@@ -4,7 +4,7 @@ echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.6'
+echo 'Script Version 2.61'
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -203,7 +203,34 @@ echo
 #
 echo '*****Building drawpile now . . .*****'
 echo
-sudo make -j 4
+echo 'The recommended option is 4, however if your Pi failed to compile the server you'
+echo 'should try a lower option. This uses less system resources on the Pi and is more'
+echo 'likely to complete without freezing up. You can choose any number, starting with'
+echo '2 and up to 8. Pressing any other number or just pressing enter will make the'
+echo 'compile process go as slow as possible.'
+echo
+echo 'This is the command to be run, where # is a number input by you:'
+echo 'sudo make -j #'
+echo
+read dpbuild
+echo
+if [ "$dpbuild" == "2" ]; then
+  sudo make -j 2
+elif [ "$dpbuild" == "3" ]; then
+  sudo make -j 3
+elif [ "$dpbuild" == "4" ]; then
+  sudo make -j 4
+elif [ "$dpbuild" == "5" ]; then
+  sudo make -j 5
+elif [ "$dpbuild" == "6" ]; then
+  sudo make -j 6
+elif [ "$dpbuild" == "7" ]; then
+  sudo make -j 7
+elif [ "$dpbuild" == "8" ]; then
+  sudo make -j 8
+else
+  sudo make
+fi
 echo
 #
 echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
