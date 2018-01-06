@@ -4,7 +4,7 @@ echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.61'
+echo 'Script Version 2.62'
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -17,6 +17,8 @@ read -p 'Press [Enter] key to continue...'
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+echo
+echo 'Pick the installed location of the Programs folder.'
 echo
 echo 'Pick an install location for the use of the Drawpile Server folders.'
 echo 'This includes session recordings, file backed sessions which help the'
@@ -201,6 +203,7 @@ echo 'Cons: Must renew the hostname via notification received in email every 30 
 echo '      or lose access. Might not be able to get the same name back.'
 echo
 echo 'Do you want to use freeDNS.afraid.org or No-IP?'
+echo 'Enter a number and hit enter to continue.'
 echo
 echo 'Press 1 for freeDNS.afraid.org'
 echo 'Press 2 for No-IP'
@@ -350,7 +353,6 @@ cd "$dpinstallloc/Programs/Drawpile"
 mkdir -p -v build
 cd "$dpinstallloc/Programs/Drawpile/build"
 #
-
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 # These lines are to fix an issue with an older version of KArchive which cannot be easily upgraded.
@@ -432,36 +434,43 @@ else
 fi
 
 echo
-echo 'Building drawpile now . . .'
+echo '*****Building drawpile now . . .*****'
 echo
-echo 'The recommended option is 4, however if your Pi failed to compile the server you'
-echo 'should try a lower option. This uses less system resources on the Pi and is more'
-echo 'likely to complete without freezing up. You can choose any number, starting with'
-echo '2 and up to 8. Pressing any other number or just pressing enter will make the'
-echo 'compile process go as slow as possible.'
+tMax=$(grep -c ^processor /proc/cpuinfo)
+
+echo 'You can hit enter to continue here, as it will pick the maximum amount of'
+echo 'threads available from the processor. If the script froze at this stage, try'
+echo "a lower number than $tMax. This uses less system resources on the Pi and is "
+echo 'more likely to complete without freezing up.'
 echo
 echo 'This is the command to be run, where # is a number input by you:'
 echo 'sudo make -j #'
 echo
-read dpbuild
+read -p "Enter compiling thread count (blank for maximum of $tMax): " threadCount
 echo
-if [ "$dpbuild" == "2" ]; then
-  sudo make -j 2
-elif [ "$dpbuild" == "3" ]; then
-  sudo make -j 3
-elif [ "$dpbuild" == "4" ]; then
-  sudo make -j 4
-elif [ "$dpbuild" == "5" ]; then
-  sudo make -j 5
-elif [ "$dpbuild" == "6" ]; then
-  sudo make -j 6
-elif [ "$dpbuild" == "7" ]; then
-  sudo make -j 7
-elif [ "$dpbuild" == "8" ]; then
-  sudo make -j 8
-else
-  sudo make
-fi
+while [ true ] ; do
+    if [ -z "$threadCount"  ] ; then
+		echo "Compiling using maximum"
+        threadCount=$tMax
+		echo
+        break
+    elif [[ $threadCount =~ ^[0-9]+$ ]] ; then
+        if (($threadCount>0)) && (($threadCount<=$tMax)) ; then
+            break
+        else
+			echo "Value: '$threadCount' is not within the range [1,$tMax]"
+			echo
+        fi
+    else
+		echo "Value: '$threadCount' is not a positive integer"
+		echo
+    fi
+    read -p "Enter compiling thread count (blank for maximum of $tMax): " threadCount
+	echo
+done
+echo "Compiling with $threadCount threads."
+echo
+sudo make -j $threadCount
 echo
 echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
 sudo make install
@@ -689,7 +698,8 @@ echo '--------------------------------------------------------------------------
 # Location provided by Calle for drawpileuser database. Can be used when drawpile-srv supports socket activation for web admin.
 # /home/drawpileuser/server.db
 #
-echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended.'
+echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended'
+echo 'if you have a hostname. If you do not have a hostname, option 6 instead.'
 echo 'All settings will automatically work, though some additional setup for'
 echo 'session templates is required. Read more on the hyperlink below.'
 echo
@@ -1021,7 +1031,7 @@ echo '    This setting is less resource intensive on the Raspberry Pi, as the'
 echo '    drawpile server is only running when a user is connected.'
 echo '2 - Server starts on Raspberry Pi power up.'
 echo '    Easier to administrate the server but runs all the time in the'
-echo '    background.'
+echo '    background. Recommended Option.'
 echo
 read dpsrvstartup
 echo
@@ -1183,7 +1193,7 @@ echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.61'
+echo 'Script Version 2.62'
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -1407,7 +1417,8 @@ echo '--------------------------------------------------------------------------
 # Location provided by Calle for drawpileuser database. Can be used when drawpile-srv supports socket activation for web admin.
 # /home/drawpileuser/server.db
 #
-echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended.'
+echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended'
+echo 'if you have a hostname. If you do not have a hostname, option 6 instead.'
 echo 'All settings will automatically work, though some additional setup for'
 echo 'session templates is required. Read more on the hyperlink below.'
 echo
