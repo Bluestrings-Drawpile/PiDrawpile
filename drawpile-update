@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.74
+drawpilescriptversion=2.75
 scriptname=drawpile-update
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'

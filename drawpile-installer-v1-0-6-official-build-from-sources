@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.74
+drawpilescriptversion=2.75
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 echo
@@ -29,7 +29,7 @@ echo 'server survive crashes or power outages, or template files which help'
 echo 'create rooms with specific settings that exist on the server at all'
 echo 'times.'
 echo
-echo '1 - Public Folder (Recommended)	- /home/pi/Public'
+echo '1 - Public Folder (Recommended)			- /home/pi/Public'
 echo '2 - Desktop Folder				- /home/pi/Desktop'
 echo '3 - Documents Folder				- /home/pi/Documents'
 echo '4 - Pictures Folder				- /home/pi/Pictures'

@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.74
+drawpilescriptversion=2.75
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
@@ -26,7 +26,7 @@ echo 'As a reminder, this is the location your Programs folder is located'
 echo 'within, which contains Drawpile and is also the location where your'
 echo 'scripts for managing the server are located.'
 echo
-echo '1 - Public Folder					- /home/pi/Public'
+echo '1 - Public Folder				- /home/pi/Public'
 echo '2 - Desktop Folder				- /home/pi/Desktop'
 echo '3 - Documents Folder				- /home/pi/Documents'
 echo '4 - Pictures Folder				- /home/pi/Pictures'
