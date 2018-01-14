@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.72
+drawpilescriptversion=2.73
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 echo
@@ -69,6 +69,7 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
+sudo chmod 777 "$dpinstallloc/Programs" -R
 sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
 git clone https://github.com/Wade821/PiDrawpile.git
 echo
@@ -1983,7 +1984,7 @@ elif [ \"\$xyx\" == \"7\" ]; then
   \$drawpilescriptversion=$drawpilescriptversion
   \$scriptname2=$scriptname2
   cd \"$dpinstallloc/Programs\"
-  
+  sudo chmod 777 \"$dpinstallloc/Programs\" -R
   git clone https://github.com/Wade821/PiDrawpile.git
   echo
   echo '--------------------------------------------------------------------------------'
