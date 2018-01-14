@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.73
+drawpilescriptversion=2.74
 scriptname=drawpile-update
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
@@ -62,9 +62,8 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
-chmod 777 "$dpinstallloc/Programs" -R
 sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
-git clone https://github.com/Wade821/PiDrawpile.git
+sudo git clone https://github.com/Wade821/PiDrawpile.git
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
