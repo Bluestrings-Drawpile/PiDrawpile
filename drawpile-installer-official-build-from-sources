@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.71
+drawpilescriptversion=2.72
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 echo
@@ -79,13 +79,14 @@ dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dpinstallloc/Programs/PiDr
 
 if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 	echo "Newest Script is using version $dpcheckversion."
-	echo "Newer version of script available, terminating script."
+	echo "Newer version of script available, the old script has been copied over"
+	echo "the old script. Please re-run this script to use newest version."
 	cd "$dpinstallloc"
 	sudo rm -rf "$dpinstallloc/$scriptname"
 	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$scriptname"
 	sudo chmod 777 "$dpinstallloc/$scriptname"
 	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
-	echo "Please run new script."
+	echo "Terminating script in 30 seconds."
 	echo
 	sleep 30s
 	exit
@@ -1992,13 +1993,14 @@ elif [ \"\$xyx\" == \"7\" ]; then
   
   if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
 	echo \"Newest Script is using version \$dpcheckversion.\"
-	echo \"Newer version of script available, terminating script.\"
+	echo \"Newer version of script available, the old script has been copied over\"
+	echo \"the old script. Please re-run this script to use newest version.\"
 	cd \"$dpinstallloc\"
 	sudo rm -rf \"$dpinstallloc/$scriptname2\"
 	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$scriptname2\"
 	sudo chmod 777 \"$dpinstallloc/$scriptname2\"
 	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
-	echo \"Please run new script.\"
+	echo \"Terminating script in 30 seconds.\"
 	echo
 	sleep 30s
 	exit
