@@ -1,0 +1,987 @@
+#!/bin/bash
+drawpilescriptversion=2.70
+scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
+echo
+echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
+echo 'you want to donate some money as thanks for all that he does!'
+echo 'laakkonenc@gmail.com'
+echo
+echo "Script Version $drawpilescriptversion"
+echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
+echo
+echo 'Please make sure you are using the latest version of this script before'
+echo 'continuing by making sure the script number above matches the Drawpile Google'
+echo 'Document version number in the upper right of every page where this script was'
+echo 'obtained. If you do not have the newest version, close this window and'
+echo 'get the newest version before proceeding.'
+echo
+read -p 'Press [Enter] key to continue...'
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Pick the installed location of the Programs folder.'
+echo
+echo 'As a reminder, this is the location your Programs folder is located'
+echo 'within, which contains Drawpile and is also the location where your'
+echo 'scripts for managing the server are located.'
+echo
+echo '1 - Public Folder					- /home/pi/Public'
+echo '2 - Desktop Folder				- /home/pi/Desktop'
+echo '3 - Documents Folder				- /home/pi/Documents'
+echo '4 - Pictures Folder				- /home/pi/Pictures'
+echo '  - Other, simply enter the exact location desired without a / at the end.'
+echo '    This is an advanced option and not suggested for average users.'
+echo '    If using a path with spaces, do NOT use double or single quotes as'
+echo '        the script will not work if you do.'
+echo '    Acceptable Example: /home/pi/Desktop/My Drawpile Server'
+echo
+echo 'Please make your selection now by entering the number or folder path:'
+echo 
+read dpinstallloc
+echo
+if [ "$dpinstallloc" == "1" ]; then
+  dpinstallloc=/home/pi/Public
+  echo "Install location chosen is $dpinstallloc"
+elif [ "$dpinstallloc" == "2" ]; then
+  dpinstallloc=/home/pi/Desktop
+  echo "Install location chosen is $dpinstallloc"
+elif [ "$dpinstallloc" == "3" ]; then
+  dpinstallloc=/home/pi/Documents
+  echo "Install location chosen is $dpinstallloc"
+elif [ "$dpinstallloc" == "4" ]; then
+  dpinstallloc=/home/pi/Pictures
+  echo "Install location chosen is $dpinstallloc"
+else
+  echo "Install location chosen is $dpinstallloc"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+cd "$dpinstallloc/"
+sudo mkdir -p -v Programs
+cd "$dpinstallloc/Programs"
+
+git clone https://github.com/Wade821/PiDrawpile.git
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+dpcheckversion=$(grep "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname2" | cut -c 23-26)
+
+if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
+	echo "Newest Script is using version $dpcheckversion."
+	echo "Newer version of script available, terminating script."
+	cd "$dpinstallloc"
+	sudo rm -rf "$dpinstallloc/$scriptname2"
+	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname2" "$dpinstallloc/$scriptname2"
+	sudo chmod 777 "$dpinstallloc/$scriptname2"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	echo "Please run new script."
+	echo
+	sleep 30s
+	exit
+elif [[ "$drawpilescriptversion" = "$dpcheckversion" ]]; then
+	echo "Script is newest version available."
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+else
+	echo "It appears the creator of the script has failed to update github with the newest version."
+	echo "Please contact him to update the script there by emailing him at wadeschlueter@gmail.com"
+	echo
+	echo "Script in use: $drawpilescriptversion"
+	echo "Github Script: $dpcheckversion"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	sleep 30s
+fi
+echo
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# Scripts to be generated for managing server.
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+sudo mkdir -p -v "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/" -R
+
+echo "#!/bin/bash
+echo '*****Administer Server Settings with Socket Activation in use . . .*****'
+echo 
+sudo systemctl stop --now drawpile-srv.socket
+sudo systemctl stop --now drawpile-srv.service
+echo
+echo 'Make sure to right click the drawpile server in the upper right'
+echo 'and quit when you are finished making changes.'
+echo
+drawpile-srv --gui &>/dev/null &
+echo
+read -p 'Press [Enter] once you are done making changes . . .'
+echo
+echo
+sudo systemctl start --now drawpile-srv.socket" > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-dp-server-socket-activation.sh"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-dp-server-socket-activation.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+echo "#!/bin/bash
+echo '*****Run drawpile-srv.service. . .*****'
+echo
+sudo systemctl stop --now drawpile-srv.service
+sudo systemctl start --now drawpile-srv.service
+echo
+echo 'Drawpile server should be running now!'
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+systemctl status drawpile-srv.service --no-pager
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo" > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-server-restart.sh"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-server-restart.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+echo "#!/bin/bash
+echo '*****Change Start up type on Drawpile Server . . .*****'
+echo
+echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
+echo
+echo '1 - Socket Activation'
+echo '    Administration of server means no users or sessions can be in use,'
+echo '    until drawpile-srv supports socket activation on web administration.'
+echo '    This setting is less resource intensive on the Raspberry Pi, as the'
+echo '    drawpile server is only running when a user is connected.'
+echo '2 - Server starts on Raspberry Pi power up.'
+echo '    Easier to administrate the server but runs all the time in the'
+echo '    background.'
+echo
+read dpsrvstartup
+echo
+if [ \"\$dpsrvstartup\" == \"1\" ]; then
+  sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
+  echo
+  echo 'Reloading systemctl and systemd.'
+  sudo systemctl daemon-reload
+  sudo systemctl restart systemd-modules-load
+  echo
+  sudo systemctl disable --now drawpile-srv.service
+  sudo systemctl enable --now drawpile-srv.socket
+  #Read more on systemd --> https://drawpile.net/help/server
+else [ \"\$dpsrvstartup\" == \"2\" ]
+  sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
+  echo
+  echo 'Reloading systemctl and systemd.'
+  sudo systemctl daemon-reload
+  sudo systemctl restart systemd-modules-load
+  echo
+  sudo systemctl disable --now drawpile-srv.socket
+  sudo systemctl enable --now drawpile-srv.service
+  #Read more on systemd --> https://drawpile.net/help/server
+fi " > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startup-switch.sh"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startup-switch.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+echo "echo 'Update Login Info NGINX for Server Administration.'
+echo
+echo 'Please type in a username you wish to use for making changes to your drawpile'
+echo 'server. If you make a mistake or need to update the server login, open a new'
+echo 'terminal window and type in the following:'
+echo
+echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
+echo
+echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
+echo 'is can be any password you like to use without spaces.'
+echo
+read -p \"Enter username: \" NGINXusername1
+read -p \"Enter username again: \" NGINXusername2
+while [ \$NGINXusername1 != \$NGINXusername2 ]
+do
+	echo
+        echo \"Usernames entered do not match!\"
+	echo
+        read -p \"Enter username: \" NGINXusername1
+        read -p \"Enter username again: \" NGINXusername2
+done
+echo
+echo \"Your Server Administration username is: \$NGINXusername1\"
+echo
+echo
+read -p \"Enter password without spaces: \" nginxhtpasswd1
+read -p \"Enter password without spaces again: \" nginxhtpasswd2
+while [ \$nginxhtpasswd1 != \$nginxhtpasswd2 ]
+do
+	echo
+        echo \"Passwords entered do not match!\"
+	echo
+        read -p \"Enter password without spaces: \" nginxhtpasswd1
+        read -p \"Enter password without spaces again: \" nginxhtpasswd2
+done
+echo
+echo \"Your Server Administration password is: \$nginxhtpasswd1\"
+echo
+sudo htpasswd -bc /etc/nginx/passwords \$NGINXusername1 \$nginxhtpasswd1
+echo
+sudo /etc/init.d/nginx restart
+sudo nginx -s reload
+sudo /etc/init.d/nginx restart" > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+echo "echo
+echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
+echo 'you want to donate some money as thanks for all that he does!'
+echo 'laakkonenc@gmail.com'
+echo
+echo \"Script Version $drawpilescriptversion\"
+echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
+echo
+echo 'Please make sure you are using the latest version of this script before'
+echo 'continuing by making sure the script number above matches the Drawpile Google'
+echo 'Document version number in the upper right of every page where this script was'
+echo 'obtained. If you do not have the newest version, close this window and'
+echo 'get the newest version before proceeding.'
+echo
+read -p 'Press [Enter] key to continue...'
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Pick the installed location of the Programs folder.'
+echo
+echo 'As a reminder, this was the location you initially downloaded'
+echo 'Drawpile to and is also the location where your scripts for managing'
+echo 'the server are located.'
+echo
+echo '1 - Public Folder					- /home/pi/Public'
+echo '2 - Desktop Folder				- /home/pi/Desktop'
+echo '3 - Documents Folder				- /home/pi/Documents'
+echo '4 - Pictures Folder				- /home/pi/Pictures'
+echo '  - Other, simply enter the exact location desired without a / at the end.'
+echo '    This is an advanced option and not suggested for average users.'
+echo '    If using a path with spaces, do NOT use double or single quotes as'
+echo '        the script will not work if you do.'
+echo '    Acceptable Example: /home/pi/Desktop/My Drawpile Server'
+echo
+echo 'Note: If you use Windows and Share files across the network, this script'
+echo 'will give you the option later to share just the Public folder, or'
+echo 'the Music, Pictures, Public, and Videos folders, or the other location'
+echo 'personally specified, or no folders.'
+echo
+echo 'Please make your selection now by entering the number or folder path:'
+echo 
+read dpinstallloc
+echo
+if [ \"\$dpinstallloc\" == \"1\" ]; then
+  dpinstallloc=/home/pi/Public
+  echo \"Install location chosen is \$dpinstallloc\"
+elif [ \"\$dpinstallloc\" == \"2\" ]; then
+  dpinstallloc=/home/pi/Desktop
+  echo \"Install location chosen is \$dpinstallloc\"
+elif [ \"\$dpinstallloc\" == \"3\" ]; then
+  dpinstallloc=/home/pi/Documents
+  echo \"Install location chosen is \$dpinstallloc\"
+elif [ \"\$dpinstallloc\" == \"4\" ]; then
+  dpinstallloc=/home/pi/Pictures
+  echo \"Install location chosen is \$dpinstallloc\"
+else
+  echo \"Install location chosen is \$dpinstallloc\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+cd \"\$dpinstallloc/\"
+sudo mkdir -p -v Programs
+echo
+echo 'This stage is for setting up an easy to remember way to connect to your server.'
+echo 
+echo 'https://freedns.afraid.org/'
+echo 'Pros: Free registration, no need to renew use of the hostname.'
+echo 'Cons: Minor additional setup with script guided help required, guided setup.'
+echo '      If a typo is made, you must use crontab -e to update the code manually.'
+echo 
+echo 'https://www.noip.com/'
+echo 'Pros: Free registration, simple setup, only slightly less complex than above'
+echo '      option listed above.'
+echo 'Cons: Must renew the hostname via notification received in email every 30 days'
+echo '      or lose access. Might not be able to get the same name back.'
+echo
+echo 'Do you want to use freeDNS.afraid.org or No-IP?'
+echo 'Enter a number and hit enter to continue.'
+echo
+echo 'Press 1 for freeDNS.afraid.org'
+echo 'Press 2 for No-IP'
+echo 'Press 3 to skip this step.'
+echo
+read dns
+echo
+if [ \"\$dns\" == \"1\" ]; then
+  echo '*****Setting up FreeDNS.afraid.org cronjob for auto update of IP...*****'
+  echo 
+  echo 'Requirements: Register an account, go to Subdomains option on the left,'
+  echo 'select option Add a subdomain. Leave Type set to A, set any desired subdomain'
+  echo 'name that you wish to use. Domain options are listed in the dropbox, you can '
+  echo 'pick Many many more available in order to search for domain names you like '
+  echo 'that are listed as Public. Click the link Shared Domain Registry and search '
+  echo 'for a desired domain. Once you find a name you like, click on the link on the'
+  echo 'left. Leave the fields Destination, TTL, and Wildcard as they currently are... '
+  echo 'and fill in the Captcha that everyone loves and hates.'
+  echo
+  echo 'Click on Dynamic DNS on the left, then go to dynamic update interface'
+  echo 'hyperlink at the top of the page, should say (version 2) beside it. Click '
+  echo 'the checkbox beside your hostname, click Apply below that where the option to '
+  echo 'the left should read: Action: Enable Dynamic DNS... . Then click cron script'
+  echo 'on the gray table to the right of your registered hostname.'
+  echo
+  echo 'Copy only the very bottom line of the page and paste here.'
+  echo 'Press Ctrl + Shift + V to paste.'
+  echo 'That is everything which appears after this line ... '
+  echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'
+  echo 
+  read freeDNS
+  echo
+  (crontab -l 2>>/dev/null; echo \"PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+\$freeDNS\") | crontab 
+elif [ \"\$dns\" == \"2\" ]; then
+  echo '*****Installing No-IP...*****'
+  cd \"\$dpinstallloc/Programs\"
+  sudo mkdir -p -v noip
+  cd noip
+  sudo wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+  sudo tar vzxf noip-duc-linux.tar.gz
+  cd noip-2.1.9-1
+  sudo make
+  echo
+  echo 'https://www.noip.com/'
+  echo
+  echo 'Requirements: Once logged in, you should be looking at the dashboard. You will '
+  echo 'know if the hyperlink at the top is https://my.noip.com/#!/. Just type'
+  echo 'your desired hostname and choose a domain drop down that you like. from the '
+  echo 'Free Domains options. Click the button Add Hostname. You will just need your '
+  echo 'username and password to set this up.'
+  echo
+  echo 'If using the classic site, click Add Host on the left. Type in your Hostname,'
+  echo 'and choose a domain on the right from the list of No-IP Free Domains. Make '
+  echo 'sure the host type is set to DNS Host (A). For IP Address, open a new tab'
+  echo 'and go to www.whatismyip.com to get your IP and put it in this field. Leave '
+  echo 'other options at default values and click Add Host.'
+  echo
+  echo 'You will be prompted to login with your No-IP account username and password.' 
+  echo 'After logging into the DUC program, answer the questions to proceed. When asked' 
+  echo 'how often you want the update to happen you must choose 5 or more. The interval'
+  echo 'is listed in minutes, if you choose 5 the update interval will be 5 minutes.'
+  echo 'If you choose 30 the interval will be 30 minutes.'
+  sudo make install
+  sudo /usr/local/bin/noip2
+  #echo 'Confirming service is working properly...'
+  #sudo noip2 ­-S
+  #Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
+  
+  echo 'If you made a typo when putting in your password for no IP, simply'
+  echo 'type the following:'
+  echo
+  echo 'noip2 -C -c /usr/local/etc/no-ip2.conf'
+else 
+    echo 'No IP update service to be set up!'
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'This script assumes you have a hostname, and it is required for'
+echo 'encrypted server connections to protect private conversations'
+echo 'and also to mask your Public IP address when connecting to the'
+echo 'server.'
+echo
+echo 'Make sure this is correctly typed both times before proceeding'
+echo 'with the script. If you do not enter it correctly, users will'
+echo 'not be able to connect to hosted sessions with the server using'
+echo 'encryption by SSL.'
+echo
+echo 'For example:'
+echo 'example.hostwebsite.com'
+echo
+echo 'If you do not have one, simply leave it blank and hit enter'
+echo 'twice. However, it is highly recommended to have one, they'
+echo 'are free after all!'
+echo
+echo 'Note: If you do make a mistake, you can always run'
+echo 'Option \"4 - Change all startup options.\" via the script'
+echo 'drawpile-server.sh later on.'
+echo
+echo 'If you have a hostname please enter it now.'
+echo
+read -p \"Enter hostname: \" hostname1
+read -p \"Enter hostname again: \" hostname2
+while [[ \$hostname1 != \$hostname2 ]]
+do
+	echo
+        echo \"Hostnames entered do not match!\"
+	echo
+        read -p \"Enter hostname: \" hostname1
+        read -p \"Enter hostname again: \" hostname2
+done
+#
+hostname=\$hostname1
+echo
+echo \"Your hostname is: \$hostname\"
+echo
+echo 'This will be used to display in the session listing instead of your'
+echo 'public IP address.'
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo '***** Setting up SSL Certificate Creation . . . *****'
+echo
+echo 'Please note in the following sections that the parts contained within'
+echo 'the brackets are the default option if no information is entered.'
+echo
+echo 'Country Name (2 letter code) [AU]:'
+echo
+read country
+echo
+if [ \"\$country\" != \"\" ]; then
+  echo \"Selected: \$country\"
+else
+  country=\"AU\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'State or Province Name (full name) [Some-State]:'
+echo
+read state
+echo
+if [ \"\$state\" != \"\" ]; then
+  echo \"Selected: \$state\"
+else
+  state=\"Some-State\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Locality name (e.g., city) [Some-City]:'
+echo
+read locality
+echo
+if [ \"\$locality\" != \"\" ]; then
+  echo \"Selected: \$locality\"
+else
+  locality=\"Some-City\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Organization Name (eg, company) [Internet Widgits Pty Ltd]:'
+echo
+read organization
+echo
+if [ \"\$organization\" != \"\" ]; then
+  echo \"Selected: \$organization\"
+else
+  organization=\"Internet Widgits Pty Ltd\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Organizational Unit Name (e.g., section) [Collaborating Artists]:'
+echo
+read unitname
+echo
+if [ \"\$unitname\" != \"\" ]; then
+  echo \"Selected: \$unitname\"
+else
+  unitname=\"Collaborating Artists\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Email Address [noemail@noemail.com]'
+echo
+read email
+echo
+if [ \"\$email\" != \"\" ]; then
+  echo \"Selected: \$email\"
+else
+  email=\"noemail@noemail.com\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=\$country/ST=\$state/L=\$locality/O=\$organization/OU=\$unitname/CN=\$hostname/emailAddress=\$email\"
+echo
+sudo chmod 777 /home/drawpileuser/
+sudo chown drawpileuser /home/drawpileuser/cert.pem
+sudo chown drawpileuser /home/drawpileuser/key.pem
+echo
+echo
+echo \"#!/bin/bash
+sudo chmod 777 /home/drawpileuser/
+sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=\$country/ST=\$state/L=\$locality/O=\$organization/OU=\$unitname/CN=\$hostname/emailAddress=\$email\"
+sudo chown drawpileuser /home/drawpileuser/cert.pem
+sudo chown drawpileuser /home/drawpileuser/key.pem
+sudo chmod 755 /home/drawpileuser/\" > /home/drawpileuser/ssl.sh
+echo
+sudo chmod 755 /home/drawpileuser/
+echo
+sudo chmod 777 /home/drawpileuser/ssl.sh
+echo
+hostname=\"--announce-local-addr \$hostname\"
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Making backup of drawpile-srv.service before modification.'
+echo
+sudo cp \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service\" \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service.backup\"
+echo
+echo 'Modifying drawpile-srv.service . . .'
+echo
+sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service\"
+#
+cd \"\$dpinstallloc\"
+sudo chmod 777 \"\$dpinstallloc\" -R
+cd \"\$dpinstallloc/Programs\"
+mkdir -p -v Drawpile-Srv-Files
+cd Drawpile-Srv-Files
+sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/\" -R
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+#
+# This is for session recordings, however it is not necessary when using file backed sessions. 
+# --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"
+#
+# Code to place after the database file in order to use httpd to authenticate instead. Username and password is plain text, no hash.
+# --web-admin-port 8080 --web-admin-access all --web-admin-auth user:pass
+#
+# Default location of the GUI Database if no location is specified.
+# /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
+# sudo chmod 777 /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
+#
+# Location provided by Calle for drawpileuser database. Can be used when drawpile-srv supports socket activation for web admin.
+# /home/drawpileuser/server.db
+#
+echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended'
+echo 'if you have a hostname. If you do not have a hostname, option 6 instead.'
+echo 'All settings will automatically work, though some additional setup for'
+echo 'session templates is required. Read more on the hyperlink below.'
+echo
+echo 'Short summary of options:'
+echo '    Read more --> https://drawpile.net/help/server/'
+echo 'web remote admin - add users, ban users, set auto session reset, etc.'
+echo 'recording - records all sessions, may not be necessary with above option'
+echo '    turned on.'
+echo 'ssl - Encrypt data sent so conversations and drawings are kept private.'
+echo '    If you do not have this option on, sensitive information should not'
+echo '    be shared in sessions. I.E. credit cards.'
+echo
+echo 'Note:'
+echo ' Be aware that systemd socket activation is not yet implemented in the'
+echo ' drawpile server, which means you cannot administer the server remotely.'
+echo ' You will have to do it by script or locally using a supplied script.'
+echo ' This is not a problem if you decide to use drawpile-srv.service instead'
+echo ' of drawpile-srv.socket later in this script.'
+echo
+echo 'These options assume you have a host name.'
+echo '  1  - Run drawpile-srv w all options.'
+echo '  2  - Run drawpile-srv w web admin & ssl - recommended'
+echo '  3  - Run drawpile-srv w web admin & session recording'
+echo '  4 - Run drawpile-srv w web admin'
+echo
+echo 'These options assume you do not have a host name.'
+echo '  5  - Run drawpile-srv w web admin & session recording'
+echo '  6 - Run drawpile-srv w web admin'
+echo
+read systemd
+echo
+if [ \"\$systemd\" == \"1\" ]; then
+  echo '1  - Run drawpile-srv w all options.'
+  mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
+elif [ \"\$systemd\" == \"2\" ]; then
+  echo '2  - Run drawpile-srv w web admin & ssl - recommended'
+  mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  systemd=\"--web-admin-port 8080 --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
+elif [ \"\$systemd\" == \"3\" ]; then
+  echo '3  - Run drawpile-srv w web admin & session recording'
+  mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" \$hostname\"
+elif [ \"\$systemd\" == \"4\" ]; then
+  echo '4 - Run drawpile-srv w web admin'
+  systemd=\"--web-admin-port 8080 \$hostname\"
+elif [ \"\$systemd\" == \"5\" ]; then
+  echo '5  - Run drawpile-srv w web admin & session recording'
+  mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"\"
+else [ \"\$systemd\" == \"6\" ]
+  echo '6 - Run drawpile-srv w web admin'
+  systemd=\"--web-admin-port 8080\"
+fi
+echo
+#
+#
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Please set the session size limit now in megabytes.'
+echo
+echo 'Example: 10MB'
+echo 'This will set a session limit of 10MB'
+echo
+echo 'If you just hit enter with nothing, it will default'
+echo 'to 15MB. Do not use spaces.'
+echo
+read sessionsizeLimit
+echo
+if [ \"\$sessionsizeLimit\" != \"\" ]; then
+  echo \"Your session size limit is \$sessionsizeLimit.\"
+else
+  sessionsizeLimit=15MB
+  echo \"Your session size limit is \$sessionsizeLimit.\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+echo 'Please set the max number of sessions at any one time.'
+echo 'to run on the server.'
+echo
+echo 'If you just hit enter with nothing, it will default'
+echo 'to 25 sessions at max.'
+echo
+read sessionCountLimit
+echo
+if [ \"\$sessionCountLimit\" != \"\" ]; then
+  echo \"Your max session limit is \$sessionCountLimit.\"
+else
+  sessionCountLimit=25
+  echo \"Your max session limit is \$sessionCountLimit.\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+echo 'Please set server title.'
+echo
+echo 'If you just hit enter with nothing, it will default'
+echo 'to: \"Welcome to my Raspberry Pi Drawpile server!\"'
+echo 'Use double quotes when typing out your title.'
+echo
+read title
+echo
+if [ \"\$title\" != \"\" ]; then
+  echo \"Your server title is: \$title.\"
+else
+  title=\"Welcome to my Raspberry Pi Drawpile server!\"
+  echo \"Your server title is: \$title.\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+echo 'Please set Moderator username now.'
+echo
+echo 'If you just hit enter with nothing, it will default'
+echo 'to: moderator.'
+echo ' Do not use spaces.'
+echo
+read username
+echo
+if [ \"\$username\" != \"\" ]; then
+  echo \"Your moderator name is: \$username.\"
+else
+  \$username=moderator
+  echo \"Your moderator name is: \$username.\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+echo 'Please set Moderator password now.'
+echo
+echo 'If you just hit enter with nothing, it will default'
+echo 'to: qwerty123.'
+echo ' Do not use spaces.'
+echo
+read password
+echo
+if [ \"\$password\" != \"\" ]; then
+  echo \"Your moderator password is: \$password\"
+else
+  \$password=qwerty123
+  echo \"Your moderator password is: \$password\"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+echo ‘Creating configuration file.’
+echo
+sudo chmod 777 /home/drawpileuser/
+echo \"[config]
+sessionSizeLimit = \$sessionsizeLimit
+sessionCountLimit = \$sessionCountLimit
+idleTimeLimit = 3h
+title = \$title
+announceWhiteList = true
+
+[announceWhitelist]
+https://drawpile.net/api/sessions/
+
+[ipbans]
+
+[users]
+\$username:plain;\$password;MOD,HOST\" > /home/drawpileuser/config.txt
+sudo chmod 777 /home/drawpileuser/config.txt
+sudo chmod 755 /home/drawpileuser/
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+#
+#
+#1 - Socket Activation
+echo \"[Unit]
+Description=Drawpile dedicated server
+After=network.target
+Documentation=man:drawpile-srv
+
+[Service]
+# Note: set this to the correct path and add -d or -c to load the right configuration file
+ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt \$systemd
+
+# The AppImage is not built with systemd integration at the moment,
+# so type=simple should be used with it:
+# Type=simple
+Restart=always
+
+# If you are using a self-built or distribution provided version with
+# systemd integration, use this to enable socket activation:
+Type=notify
+NotifyAccess=main
+
+# Note: in order to use session recording and SSL safely,
+# a dedicated user account should be created for drawpile-srv.
+User=drawpileuser
+
+[Install]
+WantedBy=multi-user.target\" > \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv01.service\"
+#
+#
+#2 - Server starts on Raspberry Pi power up
+echo \"[Unit]
+Description=Drawpile dedicated server
+After=network.target
+Documentation=man:drawpile-srv
+
+[Service]
+# Note: set this to the correct path and add -d or -c to load the right configuration file
+ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt \$systemd
+
+# The AppImage is not built with systemd integration at the moment,
+# so type=simple should be used with it:
+Type=simple
+Restart=always
+
+# If you're using a self-built or distribution provided version with
+# systemd integration, use this to enable socket activation:
+#Type=notify
+#NotifyAccess=main
+
+# Note: in order to use session recording and SSL safely,
+# a dedicated user account should be created for drawpile-srv.
+User=drawpileuser
+
+[Install]
+WantedBy=multi-user.target\" > \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv02.service\"
+echo
+sudo chmod 655 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service\"
+sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service.backup\"
+sudo chmod 655 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv01.service\"
+sudo chmod 655 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv02.service\"
+echo
+echo 'Copying files drawpile-srv.service and drawpile-srv.socket to make systemd work.'
+sudo cp \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv01.service\" /etc/systemd/system/
+sudo cp \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv02.service\" /etc/systemd/system/
+sudo cp \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.socket\" /etc/systemd/system/
+echo
+echo 'Reloading systemctl and systemd.'
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-modules-load
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo 'Setting up NGINX for remote authentication for server Administration.'
+echo
+echo 'Please type in a username you wish to use for making changes to your drawpile'
+echo 'server. If you make a mistake or need to update the server login, open a new'
+echo 'terminal window and type in the following:'
+echo
+echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
+echo
+echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
+echo 'is can be any password you like to use without spaces.'
+echo
+read -p \"Enter username: \" NGINXusername1
+read -p \"Enter username again: \" NGINXusername2
+while [ \$NGINXusername1 != \$NGINXusername2 ]
+do
+	echo
+        echo \"Usernames entered do not match!\"
+	echo
+        read -p \"Enter username: \" NGINXusername1
+        read -p \"Enter username again: \" NGINXusername2
+done
+echo
+echo \"Your Server Administration username is: \$NGINXusername1\"
+echo
+echo
+read -p \"Enter password without spaces: \" nginxhtpasswd1
+read -p \"Enter password without spaces again: \" nginxhtpasswd2
+while [ \$nginxhtpasswd1 != \$nginxhtpasswd2 ]
+do
+	echo
+        echo \"Passwords entered do not match!\"
+	echo
+        read -p \"Enter password without spaces: \" nginxhtpasswd1
+        read -p \"Enter password without spaces again: \" nginxhtpasswd2
+done
+echo
+echo \"Your Server Administration password is: \$nginxhtpasswd1\"
+echo
+sudo htpasswd -bc /etc/nginx/passwords \$NGINXusername1 \$nginxhtpasswd1
+echo
+sudo /etc/init.d/nginx restart
+sudo nginx -s reload
+sudo /etc/init.d/nginx restart" > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh"
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+echo "#!/bin/bash
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+echo 'If socket activation is enabled, it will say enabled on the line starting with'
+echo '\"Loaded:\" and it should be running. Ignore the part after vendor preset.'
+echo
+systemctl status drawpile-srv.socket --no-pager
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+echo 'If start up on Pi power up is enabled, it will say enabled on the line starting'
+echo 'with \"Loaded:\" and it should be running. Ignore the part after vendor preset.'
+echo
+systemctl status drawpile-srv.service --no-pager
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+echo 'What changes do you need to make to the server?'
+echo
+echo '1 - Administer server currently using socket activation.'
+echo '2 - Restart server which is NOT using socket activation.'
+echo '3 - Switch startup type to socket activation or on boot up.'
+echo '4 - Update Drawpile Server to newest version.'
+echo '5 - NGINX Login Change for Remote Server Administration.'
+echo '6 - Change all startup options.'
+echo '7 - Verify server management scripts are up to date.'
+echo '8 - Do nothing and close script.'
+
+echo
+read xyx
+echo
+if [ \"\$xyx\" == \"1\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-dp-server-socket-activation.sh\"
+elif [ \"\$xyx\" == \"2\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-server-restart.sh\"
+elif [ \"\$xyx\" == \"3\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startup-switch.sh\"
+elif [ \"\$xyx\" == \"4\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-update.sh\"
+elif [ \"\$xyx\" == \"5\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh\"
+elif [ \"\$xyx\" == \"6\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh\"
+elif [ \"\$xyx\" == \"7\" ]; then
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+  echo
+  echo \"Script Version $drawpilescriptversion\"
+  \$drawpilescriptversion=$drawpilescriptversion
+  \$scriptname2=$scriptname2
+  cd \"$dpinstallloc/Programs\"
+  
+  git clone https://github.com/Wade821/PiDrawpile.git
+  echo
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+  echo
+  dpcheckversion=\$(grep \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
+  
+  if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
+	echo \"Newest Script is using version \$dpcheckversion.\"
+	echo \"Newer version of script available, terminating script.\"
+	cd \"$dpinstallloc\"
+	sudo rm -rf \"$dpinstallloc/$scriptname2\"
+	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$scriptname2\"
+	sudo chmod 777 \"$dpinstallloc/$scriptname2\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	echo \"Please run new script.\"
+	echo
+	sleep 30s
+	exit
+  elif [[ \"\$drawpilescriptversion\" = \"\$dpcheckversion\" ]]; then
+	echo \"Script is newest version available.\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+  else
+	echo \"It appears the creator of the script has failed to update github with the newest version.\"
+	echo \"Please contact him to update the script there by emailing him at wadeschlueter@gmail.com\"
+	echo
+	echo \"Script in use: $drawpilescriptversion\"
+	echo \"Github Script: \$dpcheckversion\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	sleep 30s
+  fi
+  echo
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+else
+  echo \"Doing nothing and exiting script.\"
+  sleep 10s
+  exit
+fi
+
+read -p 'Press [Enter] key to continue...'
+echo" > "$dpinstallloc/drawpile-server.sh"
+sudo chmod 777 "$dpinstallloc/drawpile-server.sh"
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# End Section of Scripts to be generated for managing server. 
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------

@@ -1,10 +1,12 @@
 #!/bin/bash
+drawpilescriptversion=2.70
+scriptname=drawpile-update
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.62'
+echo "Script Version $drawpilescriptversion"
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -57,10 +59,49 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-sudo pkill drawpile-srv
-sudo pkill -9 drawpile-srv
+cd "$dpinstallloc/"
+sudo mkdir -p -v Programs
+cd "$dpinstallloc/Programs"
+
+git clone https://github.com/Wade821/PiDrawpile.git
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+dpcheckversion=$(grep "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
+
+if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
+	echo "Newest Script is using version $dpcheckversion."
+	echo "Newer version of script available, terminating script."
+	cd "$dpinstallloc"
+	sudo rm -rf "$dpinstallloc/$scriptname"
+	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$scriptname"
+	sudo chmod 777 "$dpinstallloc/$scriptname"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	echo "Please run new script."
+	echo
+	sleep 30s
+	exit
+elif [[ "$drawpilescriptversion" = "$dpcheckversion" ]]; then
+	echo "Script is newest version available."
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+else
+	echo "It appears the creator of the script has failed to update github with the newest version."
+	echo "Please contact him to update the script there by emailing him at wadeschlueter@gmail.com"
+	echo
+	echo "Script in use: $drawpilescriptversion"
+	echo "Github Script: $dpcheckversion"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	sleep 30s
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 sudo systemctl stop --now drawpile-srv.socket
 sudo systemctl stop --now drawpile-srv.service
+sudo pkill drawpile-srv
+sudo pkill -9 drawpile-srv
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -91,9 +132,9 @@ fi
 echo
 echo 'Upgrading dependencies . . .'
 echo
-sudo apt-get -q -y install cmake libqt5network5 libkf5dnssd-dev libkf5archive-dev libqt5svg5-dev qtmultimedia5-dev libsystemd-dev libminiupnpc-dev 
+sudo apt-get -q -y install cmake libqt5network5 libkf5dnssd-dev libkf5archive-dev libqt5svg5-dev qtmultimedia5-dev libsystemd-dev libminiupnpc-dev  libsodium-dev
 echo
-sudo apt-get -q -y install qtbase5-dev g++ miniupnpc libgif-dev qttools5-dev libmicrohttpd-dev extra-cmake-modules mini-httpd nginx openssl 
+sudo apt-get -q -y install qtbase5-dev g++ miniupnpc libgif-dev qttools5-dev libmicrohttpd-dev extra-cmake-modules mini-httpd nginx openssl
 echo
 echo
 echo '--------------------------------------------------------------------------------'
@@ -141,14 +182,29 @@ cd "$dpinstallloc/Programs/Drawpile/build"
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 echo
+version=$(apt-cache policy libkf5archive-dev | grep "Installed:" | cut -c 14-40)
+echo "K Archive is using version $version"
 echo
-echo 'Creating backup of file orawriter.cpp before modification.'
-cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
-echo
-#
-echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
-sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
-sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+
+if [[ "$version" > "5.29" ]]; then
+	echo "Installed version of K Archive is greater than 5.29."
+	echo "No modification of source files required."
+elif [[ "$version" = "5.29" ]]; then
+	echo "Installed version of K Archive is equal to 5.29."
+	echo "No modification of source files required."
+elif [[ "$version" < "5.29" ]]; then
+	echo "Installed version of K Archive is less than 5.29."
+	echo "Modification of source files required."
+	echo
+	echo 'Creating backup of file orawriter.cpp before modification.'
+	cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
+	echo
+	echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
+	sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+	sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+else
+	echo "Unable to make a determination of which version of K Archive is installed."
+fi
 echo
 echo
 #---------------------------------------------------------------------------------------------------------------------------------
@@ -268,40 +324,51 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Drawpile is compiled. Now setting up for automated startup . . .'
+echo '*****Drawpile is compiled.*****'
+echo
+echo
+echo '***** Now setting up for automated startup . . .*****'
 echo
 echo 'This script assumes you have a hostname, and it is required for'
 echo 'encrypted server connections to protect private conversations'
 echo 'and also to mask your Public IP address when connecting to the'
 echo 'server.'
 echo
-echo 'If you have a hostname please enter it now.'
-echo 'Make sure this is correct before hitting enter as you will not'
-echo 'have a chance to re-enter it. If you do not enter it correctly,'
-echo 'users will not be able to connect to hosted sessions with the'
-echo 'server using encryption by SSL.'
+echo 'Make sure this is correctly typed both times before proceeding'
+echo 'with the script. If you do not enter it correctly, users will'
+echo 'not be able to connect to hosted sessions with the server using'
+echo 'encryption by SSL.'
 echo
 echo 'For example:'
 echo 'example.hostwebsite.com'
 echo
-echo 'If you do not have one, simply leave it blank and hit enter.'
-echo 'However, it is highly recommended to have one, they are free'
-echo 'after all!'
+echo 'If you do not have one, simply leave it blank and hit enter'
+echo 'twice. However, it is highly recommended to have one, they'
+echo 'are free after all!'
 echo
 echo 'Note: If you do make a mistake, you can always run'
 echo 'Option "4 - Change all startup options." via the script'
 echo 'drawpile-server.sh later on.'
 echo
-read hostname
+echo 'If you have a hostname please enter it now.'
 echo
-if [ "$hostname" != "" ]; then
-  echo "Your hostname is $hostname"
-  echo
-  echo 'This will be used to display in the session listing instead of your'
-  echo 'public IP address.'
-else [ "$hostname" == "" ]
-  echo "No hostname being used."
-fi
+read -p "Enter hostname: " hostname1
+read -p "Enter hostname again: " hostname2
+while [[ $hostname1 != $hostname2 ]]
+do
+	echo
+        echo "Hostnames entered do not match!"
+	echo
+        read -p "Enter hostname: " hostname1
+        read -p "Enter hostname again: " hostname2
+done
+#
+hostname=$hostname1
+echo
+echo "Your hostname is: $hostname"
+echo
+echo 'This will be used to display in the session listing instead of your'
+echo 'public IP address.'
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'

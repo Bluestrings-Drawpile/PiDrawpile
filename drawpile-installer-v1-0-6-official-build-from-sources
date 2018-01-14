@@ -1,10 +1,13 @@
 #!/bin/bash
+drawpilescriptversion=2.70
+scriptname=drawpile-installer-v1-0-6-official-build-from-sources
+scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.62'
+echo "Script Version $drawpilescriptversion"
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -60,6 +63,45 @@ elif [ "$dpinstallloc" == "4" ]; then
 else
   echo "Install location chosen is $dpinstallloc"
   sudo mkdir -p -v "$dpinstallloc"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+cd "$dpinstallloc/"
+sudo mkdir -p -v Programs
+cd "$dpinstallloc/Programs"
+
+git clone https://github.com/Wade821/PiDrawpile.git
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+dpcheckversion=$(grep "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
+
+if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
+	echo "Newest Script is using version $dpcheckversion."
+	echo "Newer version of script available, terminating script."
+	cd "$dpinstallloc"
+	sudo rm -rf "$dpinstallloc/$scriptname"
+	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$scriptname"
+	sudo chmod 777 "$dpinstallloc/$scriptname"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	echo "Please run new script."
+	echo
+	sleep 30s
+	exit
+elif [[ "$drawpilescriptversion" = "$dpcheckversion" ]]; then
+	echo "Script is newest version available."
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+else
+	echo "It appears the creator of the script has failed to update github with the newest version."
+	echo "Please contact him to update the script there by emailing him at wadeschlueter@gmail.com"
+	echo
+	echo "Script in use: $drawpilescriptversion"
+	echo "Github Script: $dpcheckversion"
+	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
+	sleep 30s
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -186,8 +228,6 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
-cd "$dpinstallloc/"
-sudo mkdir -p -v Programs
 echo
 echo 'This stage is for setting up an easy to remember way to connect to your server.'
 echo 
@@ -375,14 +415,29 @@ cd "$dpinstallloc/Programs/Drawpile/build"
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 echo
+version=$(apt-cache policy libkf5archive-dev | grep "Installed:" | cut -c 14-40)
+echo "K Archive is using version $version"
 echo
-echo 'Creating backup of file orawriter.cpp before modification.'
-cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
-echo
-#
-echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
-sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
-sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+
+if [[ "$version" > "5.29" ]]; then
+	echo "Installed version of K Archive is greater than 5.29."
+	echo "No modification of source files required."
+elif [[ "$version" = "5.29" ]]; then
+	echo "Installed version of K Archive is equal to 5.29."
+	echo "No modification of source files required."
+elif [[ "$version" < "5.29" ]]; then
+	echo "Installed version of K Archive is less than 5.29."
+	echo "Modification of source files required."
+	echo
+	echo 'Creating backup of file orawriter.cpp before modification.'
+	cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
+	echo
+	echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
+	sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+	sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+else
+	echo "Unable to make a determination of which version of K Archive is installed."
+fi
 echo
 echo
 #---------------------------------------------------------------------------------------------------------------------------------
@@ -479,40 +534,51 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Drawpile is compiled. Now setting up for automated startup . . .'
+echo '*****Drawpile is compiled.*****'
+echo
+echo
+echo '***** Now setting up for automated startup . . .*****'
 echo
 echo 'This script assumes you have a hostname, and it is required for'
 echo 'encrypted server connections to protect private conversations'
 echo 'and also to mask your Public IP address when connecting to the'
 echo 'server.'
 echo
-echo 'If you have a hostname please enter it now.'
-echo 'Make sure this is correct before hitting enter as you will not'
-echo 'have a chance to re-enter it. If you do not enter it correctly,'
-echo 'users will not be able to connect to hosted sessions with the'
-echo 'server using encryption by SSL.'
+echo 'Make sure this is correctly typed both times before proceeding'
+echo 'with the script. If you do not enter it correctly, users will'
+echo 'not be able to connect to hosted sessions with the server using'
+echo 'encryption by SSL.'
 echo
 echo 'For example:'
 echo 'example.hostwebsite.com'
 echo
-echo 'If you do not have one, simply leave it blank and hit enter.'
-echo 'However, it is highly recommended to have one, they are free'
-echo 'after all!'
+echo 'If you do not have one, simply leave it blank and hit enter'
+echo 'twice. However, it is highly recommended to have one, they'
+echo 'are free after all!'
 echo
 echo 'Note: If you do make a mistake, you can always run'
 echo 'Option "4 - Change all startup options." via the script'
 echo 'drawpile-server.sh later on.'
 echo
-read hostname
+echo 'If you have a hostname please enter it now.'
 echo
-if [ "$hostname" != "" ]; then
-  echo "Your hostname is $hostname"
-  echo
-  echo 'This will be used to display in the session listing instead of your'
-  echo 'public IP address.'
-else [ "$hostname" == "" ]
-  echo "No hostname being used."
-fi
+read -p "Enter hostname: " hostname1
+read -p "Enter hostname again: " hostname2
+while [[ $hostname1 != $hostname2 ]]
+do
+	echo
+        echo "Hostnames entered do not match!"
+	echo
+        read -p "Enter hostname: " hostname1
+        read -p "Enter hostname again: " hostname2
+done
+#
+hostname=$hostname1
+echo
+echo "Your hostname is: $hostname"
+echo
+echo 'This will be used to display in the session listing instead of your'
+echo 'public IP address.'
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -965,7 +1031,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Setting up NGINX for remote authentication for server Administration.'
+echo 'Setting up NGINX for remote authentication for Server Administration.'
 echo
 echo 'Please type in a username you wish to use for making changes to your drawpile'
 echo 'server. If you make a mistake or need to update the server login, open a new'
@@ -1005,21 +1071,45 @@ echo "Your Server Administration password is: $nginxhtpasswd1"
 echo
 sudo htpasswd -bc /etc/nginx/passwords $NGINXusername1 $nginxhtpasswd1
 echo
-echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:8080\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n	}\n}\n/' /etc/nginx/nginx.conf
+echo
+isApache2Installed=$(apt-cache policy apache2| grep "Installed:" | cut -c 14-40)
+if [[ "$isApache2Installed" = "(none)" ]]; then
+	echo "Apache2 is not installed, no conflict with NGINX web server."
+elif [[ $isApache2Installed == *.* ]]; then
+	echo "Apache2 is installed, version $isApache2Installed"
+	echo "This will conflict with the existing installation of NGINX. In order to"
+	echo "avoid a conflict, it is suggested that the default web page in NGINX is"
+	echo "disabled and only to use the reverse proxy for administrating the"
+	echo "drawpile server."
+	echo
+	echo "Please make your selection."
+	echo "1 - Disable Default Web Page (recommended)"
+	echo "2 - Do nothing (advanced users only)"
+	echo
+	read NGINX_default_config
+	echo
+	if [ "$NGINX_default_config" == "1" ]; then
+		sudo rm /etc/nginx/sites-enabled/default
+		echo
+		echo "Default NGINX website disabled."
+	else
+		echo "Doing nothing regarding conflicting installation."
+	fi
+else
+	echo "Cannot determine if Apache2 is installed, moving on."
+fi
+echo
 echo
 sudo /etc/init.d/nginx restart
 sudo nginx -s reload
 sudo /etc/init.d/nginx restart
 echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
 echo
-#
-#
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-#
 echo '*****Starting Drawpile Server . . .*****'
 echo
 echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
@@ -1193,7 +1283,7 @@ echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo 'Script Version 2.62'
+echo \"Script Version $drawpilescriptversion\"
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
 echo
 echo 'Please make sure you are using the latest version of this script before'
@@ -1250,39 +1340,144 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+cd \"\$dpinstallloc/\"
+sudo mkdir -p -v Programs
+echo
+echo 'This stage is for setting up an easy to remember way to connect to your server.'
+echo 
+echo 'https://freedns.afraid.org/'
+echo 'Pros: Free registration, no need to renew use of the hostname.'
+echo 'Cons: Minor additional setup with script guided help required, guided setup.'
+echo '      If a typo is made, you must use crontab -e to update the code manually.'
+echo 
+echo 'https://www.noip.com/'
+echo 'Pros: Free registration, simple setup, only slightly less complex than above'
+echo '      option listed above.'
+echo 'Cons: Must renew the hostname via notification received in email every 30 days'
+echo '      or lose access. Might not be able to get the same name back.'
+echo
+echo 'Do you want to use freeDNS.afraid.org or No-IP?'
+echo 'Enter a number and hit enter to continue.'
+echo
+echo 'Press 1 for freeDNS.afraid.org'
+echo 'Press 2 for No-IP'
+echo 'Press 3 to skip this step.'
+echo
+read dns
+echo
+if [ \"\$dns\" == \"1\" ]; then
+  echo '*****Setting up FreeDNS.afraid.org cronjob for auto update of IP...*****'
+  echo 
+  echo 'Requirements: Register an account, go to Subdomains option on the left,'
+  echo 'select option Add a subdomain. Leave Type set to A, set any desired subdomain'
+  echo 'name that you wish to use. Domain options are listed in the dropbox, you can '
+  echo 'pick Many many more available in order to search for domain names you like '
+  echo 'that are listed as Public. Click the link Shared Domain Registry and search '
+  echo 'for a desired domain. Once you find a name you like, click on the link on the'
+  echo 'left. Leave the fields Destination, TTL, and Wildcard as they currently are... '
+  echo 'and fill in the Captcha that everyone loves and hates.'
+  echo
+  echo 'Click on Dynamic DNS on the left, then go to dynamic update interface'
+  echo 'hyperlink at the top of the page, should say (version 2) beside it. Click '
+  echo 'the checkbox beside your hostname, click Apply below that where the option to '
+  echo 'the left should read: Action: Enable Dynamic DNS... . Then click cron script'
+  echo 'on the gray table to the right of your registered hostname.'
+  echo
+  echo 'Copy only the very bottom line of the page and paste here.'
+  echo 'Press Ctrl + Shift + V to paste.'
+  echo 'That is everything which appears after this line ... '
+  echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'
+  echo 
+  read freeDNS
+  echo
+  (crontab -l 2>>/dev/null; echo \"PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+\$freeDNS\") | crontab 
+elif [ \"\$dns\" == \"2\" ]; then
+  echo '*****Installing No-IP...*****'
+  cd \"\$dpinstallloc/Programs\"
+  sudo mkdir -p -v noip
+  cd noip
+  sudo wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+  sudo tar vzxf noip-duc-linux.tar.gz
+  cd noip-2.1.9-1
+  sudo make
+  echo
+  echo 'https://www.noip.com/'
+  echo
+  echo 'Requirements: Once logged in, you should be looking at the dashboard. You will '
+  echo 'know if the hyperlink at the top is https://my.noip.com/#!/. Just type'
+  echo 'your desired hostname and choose a domain drop down that you like. from the '
+  echo 'Free Domains options. Click the button Add Hostname. You will just need your '
+  echo 'username and password to set this up.'
+  echo
+  echo 'If using the classic site, click Add Host on the left. Type in your Hostname,'
+  echo 'and choose a domain on the right from the list of No-IP Free Domains. Make '
+  echo 'sure the host type is set to DNS Host (A). For IP Address, open a new tab'
+  echo 'and go to www.whatismyip.com to get your IP and put it in this field. Leave '
+  echo 'other options at default values and click Add Host.'
+  echo
+  echo 'You will be prompted to login with your No-IP account username and password.' 
+  echo 'After logging into the DUC program, answer the questions to proceed. When asked' 
+  echo 'how often you want the update to happen you must choose 5 or more. The interval'
+  echo 'is listed in minutes, if you choose 5 the update interval will be 5 minutes.'
+  echo 'If you choose 30 the interval will be 30 minutes.'
+  sudo make install
+  sudo /usr/local/bin/noip2
+  #echo 'Confirming service is working properly...'
+  #sudo noip2 ­-S
+  #Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
+  
+  echo 'If you made a typo when putting in your password for no IP, simply'
+  echo 'type the following:'
+  echo
+  echo 'noip2 -C -c /usr/local/etc/no-ip2.conf'
+else 
+    echo 'No IP update service to be set up!'
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
 echo
 echo 'This script assumes you have a hostname, and it is required for'
 echo 'encrypted server connections to protect private conversations'
 echo 'and also to mask your Public IP address when connecting to the'
 echo 'server.'
 echo
-echo 'If you have a hostname please enter it now.'
-echo 'Make sure this is correct before hitting enter as you will not'
-echo 'have a chance to re-enter it. If you do not enter it correctly,'
-echo 'users will not be able to connect to hosted sessions with the'
-echo 'server using encryption by SSL.'
+echo 'Make sure this is correctly typed both times before proceeding'
+echo 'with the script. If you do not enter it correctly, users will'
+echo 'not be able to connect to hosted sessions with the server using'
+echo 'encryption by SSL.'
 echo
 echo 'For example:'
 echo 'example.hostwebsite.com'
 echo
-echo 'If you do not have one, simply leave it blank and hit enter.'
-echo 'However, it is highly recommended to have one, they are free'
-echo 'after all!'
+echo 'If you do not have one, simply leave it blank and hit enter'
+echo 'twice. However, it is highly recommended to have one, they'
+echo 'are free after all!'
 echo
 echo 'Note: If you do make a mistake, you can always run'
 echo 'Option \"4 - Change all startup options.\" via the script'
 echo 'drawpile-server.sh later on.'
 echo
-read hostname
+echo 'If you have a hostname please enter it now.'
 echo
-if [ \"\$hostname\" != \"\" ]; then
-  echo \"Your hostname is \$hostname\"
-  echo
-  echo 'This will be used to display in the session listing instead of your'
-  echo 'public IP address.'
-else [ \"\$hostname\" == \"\" ]
-  echo \"No hostname being used.\"
-fi
+read -p \"Enter hostname: \" hostname1
+read -p \"Enter hostname again: \" hostname2
+while [[ \$hostname1 != \$hostname2 ]]
+do
+	echo
+        echo \"Hostnames entered do not match!\"
+	echo
+        read -p \"Enter hostname: \" hostname1
+        read -p \"Enter hostname again: \" hostname2
+done
+#
+hostname=\$hostname1
+echo
+echo \"Your hostname is: \$hostname\"
+echo
+echo 'This will be used to display in the session listing instead of your'
+echo 'public IP address.'
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -1761,6 +1956,8 @@ echo '3 - Switch startup type to socket activation or on boot up.'
 echo '4 - Update Drawpile Server to newest version.'
 echo '5 - NGINX Login Change for Remote Server Administration.'
 echo '6 - Change all startup options.'
+echo '7 - Verify server management scripts are up to date.'
+echo '8 - Do nothing and close script.'
 
 echo
 read xyx
@@ -1775,8 +1972,55 @@ elif [ \"\$xyx\" == \"4\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-update.sh\"
 elif [ \"\$xyx\" == \"5\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh\"
-else [ \"\$xyx\" == \"6\" ]
+elif [ \"\$xyx\" == \"6\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh\"
+elif [ \"\$xyx\" == \"7\" ]; then
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+  echo
+  echo \"Script Version $drawpilescriptversion\"
+  \$drawpilescriptversion=$drawpilescriptversion
+  \$scriptname2=$scriptname2
+  cd \"$dpinstallloc/Programs\"
+  
+  git clone https://github.com/Wade821/PiDrawpile.git
+  echo
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+  echo
+  dpcheckversion=\$(grep \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
+  
+  if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
+	echo \"Newest Script is using version \$dpcheckversion.\"
+	echo \"Newer version of script available, terminating script.\"
+	cd \"$dpinstallloc\"
+	sudo rm -rf \"$dpinstallloc/$scriptname2\"
+	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$scriptname2\"
+	sudo chmod 777 \"$dpinstallloc/$scriptname2\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	echo \"Please run new script.\"
+	echo
+	sleep 30s
+	exit
+  elif [[ \"\$drawpilescriptversion\" = \"\$dpcheckversion\" ]]; then
+	echo \"Script is newest version available.\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+  else
+	echo \"It appears the creator of the script has failed to update github with the newest version.\"
+	echo \"Please contact him to update the script there by emailing him at wadeschlueter@gmail.com\"
+	echo
+	echo \"Script in use: $drawpilescriptversion\"
+	echo \"Github Script: \$dpcheckversion\"
+	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	sleep 30s
+  fi
+  echo
+  echo '--------------------------------------------------------------------------------'
+  echo '--------------------------------------------------------------------------------'
+else
+  echo \"Doing nothing and exiting script.\"
+  sleep 10s
+  exit
 fi
 
 read -p 'Press [Enter] key to continue...'
@@ -1824,195 +2068,5 @@ echo
 #
 #
 # - End of Script. -
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# Usage: drawpile-srv [options]
-# Standalone server for Drawpile
-# 
-# Options:
-#   -h, --help                               Displays this help.
-#   -v, --version                            Displays version information.
-#   --verbose, -V                            Verbose mode
-#   --port, -p <port>                        Listening port
-#   --listen, -l <address>                   Listening address
-#   --history-limit <size (Mb)>              Limit history size
-#   --record, -r <filename>                  Record session
-#   --split-recording                        Start a new recording at every
-#                                            snapshot
-#   --host-password <password>               Host password
-#   --sessions <count>                       Maximum number of sessions
-#   --persistent, -P                         Enable persistent sessions
-#   --expire <expiration>                    Idle session expiration time
-#   --title, -t <title>                      Set server title
-#   --welcome-message <message>              Set welcome message
-#   --ssl-cert <certificate>                 SSL certificate file
-#   --ssl-key <key>                          SSL key file
-#   --secure, -S                             Mandatory SSL mode
-#   --hibernation <directory>                Enable session hibernation
-#   --hibernate-all                          Hibernate even non-persistent
-#                                            sessions
-#   --auto-hibernate                         Hibernate sessions on expiration
-#   --web-admin-port <port>                  Web admin interface port
-#   --web-admin-app <root>                   Web admin app root path
-#   --web-admin-auth <user:password>         Web admin username & password
-#   --web-admin-access <address/subnet|all>  Set web admin access mask
-#   --userfile <path>                        Use user/password file
-#   --no-guests                              Users must authenticate to log in
-#   --timeout <seconds>                      Connection timeout
-#   --announce-whitelist <filename>          Session announcement server
-#                                            whitelist
-#   --announce-local-addr <address>          Local address for session
-#                                            announcement
-#   --banlist <filename>                     IP banlist
-#   --private-userlist                       Never include user lists in
-#                                            announcements
-#   --config, -c <filename>                  Load configuration file
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# drawpile-srv man
-# 
-# OPTIONS
-#        --help, -h
-#               show help text
-# 
-#        --version, -v
-#               prints program version number
-# 
-#        --verbose, -V
-#               print extra debugging information
-# 
-#        --port, -p port
-#               listen on the specified port instead of the default.
-# 
-#        --listen, -l address
-#               bind to the specified address. If no listening address is speci‐
-#               fied, drawpile-srv will listen on all addresses.
-# 
-#        --history-limit size
-#               limit session history to given size (in megabytes.) Once size is
-#               exceeded,  the  session history will be replaced with a snapshot
-#               of the current canvas contents. Note:  to  avoid  resetting  the
-#               history  too  often, the size should be at least bigger than the
-#               typical image when saved as a PNG image.
-# 
-#        --record, -r filename pattern
-#               record sessions to files. Placeholders in the  filename  pattern
-#               will be expanded to generate the actual filename. If a directory
-#               is given, a default filename pattern will be  used.  The  place‐
-#               holders %d (date), %t (time) and %i (session ID) are supported.
-# 
-#        --split-recording
-#               start  a  new  recording  at  every snapshot. Usually, a history
-#               limit should be set too.
-# 
-#        --host-password password
-#               set the session hosting password. If set, this password must  be
-#               entered to host a session.
-# 
-#        --sessions count
-#               set  session  limit. This is the maximum number of sessions that
-#               can be active at the same time.
-# 
-#        --title, -t title
-#               set server title. The title is shown  in  the  session  selector
-#               dialog.  Linebreaks  are  supported and URLs will be turned into
-#               clickable links.
-# 
-#        --welcome-message message
-#               set a welcome (chat) message that is sent to users joining  ses‐
-#               sions on this server.
-# 
-#        --persistent, -P
-#               enable  persistent  sessions.  Non-persistent  sessions  will be
-#               deleted immediately when the last user leaves.
-# 
-#        --expire time
-#               expire vacant sessions after the given time. Time can  be  given
-#               in seconds (3600), minutes (60m), hours (1h) or days (0.04d)
-# 
-#        --ssl-cert cert.pem
-#               select SSL certificate file.
-# 
-#        --ssl-key key.pem
-#               select  SSL  private  key  file. This must be used together with
-#               --secure --ssl-cert to enable SSL support.
-# 
-#        --secure, -S
-#               strict security mode. When this flag is set,  clients  must  use
-#               SSL to log in.
-# 
-#        --hibernation directory
-#               enable session hibernation. Persistent sessions will be saved to
-#               the given directory when the server is shut down.  A  hibernated
-#               session  will  be  restored  on demand when a user tries to join
-#               one.
-# 
-#        --hibernate-all
-#               hibernate even non-persistent sessions  on  exit.  A  hibernated
-#               session  behaves  like a persistent session until it is woken up
-#               again.
-# 
-#        --auto-hibernate
-#               hibernate persistent sessions upon expiration instead of  delet‐
-#               ing them. Use together with --expire
-# 
-#        --web-admin-port port
-#               enable  the  web  admin API. The HTTP server will listen on this
-#               port.
-# 
-#        --web-admin-app path
-#               the directory to server under the path "/app/". This can be used
-#               to serve a browser admin interface.
-#        --web-admin-auth user:password
-#               enable basic auth for the API using the given username and pass‐
-#               word
-# 
-#        --web-admin-access address/subnet
-#               set access controls for the web admin interface. A  subnet  mask
-#               (e.g.  192.168.1.1/24)  or  the special value "all" can be used.
-#               By default, access is only permitted from localhost.
-# 
-#        --userfile path
-#               set the user credential file to use. If set, users listed in the
-#               file must authenticate to log in.
-# 
-#        --announce-whitelist path
-#               set  the  session  announcement  server whitelist to use. If not
-#               set, all server URLs are allowed. The file is a text  file  with
-#               one  regular  expression  that  matches  an  URL per line. Lines
-#               beginning with '#' are comments.
-# 
-#        --announce-local-addr address
-#               set the address of this server to use when announcing sessions.
-# 
-#        --banlist path
-#               set the IP ban list file. The is a text file with one IP address
-#               per  line. Lines beginning with '#' are comments.  A subnet mask
-#               (e.g. "192.168.1.1/24") can be included.
-# 
-#        --no-guests
-#               all users must authenticate to log in. A userfile must have been
-#               set.
-# 
-#        --config, -c filename
-#               load  configuration  file. All parameters can also be set in the
-#               configuration file.  Parameters set on the command line override
-#               those in the file.
-# 
-# SOCKET ACTIVATION
-#        Drawpile-srv  supports  systemd  socket  activation. When the server is
-#        started by systemd and a socket is  passed,  the  parameters  --listen,
-#        --port  and --web-admin-port are ignored. The listening address must be
-#        configured in  drawpile-srv.socket  unit  file.   If  two  sockets  are
-#        passed, the second one will be used for the web admin API.
-# 
-# AUTHOR
-#        Written by Calle Laakkonen <laakkonenc@gmail.com>.
-# 
-# COPYRIGHT
-#        Copyright © 2013-2014 Calle Laakkonen <laakkonenc@gmail.com>
-#        This  is Free Software; this software is licensed under the GPL version
-#        3, as published by the Free Software Foundation.  There is NO warranty;
-#        not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# 
-# drawpile-srv                         2014                      DRAWPILE-SRV(1)
+#
+#
