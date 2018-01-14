@@ -77,7 +77,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-dpcheckversion=$(grep "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
+dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
 
 if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 	echo "Newest Script is using version $dpcheckversion."
@@ -1988,7 +1988,7 @@ elif [ \"\$xyx\" == \"7\" ]; then
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
   echo
-  dpcheckversion=\$(grep \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
+  dpcheckversion=\$(grep -m 1 \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
   
   if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
 	echo \"Newest Script is using version \$dpcheckversion.\"

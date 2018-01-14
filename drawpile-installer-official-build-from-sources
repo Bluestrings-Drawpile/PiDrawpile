@@ -27,7 +27,7 @@ echo 'server survive crashes or power outages, or template files which help'
 echo 'create rooms with specific settings that exist on the server at all'
 echo 'times.'
 echo
-echo '1 - Public Folder (Recommended)	- /home/pi/Public'
+echo '1 - Public Folder (Recommended)		- /home/pi/Public'
 echo '2 - Desktop Folder				- /home/pi/Desktop'
 echo '3 - Documents Folder				- /home/pi/Documents'
 echo '4 - Pictures Folder				- /home/pi/Pictures'
@@ -75,7 +75,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-dpcheckversion=$(grep "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
+dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
 
 if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 	echo "Newest Script is using version $dpcheckversion."
@@ -1988,7 +1988,7 @@ elif [ \"\$xyx\" == \"7\" ]; then
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
   echo
-  dpcheckversion=\$(grep \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
+  dpcheckversion=\$(grep -m 1 \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
   
   if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
 	echo \"Newest Script is using version \$dpcheckversion.\"
