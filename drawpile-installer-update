@@ -1,6 +1,7 @@
 #!/bin/bash
-drawpilescriptversion=2.77
+drawpilescriptversion=2.78
 scriptname=drawpile-installer-update
+scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
@@ -67,6 +68,11 @@ sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
 sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
 sudo git clone https://github.com/Wade821/PiDrawpile.git
+cd PiDrawpile
+sudo chmod 777 "$dpinstallloc/Programs/PiDrawpile/scripts-for-other-scripts-only/$scriptmgmtupdate"
+cd "$dpinstallloc/Programs/PiDrawpile/scripts-for-other-scripts-only"
+. ./$scriptmgmtupdate
+cd "$dpinstallloc/Programs"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'

@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.77
+drawpilescriptversion=2.78
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
@@ -944,38 +944,43 @@ elif [ \"\$xyx\" == \"7\" ]; then
   \$drawpilescriptversion=$drawpilescriptversion
   \$scriptname2=$scriptname2
   cd \"$dpinstallloc/Programs\"
-  
+  sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
   sudo git clone https://github.com/Wade821/PiDrawpile.git
   echo
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
   echo
   dpcheckversion=\$(grep -m 1 \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
+  currentscriptname=\"\$(basename \"\$(test -L \"$0\" && readlink \"$0\" || echo \"\$0\")\")\"
   
-  if [[ \"\$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
+  if [[ \"$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
 	echo \"Newest Script is using version \$dpcheckversion.\"
 	echo \"Newer version of script available, the old script has been copied over\"
 	echo \"the old script. Please re-run this script to use newest version.\"
 	cd \"$dpinstallloc\"
-	sudo rm -rf \"$dpinstallloc/$scriptname2\"
-	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$scriptname2\"
-	sudo chmod 777 \"$dpinstallloc/$scriptname2\"
+	sudo rm -rf \"$dpinstallloc/$currentscriptname\"
+	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$currentscriptname\"
+	sudo chmod 777 \"$dpinstallloc/$currentscriptname\"
 	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
 	echo \"Terminating script in 30 seconds.\"
 	echo
 	sleep 30s
 	exit
-  elif [[ \"\$drawpilescriptversion\" = \"\$dpcheckversion\" ]]; then
+  elif [[ \"$drawpilescriptversion\" = \"\$dpcheckversion\" ]]; then
 	echo \"Script is newest version available.\"
 	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
-  else
+  elif [[ \"$drawpilescriptversion\" > \"\$dpcheckversion\" ]]; then
 	echo \"It appears the creator of the script has failed to update github with the newest version.\"
 	echo \"Please contact him to update the script there by emailing him at wadeschlueter@gmail.com\"
 	echo
 	echo \"Script in use: $drawpilescriptversion\"
 	echo \"Github Script: \$dpcheckversion\"
+	echo
+	echo \"Pausing script for 30 seconds before continuing.\"
 	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
 	sleep 30s
+else
+	echo \"Unable to determine script version, proceeding with script.\"
   fi
   echo
   echo '--------------------------------------------------------------------------------'
