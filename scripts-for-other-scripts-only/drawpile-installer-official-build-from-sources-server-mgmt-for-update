@@ -1,6 +1,9 @@
 #!/bin/bash
+echo
 echo "This script is not meant to be run directly by any user, but only"
-echo "the drawpile-installer-update script."
+echo "the drawpile-installer-update script. If it states above this"
+echo "message something about unpacking objects, then this script is"
+echo "working as intended."
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
