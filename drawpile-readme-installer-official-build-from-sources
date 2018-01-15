@@ -1,0 +1,132 @@
+This document refers to the information available from the program once it is compiled, using both the direct help option
+in bash (drawpile-srv --help) and the manual (man drawpile-srv). This is so if the end user wants to edit the script I've 
+made any further, the information is readily available to do so. Any other information needed should be available at
+the following website:
+
+https://github.com/drawpile/Drawpile/wiki/Building-from-sources
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version Information
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+drawpile-srv 2.0.5
+Protocol version: 20.1
+Qt version: 5.7.1 (compiled against 5.7.1)
+SSL library version: OpenSSL 1.0.2l  25 May 2017 (268443855)
+
+---------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------
+Usage: drawpile-srv [options]
+Standalone server for Drawpile
+
+Options:
+  -h, --help                               Displays this help.
+  -v, --version                            Displays version information.
+  --gui                                    Run the graphical version.
+  --port, -p <port>                        Listening port
+  --listen, -l <address>                   Listening address
+  --local-host <hostname>                  This server's hostname for session
+                                           announcement
+  --announce-port <port>                   Port number to announce (set if
+                                           forwarding from different port)
+  --ssl-cert <certificate>                 SSL certificate file
+  --ssl-key <key>                          SSL key file
+  --secure, -S                             Mandatory SSL mode
+  --record <path>                          Record sessions
+  --web-admin-port <port>                  Web admin interface port
+  --web-admin-auth <user:password>         Web admin username & password
+  --web-admin-access <address/subnet|all>  Set web admin access mask
+  --database, -d <filename>                Use configuration database
+  --config, -c <filename>                  Use configuration file
+  --sessions, -s <path>                    File backed sessions
+  --templates, -t <path>                   Session templates
+  --extauth <url>                          Extauth server URL
+  --report-url <url>                       Abuse report handler URL
+---------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------
+DRAWPILE-SRV(1)                 Drawpile standalone server                DRAWPILE-SRV(1)
+
+NAME
+       drawpile-srv - Drawpile server
+
+SYNOPSIS
+       drawpile-srv [OPTIONS]
+
+DESCRIPTION
+       A standalone server for Drawpile.
+
+OPTIONS
+       --help, -h
+              show help text
+
+       --version, -v
+              prints program version number
+
+       --gui  run in graphical mode (used with GUI specific command line arguments)
+
+       --port, -p port
+              listen on the specified port instead of the default.
+
+       --listen, -l address
+              bind  to the specified address. If no listening address is specified, draw‐
+              pile-srv will listen on all addresses.
+
+       --local-host hostname
+              local server hostname to use in session announcement
+
+       --record, -r filename pattern
+              record sessions to files. Placeholders in  the  filename  pattern  will  be
+              expanded  to  generate  the  actual  filename.  If  a directory is given, a
+              default filename pattern will be  used.  The  placeholders  %d  (date),  %t
+              (time) and %i (session ID) are supported.
+
+       --sessions path
+              where to store file backed sessions. If not specified, sessions are kept in
+              memory.
+
+       --ssl-cert cert.pem
+              select SSL certificate file.
+
+       --ssl-key key.pem
+              select SSL private key file. This must be used together with --secure --ssl-cert  to
+              enable SSL support.
+
+       --secure, -S
+              strict  security  mode.  When this flag is set, clients must use SSL to log
+              in.
+
+       --database path
+              the configuration database to use
+
+       --config, -c path
+              the configuration file to use. Mutually exclusive with --database.
+
+       --templates, -t path
+             where to look for session templates
+
+       --web-admin-port port
+              enable web admin API and listen on this port
+
+       --web-admin-auth username:password
+              enable HTTP BASIC Authentication on web admin API
+
+       --web-admin-access address/subnet|all
+              allow access to web admin API from hosts other than localhost
+
+SOCKET ACTIVATION
+       Drawpile-srv supports systemd socket activation. When the  server  is  started  by
+       systemd  and  a socket is passed, the parameters --listen, --port and --web-admin-
+       port are ignored. The listening address must be configured in  drawpile-srv.socket
+       unit  file.   If  two  sockets are passed, the second one will be used for the web
+       admin API.
+
+AUTHOR
+       Written by Calle Laakkonen <laakkonenc@gmail.com>.
+
+COPYRIGHT
+       Copyright © 2013-2017 Calle Laakkonen <laakkonenc@gmail.com>
+       This is Free Software; this software is licensed under the GPL version 3, as  pub‐
+       lished  by  the Free Software Foundation.  There is NO warranty; not even for MER‐
+       CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+drawpile-srv                               2017                           DRAWPILE-SRV(1)
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.76
+drawpilescriptversion=2.77
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 echo
@@ -9,12 +9,15 @@ echo 'laakkonenc@gmail.com'
 echo
 echo "Script Version $drawpilescriptversion"
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
+echo 'GitHub --> https://github.com/Wade821/PiDrawpile.git'
 echo
 echo 'Please make sure you are using the latest version of this script before'
-echo 'continuing by making sure the script number above matches the Drawpile Google'
-echo 'Document version number in the upper right of every page where this script was'
-echo 'obtained. If you do not have the newest version, close this window and'
-echo 'get the newest version before proceeding.'
+echo 'continuing. You can get the latest version from Github or by making sure'
+echo 'the script number above matches the Drawpile Google document version number'
+echo 'in the upper right of every page where this script was obtained. If you do'
+echo 'not have the newest version, this script should auoto retrieve the newest'
+echo 'version of the script. If not, close this window and get the newest'
+echo 'version before proceeding.'
 echo
 read -p 'Press [Enter] key to continue...'
 echo
@@ -78,15 +81,16 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dpinstallloc/Programs/PiDrawpile/$scriptname" | cut -c 23-26)
+currentscriptname="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 
 if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 	echo "Newest Script is using version $dpcheckversion."
 	echo "Newer version of script available, the old script has been copied over"
 	echo "the old script. Please re-run this script to use newest version."
 	cd "$dpinstallloc"
-	sudo rm -rf "$dpinstallloc/$scriptname"
-	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$scriptname"
-	sudo chmod 777 "$dpinstallloc/$scriptname"
+	sudo rm -rf "$dpinstallloc/$currentscriptname"
+	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$currentscriptname"
+	sudo chmod 777 "$dpinstallloc/$currentscriptname"
 	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
 	echo "Terminating script in 30 seconds."
 	echo
@@ -95,14 +99,18 @@ if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 elif [[ "$drawpilescriptversion" = "$dpcheckversion" ]]; then
 	echo "Script is newest version available."
 	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
-else
+elif [[ "$drawpilescriptversion" > "$dpcheckversion" ]]; then
 	echo "It appears the creator of the script has failed to update github with the newest version."
 	echo "Please contact him to update the script there by emailing him at wadeschlueter@gmail.com"
 	echo
 	echo "Script in use: $drawpilescriptversion"
 	echo "Github Script: $dpcheckversion"
+	echo
+	echo "Pausing script for 30 seconds before continuing."
 	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
 	sleep 30s
+else
+	echo "Unable to determine script version, proceeding with script."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -1357,14 +1365,17 @@ echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo 'laakkonenc@gmail.com'
 echo
-echo \"Script Version $drawpilescriptversion\"
+echo \"Script Version \$drawpilescriptversion\"
 echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
+echo 'GitHub --> https://github.com/Wade821/PiDrawpile.git'
 echo
 echo 'Please make sure you are using the latest version of this script before'
-echo 'continuing by making sure the script number above matches the Drawpile Google'
-echo 'Document version number in the upper right of every page where this script was'
-echo 'obtained. If you do not have the newest version, close this window and'
-echo 'get the newest version before proceeding.'
+echo 'continuing. You can get the latest version from Github or by making sure'
+echo 'the script number above matches the Drawpile Google document version number'
+echo 'in the upper right of every page where this script was obtained. If you do'
+echo 'not have the newest version, this script should auoto retrieve the newest'
+echo 'version of the script. If not, close this window and get the newest'
+echo 'version before proceeding.'
 echo
 read -p 'Press [Enter] key to continue...'
 echo
