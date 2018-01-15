@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.75
+drawpilescriptversion=2.76
 scriptname=drawpile-update
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
@@ -213,52 +213,29 @@ echo
 echo
 echo '*****Preparing to build drawpile . . .*****'
 echo
-echo 'Do you want to use only the Drawpile Server on the Raspberry Pi?'
+echo 'These options configure the installation of Drawpile for your device.'
+echo 'All options with the server assume systemd will be in use.'
+echo 'Recommended Options: 1, 3, or 4.'
 echo
 echo 'Enter a number and hit enter to continue.'
 echo
+echo 'Drawpile Server Only Options:'
 echo '1 for Drawpile Server Only - connect from a desktop or laptop.'
-echo '2 for Drawpile Server and Drawpile Client with Wacom'
-echo '3 for Drawpile Server and Drawpile Client'
+echo '2 for Drawpile Server Only - No GUI or graphics interface - headless'
+echo
+echo 'Drawpile Server & Client Options:'
+echo '3 - Server & Client with Wacom'
+echo '4 - Server & Client'
+echo '5 - Server & Client - dprectool and debugging version'
+echo
+echo 'Drawpile Client Only Options:'
+echo '6 for Drawpile Client Only with Wacom'
+echo '7 for Drawpile Client Only'
 echo
 read x
 echo
-if [ "$x" == "2" ]; then
-  cmake .. -DINITSYS=systemd
-  sudo apt-get -q -y install libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
-  echo
-  xsetwacom --list devices
-  echo
-  xsetwacom --list parameters
-  echo
-  echo 'Use the following in the terminal more information.'
-  echo 'man wacom'
-  echo
-  echo 'You can set the tablet from absolute positioning to relative via this command.'
-  echo 'xsetwacom set stylus mode relative'
-  echo
-  echo 'You may have to replace stylus with the ID listed for the device, which you'
-  echo 'can find by typing the following: xwacom --list devices'
-  echo 'Additionally, you may use the full name of the device in single quotes as well'
-  echo 'To represent the device. For example, the following could be used . . .'
-  echo 'Wacom Intuos3 6x8 Pen stylus'
-  echo
-  echo 'There does not appear to be any working graphical based configuration program'
-  echo 'for the wacom tablet that I have been able to find as of yet.'
-  echo
-  echo 'Read more on configuring your Wacom Tablet here --> http://tinyurl.com/blhyk7m'
-  echo 'write the following command in the terminal to read more on Wacom Configuration:'
-  echo 'man wacom'
-  echo
-elif [ "$x" == "3" ]; then
-  cmake .. -DINITSYS=systemd
-else
-  cmake .. -DINITSYS=systemd -DCLIENT=OFF
-fi
-
 echo
-#
-echo '*****Building drawpile now . . .*****'
+echo '*****Building drawpile soon . . .*****'
 echo
 tMax=$(grep -c ^processor /proc/cpuinfo)
 
@@ -292,14 +269,107 @@ while [ true ] ; do
     read -p "Enter compiling thread count (blank for maximum of $tMax): " threadCount
 	echo
 done
+echo
+echo
+if [ "$x" == "2" ]; then
+  cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off
+elif [ "$x" == "3" ]; then
+  cmake .. -DINITSYS=systemd
+  sudo apt-get -q -y install libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
+  echo
+  xsetwacom --list devices
+  echo
+  xsetwacom --list parameters
+  echo
+  echo 'Use the following in the terminal more information.'
+  echo 'man wacom'
+  echo
+  echo 'You can set the tablet from absolute positioning to relative via this command.'
+  echo 'xsetwacom set stylus mode relative'
+  echo
+  echo 'You may have to replace stylus with the ID listed for the device, which you'
+  echo 'can find by typing the following: xwacom --list devices'
+  echo 'Additionally, you may use the full name of the device in single quotes as well'
+  echo 'To represent the device. For example, the following could be used . . .'
+  echo 'Wacom Intuos3 6x8 Pen stylus'
+  echo
+  echo 'There does not appear to be any working graphical based configuration program'
+  echo 'for the wacom tablet that I have been able to find as of yet.'
+  echo
+  echo 'Read more on configuring your Wacom Tablet here --> http://tinyurl.com/blhyk7m'
+  echo 'write the following command in the terminal to read more on Wacom Configuration:'
+  echo 'man wacom'
+  echo
+elif [ "$x" == "4" ]; then
+  cmake .. -DINITSYS=systemd
+elif [ "$x" == "5" ]; then
+  cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug
+elif [ "$x" == "6" ]; then
+  cmake .. -DSERVER=off
+  sudo apt-get -q -y install libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
+  echo
+  xsetwacom --list devices
+  echo
+  xsetwacom --list parameters
+  echo
+  echo 'Use the following in the terminal more information.'
+  echo 'man wacom'
+  echo
+  echo 'You can set the tablet from absolute positioning to relative via this command.'
+  echo 'xsetwacom set stylus mode relative'
+  echo
+  echo 'You may have to replace stylus with the ID listed for the device, which you'
+  echo 'can find by typing the following: xwacom --list devices'
+  echo 'Additionally, you may use the full name of the device in single quotes as well'
+  echo 'To represent the device. For example, the following could be used . . .'
+  echo 'Wacom Intuos3 6x8 Pen stylus'
+  echo
+  echo 'There does not appear to be any working graphical based configuration program'
+  echo 'for the wacom tablet that I have been able to find as of yet.'
+  echo
+  echo 'Read more on configuring your Wacom Tablet here --> http://tinyurl.com/blhyk7m'
+  echo 'write the following command in the terminal to read more on Wacom Configuration:'
+  echo 'man wacom'
+  echo
+  echo
+  echo "Compiling with $threadCount threads."
+  echo
+  sudo make -j $threadCount
+  echo
+  echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
+  sudo make install
+  #Location of created executable --> /usr/local/bin/
+  echo
+  echo "Compiling complete, exiting script since no further config is required."
+  echo
+  sleep 30s
+  exit
+elif [ "$x" == "7" ]; then
+  cmake .. -DSERVER=off
+  echo
+  echo "Compiling with $threadCount threads."
+  echo
+  sudo make -j $threadCount
+  echo
+  echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
+  sudo make install
+  #Location of created executable --> /usr/local/bin/
+  echo
+  echo "Compiling complete, exiting script since no further config is required."
+  echo
+  sleep 30s
+  exit
+else
+  cmake .. -DINITSYS=systemd -DCLIENT=OFF
+fi
+
+echo
 echo "Compiling with $threadCount threads."
 echo
 sudo make -j $threadCount
 echo
 echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
-echo
 sudo make install
-#
 #Location of created executable --> /usr/local/bin/
 echo
 echo '--------------------------------------------------------------------------------'
