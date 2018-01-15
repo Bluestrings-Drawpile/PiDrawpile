@@ -898,4 +898,4 @@ sudo chmod 777 "$dpinstallloc/drawpile-server.sh"
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
-sudo rm -f "$dpinstallloc/$scriptname2"
+sudo rm -f "$dpinstallloc/Programs/PiDrwapile/scripts-for-other-scripts-only/$scriptname2"
