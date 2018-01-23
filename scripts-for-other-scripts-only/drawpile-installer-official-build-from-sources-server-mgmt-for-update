@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.79
+drawpilescriptversion=2.80
 echo
 echo "This script is not meant to be run directly by any user, but only"
 echo "the drawpile-installer-update script. If it states above this"
@@ -361,7 +361,7 @@ echo 'not be able to connect to hosted sessions with the server using'
 echo 'encryption by SSL.'
 echo
 echo \"\${bold}For example:\${normal}\"
-echo \"\${underline}example.hostwebsite.com \${underline}\"
+echo \"\${underline}example.hostwebsite.com \${normal}\"
 echo
 echo 'If you do not have one, simply leave it blank and hit enter'
 echo 'twice. However, it is highly recommended to have one, they'
