@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.79
+drawpilescriptversion=2.80
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 bold=$(tput bold)
@@ -407,7 +407,7 @@ echo
 echo "--------------------------------------------------------------------------------"
 echo "--------------------------------------------------------------------------------"
 echo
-echo "${bold}*****Building Drawpile . . .*****${normal}"
+echo "${bold}*****Preparing to Build Drawpile . . .*****${normal}"
 echo
 cd "$dpinstallloc/Programs/Drawpile"
 mkdir -p -v build
@@ -463,7 +463,7 @@ echo
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 echo
-echo "${bold}*****Preparing to Build Drawpile . . .*****${normal}"
+echo "${bold}*****Drawpile Build Configuration . . .*****${normal}"
 echo
 echo 'These options configure the installation of Drawpile for your device.'
 echo 'All options with the server assume systemd will be in use.'
@@ -487,7 +487,7 @@ echo
 read x
 echo
 echo
-echo "${bold}*****Building Drawpile soon . . *****${normal}"
+echo "${bold}*****Determine Compile Speed . . .*****${normal}"
 echo
 tMax=$(grep -c ^processor /proc/cpuinfo)
 
@@ -643,7 +643,7 @@ echo 'not be able to connect to hosted sessions with the server using'
 echo 'encryption by SSL.'
 echo
 echo "${bold}For example:${normal}"
-echo "${underline}example.hostwebsite.com ${underline}"
+echo "${underline}example.hostwebsite.com ${normal}"
 echo
 echo 'If you do not have one, simply leave it blank and hit enter'
 echo 'twice. However, it is highly recommended to have one, they'
@@ -1598,7 +1598,7 @@ echo 'not be able to connect to hosted sessions with the server using'
 echo 'encryption by SSL.'
 echo
 echo \"\${bold}For example:\${normal}\"
-echo \"\${underline}example.hostwebsite.com \${underline}\"
+echo \"\${underline}example.hostwebsite.com \${normal}\"
 echo
 echo 'If you do not have one, simply leave it blank and hit enter'
 echo 'twice. However, it is highly recommended to have one, they'
@@ -2203,14 +2203,6 @@ sudo chmod 777 "$dpinstallloc/drawpile-server.sh"
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo "${bold}*****Drawpile Server Installation and Setup Complete . . .*****${normal}"
-echo
-echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
-echo 'you want to donate some money as thanks for all that he does!'
-echo "${underline}laakkonenc@gmail.com${normal}"
-echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
@@ -2228,6 +2220,12 @@ systemctl status drawpile-srv.service --no-pager
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+echo "${bold}*****Drawpile Server Installation and Setup Complete . . .*****${normal}"
+echo
+echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
+echo 'you want to donate some money as thanks for all that he does!'
+echo "${underline}laakkonenc@gmail.com${normal}"
 echo
 read -p 'Press [Enter] key to close window...'
 echo
