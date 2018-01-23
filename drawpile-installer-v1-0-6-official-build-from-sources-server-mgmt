@@ -1,7 +1,8 @@
 #!/bin/bash
-drawpilescriptversion=2.80
+drawpilescriptversion=2.81
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bold=$(tput bold)
 underline=$(tput smul)
 red=$(tput setaf 1)
@@ -99,9 +100,9 @@ if [[ "$drawpilescriptversion" < "$dpcheckversion" ]]; then
 	echo "Newer version of script available, the old script has been copied over"
 	echo "the old script. Please re-run this script to use newest version."
 	cd "$dpinstallloc"
-	sudo rm -rf "$dpinstallloc/$currentscriptname"
-	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$dpinstallloc/$currentscriptname"
-	sudo chmod 777 "$dpinstallloc/$currentscriptname"
+	sudo rm -rf "$SCRIPTDIR/$currentscriptname"
+	sudo cp "$dpinstallloc/Programs/PiDrawpile/$scriptname" "$SCRIPTDIR/$currentscriptname"
+	sudo chmod 777 "$SCRIPTDIR/$currentscriptname"
 	sudo rm -rf "$dpinstallloc/Programs/PiDrawpile/"
 	echo "Terminating script in 30 seconds."
 	echo
