@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.80
+drawpilescriptversion=2.81
 echo
 echo "This script is not meant to be run directly by any user, but only"
 echo "the drawpile-installer-update script. If it states above this"
