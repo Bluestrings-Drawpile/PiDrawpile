@@ -1,14 +1,28 @@
 #!/bin/bash
-drawpilescriptversion=2.78
+drawpilescriptversion=2.79
+scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
+bold=$(tput bold)
+underline=$(tput smul)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+blue=$(tput setaf 4)
+magenta=$(tput setaf 5)
+cyan=$(tput setaf 6)
+normal=$(tput sgr0)
+#
+# Text Formatting - Yellow looks orange unless used in bold mode.
+# https://stackoverflow.com/questions/2924697/how-does-one-output-bold-text-in-bash
+# http://linuxcommand.org/lc3_adv_tput.php
 echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
-echo 'laakkonenc@gmail.com'
+echo "${underline}laakkonenc@gmail.com${normal}"
 echo
-echo "Script Version $drawpilescriptversion"
-echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
-echo 'GitHub --> https://github.com/Wade821/PiDrawpile.git'
+echo "Script Version ${bold}$drawpilescriptversion${normal}"
+echo "'Google Doc --> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
+echo "GitHub --> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
 echo
 echo 'Please make sure you are using the latest version of this script before'
 echo 'continuing. You can get the latest version from Github or by making sure'
@@ -23,13 +37,13 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Pick the installed location of the Programs folder.'
+echo 'Pick an install location for the use of the Drawpile Server folders.'
+echo 'This includes session recordings, file backed sessions which help the'
+echo 'server survive crashes or power outages, or template files which help'
+echo 'create rooms with specific settings that exist on the server at all'
+echo 'times.'
 echo
-echo 'As a reminder, this is the location your Programs folder is located'
-echo 'within, which contains Drawpile and is also the location where your'
-echo 'scripts for managing the server are located.'
-echo
-echo '1 - Public Folder					- /home/pi/Public'
+echo "1 - Public Folder ${underline}(Recommended)${normal}			- /home/pi/Public"
 echo '2 - Desktop Folder				- /home/pi/Desktop'
 echo '3 - Documents Folder				- /home/pi/Documents'
 echo '4 - Pictures Folder				- /home/pi/Pictures'
@@ -37,7 +51,12 @@ echo '  - Other, simply enter the exact location desired without a / at the end.
 echo '    This is an advanced option and not suggested for average users.'
 echo '    If using a path with spaces, do NOT use double or single quotes as'
 echo '        the script will not work if you do.'
-echo '    Acceptable Example: /home/pi/Desktop/My Drawpile Server'
+echo "    ${underline}Acceptable Example:${normal} /home/pi/Desktop/My Drawpile Server"
+echo
+echo "${bold}Note:${normal} If you use Windows and Share files across the network, this script"
+echo 'will give you the option later to share just the Public folder, or'
+echo 'the Music, Pictures, Public, and Videos folders, or the other location'
+echo 'personally specified, or no folders.'
 echo
 echo 'Please make your selection now by entering the number or folder path:'
 echo 
@@ -57,6 +76,7 @@ elif [ "$dpinstallloc" == "4" ]; then
   echo "Install location chosen is $dpinstallloc"
 else
   echo "Install location chosen is $dpinstallloc"
+  sudo mkdir -p -v "$dpinstallloc"
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -117,7 +137,16 @@ sudo mkdir -p -v "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/"
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/" -R
 
 echo "#!/bin/bash
-echo '*****Administer Server Settings with Socket Activation in use . . .*****'
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
+echo \"\${bold}*****Administer Server Settings with Socket Activation in use . . .*****\${normal}\"
 echo 
 sudo systemctl stop --now drawpile-srv.socket
 sudo systemctl stop --now drawpile-srv.service
@@ -135,7 +164,16 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-d
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
-echo '*****Run drawpile-srv.service. . .*****'
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
+echo \"\${bold}*****Run drawpile-srv.service. . .*****\${normal}\"
 echo
 sudo systemctl stop --now drawpile-srv.service
 sudo systemctl start --now drawpile-srv.service
@@ -152,16 +190,27 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpil
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
-echo '*****Change Start up type on Drawpile Server . . .*****'
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
+echo \"\${bold}*****Change Start up type on Drawpile Server . . .*****\$\{normal}\"
 echo
 echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
 echo
-echo '1 - Socket Activation'
-echo '    Administration of server means no users or sessions can be in use,'
-echo '    until drawpile-srv supports socket activation on web administration.'
+echo \"\${bold}\${cyan}1 - Socket Activation\${normal}\"
 echo '    This setting is less resource intensive on the Raspberry Pi, as the'
 echo '    drawpile server is only running when a user is connected.'
-echo '2 - Server starts on Raspberry Pi power up.'
+echo '    Administration of the server means no users or sessions can be in'
+echo '    use as using the supplied script to manage the server is necessary,'
+echo '    since Drawpile does not have systemd socket activation for web'
+echo '    administration implemented.'
+echo \"\${bold}\${cyan}2 - Server starts on Raspberry Pi power up - Recommended\${normal}\"
 echo '    Easier to administrate the server but runs all the time in the'
 echo '    background.'
 echo
@@ -191,7 +240,17 @@ fi " > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startu
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startup-switch.sh"
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-echo "echo 'Update Login Info NGINX for Server Administration.'
+echo "#!/bin/bash
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
+echo \"\${bold}Update Login Info NGINX for Server Administration.\${normal}\"
 echo
 echo 'Please type in a username you wish to use for making changes to your drawpile'
 echo 'server. If you make a mistake or need to update the server login, open a new'
@@ -237,14 +296,24 @@ sudo /etc/init.d/nginx restart" > "$dpinstallloc/Programs/Drawpile-Srv-Files/ser
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh"
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-echo "echo
+echo "#!/bin/bash
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
+echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
-echo 'laakkonenc@gmail.com'
+echo \"\${underline}laakkonenc@gmail.com\${normal}\"
 echo
-echo \"Script Version \$drawpilescriptversion\"
-echo 'Google Doc --> http://tinyurl.com/jx5oe4h'
-echo 'GitHub --> https://github.com/Wade821/PiDrawpile.git'
+echo \"Script Version \${bold}$drawpilescriptversion\${normal}\"
+echo \"'Google Doc --> \${underline}http://tinyurl.com/jx5oe4h \${normal}\"
+echo \"GitHub --> \${underline}https://github.com/Wade821/PiDrawpile.git \${normal}\"
 echo
 echo 'Please make sure you are using the latest version of this script before'
 echo 'continuing. You can get the latest version from Github or by making sure'
@@ -259,7 +328,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Pick the installed location of the Programs folder.'
+echo \"\${bold}Pick the installed location of the Programs folder.\${normal}\"
 echo
 echo 'As a reminder, this was the location you initially downloaded'
 echo 'Drawpile to and is also the location where your scripts for managing'
@@ -273,9 +342,9 @@ echo '  - Other, simply enter the exact location desired without a / at the end.
 echo '    This is an advanced option and not suggested for average users.'
 echo '    If using a path with spaces, do NOT use double or single quotes as'
 echo '        the script will not work if you do.'
-echo '    Acceptable Example: /home/pi/Desktop/My Drawpile Server'
+echo \"    ${underline}Acceptable Example:${normal} /home/pi/Desktop/My Drawpile Server\"
 echo
-echo 'Note: If you use Windows and Share files across the network, this script'
+echo \"\${bold}Note:\${normal} If you use Windows and Share files across the network, this script\"
 echo 'will give you the option later to share just the Public folder, or'
 echo 'the Music, Pictures, Public, and Videos folders, or the other location'
 echo 'personally specified, or no folders.'
@@ -307,15 +376,15 @@ sudo mkdir -p -v Programs
 echo
 echo 'This stage is for setting up an easy to remember way to connect to your server.'
 echo 
-echo 'https://freedns.afraid.org/'
-echo 'Pros: Free registration, no need to renew use of the hostname.'
-echo 'Cons: Minor additional setup with script guided help required, guided setup.'
+echo \"\${underline}https://freedns.afraid.org/ \${normal}\"
+echo \"\${bold}Pros:\${normal} Free registration, no need to renew use of the hostname.\"
+echo \"\${bold}Cons:\${normal} Minor additional setup with script guided help required, guided setup.\"
 echo '      If a typo is made, you must use crontab -e to update the code manually.'
 echo 
-echo 'https://www.noip.com/'
-echo 'Pros: Free registration, simple setup, only slightly less complex than above'
+echo \"\${underline}https://www.noip.com/ \${normal}\"
+echo \"\${bold}Pros:\${normal} Free registration, simple setup, only slightly less complex than above\"
 echo '      option listed above.'
-echo 'Cons: Must renew the hostname via notification received in email every 30 days'
+echo \"\${bold}Cons:\${normal} Must renew the hostname via notification received in email every 30 \"
 echo '      or lose access. Might not be able to get the same name back.'
 echo
 echo 'Do you want to use freeDNS.afraid.org or No-IP?'
@@ -410,15 +479,15 @@ echo 'with the script. If you do not enter it correctly, users will'
 echo 'not be able to connect to hosted sessions with the server using'
 echo 'encryption by SSL.'
 echo
-echo 'For example:'
-echo 'example.hostwebsite.com'
+echo \"\${bold}For example:\${normal}\"
+echo \"\${underline}example.hostwebsite.com \${underline}\"
 echo
 echo 'If you do not have one, simply leave it blank and hit enter'
 echo 'twice. However, it is highly recommended to have one, they'
 echo 'are free after all!'
 echo
-echo 'Note: If you do make a mistake, you can always run'
-echo 'Option \"4 - Change all startup options.\" via the script'
+echo \"\${bold}Note:\${normal} If you do make a mistake, you can always run\"
+echo \"Option \${underline}6 - Change all startup options.\${normal} via the script\"
 echo 'drawpile-server.sh later on.'
 echo
 echo 'If you have a hostname please enter it now.'
@@ -444,7 +513,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo '***** Setting up SSL Certificate Creation . . . *****'
+echo \"\${bold}***** Setting up SSL Certificate Creation . . . *****\${normal}\"
 echo
 echo 'Please note in the following sections that the parts contained within'
 echo 'the brackets are the default option if no information is entered.'
@@ -574,11 +643,21 @@ echo '--------------------------------------------------------------------------
 # Location provided by Calle for drawpileuser database. Can be used when drawpile-srv supports socket activation for web admin.
 # /home/drawpileuser/server.db
 #
-echo 'Determine how you want drawpile-srv to run now. Option 2 is recommended'
+echo \"Determine how you want drawpile-srv to run now. \${underline}Option 2\${normal} is recommended\"
 echo 'if you have a hostname. If you do not have a hostname, option 6 instead.'
 echo 'All settings will automatically work, though some additional setup for'
 echo 'session templates is required. Read more on the hyperlink below.'
 echo
+echo \"\${bold}\${cyan}Short summary of options:\${normal}\"
+echo \"    Read more --> \${underline}https://drawpile.net/help/server/\${normal}\"
+echo \"\${bold}web remote admin\${normal} - add users, ban users, set auto session reset, etc.\"
+echo \"\${bold}recording\${normal} - records all sessions, may not be necessary with above option\"
+echo '    turned on.'
+echo \"\${bold}ssl\${normal} - Encrypt data sent so conversations and drawings are kept private.\"
+echo '    If you do not have this option on, sensitive information should not'
+echo '    be shared in sessions. I.E. credit cards.'
+
+
 echo 'Short summary of options:'
 echo '    Read more --> https://drawpile.net/help/server/'
 echo 'web remote admin - add users, ban users, set auto session reset, etc.'
@@ -588,20 +667,13 @@ echo 'ssl - Encrypt data sent so conversations and drawings are kept private.'
 echo '    If you do not have this option on, sensitive information should not'
 echo '    be shared in sessions. I.E. credit cards.'
 echo
-echo 'Note:'
-echo ' Be aware that systemd socket activation is not yet implemented in the'
-echo ' drawpile server, which means you cannot administer the server remotely.'
-echo ' You will have to do it by script or locally using a supplied script.'
-echo ' This is not a problem if you decide to use drawpile-srv.service instead'
-echo ' of drawpile-srv.socket later in this script.'
-echo
-echo 'These options assume you have a host name.'
+echo \"\${bold}\${cyan}These options assume you have a host name.\${normal}\"
 echo '  1  - Run drawpile-srv w all options.'
-echo '  2  - Run drawpile-srv w web admin & ssl - recommended'
+echo \"  2  - Run drawpile-srv w web admin & ssl - \${underline}recommended\${normal}\"
 echo '  3  - Run drawpile-srv w web admin & session recording'
 echo '  4 - Run drawpile-srv w web admin'
 echo
-echo 'These options assume you do not have a host name.'
+echo \"\${bold}\${cyan}These options assume you do not have a host name.\${normal}\"
 echo '  5  - Run drawpile-srv w web admin & session recording'
 echo '  6 - Run drawpile-srv w web admin'
 echo
@@ -844,7 +916,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo 'Setting up NGINX for remote authentication for server Administration.'
+echo \"\${bold}Update Login Info NGINX for Server Administration.\${normal}\"
 echo
 echo 'Please type in a username you wish to use for making changes to your drawpile'
 echo 'server. If you make a mistake or need to update the server login, open a new'
@@ -891,6 +963,15 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+bold=\$(tput bold)
+underline=\$(tput smul)
+red=\$(tput setaf 1)
+green=\$(tput setaf 2)
+yellow=\$(tput setaf 3)
+blue=\$(tput setaf 4)
+magenta=\$(tput setaf 5)
+cyan=\$(tput setaf 6)
+normal=\$(tput sgr0)
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -910,7 +991,7 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
-echo 'What changes do you need to make to the server?'
+echo \"\${bold}What changes do you need to make to the server?\${normal}\"
 echo
 echo '1 - Administer server currently using socket activation.'
 echo '2 - Restart server which is NOT using socket activation.'
