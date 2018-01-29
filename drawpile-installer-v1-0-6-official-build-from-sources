@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.81
+drawpilescriptversion=2.82
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -866,19 +866,13 @@ echo
 echo "${bold}${cyan}Short summary of options:${normal}"
 echo "    Read more --> ${underline}https://drawpile.net/help/server/${normal}"
 echo "${bold}web remote admin${normal} - add users, ban users, set auto session reset, etc."
-echo "${bold}recording${normal} - records all sessions, may not be necessary with above option"
-echo '    turned on.'
+echo "${bold}recording${normal} - records all sessions, may not be necessary with file backed"
+echo '    sessions turned on, though it can be useful for debugging broken boards or '
+echo '    recovering art from broken boards. This can be turned on an individual basis'
+echo '    when a room is active on the server by going to File and then Record... ,'
+echo "    or by combining the file backed sessions option and checking ${underline}Archive"
+echo "    terminated sessions${normal}."
 echo "${bold}ssl${normal} - Encrypt data sent so conversations and drawings are kept private."
-echo '    If you do not have this option on, sensitive information should not'
-echo '    be shared in sessions. I.E. credit cards.'
-
-
-echo 'Short summary of options:'
-echo '    Read more --> https://drawpile.net/help/server/'
-echo 'web remote admin - add users, ban users, set auto session reset, etc.'
-echo 'recording - records all sessions, may not be necessary with above option'
-echo '    turned on.'
-echo 'ssl - Encrypt data sent so conversations and drawings are kept private.'
 echo '    If you do not have this option on, sensitive information should not'
 echo '    be shared in sessions. I.E. credit cards.'
 echo
@@ -1770,8 +1764,12 @@ echo
 echo \"\${bold}\${cyan}Short summary of options:\${normal}\"
 echo \"    Read more --> \${underline}https://drawpile.net/help/server/\${normal}\"
 echo \"\${bold}web remote admin\${normal} - add users, ban users, set auto session reset, etc.\"
-echo \"\${bold}recording\${normal} - records all sessions, may not be necessary with above option\"
-echo '    turned on.'
+echo \"\${bold}recording\${normal} - records all sessions, may not be necessary with file backed\"
+echo '    sessions turned on, though it can be useful for debugging broken boards or '
+echo '    recovering art from broken boards. This can be turned on an individual basis'
+echo '    when a room is active on the server by going to File and then Record... ,'
+echo \"    or by combining the file backed sessions option and checking \${underline}Archive\"
+echo \"    terminated sessions\${normal}.\"
 echo \"\${bold}ssl\${normal} - Encrypt data sent so conversations and drawings are kept private.\"
 echo '    If you do not have this option on, sensitive information should not'
 echo '    be shared in sessions. I.E. credit cards.'
@@ -2227,6 +2225,13 @@ echo
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo "${underline}laakkonenc@gmail.com${normal}"
+echo
+echo "${bold}Note:${normal} Automatic Session resets are determined by 70% of the setting Session Size Limit. What this"
+echo '     means is that a server set to 15 MB will automatically reset at 10.50 MB. A server set to'
+echo '     20 MB will auto reset at 14 MB. A server set to 25 MB will auto reset at 17.50 MB. This is'
+echo '     especially important to make the value large to account for large boards being hosted on the'
+echo '     server. I suggest using 25 MB for the setting when remotely accessing the server to'
+echo '     administrate the server settings.'
 echo
 read -p 'Press [Enter] key to close window...'
 echo

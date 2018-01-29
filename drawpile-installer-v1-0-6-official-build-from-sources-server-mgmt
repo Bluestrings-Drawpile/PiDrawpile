@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.81
+drawpilescriptversion=2.82
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -652,8 +652,12 @@ echo
 echo \"\${bold}\${cyan}Short summary of options:\${normal}\"
 echo \"    Read more --> \${underline}https://drawpile.net/help/server/\${normal}\"
 echo \"\${bold}web remote admin\${normal} - add users, ban users, set auto session reset, etc.\"
-echo \"\${bold}recording\${normal} - records all sessions, may not be necessary with above option\"
-echo '    turned on.'
+echo \"\${bold}recording\${normal} - records all sessions, may not be necessary with file backed\"
+echo '    sessions turned on, though it can be useful for debugging broken boards or '
+echo '    recovering art from broken boards. This can be turned on an individual basis'
+echo '    when a room is active on the server by going to File and then Record... ,'
+echo \"    or by combining the file backed sessions option and checking \${underline}Archive\"
+echo \"    terminated sessions\${normal}.\"
 echo \"\${bold}ssl\${normal} - Encrypt data sent so conversations and drawings are kept private.\"
 echo '    If you do not have this option on, sensitive information should not'
 echo '    be shared in sessions. I.E. credit cards.'

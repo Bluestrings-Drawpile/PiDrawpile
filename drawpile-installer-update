@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.81
+drawpilescriptversion=2.82
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -454,6 +454,7 @@ echo
 echo 'This will be used to display in the session listing instead of your'
 echo 'public IP address.'
 echo
+hostname="--local-host $hostname"
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
@@ -502,9 +503,15 @@ echo '    power outages and server crashes. Can serve as a recording if server'
 echo '    database set to Archive terminated sessions, however filenames are'
 echo '    saved like 926a80d5-3168-401d-b406-f05d3fc05c32.dprec with a'
 echo '    corresponding text file, the session title is inside the text file.'
-echo "${bold}recording${normal} - records all sessions, may not be necessary with above option"
-echo '    turned on.'
-echo "${bold}templates${normal} - provide default sessions that always exist on the server"
+echo "${bold}recording${normal} - records all sessions, may not be necessary with file backed"
+echo '    sessions turned on, though it can be useful for debugging broken boards or '
+echo '    recovering art from broken boards. This can be turned on an individual basis'
+echo '    when a room is active on the server by going to File and then Record... ,'
+echo "    or by combining the file backed sessions option and checking ${underline}Archive"
+echo "    terminated sessions${normal}."
+echo "${bold}templates${normal} - provide default sessions that always exist on the server."
+echo '    This feature is not yet implemented in the graphical user interface but they can be'
+echo '    turned on using one of the options provided below.'
 echo "${bold}ssl${normal} - Encrypt data sent so conversations and drawings are kept private."
 echo '    If you do not have this option on, sensitive information should not'
 echo '    be shared in sessions. I.E. credit cards.'
@@ -815,6 +822,13 @@ echo
 echo "To read more on ${bold}External authentication${normal}, go to this link"
 echo "and find that header on the website."
 echo "https://drawpile.net/help/server/"
+echo
+echo "${bold}Note:${normal} Automatic Session resets are determined by 70% of the setting Session Size Limit. What this"
+echo '     means is that a server set to 15 MB will automatically reset at 10.50 MB. A server set to'
+echo '     20 MB will auto reset at 14 MB. A server set to 25 MB will auto reset at 17.50 MB. This is'
+echo '     especially important to make the value large to account for large boards being hosted on the'
+echo '     server. I suggest using 25 MB for the setting when remotely accessing the server to'
+echo '     administrate the server settings.'
 echo
 read -p 'Press [Enter] key to close window...'
 echo
