@@ -1,5 +1,8 @@
 #!/bin/bash
-drawpilescriptversion=2.82
+drawpilescriptversion=2.83
+scriptname=drawpile-installer-official-build-from-sources-server-mgmt
+scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo
 echo "This script is not meant to be run directly by any user, but only"
 echo "the drawpile-installer-update script. If it states above this"
@@ -904,31 +907,31 @@ elif [ \"\$xyx\" == \"7\" ]; then
   \$drawpilescriptversion=$drawpilescriptversion
   \$scriptname2=$scriptname2
   cd \"$dpinstallloc/Programs\"
-  sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
-  sudo git clone https://github.com/Wade821/PiDrawpile.git
+  wget \"https://raw.githubusercontent.com/Wade821/PiDrawpile/master/\$scriptname2\"
+ 
   echo
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
   echo
-  dpcheckversion=\$(grep -m 1 \"drawpilescriptversion=\" \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" | cut -c 23-26)
-  currentscriptname=\"\$(basename \"\$(test -L \"$0\" && readlink \"$0\" || echo \"\$0\")\")\"
+  dpcheckversion=\$(grep -m 1 \"drawpilescriptversion=\" \"$dpinstallloc/Programs/\$scriptname2\" | cut -c 23-26)
+  currentscriptname=\"\$(basename \"\$(test -L \"\$0\" && readlink \"\$0\" || echo \"\$0\")\")\"
   
   if [[ \"$drawpilescriptversion\" < \"\$dpcheckversion\" ]]; then
 	echo \"Newest Script is using version \$dpcheckversion.\"
 	echo \"Newer version of script available, the old script has been copied over\"
 	echo \"the old script. Please re-run this script to use newest version.\"
 	cd \"$dpinstallloc\"
-	sudo rm -rf \"$dpinstallloc/$currentscriptname\"
-	sudo cp \"$dpinstallloc/Programs/PiDrawpile/$scriptname2\" \"$dpinstallloc/$currentscriptname\"
-	sudo chmod 777 \"$dpinstallloc/$currentscriptname\"
-	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	sudo rm -rf \"$dpinstallloc/\$currentscriptname\"
+	sudo cp \"$dpinstallloc/Programs/\$scriptname2\" \"$dpinstallloc/\$currentscriptname\"
+	sudo chmod 777 \"$dpinstallloc/\$currentscriptname\"
+	sudo rm -rf \"$dpinstallloc/Programs/\$scriptname2\"
 	echo \"Terminating script in 30 seconds.\"
 	echo
 	sleep 30s
 	exit
   elif [[ \"$drawpilescriptversion\" = \"\$dpcheckversion\" ]]; then
 	echo \"Script is newest version available.\"
-	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	sudo rm -rf \"$dpinstallloc/Programs/\$scriptname2\"
   elif [[ \"$drawpilescriptversion\" > \"\$dpcheckversion\" ]]; then
 	echo \"It appears the creator of the script has failed to update github with the newest version.\"
 	echo \"Please contact him to update the script there by emailing him at wadeschlueter@gmail.com\"
@@ -937,7 +940,7 @@ elif [ \"\$xyx\" == \"7\" ]; then
 	echo \"Github Script: \$dpcheckversion\"
 	echo
 	echo \"Pausing script for 30 seconds before continuing.\"
-	sudo rm -rf \"$dpinstallloc/Programs/PiDrawpile/\"
+	sudo rm -rf \"$dpinstallloc/Programs/\$scriptname2\"
 	sleep 30s
 else
 	echo \"Unable to determine script version, proceeding with script.\"
