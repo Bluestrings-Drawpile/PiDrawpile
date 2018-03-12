@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.84
+drawpilescriptversion=2.85
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -410,7 +410,7 @@ echo
 echo "${bold}*****Preparing to Build Drawpile . . .*****${normal}"
 echo
 cd "$dpinstallloc/Programs/Drawpile"
-mkdir -p -v build
+sudo mkdir -p -v build
 cd "$dpinstallloc/Programs/Drawpile/build"
 #
 #---------------------------------------------------------------------------------------------------------------------------------
@@ -837,7 +837,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service"
 cd "$dpinstallloc"
 sudo chmod 777 "$dpinstallloc" -R
 cd "$dpinstallloc/Programs"
-mkdir -p -v Drawpile-Srv-Files
+sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/" -R
 echo
@@ -889,30 +889,27 @@ read systemd
 echo
 if [ "$systemd" == "1" ]; then
   echo '1  - Run drawpile-srv w all options.'
-  mkdir -p -v session-record
-  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
+  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
   systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
 elif [ "$systemd" == "2" ]; then
   echo '2  - Run drawpile-srv w web admin & ssl - recommended'
-  mkdir -p -v session-record
-  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   systemd=" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
 elif [ "$systemd" == "3" ]; then
   echo '3  - Run drawpile-srv w web admin & session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
+  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
   systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $hostname"
 elif [ "$systemd" == "4" ]; then
   echo '4 - Run drawpile-srv w web admin'
   systemd=" $hostname"
 elif [ "$systemd" == "5" ]; then
   echo '5  - Run drawpile-srv w web admin & session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
+  sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record" -R
   systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\""
 else [ "$systemd" == "6" ]
   echo '6 - Run drawpile-srv w web admin'
@@ -1311,7 +1308,7 @@ blue=\$(tput setaf 4)
 magenta=\$(tput setaf 5)
 cyan=\$(tput setaf 6)
 normal=\$(tput sgr0)
-echo \"\${bold}*****Change Start up type on Drawpile Server . . .*****\$\{normal}\"
+echo \"\${bold}*****Change Start up type on Drawpile Server . . .*****\${normal}\"
 echo
 echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
 echo
@@ -1735,7 +1732,7 @@ sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service\"
 cd \"\$dpinstallloc\"
 sudo chmod 777 \"\$dpinstallloc\" -R
 cd \"\$dpinstallloc/Programs\"
-mkdir -p -v Drawpile-Srv-Files
+sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/\" -R
 echo
@@ -1797,30 +1794,27 @@ read systemd
 echo
 if [ \"\$systemd\" == \"1\" ]; then
   echo '1  - Run drawpile-srv w all options.'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
 elif [ \"\$systemd\" == \"2\" ]; then
   echo '2  - Run drawpile-srv w web admin & ssl - recommended'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
   systemd=\"--secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
 elif [ \"\$systemd\" == \"3\" ]; then
   echo '3  - Run drawpile-srv w web admin & session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" \$hostname\"
 elif [ \"\$systemd\" == \"4\" ]; then
   echo '4 - Run drawpile-srv w web admin'
   systemd=\"\$hostname\"
 elif [ \"\$systemd\" == \"5\" ]; then
   echo '5  - Run drawpile-srv w web admin & session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"\"
 else [ \"\$systemd\" == \"6\" ]
   echo '6 - Run drawpile-srv w web admin'

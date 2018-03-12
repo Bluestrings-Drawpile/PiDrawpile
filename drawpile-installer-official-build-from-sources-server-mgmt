@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.84
+drawpilescriptversion=2.85
 scriptname=drawpile-installer-official-build-from-sources-server-mgmt
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -172,7 +172,7 @@ blue=\$(tput setaf 4)
 magenta=\$(tput setaf 5)
 cyan=\$(tput setaf 6)
 normal=\$(tput sgr0)
-echo \"\${bold}*****Change Start up type on Drawpile Server . . .*****\$\{normal}\"
+echo \"\${bold}*****Change Start up type on Drawpile Server . . .*****\${normal}\"
 echo
 echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
 echo
@@ -591,7 +591,7 @@ sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile/server/drawpile-srv.service\"
 cd \"\$dpinstallloc\"
 sudo chmod 777 \"\$dpinstallloc\" -R
 cd \"\$dpinstallloc/Programs\"
-mkdir -p -v Drawpile-Srv-Files
+sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/\" -R
 echo
@@ -664,143 +664,143 @@ read systemd
 echo
 if [ \"\$systemd\" == \"1\" ]; then
   echo 'Selected - 1 - all options.'
-  mkdir -p -v sessions
-  mkdir -p -v templates
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v sessions
+  sudo mkdir -p -v templates
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"2\" ]; then
   echo 'Selected - 2 - all options except session recording'
   echo '         - recommended'
-  mkdir -p -v sessions
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v sessions
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"3\" ]; then
   echo 'Selected - 3 - web admin, session recording, ssl, & templates'
-  mkdir -p -v templates
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"4\" ]; then
   echo 'Selected - 4 - web admin, file backed sessions, & ssl'
-  mkdir -p -v sessions
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
+  sudo mkdir -p -v sessions
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"5\" ]; then
   echo 'Selected - 5  - web admin, file backed sessions, & templates'
-  mkdir -p -v sessions
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v sessions
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"6\" ]; then
   echo 'Selected - 6  - web admin, session recording, & ssl'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"7\" ]; then
   echo 'Selected - 7  - web admin, session recording, & templates'
-  mkdir -p -v templates
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"8\" ]; then
   echo 'Selected - 8  - web admin, ssl, & templates'
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"9\" ]; then
   echo 'Selected - 9  - web admin & file backed sessions'
-  mkdir -p -v sessions
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
+  sudo mkdir -p -v sessions
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"10\" ]; then
   echo 'Selected - 10 - web admin & session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"11\" ]; then
   echo 'Selected - 11 - web admin & ssl'
   systemd=\"--secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"12\" ]; then
   echo 'Selected - 12 - web admin & templates'
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" \$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"13\" ]; then
   echo 'Selected - 13 - w web admin'
   systemd=\"\$hostname --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"14\" ]; then
   echo 'Selected - 14 - all options.'
-  mkdir -p -v sessions
-  mkdir -p -v templates
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v sessions
+  sudo mkdir -p -v templates
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"15\" ]; then
   echo 'Selected - 15 - all options except session recording'
   echo '         - recommended'
-  mkdir -p -v sessions
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v sessions
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/\" 
-  elif [ \"\$systemd\" == \"16\" ]; then
+elif [ \"\$systemd\" == \"16\" ]; then
   echo 'Selected - 16 - web admin, session recording, & templates'
-  mkdir -p -v templates
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"17\" ]; then
   echo 'Selected - 17 - web admin & file backed sessions'
-  mkdir -p -v sessions
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\"
+  sudo mkdir -p -v sessions
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions\" -R
   systemd=\"--sessions \"\$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"18\" ]; then
   echo 'Selected - 18  - web admin, session recording'
-  mkdir -p -v session-record
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
+  sudo mkdir -p -v session-record
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\" -R
   systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --extauth https://drawpile.net/api/ext-auth/\"
 elif [ \"\$systemd\" == \"19\" ]; then
   echo 'Selected - 19  - web admin & templates'
-  mkdir -p -v templates
-  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
-  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\"
+  sudo mkdir -p -v templates
+  sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
+  sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates\" -R
   systemd=\"--templates \"\$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/\"
 else [ \"\$systemd\" == \"20\" ]
   echo 'Selected - 20 - web admin'
