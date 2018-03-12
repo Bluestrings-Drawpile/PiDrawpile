@@ -8,7 +8,7 @@ https://github.com/drawpile/Drawpile/wiki/Building-from-sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Version Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-drawpile-srv 2.0.5
+drawpile-srv 2.0.9
 Protocol version: 20.1
 Qt version: 5.7.1 (compiled against 5.7.1)
 SSL library version: OpenSSL 1.0.2l  25 May 2017 (268443855)

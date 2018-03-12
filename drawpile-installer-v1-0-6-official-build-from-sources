@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.83
+drawpilescriptversion=2.84
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -86,7 +86,7 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
-wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
+sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -156,7 +156,7 @@ if [ "$samba" == "1" ]; then
   sudo apt-get -q -y install samba samba-common-bin
   sudo chmod 777 /etc/samba/smb.conf
   sudo sed -i '/workgroup = MYWORKGROUP/ c\workgroup = WORKGROUP' /etc/samba/smb.conf
-  sudo sed -i '/# wins support = no/ c\ wins support = yes' /etc/samba/smb.conf
+  sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
   echo
   sudo chmod 777 /home/pi/Public -R
   echo "[Pi-Public]
@@ -177,7 +177,7 @@ elif [ "$samba" == "2" ]; then
   sudo apt-get -q -y install samba samba-common-bin
   sudo chmod 777 /etc/samba/smb.conf
   sudo sed -i '/workgroup = MYWORKGROUP/ c\workgroup = WORKGROUP' /etc/samba/smb.conf
-  sudo sed -i '/# wins support = no/ c\ wins support = yes' /etc/samba/smb.conf
+  sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
   echo
   sudo chmod 777 /home/pi/Public -R
   sudo chmod 777 /home/pi/Music -R
@@ -227,7 +227,7 @@ elif [ "$samba" == "3" ]; then
   sudo apt-get -q -y install samba samba-common-bin
   sudo chmod 777 /etc/samba/smb.conf
   sudo sed -i '/workgroup = MYWORKGROUP/ c\workgroup = WORKGROUP' /etc/samba/smb.conf
-  sudo sed -i '/# wins support = no/ c\ wins support = yes' /etc/samba/smb.conf
+  sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
   echo
   sudo chmod 777 "$dpinstallloc/" -R
   echo "[Pi-Drawpile-Server]
@@ -772,11 +772,11 @@ sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
 sudo chmod 755 /home/drawpileuser/
 echo
-if [ \"\`systemctl is-active drawpile-srv.socket\`\" = \"enabled; vendor preset\" ] 
+if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ] 
 then 
 	echo \"drawpile-srv.socket previously enabled, restarting server.\"
 	sudo systemctl restart drawpile-srv.socket
-else [ \"\`systemctl is-active drawpile-srv.service\`\" = \"enabled; vendor preset\" ] 
+else [ \"\`systemctl is-enabled drawpile-srv.service\`\" = \"enabled\" ] 
 	echo \"drawpile-srv.service previously enabled, restarting server.\"
 	sudo systemctl restart drawpile-srv.service
 fi" > /home/drawpileuser/ssl.sh
@@ -848,7 +848,7 @@ echo '--------------------------------------------------------------------------
 # --record "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec"
 #
 # Code to place after the database file in order to use httpd to authenticate instead. Username and password is plain text, no hash.
-# --web-admin-port 8080 --web-admin-access all --web-admin-auth user:pass
+# --web-admin-port 27780 --web-admin-access all --web-admin-auth user:pass
 #
 # Default location of the GUI Database if no location is specified.
 # /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
@@ -879,11 +879,11 @@ echo "${bold}${cyan}These options assume you have a host name.${normal}"
 echo '  1  - Run drawpile-srv w all options.'
 echo "  2  - Run drawpile-srv w web admin & ssl - ${underline}recommended${normal}"
 echo '  3  - Run drawpile-srv w web admin & session recording'
-echo '  4 - Run drawpile-srv w web admin'
+echo '  4  - Run drawpile-srv w web admin'
 echo
 echo "${bold}${cyan}These options assume you do not have a host name.${normal}"
 echo '  5  - Run drawpile-srv w web admin & session recording'
-echo '  6 - Run drawpile-srv w web admin'
+echo '  6  - Run drawpile-srv w web admin'
 echo
 read systemd
 echo
@@ -892,31 +892,31 @@ if [ "$systemd" == "1" ]; then
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
+  systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
 elif [ "$systemd" == "2" ]; then
   echo '2  - Run drawpile-srv w web admin & ssl - recommended'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
+  systemd=" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname"
 elif [ "$systemd" == "3" ]; then
   echo '3  - Run drawpile-srv w web admin & session recording'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $hostname"
+  systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $hostname"
 elif [ "$systemd" == "4" ]; then
   echo '4 - Run drawpile-srv w web admin'
-  systemd="--web-admin-port 8080 $hostname"
+  systemd=" $hostname"
 elif [ "$systemd" == "5" ]; then
   echo '5  - Run drawpile-srv w web admin & session recording'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\""
+  systemd=" --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\""
 else [ "$systemd" == "6" ]
   echo '6 - Run drawpile-srv w web admin'
-  systemd="--web-admin-port 8080"
+  systemd=""
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -1084,7 +1084,7 @@ Documentation=man:drawpile-srv
 
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt $systemd
+ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt --web-admin-port 27780 $systemd
 
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
@@ -1162,7 +1162,7 @@ sudo htpasswd -bc /etc/nginx/passwords $NGINXusername1 $nginxhtpasswd1
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
-sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:8080\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n	}\n}\n/' /etc/nginx/nginx.conf
+sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
 echo
 isApache2Installed=$(apt-cache policy apache2| grep "Installed:" | cut -c 14-40)
 if [[ "$isApache2Installed" = "(none)" ]]; then
@@ -1196,6 +1196,7 @@ sudo /etc/init.d/nginx restart
 sudo nginx -s reload
 sudo /etc/init.d/nginx restart
 echo
+echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
@@ -1224,7 +1225,6 @@ if [ "$dpsrvstartup" == "1" ]; then
   sudo systemctl restart systemd-modules-load
   echo
   sudo systemctl enable --now drawpile-srv.socket
-  sudo chmod 777 /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
   #Read more on systemd --> https://drawpile.net/help/server
 else [ "$dpsrvstartup" == "2" ]
   sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
@@ -1746,7 +1746,7 @@ echo '--------------------------------------------------------------------------
 # --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"
 #
 # Code to place after the database file in order to use httpd to authenticate instead. Username and password is plain text, no hash.
-# --web-admin-port 8080 --web-admin-access all --web-admin-auth user:pass
+# --web-admin-port 27780 --web-admin-access all --web-admin-auth user:pass
 #
 # Default location of the GUI Database if no location is specified.
 # /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
@@ -1800,31 +1800,31 @@ if [ \"\$systemd\" == \"1\" ]; then
   mkdir -p -v session-record
   sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
   sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
+  systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
 elif [ \"\$systemd\" == \"2\" ]; then
   echo '2  - Run drawpile-srv w web admin & ssl - recommended'
   mkdir -p -v session-record
   sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
   sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  systemd=\"--web-admin-port 8080 --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
+  systemd=\"--secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem \$hostname\"
 elif [ \"\$systemd\" == \"3\" ]; then
   echo '3  - Run drawpile-srv w web admin & session recording'
   mkdir -p -v session-record
   sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
   sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" \$hostname\"
+  systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" \$hostname\"
 elif [ \"\$systemd\" == \"4\" ]; then
   echo '4 - Run drawpile-srv w web admin'
-  systemd=\"--web-admin-port 8080 \$hostname\"
+  systemd=\"\$hostname\"
 elif [ \"\$systemd\" == \"5\" ]; then
   echo '5  - Run drawpile-srv w web admin & session recording'
   mkdir -p -v session-record
   sudo chmod 777 \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
   sudo chown drawpileuser \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record\"
-  systemd=\"--web-admin-port 8080 --record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"\"
+  systemd=\"--record \"\$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\"\"
 else [ \"\$systemd\" == \"6\" ]
   echo '6 - Run drawpile-srv w web admin'
-  systemd=\"--web-admin-port 8080\"
+  systemd=\"\"
 fi
 echo
 #
@@ -1996,7 +1996,7 @@ Documentation=man:drawpile-srv
 
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt \$systemd
+ExecStart=/usr/local/bin/drawpile-srv -c /home/drawpileuser/config.txt --web-admin-port 27780 \$systemd
 
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
@@ -2109,31 +2109,32 @@ echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo
 echo \"\${bold}What changes do you need to make to the server?\${normal}\"
 echo
-echo '1 - Administer server currently using socket activation.'
-echo '2 - Restart server which is NOT using socket activation.'
-echo '3 - Switch startup type to socket activation or on boot up.'
-echo '4 - Update Drawpile Server to newest version.'
-echo '5 - NGINX Login Change for Remote Server Administration.'
-echo '6 - Change all startup options.'
-echo '7 - Verify server management scripts are up to date.'
+echo '1 - Switch startup type to socket activation or on boot up.'
+echo '2 - NGINX Login Change for Remote Server Administration.'
+echo '3 - Change all startup options.'
+echo
+echo '4 - Administer server currently using socket activation.'
+echo '5 - Restart server which is NOT using socket activation.'
+echo
+echo '6 - Verify server management scripts are up to date.'
+echo '7 - Update Drawpile Server to newest version.'
+echo
 echo '8 - Do nothing and close script.'
 
 echo
 read xyx
 echo
 if [ \"\$xyx\" == \"1\" ]; then
-  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-dp-server-socket-activation.sh\"
-elif [ \"\$xyx\" == \"2\" ]; then
-  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-server-restart.sh\"
-elif [ \"\$xyx\" == \"3\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-startup-switch.sh\"
-elif [ \"\$xyx\" == \"4\" ]; then
-  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-update.sh\"
-elif [ \"\$xyx\" == \"5\" ]; then
+elif [ \"\$xyx\" == \"2\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-password-change.sh\"
-elif [ \"\$xyx\" == \"6\" ]; then
+elif [ \"\$xyx\" == \"3\" ]; then
   \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh\"
-elif [ \"\$xyx\" == \"7\" ]; then
+elif [ \"\$xyx\" == \"4\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-dp-server-socket-activation.sh\"
+elif [ \"\$xyx\" == \"5\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-server-restart.sh\"
+elif [ \"\$xyx\" == \"6\" ]; then
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
   echo
@@ -2141,7 +2142,7 @@ elif [ \"\$xyx\" == \"7\" ]; then
   \$drawpilescriptversion=$drawpilescriptversion
   \$scriptname2=$scriptname2
   cd \"$dpinstallloc/Programs\"
-  wget \"https://raw.githubusercontent.com/Wade821/PiDrawpile/master/\$scriptname2\"
+  sudo wget \"https://raw.githubusercontent.com/Wade821/PiDrawpile/master/\$scriptname2\"
  
   echo
   echo '--------------------------------------------------------------------------------'
@@ -2176,12 +2177,14 @@ elif [ \"\$xyx\" == \"7\" ]; then
 	echo \"Pausing script for 30 seconds before continuing.\"
 	sudo rm -rf \"$dpinstallloc/Programs/\$scriptname2\"
 	sleep 30s
-else
+  else
 	echo \"Unable to determine script version, proceeding with script.\"
   fi
   echo
   echo '--------------------------------------------------------------------------------'
   echo '--------------------------------------------------------------------------------'
+elif [ \"\$xyx\" == \"7\" ]; then
+  \"$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-update.sh\"
 else
   echo \"Doing nothing and exiting script.\"
   sleep 10s

@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.83
+drawpilescriptversion=2.84
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -85,9 +85,9 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
-wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
+sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
 echo
-wget "https://github.com/Wade821/PiDrawpile/blob/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
+sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
 sudo chmod 777 "$dpinstallloc/Programs/$scriptmgmtupdate"
 . ./$scriptmgmtupdate
 cd "$dpinstallloc/Programs"
@@ -127,6 +127,7 @@ elif [[ "$drawpilescriptversion" > "$dpcheckversion" ]]; then
 else
 	echo "Unable to determine script version, proceeding with script."
 fi
+sudo rm -rf "$dpinstallloc/Programs/$scriptmgmtupdate"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -488,7 +489,7 @@ echo '--------------------------------------------------------------------------
 # Location provided by Calle for drawpileuser database. Can be used when drawpile-srv supports socket activation for web admin.
 # /home/drawpileuser/server.db
 #
-
+echo
 echo "Determine how you want drawpile-srv to run now. ${underline}Option 2${normal} is recommended"
 echo 'if you have a hostname. If you do not have a hostname, option 15 instead.'
 echo 'All settings will automatically work, though some additional setup for'
@@ -552,7 +553,7 @@ if [ "$systemd" == "1" ]; then
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "2" ]; then
   echo 'Selected - 2 - all options except session recording'
   echo '         - recommended'
@@ -562,7 +563,7 @@ elif [ "$systemd" == "2" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "3" ]; then
   echo 'Selected - 3 - web admin, session recording, ssl, & templates'
   mkdir -p -v templates
@@ -571,13 +572,13 @@ elif [ "$systemd" == "3" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "4" ]; then
   echo 'Selected - 4 - web admin, file backed sessions, & ssl'
   mkdir -p -v sessions
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "5" ]; then
   echo 'Selected - 5  - web admin, file backed sessions, & templates'
   mkdir -p -v sessions
@@ -586,13 +587,13 @@ elif [ "$systemd" == "5" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "6" ]; then
   echo 'Selected - 6  - web admin, session recording, & ssl'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "7" ]; then
   echo 'Selected - 7  - web admin, session recording, & templates'
   mkdir -p -v templates
@@ -601,37 +602,37 @@ elif [ "$systemd" == "7" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "8" ]; then
   echo 'Selected - 8  - web admin, ssl, & templates'
   mkdir -p -v templates
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "9" ]; then
   echo 'Selected - 9  - web admin & file backed sessions'
   mkdir -p -v sessions
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "10" ]; then
   echo 'Selected - 10 - web admin & session recording'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "11" ]; then
   echo 'Selected - 11 - web admin & ssl'
-  systemd="--web-admin-port 8080 --secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--secure --ssl-cert /home/drawpileuser/cert.pem --ssl-key /home/drawpileuser/key.pem $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "12" ]; then
   echo 'Selected - 12 - web admin & templates'
   mkdir -p -v templates
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" $hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "13" ]; then
   echo 'Selected - 13 - w web admin'
-  systemd="--web-admin-port 8080 $hostname --extauth https://drawpile.net/api/ext-auth/"
+  systemd="$hostname --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "14" ]; then
   echo 'Selected - 14 - all options.'
   mkdir -p -v sessions
@@ -643,7 +644,7 @@ elif [ "$systemd" == "14" ]; then
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "15" ]; then
   echo 'Selected - 15 - all options except session recording'
   echo '         - recommended'
@@ -653,7 +654,7 @@ elif [ "$systemd" == "15" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/" 
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/" 
   elif [ "$systemd" == "16" ]; then
   echo 'Selected - 16 - web admin, session recording, & templates'
   mkdir -p -v templates
@@ -662,28 +663,28 @@ elif [ "$systemd" == "15" ]; then
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "17" ]; then
   echo 'Selected - 17 - web admin & file backed sessions'
   mkdir -p -v sessions
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/sessions"
-  systemd="--web-admin-port 8080 --sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--sessions \"$dpinstallloc/Programs/Drawpile-Srv-Files/sessions/\" --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "18" ]; then
   echo 'Selected - 18  - web admin, session recording'
   mkdir -p -v session-record
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/session-record"
-  systemd="--web-admin-port 8080 --record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--record \"$dpinstallloc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --extauth https://drawpile.net/api/ext-auth/"
 elif [ "$systemd" == "19" ]; then
   echo 'Selected - 19  - web admin & templates'
   mkdir -p -v templates
   sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
   sudo chown drawpileuser "$dpinstallloc/Programs/Drawpile-Srv-Files/templates"
-  systemd="--web-admin-port 8080 --templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--templates \"$dpinstallloc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 else [ "$systemd" == "20" ]
   echo 'Selected - 20 - web admin'
-  systemd="--web-admin-port 8080 --extauth https://drawpile.net/api/ext-auth/"
+  systemd="--extauth https://drawpile.net/api/ext-auth/"
 fi
 #
 #
@@ -695,7 +696,7 @@ Documentation=man:drawpile-srv
 
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db $systemd
+ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db $systemd
 
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
@@ -723,7 +724,7 @@ Documentation=man:drawpile-srv
 
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db $systemd
+ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd
 
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
@@ -755,13 +756,75 @@ echo
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
 echo
+sudo sed -i 's!proxy_pass http://127.0.0.1:8080/\;!proxy_pass http://127.0.0.1:27780/\;!' /etc/nginx/nginx.conf
+sudo /etc/init.d/nginx restart
+sudo nginx -s reload
+sudo /etc/init.d/nginx restart
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo "Checking server database file to ensure no issues with setup."
+echo
+sudo mkdir -p -v /home/pi/.local/share/drawpile/drawpile-srv/
+echo
+if [[ -e  "/home/drawpileuser/server.db" && ! -e "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" ]]; then
+	echo "Server.db file exists and guiserver.db does not exist. Making backup."
+	echo
+	sudo cp -p "/home/drawpileuser/server.db" "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db"
+elif [[ ! -e  "/home/drawpileuser/server.db" &&  -e "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" ]]; then
+	echo "Server.db file does not exist and Guiserver.db file exists."
+	echo "Minor step needed to resolve issue."
+	echo
+	sudo cp -p "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" "/home/drawpileuser/server.db"
+	sudo chmod 777 /home/drawpileuser/server.db
+	sudo chown drawpileuser /home/drawpileuser/server.db
+elif [[ -e  "/home/drawpileuser/server.db" && -e "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" ]]; then
+	echo "Server.db file exists and Guiserver.db file exists. Determining which file is newer."
+	echo
+	if [[ "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" -nt "/home/drawpileuser/server.db" ]]; then
+		echo "Copying newer guiserver.db file over older server.db file."
+		sudo cp -p /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db /home/drawpileuser/server.db
+	elif [[ "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" -ot "/home/drawpileuser/server.db" ]]; then
+		echo "Copying newer server.db file over guiserver.db file."
+		sudo cp -p /home/drawpileuser/server.db /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
+	elif cmp -s /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db /home/drawpileuser/server.db ; then
+    		echo 'Database files are the exact same, byte for byte.'
+	else
+		echo "Unable to make a determination of when the files were last modified."
+	fi
+	#
+	#stat 	--> https://ss64.com/bash/stat.html
+	#	Uses block size. Not accurate.
+	#	Old Command: elif [[ "$drawpileuser_server_db_stat" -eq "$drawpileuser_guiserver_db_stat" ]]; then
+	#cmp 	--> https://ss64.com/bash/cmp.html
+	#	Compares files byte by byte, much better accuracy.
+	#diff 	--> https://ss64.com/bash/diff.html
+	#	Should be just as effective as cmp.
+	#
+elif [[ ! -e  "/home/drawpileuser/server.db" && ! -e "/home/pi/.local/share/drawpile/drawpile-srv/guiserver.db" ]]; then
+	echo "Files server.db and guiserver.db do not exist."
+	echo "Resolving issue now to ensure drawpileuser"
+	echo "can access database. . ."
+	echo
+	sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
+	sudo systemctl daemon-reload
+	sudo systemctl restart systemd-modules-load
+	sudo systemctl start --now drawpile-srv.service & sleep 1
+	sudo systemctl stop --now drawpile-srv.service
+	sudo chmod 777 /home/drawpileuser/server.db
+	sudo chown drawpileuser /home/drawpileuser/server.db
+	sudo cp -p /home/drawpileuser/server.db /home/pi/.local/share/drawpile/drawpile-srv/guiserver.db
+else
+	echo "Unable to determine if files exist or not, must be an error in script. Proceeding with script."
+fi
+echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 #
 echo "${bold}*****Starting Drawpile Server . . .*****${normal}"
 echo
-if [ "`systemctl is-active drawpile-srv.socket`" = "enabled; vendor preset" ] 
-then 
+if [ "`systemctl is-enabled drawpile-srv.socket`" = "enabled" ]; then 
 	sudo cp "/etc/systemd/system/drawpile-srv01.service" /etc/systemd/system/drawpile-srv.service
 	echo
 	echo 'Reloading systemctl and systemd.'
@@ -769,8 +832,9 @@ then
 	sudo systemctl restart systemd-modules-load
 	echo
 	echo "drawpile-srv.socket previously enabled, starting up server."
-	sudo systemctl start drawpile-srv.socket
-else [ "`systemctl is-active drawpile-srv.service`" = "enabled; vendor preset" ] 
+	sudo systemctl disable drawpile-srv.service
+	sudo systemctl start --now drawpile-srv.socket
+elif [ "`systemctl is-enabled drawpile-srv.service`" = "enabled" ]; then
 	sudo cp "/etc/systemd/system/drawpile-srv02.service" /etc/systemd/system/drawpile-srv.service
 	echo
 	echo 'Reloading systemctl and systemd.'
@@ -778,7 +842,25 @@ else [ "`systemctl is-active drawpile-srv.service`" = "enabled; vendor preset" ]
 	sudo systemctl restart systemd-modules-load
 	echo
 	echo "drawpile-srv.service previously enabled, starting up server."
+	echo
+	echo "However, socket activation with web management was made"
+	echo "available as of Drawpile 2.0.8. It is recommended to"
+	echo "switch the server startup type using the server management"
+	echo "script to make the change."
+	echo
+	sudo systemctl disable drawpile-srv.socket
+	sudo systemctl stop --now drawpile-srv.socket
 	sudo systemctl start drawpile-srv.service
+else
+  	sudo cp "/etc/systemd/system/drawpile-srv01.service" /etc/systemd/system/drawpile-srv.service
+	echo
+	echo 'Reloading systemctl and systemd.'
+	sudo systemctl daemon-reload
+	sudo systemctl restart systemd-modules-load
+	echo
+	echo "No Drawpile automated startup is detected, setting up Socket Activation."
+	sudo systemctl enable drawpile-srv.socket
+	sudo systemctl start --now drawpile-srv.socket
 fi
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
