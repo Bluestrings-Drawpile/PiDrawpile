@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.85
+drawpilescriptversion=2.86
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -88,12 +88,8 @@ cd "$dpinstallloc/Programs"
 sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
 echo
 sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
+sudo chmod 777 "$dpinstallloc/Programs" -R
 sudo chmod 777 "$dpinstallloc/Programs/$scriptmgmtupdate"
-. ./$scriptmgmtupdate
-cd "$dpinstallloc/Programs"
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
 echo
 dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dpinstallloc/Programs/$scriptname" | cut -c 23-26)
 currentscriptname="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
@@ -127,7 +123,11 @@ elif [[ "$drawpilescriptversion" > "$dpcheckversion" ]]; then
 else
 	echo "Unable to determine script version, proceeding with script."
 fi
+echo
+. ./$scriptmgmtupdate
+echo
 sudo rm -rf "$dpinstallloc/Programs/$scriptmgmtupdate"
+cd "$dpinstallloc/Programs"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -178,6 +178,7 @@ echo "${bold}*****Updating Repository . . .*****${normal}"
 echo
 cd "$dpinstallloc/Programs/"
 sudo rm Drawpile -R
+sudo chmod 777 "$dpinstallloc/Programs/" -R
 git clone https://github.com/drawpile/Drawpile.git
 echo
 #
@@ -190,9 +191,12 @@ echo "--------------------------------------------------------------------------
 echo "--------------------------------------------------------------------------------"
 echo
 echo "${bold}*****Preparing to Build Drawpile . . .*****${normal}"
-cd "$dpinstallloc/Programs/Drawpile/"
+echo
+cd "$dpinstallloc/Programs/Drawpile"
 sudo mkdir -p -v build
+sudo chmod 777 "$dpinstallloc/Programs/Drawpile/build" -R
 cd "$dpinstallloc/Programs/Drawpile/build"
+echo
 #
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
@@ -231,11 +235,11 @@ elif [[ "$version" < "5.29" ]]; then
 	echo "Modification of source files required."
 	echo
 	echo 'Creating backup of file orawriter.cpp before modification.'
-	cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
 	echo
 	echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
-	sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
-	sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+	sudo sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+	sudo sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
 else
 	echo "Unable to make a determination of which version of K Archive is installed."
 fi
@@ -305,9 +309,9 @@ done
 echo
 echo
 if [ "$x" == "2" ]; then
-  cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off
+  sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off
 elif [ "$x" == "3" ]; then
-  cmake .. -DINITSYS=systemd
+  sudo cmake .. -DINITSYS=systemd
   sudo apt-get -q -y install libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
   echo
   xsetwacom --list devices
@@ -334,11 +338,11 @@ elif [ "$x" == "3" ]; then
   echo 'man wacom'
   echo
 elif [ "$x" == "4" ]; then
-  cmake .. -DINITSYS=systemd
+  sudo cmake .. -DINITSYS=systemd
 elif [ "$x" == "5" ]; then
-  cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug
+  sudo cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug
 elif [ "$x" == "6" ]; then
-  cmake .. -DSERVER=off
+  sudo cmake .. -DSERVER=off
   sudo apt-get -q -y install libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
   echo
   xsetwacom --list devices
@@ -378,7 +382,7 @@ elif [ "$x" == "6" ]; then
   sleep 30s
   exit
 elif [ "$x" == "7" ]; then
-  cmake .. -DSERVER=off
+  sudo cmake .. -DSERVER=off
   echo
   echo "Compiling with $threadCount threads."
   echo
@@ -393,7 +397,7 @@ elif [ "$x" == "7" ]; then
   sleep 30s
   exit
 else
-  cmake .. -DINITSYS=systemd -DCLIENT=OFF
+  sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF
 fi
 
 echo
