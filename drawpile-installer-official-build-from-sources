@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.86
+drawpilescriptversion=2.87
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -250,7 +250,7 @@ echo
 echo 'This stage is for setting up an easy to remember way to connect to your server.'
 echo 
 echo "${underline}https://freedns.afraid.org/ ${normal}"
-echo "${bold}Pros:${normal} Free registration, no need to renew use of the hostname."
+echo "${bold}Pros:${normal} Free registration, renew hostname every six months."
 echo "${bold}Cons:${normal} Minor additional setup with script guided help required, guided setup."
 echo '      If a typo is made, you must use crontab -e to update the code manually.'
 echo 
@@ -1166,7 +1166,7 @@ echo
 # Refer to help with this command.
 # https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
 #
-sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:22780\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
+sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
 echo
 isApache2Installed=$(apt-cache policy apache2| grep "Installed:" | cut -c 14-40)
 if [[ "$isApache2Installed" = "(none)" ]]; then
@@ -1259,6 +1259,7 @@ sudo mkdir -p -v "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/"
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/" -R
 
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -1285,6 +1286,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpil
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -1331,6 +1333,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpil
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -1387,6 +1390,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-p
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -1467,7 +1471,7 @@ echo
 echo 'This stage is for setting up an easy to remember way to connect to your server.'
 echo 
 echo \"\${underline}https://freedns.afraid.org/ \${normal}\"
-echo \"\${bold}Pros:\${normal} Free registration, no need to renew use of the hostname.\"
+echo \"\${bold}Pros:\${normal} Free registration, renew hostname every six months.\"
 echo \"\${bold}Cons:\${normal} Minor additional setup with script guided help required, guided setup.\"
 echo '      If a typo is made, you must use crontab -e to update the code manually.'
 echo 
@@ -2049,6 +2053,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)

@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.86
+drawpilescriptversion=2.87
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -138,6 +138,7 @@ sudo mkdir -p -v "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/"
 sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/" -R
 
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -165,6 +166,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/admin-d
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -191,6 +193,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpil
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -242,6 +245,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/drawpil
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -298,6 +302,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/NGINX-p
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
@@ -378,7 +383,7 @@ echo
 echo 'This stage is for setting up an easy to remember way to connect to your server.'
 echo 
 echo \"\${underline}https://freedns.afraid.org/ \${normal}\"
-echo \"\${bold}Pros:\${normal} Free registration, no need to renew use of the hostname.\"
+echo \"\${bold}Pros:\${normal} Free registration, renew hostname every six months.\"
 echo \"\${bold}Cons:\${normal} Minor additional setup with script guided help required, guided setup.\"
 echo '      If a typo is made, you must use crontab -e to update the code manually.'
 echo 
@@ -958,6 +963,9 @@ echo \"Your Server Administration password is: \$nginxhtpasswd1\"
 echo
 sudo htpasswd -bc /etc/nginx/passwords \$NGINXusername1 \$nginxhtpasswd1
 echo
+sudo sed -i 's!proxy_pass http://127.0.0.1:8080/\;!proxy_pass http://127.0.0.1:27780/\;!' /etc/nginx/nginx.conf
+sudo sed -i 's!proxy_pass http://127.0.0.1:22780/\;!proxy_pass http://127.0.0.1:27780/\;!' /etc/nginx/nginx.conf
+echo
 sudo /etc/init.d/nginx restart
 sudo nginx -s reload
 sudo /etc/init.d/nginx restart" > "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup-options.sh"
@@ -965,6 +973,7 @@ sudo chmod 777 "$dpinstallloc/Programs/Drawpile-Srv-Files/server-scripts/startup
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 echo "#!/bin/bash
+\$drawpilescriptversion=$drawpilescriptversion
 bold=\$(tput bold)
 underline=\$(tput smul)
 red=\$(tput setaf 1)
