@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.87
+drawpilescriptversion=2.88
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -368,15 +368,45 @@ if [ "$x" == "y" ]; then
   echo 'Updating already installed packages . . .'
   echo
   sudo apt-get -q -y upgrade
+  sudo apt-get clean
 else
   echo 'Skipping update of all installed packages.'
 fi
 echo
 echo 'Installing dependencies . . .'
+# Compile Client Requirements - https://github.com/drawpile/Drawpile/wiki/Building-from-sources
+# 
+# **Actual Dependencies**
+# cmake - Cross platform open source make system
+# extra-cmake-modules - Extra modules and scripts for CMake
+# g++ - compiler
+# libgif-dev - library for GIF images (development) (enables animated GIF export)
+# libkf5archive-dev - development files for karchive
+# libkf5dnssd-dev - development files for kdnssd (enables local server discovery)
+# libminiupnpc-dev - UPnP IGD client lightweight library development files (enables automatic port forwarding)
+# libqt5network5  - Qt 5 network module
+# libqt5svg5-dev - Qt 5 SVG module development files
+# miniupnpc - UPnP IGD client lightweight library client (enables automatic port forwarding)
+# qtbase5-dev - Qt 5 base development files
+# qtmultimedia5-dev - APIs for multimedia functionality - development files
+# qttools5-dev - Qt 5 tools development files
+
+
+sudo apt-get -q -y install cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev
+sudo apt-get clean
 echo
-sudo apt-get -q -y install cmake libqt5network5 libkf5dnssd-dev libkf5archive-dev libqt5svg5-dev qtmultimedia5-dev libsystemd-dev libminiupnpc-dev 
-echo
-sudo apt-get -q -y install qtbase5-dev g++ miniupnpc libgif-dev qttools5-dev libmicrohttpd-dev extra-cmake-modules mini-httpd nginx openssl 
+
+# **Optional Dependencies**
+# libmicrohttpd-dev - library embedding HTTP server functionality (development, used for remote administration of drawpile server)
+# libsystemd - systemd utility library - development files (enable socket drawpile server startup I believe)
+# mini-httpd - Small HTTP server (Used for creating password for use with NGINX)
+# nginx - small, powerful, scalable web/proxy server (used for reverse proxy to manage drawpile server in a more secure manner)
+# openssl - Secure Sockets Layer toolkit - cryptographic utility (used to create SSL key for encrypted drawing sessions)
+# QtColorPicker - Not chosen for install as it is bundled, but external library is used if available
+
+
+sudo apt-get -q -y install libmicrohttpd-dev libsystemd-dev mini-httpd nginx openssl
+sudo apt-get clean
 echo
 #
 # Not in use, left here for notes.
