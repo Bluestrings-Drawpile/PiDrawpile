@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.88
+drawpilescriptversion=2.89
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -297,11 +297,26 @@ elif [[ "$versionQT" < "5.8" ]]; then
 	echo "Installed version of qtbase5-dev is less than 5.8."
 	echo "Modification of source files required."
 	echo
-	echo 'Creating backup of file orawriter.cpp before modification.'
+	echo 'Creating backup of file loginhandler.cpp before modification.'
 	sudo cp "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp" "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp.backup"
+	echo
+	echo 'Creating backup of file aclfilter.cpp before modification.'
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp.backup"
 	echo
 	echo 'Modifying file loginhandler.cpp for use with older version of qtbase5-dev.'
 	sudo sed -i -e 's/#include <QNetworkReply>/#include <QNetworkReply>\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp"
+	echo
+	echo 'Modifying file aclfilter.cpp for use with older version of qtbase5-dev.'
+	sudo sed -i -e 's/#include "..\/shared\/net\/undo.h"/#include "..\/shared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp"
+	echo
+	echo
+	echo 'Creating backup of file navigator.cpp before modification.'
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp" "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
+	echo
+	echo 'Modifying file navigator.cpp for use with older version of qtbase5-dev.'
+	sudo sed -i -e 's/right.center()/0.5 * right.p1() + 0.5 * right.p2()/g' "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
+	
+	
 else
 	echo "Unable to make a determination of which version of qtbase5-dev is installed."
 fi
