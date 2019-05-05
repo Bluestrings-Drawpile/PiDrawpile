@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.89
+drawpilescriptversion=2.90
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -120,6 +120,40 @@ elif [[ "$drawpilescriptversion" > "$dpcheckversion" ]]; then
 	sleep 30s
 else
 	echo "Unable to determine script version, proceeding with script."
+fi
+echo
+
+# '--------------------------------------------------------------------------------'
+# '--------------------------------------------------------------------------------'
+
+UsingWhatLinuxDistro=$( uname -a | awk '{ print $2, $3 }' | cut -c 1-16 )
+	# Sample output of 'uname -a': 
+	# Linux raspberrypi 4.14.98-v7+ #1200 SMP Tue Feb 12 20:27:48 GMT 2019 armv7l GNU/Linux
+	# Raspbian Versions: 		https://en.wikipedia.org/wiki/Raspbian
+UsingWhatRaspCodename=$( lsb_release -a 2>/dev/null | grep -oh -m 1 stretch )
+	# Sample output of 'lsb_release -a': 
+	# No LSB modules are available.
+	# Distributor ID:	Raspbian
+	# Description:		Raspbian GNU/Linux 9.8 (stretch)
+	# Release:			9.8
+	# Codename:			stretch
+
+if [[ "$UsingWhatLinuxDistro" == "raspberrypi 4.14" ]] && [[ "$UsingWhatRaspCodename" == "stretch" ]] ; then
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+		echo "${bold}*****Adding Testing Package Repo for updated packages. . . .*****${normal}"
+	echo
+	echo "${bold}*****Drawpile requires newer QT Version than what is available*****${normal}"
+	echo "${bold}*****          within the stable repository . . . .           *****${normal}"
+	echo
+	echo -e "Package: *\nPin: release a=buster\nPin-Priority: 750" | sudo tee /etc/apt/preferences.d/buster.pref 2>&1 >/dev/null
+	echo "deb http://mirrordirector.raspbian.org/raspbian/ buster main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/buster.list 2>&1 >/dev/null
+	echo
+	echo -e "Package: *\nPin: release a=stretch\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/stretch.pref 2>&1 >/dev/null
+	sudo echo "deb http://mirrordirector.raspbian.org/raspbian/ stretch main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/stretch.list 2>&1 >/dev/null
+else
+	echo "Not using Raspbian. Skipping addition of testing distro for Raspbian."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -841,14 +875,15 @@ sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
 sudo chmod 755 /home/drawpileuser/
 echo
-if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ] 
-then 
+if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ]; then 
 	echo \"drawpile-srv.socket previously enabled, restarting server.\"
 	sudo systemctl stop --now drawpile-srv.service
 	sudo systemctl restart drawpile-srv.socket
-else [ \"\`systemctl is-enabled drawpile-srv.service\`\" = \"enabled\" ] 
+elif [ \"\`systemctl is-enabled drawpile-srv.service\`\" = \"enabled\" ]; then
 	echo \"drawpile-srv.service previously enabled, restarting server.\"
 	sudo systemctl restart drawpile-srv.service
+else
+	echo This message should not be visible.
 fi" > /home/drawpileuser/ssl.sh
 echo
 sudo chmod 755 /home/drawpileuser/
