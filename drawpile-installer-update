@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.90
+drawpilescriptversion=2.91
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -129,9 +129,11 @@ echo
 sudo rm -rf "$dpinstallloc/Programs/$scriptmgmtupdate"
 cd "$dpinstallloc/Programs"
 
-# '--------------------------------------------------------------------------------'
-# '--------------------------------------------------------------------------------'
-
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# Consider Addition of Testing Distro If Drawpile failed to compile
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 UsingWhatLinuxDistro=$( uname -a | awk '{ print $2, $3 }' | cut -c 1-16 )
 	# Sample output of 'uname -a': 
 	# Linux raspberrypi 4.14.98-v7+ #1200 SMP Tue Feb 12 20:27:48 GMT 2019 armv7l GNU/Linux
@@ -148,18 +150,119 @@ if [[ "$UsingWhatLinuxDistro" == "raspberrypi 4.14" ]] && [[ "$UsingWhatRaspCode
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}*****Adding Testing Package Repo for updated packages. . . .*****${normal}"
+	echo "${bold}*****Would you like to temporarily add the Testing Package *****${normal}"
+	echo "${bold}*****           Repo for updated packages. . . .           *****${normal}"
 	echo
-	echo "${bold}*****Drawpile requires newer QT Version than what is available*****${normal}"
-	echo "${bold}*****          within the stable repository . . . .           *****${normal}"
+	echo "This step exists in the event that you are unable to successfully"
+	echo "compile Drawpile using the built in changes provided by the script."
 	echo
-	echo -e "Package: *\nPin: release a=buster\nPin-Priority: 750" | sudo tee /etc/apt/preferences.d/buster.pref 2>&1 >/dev/null
-	echo "deb http://mirrordirector.raspbian.org/raspbian/ buster main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/buster.list 2>&1 >/dev/null
+	echo "If this is the first time you are running the script, select n for"
+	echo "no. Otherwise, you may attempt this step with a second attempt."
+	echo "When operations have completed, the script will remove the testing"
+	echo "repository options automatically."
 	echo
-	echo -e "Package: *\nPin: release a=stretch\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/stretch.pref 2>&1 >/dev/null
-	sudo echo "deb http://mirrordirector.raspbian.org/raspbian/ stretch main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/stretch.list 2>&1 >/dev/null
+	echo "${bold}Detailed Notes${normal}"
+	echo "Sometimes, updates require newer packages than what are available"
+	echo "within the stable package repository. This means that the script"
+	echo "will fail if it is a required package. The testing repository"
+	echo "packages should be stable and quite usable, so it should be safe"
+	echo "to use these updates without issue. However, since it is the testing"
+	echo "repository, there exists a chance it could mess up your installation"
+	echo "and require you to reinstall Raspbian. Presumably, this chance is low"
+	echo "but ultimately this script does not assume responsibility should"
+	echo "a problem arise. Use this only if your first attempt to compile"
+	echo "Drawpile fails."
+	echo
+	echo
+	echo 'Please choose if you would like to attempt the testing repository'
+	echo 'for packages to be installed.'
+	echo
+	echo 'y for yes'
+	echo 'n for no'
+	echo
+	while :; do
+		read -p "${bold}Please make your selection now by entering y or n:${normal} " TestingPackageDecision
+		if [ "$TestingPackageDecision" == "y" ] || [ "$TestingPackageDecision" == "Y" ] || [ "$TestingPackageDecision" == "yes" ] || [ "$TestingPackageDecision" == "YES" ] || [ "$TestingPackageDecision" == "Yes" ] || [ "$TestingPackageDecision" == "n" ] || [ "$TestingPackageDecision" == "N" ] || [ "$TestingPackageDecision" == "no" ] || [ "$TestingPackageDecision" == "NO" ] || [ "$TestingPackageDecision" == "No" ]; then
+			break
+		else
+			echo
+			echo "Invalid input selection, try again."
+			echo
+			continue
+		fi
+	done
+	if [ "$TestingPackageDecision" == "y" ] || [ "$TestingPackageDecision" == "Y" ] || [ "$TestingPackageDecision" == "yes" ] || [ "$TestingPackageDecision" == "YES" ] || [ "$TestingPackageDecision" == "Yes" ] ; then
+		echo
+		echo "${bold}*****Adding Testing Package Repo for updated packages. . . .*****${normal}"
+		echo
+		echo "${bold}*****Drawpile requires newer QT Version than what is available*****${normal}"
+		echo "${bold}*****          within the stable repository . . . .           *****${normal}"
+		echo
+		# --------------------------------------------------------------------------------
+		# --------------------------------------------------------------------------------
+		if [[ -e  "/etc/apt/preferences.d/buster.pref" ]]; then
+			echo "File buster.pref exists, skipping addition."
+			FileBusterPrefExist=yes
+		elif [[ ! -e "/etc/apt/preferences.d/buster.pref" ]]; then
+			echo "File buster.pref does not exist, adding file."
+			echo -e "Package: *\nPin: release a=buster\nPin-Priority: 750" | sudo tee /etc/apt/preferences.d/buster.pref 2>&1 >/dev/null
+			FileBusterPrefExist=no
+		else
+			echo "Cannot determine if file buster.pref exists or not."
+			echo "This message should not be visible."
+			FileBusterPrefExist=error
+		fi
+		# --------------------------------------------------------------------------------
+		if [[ -e  "/etc/apt/sources.list.d/buster.list" ]]; then
+			echo "File buster.list exists, skipping addition."
+			FileBusterListExist=yes
+		elif [[ ! -e "/etc/apt/sources.list.d/buster.list" ]]; then
+			echo "File buster.list does not exist, adding file."
+			echo "deb http://mirrordirector.raspbian.org/raspbian/ buster main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/buster.list 2>&1 >/dev/null
+			FileBusterListExist=no
+		else
+			echo "Cannot determine if file buster.list exists or not."
+			echo "This message should not be visible."
+			FileBusterListExist=error
+		fi
+		# --------------------------------------------------------------------------------
+		# --------------------------------------------------------------------------------
+		if [[ -e  "/etc/apt/preferences.d/stretch.pref" ]]; then
+			echo "File stretch.pref exists, skipping addition."
+			FileStretchPrefExist=yes
+		elif [[ ! -e "/etc/apt/preferences.d/stretch.pref" ]]; then
+			echo "File stretch.pref does not exist, adding file."
+			echo -e "Package: *\nPin: release a=stretch\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/stretch.pref 2>&1 >/dev/null
+			FileStretchPrefExist=no
+		else
+			echo "Cannot determine if file stretch.pref exists or not."
+			echo "This message should not be visible."
+			FileStretchPrefExist=error
+		fi
+		# --------------------------------------------------------------------------------
+		if [[ -e  "/etc/apt/sources.list.d/stretch.list" ]]; then
+			echo "File stretch.list exists, skipping addition."
+			FileStretchListExist=yes
+		elif [[ ! -e "/etc/apt/sources.list.d/stretch.list" ]]; then
+			echo "File stretch.list does not exist, adding file."
+			sudo echo "deb http://mirrordirector.raspbian.org/raspbian/ stretch main contrib non-free rpi" | sudo tee /etc/apt/sources.list.d/stretch.list 2>&1 >/dev/null
+			FileStretchListExist=no
+		else
+			echo "Cannot determine if file stretch.list exists or not."
+			echo "This message should not be visible."
+			FileStretchListExist=error
+		fi
+		# --------------------------------------------------------------------------------
+		# --------------------------------------------------------------------------------
+	elif [ "$TestingPackageDecision" == "n" ] || [ "$TestingPackageDecision" == "N" ] || [ "$TestingPackageDecision" == "no" ] || [ "$TestingPackageDecision" == "NO" ] || [ "$TestingPackageDecision" == "No" ] ; then
+		echo "Skipping addition of testing package repository for Raspbian Stretch."
+	else
+		echo "Skipping addition of testing package repository for Raspbian Stretch."
+		echo
+		echo "This message should not be visible as an invalid option was provided."
+	fi
 else
-	echo "Not using Raspbian. Skipping addition of testing distro for Raspbian."
+	echo "Not using Raspbian. Skipping possible addition of testing distro."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -348,8 +451,20 @@ elif [[ "$versionQT" < "5.8" ]]; then
 	echo
 	echo 'Modifying file navigator.cpp for use with older version of qtbase5-dev.'
 	sudo sed -i -e 's/right.center()/0.5 * right.p1() + 0.5 * right.p2()/g' "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
-	
-	
+	echo
+	cd "$dpinstallloc/Programs/Drawpile"
+	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer.patch"
+	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
+	patch -p1 < elapsed-timer.patch
+	patch -p1 < elapsed-timer2.patch
+	echo
+	echo 'Modifying file joindialog.cpp for use with older version of qtbase5-dev.'
+	sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dpinstallloc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
+	echo
+	#
+	# Changing back to prior directory before continuing script.
+	#
+	cd "$dpinstallloc/Programs/Drawpile/build"
 else
 	echo "Unable to make a determination of which version of qtbase5-dev is installed."
 fi
@@ -977,6 +1092,86 @@ else
 	sudo systemctl start --now drawpile-srv.socket
 fi
 echo
+
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# Removal of Testing Distro Changes if Previously Applied
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+if [ "$TestingPackageDecision" == "y" ] || [ "$TestingPackageDecision" == "Y" ] || [ "$TestingPackageDecision" == "yes" ] || [ "$TestingPackageDecision" == "YES" ] || [ "$TestingPackageDecision" == "Yes" ] ; then
+	echo
+	echo "${bold}*****Removing Testing Package Repo for updated packages. . . .*****${normal}"
+	echo
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+	if [[ "$FileBusterPrefExist" = "yes" ]]; then
+		echo "File buster.pref already existed prior to script modification."
+		echo "No changes made to this file."
+	elif [[ "$FileBusterPrefExist" = "no" ]]; then
+		echo "File buster.pref did not exist prior to script modification."
+		echo "Removing this file."
+		sudo rm -f /etc/apt/preferences.d/buster.pref
+	else
+		echo "Cannot determine if file buster.pref existed or not prior"
+		echo "to script modification of the system."
+		echo
+		echo "This message should not be visible."
+	fi
+	# --------------------------------------------------------------------------------
+	if [[ "$FileBusterListExist" = "yes" ]]; then
+		echo "File buster.list already existed prior to script modification."
+		echo "No changes made to this file."
+	elif [[ "$FileBusterListExist" = "no" ]]; then
+		echo "File buster.list did not exist prior to script modification."
+		echo "Removing this file."
+		sudo rm -f /etc/apt/sources.list.d/buster.list
+	else
+		echo "Cannot determine if file buster.list existed or not prior"
+		echo "to script modification of the system."
+		echo
+		echo "This message should not be visible."
+	fi
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+	if [[ "$FileStretchPrefExist" = "yes" ]]; then
+		echo "File stretch.pref already existed prior to script modification."
+		echo "No changes made to this file."
+	elif [[ "$FileStretchPrefExist" = "no" ]]; then
+		echo "File stretch.pref did not exist prior to script modification."
+		echo "Removing this file."
+		sudo rm -f /etc/apt/preferences.d/stretch.pref
+	else
+		echo "Cannot determine if file stretch.pref existed or not prior"
+		echo "to script modification of the system."
+		echo
+		echo "This message should not be visible."
+	fi
+	# --------------------------------------------------------------------------------
+	if [[ "$FileStretchListExist" = "yes" ]]; then
+		echo "File stretch.list already existed prior to script modification."
+		echo "No changes made to this file."
+	elif [[ "$FileStretchListExist" = "no" ]]; then
+		echo "File stretch.list did not exist prior to script modification."
+		echo "Removing this file."
+		sudo rm -f /etc/apt/sources.list.d/stretch.list
+	else
+		echo "Cannot determine if file stretch.list existed or not prior"
+		echo "to script modification of the system."
+		echo
+		echo "This message should not be visible."
+	fi
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+elif [ "$TestingPackageDecision" == "n" ] || [ "$TestingPackageDecision" == "N" ] || [ "$TestingPackageDecision" == "no" ] || [ "$TestingPackageDecision" == "NO" ] || [ "$TestingPackageDecision" == "No" ] ; then
+	# Do nothing as no error was detected.
+	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+	:
+else
+	:
+fi
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
