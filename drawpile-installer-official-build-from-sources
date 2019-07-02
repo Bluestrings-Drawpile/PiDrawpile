@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.92
+drawpilescriptversion=2.93
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -577,7 +577,7 @@ echo
 #---------------------------------------------------------------------------------------------------------------------------------
 # These lines are to fix an issue with an older version of KArchive which cannot be easily upgraded.
 # KArchive apparently doesn't supply a version number macro so this can't be detected at compile time as a problem.
-# File is located under Drawpile/src/client/ora/orawriter.cpp and replaces the following text
+# File is located under Drawpile/src/libclient/ora/orawriter.cpp and replaces the following text
 # zip.errorLine() 
 # zf.errorLine() 
 #
@@ -610,11 +610,11 @@ elif [[ "$version" < "5.29" ]]; then
 	echo "Modification of source files required."
 	echo
 	echo 'Creating backup of file orawriter.cpp before modification.'
-	sudo cp "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp.backup"
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/libclient/ora/orawriter.cpp" "$dpinstallloc/Programs/Drawpile/src/libclient/ora/orawriter.cpp.backup"
 	echo
 	echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
-	sudo sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
-	sudo sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/client/ora/orawriter.cpp"
+	sudo sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
+	sudo sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dpinstallloc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
 else
 	echo "Unable to make a determination of which version of K Archive is installed."
 fi
@@ -642,33 +642,40 @@ elif [[ "$versionQT" < "5.8" ]]; then
 	echo "Installed version of qtbase5-dev is less than 5.8."
 	echo "Modification of source files required."
 	echo
-	echo 'Creating backup of file loginhandler.cpp before modification.'
-	sudo cp "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp" "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp.backup"
-	echo
-	echo 'Creating backup of file aclfilter.cpp before modification.'
-	sudo cp "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp" "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp.backup"
+	echo 'Creating backup of file loginhandler.cpp before modification.'	
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/libserver/loginhandler.cpp" "$dpinstallloc/Programs/Drawpile/src/libserver/loginhandler.cpp.backup"
 	echo
 	echo 'Modifying file loginhandler.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/#include <QNetworkReply>/#include <QNetworkReply>\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/shared/server/loginhandler.cpp"
+	sudo sed -i -e 's/#include <QNetworkReply>/#include <QNetworkReply>\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/libserver/loginhandler.cpp"
+	echo
+	echo
+	echo 'Creating backup of file aclfilter.cpp before modification.'
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp" "$dpinstallloc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp.backup"
 	echo
 	echo 'Modifying file aclfilter.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/#include "..\/shared\/net\/undo.h"/#include "..\/shared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/client/canvas/aclfilter.cpp"
+	sudo sed -i -e 's/#include "..\/shared\/net\/undo.h"/#include "..\/shared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
+	sudo sed -i -e 's/#include "..\/libshared\/net\/undo.h"/#include "..\/libshared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dpinstallloc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
 	echo
 	echo
 	echo 'Creating backup of file navigator.cpp before modification.'
-	sudo cp "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp" "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp" "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp.backup"
 	echo
 	echo 'Modifying file navigator.cpp for use with older version of qtbase5-dev.'
 	sudo sed -i -e 's/right.center()/0.5 * right.p1() + 0.5 * right.p2()/g' "$dpinstallloc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
+	echo
+	echo
+	echo 'Creating backup of file joindialog.cpp before modification.'
+	sudo cp "$dpinstallloc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp" "$dpinstallloc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp.backup"
+	echo
+	echo 'Modifying file joindialog.cpp for use with older version of qtbase5-dev.'
+	sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dpinstallloc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
+	echo
 	echo
 	cd "$dpinstallloc/Programs/Drawpile"
 	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer.patch"
 	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
 	patch -p1 < elapsed-timer.patch
 	patch -p1 < elapsed-timer2.patch
-	echo
-	echo 'Modifying file joindialog.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dpinstallloc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
 	echo
 	#
 	# Changing back to prior directory before continuing script.
