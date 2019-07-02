@@ -1,7 +1,7 @@
-diff --git a/src/shared/listings/announcements.cpp b/src/shared/listings/announcements.cpp
+diff --git a/src/libserver/announcements.cpp b/src/libserver/announcements.cpp
 index 05bdc35e..0b7acc13 100644
---- a/src/shared/listings/announcements.cpp
-+++ b/src/shared/listings/announcements.cpp
+--- a/src/libserver/announcements.cpp
++++ b/src/libserver/announcements.cpp
 @@ -61,7 +61,7 @@ void Announcements::announceSession(Announcable *session, const QUrl &listServer
  		listServer,
  		session,
@@ -38,10 +38,10 @@ index 05bdc35e..0b7acc13 100644
  		}
  	}
  
-diff --git a/src/shared/listings/announcements.h b/src/shared/listings/announcements.h
+diff --git a/src/libserver/announcements.h b/src/libserver/announcements.h
 index dfb4c934..b23e3e36 100644
---- a/src/shared/listings/announcements.h
-+++ b/src/shared/listings/announcements.h
+--- a/src/libserver/announcements.h
++++ b/src/libserver/announcements.h
 @@ -23,7 +23,7 @@
  
  #include <QObject>

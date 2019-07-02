@@ -1,7 +1,7 @@
-diff --git a/src/client/recording/indexbuilder.cpp b/src/client/recording/indexbuilder.cpp
+diff --git a/src/libclient/recording/indexbuilder.cpp b/src/libclient/recording/indexbuilder.cpp
 index a608e776..29034fb7 100644
---- a/src/client/recording/indexbuilder.cpp
-+++ b/src/client/recording/indexbuilder.cpp
+--- a/src/libclient/recording/indexbuilder.cpp
++++ b/src/libclient/recording/indexbuilder.cpp
 @@ -32,7 +32,7 @@
  #include "core/annotationmodel.h"
  
