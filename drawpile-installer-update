@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.93
+drawpilescriptversion=2.94
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -17,26 +17,62 @@ normal=$(tput sgr0)
 # https://stackoverflow.com/questions/2924697/how-does-one-output-bold-text-in-bash
 # http://linuxcommand.org/lc3_adv_tput.php
 echo
+function DrawpileCreditsFunction () {
 echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 echo 'you want to donate some money as thanks for all that he does!'
 echo "${underline}laakkonenc@gmail.com${normal}"
 echo
-echo "Script Version ${bold}$drawpilescriptversion${normal}"
-echo "'Google Doc --> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
-echo "GitHub --> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
-echo
-echo 'Please make sure you are using the latest version of this script before'
-echo 'continuing. You can get the latest version from Github or by making sure'
-echo 'the script number above matches the Drawpile Google document version number'
-echo 'in the upper right of every page where this script was obtained. If you do'
-echo 'not have the newest version, this script should auoto retrieve the newest'
-echo 'version of the script. If not, close this window and get the newest'
-echo 'version before proceeding.'
+}
+
+function DrawpileCreditsURLsFunctions () {
+echo "Script Ver.	--> ${bold}$drawpilescriptversion${normal}"
+echo "Google Doc 	--> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
+echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
+}
+
+DrawpileCreditsFunction
+DrawpileCreditsURLsFunctions
 echo
 read -p 'Press [Enter] key to continue...'
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+echo
+# Prompt for user name change if root detected, first attempting Pi (and verifying), 
+#     and requesting user input with verification directory exists.
+
+if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; then
+	USERNAME=pi
+	if [[ -e  "/home/$USERNAME" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		echo "When running script with sudo or su, please specify your user account name."
+		echo
+		read -p "Enter username: " USERNAME
+		echo
+		while [[ ! -e "/home/$USERNAME" ]]
+		do
+			echo
+			echo "Invalid user name entered. Please enter a valid user name. User"
+			echo "name verified by checking for valid folder path listed below:"
+			echo "     /home/$USERNAME"
+			echo
+			read -p "Enter user name: " USERNAME
+			echo
+		done
+	fi
+else
+	USERNAME=$USER
+fi
+
+OptionLoc1="/home/$USERNAME/Public"
+OptionLoc2="/home/$USERNAME/Desktop"
+OptionLoc3="/home/$USERNAME/Documents"
+OptionLoc4="/home/$USERNAME/Pictures"
+InvalidPathText="${red}${bold}X - Automatic local path selection is invalid -${normal}"
+
+function DisplayLocationSelectionOptions {
 echo
 echo 'Pick an install location for the use of the Drawpile Server folders.'
 echo 'This includes session recordings, file backed sessions which help the'
@@ -44,39 +80,125 @@ echo 'server survive crashes or power outages, or template files which help'
 echo 'create rooms with specific settings that exist on the server at all'
 echo 'times.'
 echo
-echo "1 - Public Folder ${underline}(Recommended)${normal}			- /home/pi/Public"
-echo '2 - Desktop Folder				- /home/pi/Desktop'
-echo '3 - Documents Folder				- /home/pi/Documents'
-echo '4 - Pictures Folder				- /home/pi/Pictures'
-echo '  - Other, simply enter the exact location desired without a / at the end.'
-echo '    This is an advanced option and not suggested for average users.'
-echo '    If using a path with spaces, do NOT use double or single quotes as'
-echo '        the script will not work if you do.'
-echo "    ${underline}Acceptable Example:${normal} /home/pi/Desktop/My Drawpile Server"
+[[ -d "$OptionLoc1" ]] && echo "1 - Public Folder ${underline}(Recommended)${normal}			- $OptionLoc1" || echo "$InvalidPathText $OptionLoc1"
+[[ -d "$OptionLoc2" ]] && echo "2 - Desktop Folder				- $OptionLoc2" || echo "$InvalidPathText $OptionLoc2"
+[[ -d "$OptionLoc3" ]] && echo "3 - Documents Folder				- $OptionLoc3" || echo "$InvalidPathText $OptionLoc3"
+[[ -d "$OptionLoc4" ]] && echo "4 - Pictures Folder				- $OptionLoc4" || echo "$InvalidPathText $OptionLoc4"
+echo "5 - Enter your own location and create the folders if they do not exist."
+echo '  - Specify an already existing location: simply enter the exact location'
+echo '        desired without a / at the end. This is an advanced option and not'
+echo '        suggested for average users. If using a path with spaces, do NOT '
+echo '        use double or single quotes as the script will not work if you do.'
+echo '        This directory must already exist. If not, create it manually '
+echo '        before using this script.'
+echo
+echo "      ${underline}Acceptable Example:${normal} /home/$USERNAME/Desktop/My Drawpile Server"
+echo "	${underline}Note:${normal} This location is an example and may not exist on your computer."
 echo
 echo "${bold}Note:${normal} If you use Windows and Share files across the network, this script"
-echo 'will give you the option later to share just the Public folder, or'
-echo 'the Music, Pictures, Public, and Videos folders, or the other location'
-echo 'personally specified, or no folders.'
+echo '     will give you the option later to share just the Public folder, or'
+echo '     the Music, Pictures, Public, and Videos folders, or the other'
+echo '     location personally specified, or no folders.'
 echo
-echo 'Please make your selection now by entering the number or folder path:'
-echo 
-read dpinstallloc
+}
+
+DisplayLocationSelectionOptions
+# The below verifies the input as either a number 1-4, or existing folder location without a / at the end.
+# If there is a / at the end, it will break the script.
+# 2nd line below is an old line after the line above it, left for reference. 
+# [[ $dpinstallloc =~ ^[0-9]+$ ]] || [[ -d "$dpinstallloc" ]] || { echo; echo "Enter a valid number or existing path location."; echo "Don't use double or single quotes."; echo ; echo 'If selecting a path, simply enter the exact location desired without a / at'; echo '        the end. If using a path with spaces, do NOT use double or single '; echo '        quotes as the script will not work if you do. This directory must'; echo '        already exist. If not, create it manually before using this script.'; echo; continue; } 
+# if [[ -d "$dpinstallloc" ]] && [ "${dpinstallloc: -1}" != \" ] && [ "${dpinstallloc: -1}" != \' ] && [ "${dpinstallloc: -1}" != / ] || (( "$dpinstallloc" >= 1 && "$dpinstallloc" <= 5 )) ; then
+function InvalidPathSelection01 () {
+		echo
+		echo "${red}${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+		echo "${red}${bold}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${normal}"
+		echo "${red}${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+		echo
+		echo "${red}${bold}Invalid number or the path selection does not exist, try again. ${normal}"
+		echo
+		echo "${red}${bold}If selecting a path, simply enter the exact location desired without a / at${normal}"
+		echo "${red}${bold}        the end. If using a path with spaces, do NOT use double or single ${normal}"
+		echo "${red}${bold}        quotes as the script will not work if you do. This directory must${normal}"
+		echo "${red}${bold}        already exist. If not, create it manually before using this script.${normal}"
+		echo
+		echo "${red}${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+		echo "${red}${bold}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${normal}"
+		echo "${red}${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+		echo 
+}
+
+while :; do
+	read -p "${bold}Please make your selection now by entering the number or folder path:${normal} " dpinstallloc
+	[[ $dpinstallloc =~ ^[0-9]+$ ]] || [[ -d "$dpinstallloc" ]] || { InvalidPathSelection01; DisplayLocationSelectionOptions; continue; }
+	if [[ -d "$dpinstallloc" ]] && [ "${dpinstallloc: -1}" != \" ] && [ "${dpinstallloc: -1}" != \' ] && [ "${dpinstallloc: -1}" != / ] ; then
+		break
+	elif (( "$dpinstallloc" >= "1" && "$dpinstallloc" <= "4" )) ; then
+		if [[ -d "$OptionLoc1" ]] || [[ -d "$OptionLoc2" ]] || [[ -d "$OptionLoc3" ]] || [[ -d "$OptionLoc4" ]] ; then
+			break
+		else
+			InvalidPathSelection01
+			DisplayLocationSelectionOptions
+		fi
+	elif [ "$dpinstallloc" = "5" ] ; then
+		echo
+		echo "This is your current working directory."
+		echo
+		pwd
+		echo
+		echo "You can enter this path and any folders you wish to create the server "
+		echo "files within or enter the full path of your choosing . . . "
+		echo
+		read -p "${bold}Please enter your desired folder path location:${normal} " dpinstallloc5
+		echo
+		echo
+		echo "${bold}Is this path correct?: $dpinstallloc5 ${normal}"
+		while :; do
+			read -p "${bold}Please make your selection now by entering y or n:${normal} " verifydpinstallloc
+			if [ "$verifydpinstallloc" == "y" ] || [ "$verifydpinstallloc" == "Y" ] || [ "$verifydpinstallloc" == "yes" ] || [ "$verifydpinstallloc" == "YES" ] || [ "$verifydpinstallloc" == "Yes" ] || [ "$verifydpinstallloc" == "n" ] || [ "$verifydpinstallloc" == "N" ] || [ "$verifydpinstallloc" == "no" ] || [ "$verifydpinstallloc" == "NO" ] || [ "$verifydpinstallloc" == "No" ]; then
+				break
+			else
+				echo
+				echo "Invalid input selection, try again."
+				echo
+				continue
+			fi
+		done
+		if [ "$verifydpinstallloc" == "y" ] || [ "$verifydpinstallloc" == "Y" ] || [ "$verifydpinstallloc" == "yes" ] || [ "$verifydpinstallloc" == "YES" ] || [ "$verifydpinstallloc" == "Yes" ]; then
+			echo
+			sudo mkdir -p -v "$dpinstallloc5"
+			break
+		elif [ "$verifydpinstallloc" == "n" ] || [ "$verifydpinstallloc" == "N" ] || [ "$verifydpinstallloc" == "no" ] || [ "$verifydpinstallloc" == "NO" ] || [ "$verifydpinstallloc" == "No" ]; then
+			echo
+			InvalidPathSelection01
+			DisplayLocationSelectionOptions
+		else
+			echo
+			echo "This message should not be visible as an invalid option was provided."
+		fi
+	else
+		InvalidPathSelection01
+		DisplayLocationSelectionOptions
+	fi
+done
 echo
 if [ "$dpinstallloc" == "1" ]; then
-  dpinstallloc=/home/pi/Public
-  echo "Install location chosen is $dpinstallloc"
+	dpinstallloc=$OptionLoc1
+	echo "Install location chosen is $dpinstallloc"
 elif [ "$dpinstallloc" == "2" ]; then
-  dpinstallloc=/home/pi/Desktop
-  echo "Install location chosen is $dpinstallloc"
+	dpinstallloc=$OptionLoc2
+	echo "Install location chosen is $dpinstallloc"
 elif [ "$dpinstallloc" == "3" ]; then
-  dpinstallloc=/home/pi/Documents
-  echo "Install location chosen is $dpinstallloc"
+	dpinstallloc=$OptionLoc3
+	echo "Install location chosen is $dpinstallloc"
 elif [ "$dpinstallloc" == "4" ]; then
-  dpinstallloc=/home/pi/Pictures
-  echo "Install location chosen is $dpinstallloc"
+	dpinstallloc=$OptionLoc4
+	echo "Install location chosen is $dpinstallloc"
+elif [ "$dpinstallloc" == "5" ]; then
+	dpinstallloc=dpinstallloc5
+	echo "Install location chosen is $dpinstallloc"
 else
-  echo "Install location chosen is $dpinstallloc"
+	sudo mkdir -p -v "$dpinstallloc"
+	echo "Install location chosen is $dpinstallloc"
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -264,6 +386,114 @@ if [[ "$UsingWhatLinuxDistro" == "raspberrypi 4.14" ]] && [[ "$UsingWhatRaspCode
 else
 	echo "Not using Raspbian. Skipping possible addition of testing distro."
 fi
+echo
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+#
+# Check if package is available and attempt to install it. Provide error message 
+# if not. Used for optional packages not related to main install of Drawpile
+# Server
+#
+function PackageVersionCheckFunction () {
+
+if [ "$NotAvailableCheck" -eq "1" ]; then
+	echo "${bold}${red}Package $packagename is not available in your distribution's repository.${normal}"
+	echo
+	[ -z "$packagedescription1NONE" ] || echo $packagedescription1NONE
+	[ -z "$packagedescription2NONE" ] || echo $packagedescription2NONE
+	[ -z "$packagedescription3NONE" ] || echo $packagedescription3NONE
+	[ -z "$packagedescription4NONE" ] || echo $packagedescription4NONE
+	[ -z "$packagedescription5NONE" ] || echo $packagedescription5NONE
+	echo
+	[ -z "$packageaction1NONE" ] || echo $packageaction1NONE
+	echo
+	echo
+	[ -z "$packageaction2NONE" ] || $packageaction2NONE
+	[ -z "$packageaction3NONE" ] || $packageaction3NONE
+elif [[ "$version" = "(none)" ]]; then
+	echo "Package ${bold}$packagename${normal} is not installed."
+	[ -z "$packagedescription1InitialCheckNone" ] || echo $packagedescription1InitialCheckNone
+	[ -z "$packagedescription2InitialCheckNone" ] || echo $packagedescription2InitialCheckNone
+	[ -z "$packagedescription3InitialCheckNone" ] || echo $packagedescription3InitialCheckNone
+	[ -z "$packagedescription4InitialCheckNone" ] || echo $packagedescription4InitialCheckNone
+	[ -z "$packagedescription5InitialCheckNone" ] || echo $packagedescription5InitialCheckNone
+	echo
+	sudo apt-get -q -y install $packagename
+	echo
+	if [[ "$version" = "(none)" ]]; then
+		echo "${bold}${red}Package $packagename is not available in your distribution's repository.${normal}"
+		echo
+		[ -z "$packagedescription1NONE" ] || echo $packagedescription1NONE
+		[ -z "$packagedescription2NONE" ] || echo $packagedescription2NONE
+		[ -z "$packagedescription3NONE" ] || echo $packagedescription3NONE
+		[ -z "$packagedescription4NONE" ] || echo $packagedescription4NONE
+		[ -z "$packagedescription5NONE" ] || echo $packagedescription5NONE
+		echo
+		[ -z "$packageaction1NONE" ] || echo $packageaction1NONE
+		echo
+		echo
+		[ -z "$packageaction2NONE" ] || $packageaction2NONE
+		[ -z "$packageaction3NONE" ] || $packageaction3NONE
+	elif [[ "$version" > "$minimumversion" ]] || [[ "$version" = "$minimumversion" ]]; then
+		echo "Package ${bold}$packagename $version${normal} is installed."
+	elif [[ "$version" < "$minimumversion" ]]; then
+		echo "${bold}${yellow}Package $packagename ($version) is not the minimum version ($minimumversion)${normal}."
+		echo
+		[ -z "$packagedescription1NotMin" ] || echo $packagedescription1NotMin
+		[ -z "$packagedescription2NotMin" ] || echo $packagedescription2NotMin
+		[ -z "$packagedescription3NotMin" ] || echo $packagedescription3NotMin
+		[ -z "$packagedescription4NotMin" ] || echo $packagedescription4NotMin
+		[ -z "$packagedescription5NotMin" ] || echo $packagedescription5NotMin
+		echo 
+		[ -z "$packageaction1NotMin" ] || echo $packageaction1NotMin
+		echo
+		echo
+		[ -z "$packageaction2NotMin" ] || $packageaction2NotMin
+		[ -z "$packageaction3NotMin" ] || $packageaction3NotMin
+	else
+		echo "Unable to make a determination of which version of $packagename is installed."
+		echo "This message should not be visible."
+	fi
+elif [[ "$version" > "$minimumversion" ]] || [[ "$version" = "$minimumversion" ]]; then
+	echo "Package ${bold}$packagename $version${normal} is installed."
+elif [[ "$version" < "$minimumversion" ]]; then
+	echo "${bold}${yellow}Package $packagename ($version) is not the minimum version ($minimumversion)${normal}."
+	echo
+	[ -z "$packagedescription1NotInitiallyMin" ] || echo $packagedescription1NotInitiallyMin
+	[ -z "$packagedescription2NotInitiallyMin" ] || echo $packagedescription2NotInitiallyMin
+	[ -z "$packagedescription3NotInitiallyMin" ] || echo $packagedescription3NotInitiallyMin
+	[ -z "$packagedescription4NotInitiallyMin" ] || echo $packagedescription4NotInitiallyMin
+	[ -z "$packagedescription5NotInitiallyMin" ] || echo $packagedescription5NotInitiallyMin
+	echo 
+	sudo apt-get -q -y install $packagename
+	echo
+	if [[ "$version" > "$minimumversion" ]] || [[ "$version" = "$minimumversion" ]]; then
+		echo "Package ${bold}$packagename $version${normal} is installed."
+	elif [[ "$version" < "$minimumversion" ]]; then
+		echo "${bold}${yellow}Package $packagename ($version) is not the minimum version ($minimumversion)${normal}."
+		echo
+		[ -z "$packagedescription1NotMin" ] || echo $packagedescription1NotMin
+		[ -z "$packagedescription2NotMin" ] || echo $packagedescription2NotMin
+		[ -z "$packagedescription3NotMin" ] || echo $packagedescription3NotMin
+		[ -z "$packagedescription4NotMin" ] || echo $packagedescription4NotMin
+		[ -z "$packagedescription5NotMin" ] || echo $packagedescription5NotMin
+		echo 
+		[ -z "$packageaction1NotMin" ] || echo $packageaction1NotMin
+		echo
+		echo
+		[ -z "$packageaction2NotMin" ] || $packageaction2NotMin
+		[ -z "$packageaction3NotMin" ] || $packageaction3NotMin
+	else
+		echo "Unable to make a determination of which version of $packagename is installed."
+		echo "This message should not be visible."
+	fi
+else
+	echo "Unable to make a determination of which version of $packagename is installed."
+	echo "This message should not be visible."
+fi
+}
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
