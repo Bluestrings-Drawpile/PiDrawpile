@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.94
+drawpilescriptversion=2.95
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -1221,8 +1221,9 @@ echo
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
 echo
-sudo sed -i 's!proxy_pass http://127.0.0.1:8080/\;!proxy_pass http://127.0.0.1:27780/\;!' /etc/nginx/nginx.conf
-sudo sed -i 's!proxy_pass http://127.0.0.1:22780/\;!proxy_pass http://127.0.0.1:27780/\;!' /etc/nginx/nginx.conf
+sudo sed -i 's!proxy_pass http://127.0.0.1:8080/\;!proxy_pass http://127.0.0.1:27780/api/\;!' /etc/nginx/nginx.conf
+sudo sed -i 's!proxy_pass http://127.0.0.1:22780/\;!proxy_pass http://127.0.0.1:27780/api/\;!' /etc/nginx/nginx.conf
+sudo sed -i 's!proxy_pass http://127.0.0.1:27780/\;!proxy_pass http://127.0.0.1:27780/api/\;!' /etc/nginx/nginx.conf
 sudo /etc/init.d/nginx restart
 sudo nginx -s reload
 sudo /etc/init.d/nginx restart
