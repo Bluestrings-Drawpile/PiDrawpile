@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.90
+drawpilescriptversion=2.91
 scriptname=drawpile-installer-v1-0-6-official-build-from-sources
 scriptname2=drawpile-installer-v1-0-6-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -799,7 +799,7 @@ sudo chmod 777 /home/drawpileuser/
 sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=$country/ST=$state/L=$locality/O=$organization/OU=$unitname/CN=$hostname/emailAddress=$email\"
 sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
-sudo chmod 755 /home/drawpileuser/
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)
 echo
 if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ] 
 then 
@@ -810,7 +810,7 @@ else [ \"\`systemctl is-enabled drawpile-srv.service\`\" = \"enabled\" ]
 	sudo systemctl restart drawpile-srv.service
 fi" > /home/drawpileuser/ssl.sh
 echo
-sudo chmod 755 /home/drawpileuser/
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)
 echo
 sudo chmod 777 /home/drawpileuser/ssl.sh
 echo
@@ -1067,7 +1067,7 @@ https://drawpile.net/api/sessions/
 [users]
 $username:plain;$password;MOD,HOST" > /home/drawpileuser/config.txt
 sudo chmod 777 /home/drawpileuser/config.txt
-sudo chmod 755 /home/drawpileuser/
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -1745,9 +1745,9 @@ sudo chmod 777 /home/drawpileuser/
 sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=\$country/ST=\$state/L=\$locality/O=\$organization/OU=\$unitname/CN=\$hostname/emailAddress=\$email\"
 sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
-sudo chmod 755 /home/drawpileuser/\" > /home/drawpileuser/ssl.sh
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)\" > /home/drawpileuser/ssl.sh
 echo
-sudo chmod 755 /home/drawpileuser/
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)
 echo
 sudo chmod 777 /home/drawpileuser/ssl.sh
 echo
@@ -1981,7 +1981,7 @@ https://drawpile.net/api/sessions/
 [users]
 \$username:plain;\$password;MOD,HOST\" > /home/drawpileuser/config.txt
 sudo chmod 777 /home/drawpileuser/config.txt
-sudo chmod 755 /home/drawpileuser/
+sudo chmod 755 /home/drawpileuser/!(ssl.sh)
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
