@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.95
+drawpilescriptversion=2.96
 scriptname=drawpile-installer-official-build-from-sources
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -715,6 +715,17 @@ elif [ "$dns" == "2" ]; then
   sudo tar vzxf noip-duc-linux.tar.gz
   cd noip-2.1.9-1
   sudo make
+  if [[ -e  "/usr/local/bin/noip2" ]]; then
+	LocationCreatednoip2Executable=/usr/local/bin
+  elif [[ -e  "/usr/bin/noip2" ]]; then
+	LocationCreatednoip2Executable=/usr/bin
+  else
+	echo Was unable to determine location of noip2 executable.
+	echo This will cause issues with the script.
+	echo
+	sleep 30s
+	exit
+  fi
   echo
   echo 'https://www.noip.com/'
   echo
@@ -736,10 +747,10 @@ elif [ "$dns" == "2" ]; then
   echo 'is listed in minutes, if you choose 5 the update interval will be 5 minutes.'
   echo 'If you choose 30 the interval will be 30 minutes.'
   sudo make install
-  sudo /usr/local/bin/noip2
-  #echo 'Confirming service is working properly...'
-  #sudo noip2 ­-S
-  #Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
+  sudo $LocationCreatednoip2Executable/noip2
+  # echo 'Confirming service is working properly...'
+  # sudo noip2 -S
+  # Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
   
   echo 'If you made a typo when putting in your password for no IP, simply'
   echo 'type the following:'
@@ -1127,6 +1138,19 @@ echo '--------------------------------------------------------------------------
 echo
 echo "${bold}*****Drawpile is Compiled . . *****${normal}"
 echo
+
+if [[ -e  "/usr/local/bin/drawpile-srv" ]]; then
+	LocationCreatedExecutable=/usr/local/bin
+elif [[ -e  "/usr/bin/drawpile-srv" ]]; then
+	LocationCreatedExecutable=/usr/bin
+else
+		echo "Was unable to determine location of created executable."
+		echo "This will cause issues with the script."
+		echo
+		sleep 30s
+		exit
+fi
+
 echo
 echo "${bold}***** Now setting up for automated startup . . .*****${normal}"
 echo
@@ -1268,7 +1292,9 @@ sudo chmod 777 /home/drawpileuser/
 sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=$country/ST=$state/L=$locality/O=$organization/OU=$unitname/CN=$hostname/emailAddress=$email\"
 sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
-sudo chmod 755 /home/drawpileuser/!(ssl.sh)
+sudo chmod 755 /home/drawpileuser/ -R
+echo
+sudo chmod 777 /home/drawpileuser/ssl.sh
 echo
 if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ]; then 
 	echo \"drawpile-srv.socket previously enabled, restarting server.\"
@@ -1281,7 +1307,7 @@ else
 	echo This message should not be visible.
 fi" > /home/drawpileuser/ssl.sh
 echo
-sudo chmod 755 /home/drawpileuser/!(ssl.sh)
+sudo chmod 755 /home/drawpileuser/ -R
 echo
 sudo chmod 777 /home/drawpileuser/ssl.sh
 echo
@@ -1562,7 +1588,7 @@ After=network.target
 Documentation=man:drawpile-srv
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db $systemd
+ExecStart=$LocationCreatedExecutable/drawpile-srv -d /home/drawpileuser/server.db $systemd
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
 # Type=simple
@@ -1585,7 +1611,7 @@ After=network.target
 Documentation=man:drawpile-srv
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd
+ExecStart=$LocationCreatedExecutable/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
 Type=simple
@@ -1662,6 +1688,9 @@ echo
 # Refer to help with this command.
 # https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
 #
+
+sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
+
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
 echo
 isApache2Installed=$(apt-cache policy apache2| grep "Installed:" | cut -c 14-40)
@@ -2022,6 +2051,17 @@ elif [ \"\$dns\" == \"2\" ]; then
   sudo tar vzxf noip-duc-linux.tar.gz
   cd noip-2.1.9-1
   sudo make
+  if [[ -e  \"/usr/local/bin/noip2\" ]]; then
+	LocationCreatednoip2Executable=/usr/local/bin
+  elif [[ -e  \"/usr/bin/noip2\" ]]; then
+	LocationCreatednoip2Executable=/usr/bin
+  else
+	echo Was unable to determine location of noip2 executable.
+	echo This will cause issues with the script.
+	echo
+	sleep 30s
+	exit
+  fi
   echo
   echo 'https://www.noip.com/'
   echo
@@ -2043,10 +2083,10 @@ elif [ \"\$dns\" == \"2\" ]; then
   echo 'is listed in minutes, if you choose 5 the update interval will be 5 minutes.'
   echo 'If you choose 30 the interval will be 30 minutes.'
   sudo make install
-  sudo /usr/local/bin/noip2
-  #echo 'Confirming service is working properly...'
-  #sudo noip2 ­-S
-  #Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
+  sudo $LocationCreatednoip2Executable/noip2
+  # echo 'Confirming service is working properly...'
+  # sudo noip2 -S
+  # Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
   
   echo 'If you made a typo when putting in your password for no IP, simply'
   echo 'type the following:'
@@ -2192,9 +2232,22 @@ sudo chmod 777 /home/drawpileuser/
 sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj \"/C=\$country/ST=\$state/L=\$locality/O=\$organization/OU=\$unitname/CN=\$hostname/emailAddress=\$email\"
 sudo chown drawpileuser /home/drawpileuser/cert.pem
 sudo chown drawpileuser /home/drawpileuser/key.pem
-sudo chmod 755 /home/drawpileuser/!(ssl.sh)\" > /home/drawpileuser/ssl.sh
+sudo chmod 755 /home/drawpileuser/ -R
 echo
-sudo chmod 755 /home/drawpileuser/!(ssl.sh)
+sudo chmod 777 /home/drawpileuser/ssl.sh
+echo
+if [ \"\`systemctl is-enabled drawpile-srv.socket\`\" = \"enabled\" ]; then 
+	echo \"drawpile-srv.socket previously enabled, restarting server.\"
+	sudo systemctl stop --now drawpile-srv.service
+	sudo systemctl restart drawpile-srv.socket
+elif [ \"\`systemctl is-enabled drawpile-srv.service\`\" = \"enabled\" ]; then
+	echo \"drawpile-srv.service previously enabled, restarting server.\"
+	sudo systemctl restart drawpile-srv.service
+else
+	echo This message should not be visible.
+fi\" > /home/drawpileuser/ssl.sh
+echo
+sudo chmod 755 /home/drawpileuser/ -R
 echo
 sudo chmod 777 /home/drawpileuser/ssl.sh
 echo
@@ -2437,7 +2490,7 @@ After=network.target
 Documentation=man:drawpile-srv
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db \$systemd
+ExecStart=$LocationCreatedExecutable/drawpile-srv -d /home/drawpileuser/server.db \$systemd
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
 # Type=simple
@@ -2460,7 +2513,7 @@ After=network.target
 Documentation=man:drawpile-srv
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=/usr/local/bin/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 \$systemd
+ExecStart=$LocationCreatedExecutable/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 \$systemd
 # The AppImage is not built with systemd integration at the moment,
 # so type=simple should be used with it:
 Type=simple
