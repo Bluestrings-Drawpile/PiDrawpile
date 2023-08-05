@@ -1,14 +1,23 @@
 #!/bin/bash
-drawpilescriptversion=2.97
+drawpilescriptversion=2.971
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
 script_main_url=https://raw.githubusercontent.com/Wade821/PiDrawpile/master
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#In case I decide to change the name
+github_account_name=Wade821
+github_project_name=PiDrawpile
+# When no path being used, should look like github_sub_folder_path=""
+github_main_script_only_sub_folder_path=testing/
+# Normal line
+# https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
+# Example line
+# sudo wget -q "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" --show-progress
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 # script_name=drawpile-installer-official-build-from-sources
-# drawpile_script_overall_master_version_URL=https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/version.txt
+# drawpile_script_overall_master_version_URL=https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/version.txt
 # Do not alter script_main_url... instead, include subfolder in script_name variable. 
 # See example included below for reference code.
 #		sudo wget -q "$script_main_url/$script_name" --show-progress
@@ -504,7 +513,7 @@ echo
 function script_update_check_function () {
 	sudo mkdir -p -v "$dp_install_loc/Programs"
 	cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30s; exit 1; }
-	sudo wget -q "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$script_name" --show-progress
+	sudo wget -q "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" --show-progress
 	sudo chmod 777 "$dp_install_loc/Programs" -R
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
@@ -1856,8 +1865,8 @@ elif [ "$version_qt" < "5.8" ]; then
 	sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
 	echo '--------------------------------------------------------------------------------'
 	cd "$dp_install_loc/Programs/Drawpile"
-	sudo wget -q "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer.patch" --show-progress
-	sudo wget -q "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer2.patch" --show-progress
+	sudo wget -q "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer.patch" --show-progress
+	sudo wget -q "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer2.patch" --show-progress
 	echo '--------------------------------------------------------------------------------'
 	patch -p1 < elapsed-timer.patch
 	echo '--------------------------------------------------------------------------------'
@@ -6309,7 +6318,7 @@ comment_EOF
 		if [[ ! -e "/home/$current_username/Downloads/rpi-logo-img.png" ]]; then
 			echo Downloading image to use for RPi-Monitor Shortcut.
 			echo
-			sudo wget -q --show-progress https://raw.githubusercontent.com/Wade821/PiDrawpile/master/images/rpi-logo-img.png -O /home/$current_username/Downloads/rpi-logo-img.png
+			sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O /home/$current_username/Downloads/rpi-logo-img.png
 		else
 			echo Image already downloaded to use for RPi-Monitor Shortcut.
 		fi
@@ -6744,7 +6753,7 @@ if [[ -d "home/$current_user/Desktop" ]]; then
 			echo $dp_install_loc/drawpile_list_server.png
 			list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
 		else
-			sudo wget -q --show-progress https://raw.githubusercontent.com/Wade821/PiDrawpile/master/images/drawpile_list_server.png -O $dp_install_loc/drawpile_list_server.png
+			sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $dp_install_loc/drawpile_list_server.png
 			list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
 		fi
 
@@ -6753,7 +6762,7 @@ if [[ -d "home/$current_user/Desktop" ]]; then
 			echo $dp_install_loc/drawpile_web_admin.png
 			server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
 		else
-			sudo wget -q --show-progress https://raw.githubusercontent.com/Wade821/PiDrawpile/master/images/drawpile_web_admin.png -O $dp_install_loc/drawpile_web_admin.png
+			sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $dp_install_loc/drawpile_web_admin.png
 			server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
 		fi
 	}
