@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.972
+drawpilescriptversion=2.973
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -841,8 +841,8 @@ function script_update_check_function () {
 	sudo chmod 777 "$dp_install_loc/Programs" -R
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
-	dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dp_install_loc/Programs/$script_name" | cut -c 23-26)
-	dp_check_version=$(grep -m 1 "drawpile_script_version=" "$dp_install_loc/Programs/$script_name" | cut -c 25-28)
+	dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dp_install_loc/Programs/$script_name" | cut -c 23-40)
+	dp_check_version=$(grep -m 1 "drawpile_script_version=" "$dp_install_loc/Programs/$script_name" | cut -c 25-40)
 	# This is a check in case the user changed the name of the script from the default, so it overwrites it successfully.
 	current_script_name="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 	echo
@@ -2612,6 +2612,31 @@ function wacom_explanation_function () {
 	echo
 }
 
+function drawpile_client_shortcut_function () {
+	if (( "$drawpile_build_configuration" >= "3" && "$drawpile_build_configuration" <= "8" )) ; then
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O $dp_install_loc/drawpile_icon.png
+		drawpile_client_shortcut_png=$dp_install_loc/drawpile_icon.png
+		if [[ ! -e "/home/$current_username/Desktop/Drawpile Client" ]]; then
+			echo Creating shortcut for Drawpile Client on Desktop.
+			echo
+			cat <<EOF | sudo tee "/home/$current_username/Desktop/Drawpile Client" >/dev/null
+[Desktop Entry]
+Name=Drawpile Client
+Comment=Drawpile Client
+Terminal=false
+Exec=drawpile
+Type=Application
+Icon=$drawpile_client_shortcut_png
+Name[en_GB]=Drawpile Client
+EOF
+		sudo chown $current_username "/home/$current_username/Desktop/Drawpile Client"
+		sudo chmod 755 "/home/$current_username/Desktop/Drawpile Client"
+		else
+			echo Shortcut for Drawpile Client already exists on Desktop.
+		fi
+	fi
+}
+
 function compile_drawpile_client_only_function () {
 	echo
 	echo "${bold}${cyan}*****Compiling with $thread_count threads.*****${normal}"
@@ -2634,6 +2659,8 @@ function compile_drawpile_client_only_function () {
 		elif [[ "$git_clone_dp_checkout" = "2" ]] || [[ "$git_clone_dp_checkout" = "3" ]]; then
 			if [[ "$drawpile_version" = "$drawpile_version_website_check" ]]; then
 				echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+				echo
+				drawpile_client_shortcut_function
 				echo
 				echo "Exiting script in 30 seconds since no further"
 				echo "configuration is required."
@@ -2980,6 +3007,8 @@ else
 		exit
 fi
 echo
+drawpile_client_shortcut_function
+echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
@@ -3321,7 +3350,6 @@ function generate_self_signed_ssl () {
 	echo 'the brackets are the default option if no information is entered.'
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
 	variable_to_read_1="ssl_country"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3350,7 +3378,6 @@ function generate_self_signed_ssl () {
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
 	variable_to_read_1="ssl_state"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3379,7 +3406,6 @@ function generate_self_signed_ssl () {
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
 	variable_to_read_1="ssl_locality"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3408,7 +3434,6 @@ function generate_self_signed_ssl () {
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
 	variable_to_read_1="ssl_organization"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3437,8 +3462,6 @@ function generate_self_signed_ssl () {
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
-	
 	variable_to_read_1="ssl_unitname"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3467,7 +3490,6 @@ function generate_self_signed_ssl () {
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
 	variable_to_read_1="ssl_email"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -3497,8 +3519,11 @@ function generate_self_signed_ssl () {
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	ssl_certificate=/home/drawpileuser/cert.pem
-	ssl_private_cert_key=/home/drawpileuser/key.pem
+	sudo mkdir -p -v "/srv/drawpile"
+	ssl_certificate=/srv/drawpile/cert.pem
+	ssl_private_cert_key=/srv/drawpile/key.pem
+	sudo sed -i '\!^ssl_certificate =!{h;s!=.*!= '"$ssl_certificate"'!};${x;\!^$!{s!!ssl_certificate = '"$ssl_certificate"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
 	
 	sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
@@ -3616,6 +3641,11 @@ ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
 ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
 ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
+
+sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
+sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
+sudo sed -i '\!^ssl_fullchain_certificate =!{h;s!=.*!= '"$ssl_fullchain_certificate"'!};${x;\!^$!{s!!ssl_fullchain_certificate = '"$ssl_fullchain_certificate"'!;H};x}' $drawpile_configuration_values_file
+sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
 
 function permissions_lets_encrypt_ssl () {
 	# echo
@@ -4070,10 +4100,10 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 echo "${bold}${cyan}***** Setting Abuse Report for Automatic Startup *****${normal}"
-echo
+
 # Used to exit virtual environment that is started with this command: . env/bin/activate
 deactivate
-echo
+
 sudo cp -R "$dp_install_loc/Programs/abusereport" "/usr/local/bin/abusereport"
 cat <<EOF | sudo tee /usr/local/bin/drawpile_abuse_report >/dev/null
 #!/bin/sh
@@ -4089,7 +4119,6 @@ EOF
 sudo chown drawpileuser "/usr/local/bin/./drawpile_abuse_report"
 sudo chmod 755 "/usr/local/bin/./drawpile_abuse_report"
 
-echo
 cat <<EOF | sudo tee /etc/systemd/system/drawpile_abuse_report.service >/dev/null
 [Unit]
 Description=Drawpile abuse report tool
@@ -4854,7 +4883,7 @@ echo "     sessions that are hosted on the server."
 echo "     "
 echo "     Because of this, it would be helpful to store this information in "
 echo "     the file where other server configuration settings are kept."
-echo "           drawpile_configuration_values_file"
+echo "           $drawpile_configuration_values_file"
 echo "     "
 echo "     You will be given a chance to decide if you want to save this info"
 echo "     in plain text format. ${bold}${red}If you plan on doing so, do not use exclamation${normal}"
@@ -4913,7 +4942,7 @@ echo "     sessions that are hosted on the server."
 echo "     "
 echo "     Because of this, it would be helpful to store this information in "
 echo "     the file where other server configuration settings are kept."
-echo "           drawpile_configuration_values_file"
+echo "           $drawpile_configuration_values_file"
 echo "     "
 echo "     This information would be used to potentially update the list server"
 echo "     configuration file in the event of a admin username and/or password"
@@ -5187,21 +5216,21 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "This step may take a while, please be patient."
 		echo
 		# Version check provided by askmeaboutloom
-		# if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
-		# 	go install 'github.com/drawpile/listserver@latest'
-		# else
-		# 	# go get github.com/drawpile/listserver
-		# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
-		# fi
-		package_name=golang
-		version_test_by_distro_function
-		if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
+		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
 			go install 'github.com/drawpile/listserver@latest'
-		elif [ "$test_version_simple" < "1.16" ]; then
-			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
 		else
-			echo "This message for golang's version ($test_version_simple) should not be visible."
+			# go get github.com/drawpile/listserver
+			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
 		fi
+		# package_name=golang
+		# version_test_by_distro_function
+		# if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
+		# 	go install 'github.com/drawpile/listserver@latest'
+		# elif [ "$test_version_simple" < "1.16" ]; then
+		# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+		# else
+		# 	echo "This message for golang's version ($test_version_simple) should not be visible."
+		# fi
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -6119,9 +6148,11 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 1 of 2) *****${normal}"
 	echo
-	versionnpm=$( apt-cache policy npm | grep "Installed:" | cut -c 14-21 )
+	# versionnpm=$( apt-cache policy npm | grep "Installed:" | cut -c 14-21 )
+	package_name=npm
+	version_test_by_distro_function
 	minimum_versionnpm=7.5.2+ds-2
-	if [[ "$versionnpm" = "(none)" ]]; then
+	if [[ "$test_installation_status" = "Not Installed" ]]; then
 		echo "Installing package npm . . ."
 		echo
 		app_does_not_exist=0
@@ -6158,6 +6189,7 @@ EOF
 		app_not_installed=0
 		progs=(nodejs);
 		package_install_status_check_function
+		sudo $package_install_program nodejs
 		echo
 		echo "Installing/updating Node.JS . . ."
 		sudo $package_install_program nodejs
@@ -6165,24 +6197,25 @@ EOF
 		echo "Installed version is . . ."
 		node -v
 		echo
-		versionnodejs=$( apt-cache policy nodejs | grep "Installed:" | cut -c 14-20 )
+		package_name=nodejs
+		version_test_by_distro_function
 		minimum_versionnodejs=14.0.0
-		if [[ "$versionnodejs" = "(none)" ]]; then
+		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "Failed to install . . ."
 			echo "The web admin interface will not work!"
 			echo
 			sleep 30
-		elif [[ "$versionnodejs" < "$minimum_versionnodejs" ]]; then
+		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
 			echo "Failed to update past minimum version $minimum_versionnodejs . . ."
 			echo "The web admin interface will not work!"
 			echo
 			sleep 30
-		elif [[ "$versionnodejs" = "$minimum_versionnodejs" ]]; then
+		elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
 			echo "Meets minimum version $minimum_versionnodejs requirements for Node . . ."
 			echo "The web admin interface should work!"
 			echo
 			sleep 5
-		elif [[ "$versionnodejs" > "$minimum_versionnodejs" ]]; then
+		elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
 			echo "Updated successfully past minimum version $minimum_versionnodejs . . ."
 			echo "The web admin interface should work!"
 			echo
@@ -6196,16 +6229,18 @@ EOF
 		fi
 	}
 
-	versionnodejs=$( apt-cache policy nodejs | grep "Installed:" | cut -c 14-20 )
+	# versionnodejs=$( apt-cache policy nodejs | grep "Installed:" | cut -c 14-20 )
+	package_name=nodejs
+	version_test_by_distro_function
 	minimum_versionnodejs=14.0.0
-	if [[ "$versionnodejs" = "(none)" ]]; then
+	if [[ "$test_installation_status" = "Not Installed" ]]; then
 		echo "Preparing to install package node.js . . ."
-		echo Version installed is $versionnodejs . . .
+		echo Version installed is $test_version . . .
 		echo
 		install_or_update_nodejs
-	elif [[ "$versionnodejs" < "$minimum_versionnodejs" ]]; then
+	elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
 		echo "Preparing to update package node.js . . ."
-		echo Version installed is $versionnodejs . . .
+		echo Version installed is $test_version . . .
 		echo
 		install_or_update_nodejs
 	else
