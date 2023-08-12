@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.974
+drawpilescriptversion=2.975
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -6309,22 +6309,22 @@ EOF
 		minimum_versionnodejs=14.0.0
 		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "Failed to install . . ."
-			echo "The web admin interface will not work!"
+			echo "${bold}${red}The web admin interface will not work!${normal}"
 			echo
 			sleep 30
 		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
 			echo "Failed to update past minimum version $minimum_versionnodejs . . ."
-			echo "The web admin interface will not work!"
+			echo "${bold}${red}The web admin interface will not work!${normal}"
 			echo
 			sleep 30
 		elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
 			echo "Meets minimum version $minimum_versionnodejs requirements for Node . . ."
-			echo "The web admin interface should work!"
+			echo "${bold}${green}The web admin interface should work!${normal}"
 			echo
 			sleep 5
 		elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
 			echo "Updated successfully past minimum version $minimum_versionnodejs . . ."
-			echo "The web admin interface should work!"
+			echo "${bold}${green}The web admin interface should work!${normal}"
 			echo
 			sleep 5
 		else
@@ -7922,7 +7922,7 @@ EOF
 		echo Creating shortcut for Drawpile Admin on Desktop.
 		echo
 		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile Admin
 Comment=Drawpile Admin
