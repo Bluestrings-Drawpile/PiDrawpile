@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.975
+drawpilescriptversion=2.976
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -7800,13 +7800,9 @@ if [[ -d "$option_loc_2" ]]; then
 	echo "       $dp_install_loc/drawpile_web_admin.png"
 	echo
 	echo "     If using favicon (2) , will accept these icons, preferring largest first"
-	[[ -e "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)"
-	[[ -e "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)"
-	[[ -e "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png"
-	[[ -e "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)"
-	[[ -e "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)"
-	[[ -e "$script_directory/64.png" ]] && echo "       $script_directory/64.png"
-	
+	[[ -e "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)" || [[ -e "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)"
+	[[ -e "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)" || [[ -e "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)"
+	[[ -e "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png" || [[ -e "$script_directory/64.png" ]] && echo "       $script_directory/64.png"
 	echo
 	echo "Press 1 for custom icons, or 2 to use favicons."
 	echo
