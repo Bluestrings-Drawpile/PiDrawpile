@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.976
+drawpilescriptversion=2.977
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -7960,6 +7960,17 @@ EOF
 	else
 		echo Shortcut for Drawpile Admin already exists on Desktop.
 	fi
+	
+	cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin GUI.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin GUI
+Comment=Drawpile Admin GUI
+Terminal=false
+Exec=drawpile-srv --gui --remote http://localhost:27780/api/
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin GUI
+EOF
 fi
 
 # --------------------------------------------------------------------------------
