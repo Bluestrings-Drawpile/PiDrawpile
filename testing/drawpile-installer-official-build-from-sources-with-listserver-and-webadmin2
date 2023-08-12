@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.973
+drawpilescriptversion=2.974
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -656,16 +656,71 @@ comment_EOF
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-option_loc_1="/home/$current_username/Public"
-option_loc_2="/home/$current_username/Desktop"
-option_loc_3="/home/$current_username/Documents"
-option_loc_4="/home/$current_username/Pictures"
-option_loc_5="/usr/local/bin"
-dp_install_loc_9_custom=""
+# 
+# This section checks for language specific folder names
+# 
+<<comment_EOF
 
-# The locations below are used with Samba file sharing set up.
-option_loc_10="/home/$current_username/Music"
-option_loc_11="/home/$current_username/Videos"
+/home/pi/.config/user-dirs.dirs
+# --------------------------------------------------------------------------------
+# This file is written by xdg-user-dirs-update
+# If you want to change or add directories, just edit the line you're
+# interested in. All local changes will be retained on the next run.
+# Format is XDG_xxx_DIR="$HOME/yyy", where yyy is a shell-escaped
+# homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
+# absolute path. No other format is supported.
+# 
+XDG_DESKTOP_DIR="$HOME/Desktop"
+XDG_DOWNLOAD_DIR="$HOME/Downloads"
+XDG_TEMPLATES_DIR="$HOME/Templates"
+XDG_PUBLICSHARE_DIR="$HOME/Public"
+XDG_DOCUMENTS_DIR="$HOME/Documents"
+XDG_MUSIC_DIR="$HOME/Music"
+XDG_PICTURES_DIR="$HOME/Pictures"
+XDG_VIDEOS_DIR="$HOME/Videos"
+# --------------------------------------------------------------------------------
+grep -m 1 "XDG_DOCUMENTS_DIR=" "/home/$current_username/.config/user-dirs.dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//'
+
+comment_EOF
+
+local_user_dirs="/home/$current_username/.config/user-dirs.dirs"
+
+if [[ -e "$local_user_dirs" ]]; then
+	XDG_PUBLICSHARE_DIR=$( grep -m 1 "XDG_PUBLICSHARE_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	XDG_DESKTOP_DIR=$( grep -m 1 "XDG_DESKTOP_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	XDG_DOCUMENTS_DIR=$( grep -m 1 "XDG_DOCUMENTS_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	XDG_PICTURES_DIR=$( grep -m 1 "XDG_PICTURES_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	
+	XDG_MUSIC_DIR=$( grep -m 1 "XDG_MUSIC_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	XDG_VIDEOS_DIR=$( grep -m 1 "XDG_VIDEOS_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	XDG_DOWNLOAD_DIR=$( grep -m 1 "XDG_DOWNLOAD_DIR=" "$local_user_dirs" | cut -d "=" -f2- | sed s/"\$HOME\/"// | sed -e 's/^"//' -e 's/"$//' )
+	
+	option_loc_1="/home/$current_username/$XDG_PUBLICSHARE_DIR"
+	option_loc_2="/home/$current_username/$XDG_DESKTOP_DIR"
+	option_loc_3="/home/$current_username/$XDG_DOCUMENTS_DIR"
+	option_loc_4="/home/$current_username/$XDG_PICTURES_DIR"
+	option_loc_5="/usr/local/bin"
+	dp_install_loc_9_custom=""
+
+	# The locations below are used with Samba file sharing set up.
+	option_loc_10="/home/$current_username/$XDG_MUSIC_DIR"
+	option_loc_11="/home/$current_username/$XDG_VIDEOS_DIR"
+	option_loc_12="/home/$current_username/$XDG_DOWNLOAD_DIR"
+else
+	option_loc_1="/home/$current_username/Public"
+	option_loc_2="/home/$current_username/Desktop"
+	option_loc_3="/home/$current_username/Documents"
+	option_loc_4="/home/$current_username/Pictures"
+	option_loc_5="/usr/local/bin"
+	dp_install_loc_9_custom=""
+
+	# The locations below are used with Samba file sharing set up.
+	option_loc_10="/home/$current_username/Music"
+	option_loc_11="/home/$current_username/Videos"
+	option_loc_12="/home/$current_username/Downloads"
+fi
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 
 invalid_path_text="${red}${bold}X - Automatic local path selection is invalid -${normal}"
 
@@ -692,7 +747,7 @@ function display_location_selection_options () {
 	echo '        This directory must already exist. If not, create it manually '
 	echo '        before using this script.'
 	echo
-	echo "      ${underline}Acceptable Example:${normal} /home/$current_username/Desktop/My Drawpile Server"
+	echo "      ${underline}Acceptable Example:${normal} $option_loc_2/My Drawpile Server"
 	echo "	${underline}Note:${normal} This location is an example and may not exist on your computer."
 	echo
 	echo "${bold}Note:${normal} If you use Windows and Share files across the network, this script"
@@ -2614,23 +2669,45 @@ function wacom_explanation_function () {
 
 function drawpile_client_shortcut_function () {
 	if (( "$drawpile_build_configuration" >= "3" && "$drawpile_build_configuration" <= "8" )) ; then
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O $dp_install_loc/drawpile_icon.png
-		drawpile_client_shortcut_png=$dp_install_loc/drawpile_icon.png
-		if [[ ! -e "/home/$current_username/Desktop/Drawpile Client" ]]; then
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_12/drawpile-icon.png"
+		drawpile_client_shortcut_png="$option_loc_12/drawpile-icon.png"
+		
+		if [[ ! -e "$option_loc_2/Drawpile Client.desktop" ]] && [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			echo
+			echo "Fedora doesn't enable Desktop icons by default. If you want that enabled so the"
+			echo "script generated shortcuts work, go to the website below, click the link "
+			echo "'Click here to install browser extension' and follow the prompts. After that"
+			echo "that, click 'Install' to enable the extension."
+			echo
+			echo "     https://extensions.gnome.org/extension/2087/desktop-icons-ng-ding/"
+			echo
+			gnome-shell --version
+			echo
+			pause
+		fi
+		
+		if [[ ! -e "$option_loc_2/Drawpile Client.desktop" ]]; then
+			echo
 			echo Creating shortcut for Drawpile Client on Desktop.
 			echo
-			cat <<EOF | sudo tee "/home/$current_username/Desktop/Drawpile Client" >/dev/null
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Client.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile Client
 Comment=Drawpile Client
 Terminal=false
-Exec=drawpile
+TryExec=drawpile
+Exec=/usr/local/bin/drawpile
 Type=Application
 Icon=$drawpile_client_shortcut_png
 Name[en_GB]=Drawpile Client
 EOF
-		sudo chown $current_username "/home/$current_username/Desktop/Drawpile Client"
-		sudo chmod 755 "/home/$current_username/Desktop/Drawpile Client"
+		# Trust the Desktop shortcut so it's launchable. 
+		# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+		# gio set "~/Desktop/Drawpile Client.desktop" metadata::trusted true
+		gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
+		
+		sudo chown $current_username "$option_loc_2/Drawpile Client.desktop"
+		sudo chmod 754 "$option_loc_2/Drawpile Client.desktop"
 		else
 			echo Shortcut for Drawpile Client already exists on Desktop.
 		fi
@@ -3117,10 +3194,27 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo 'Press Ctrl + Shift + V to paste.'
 			echo 'That is everything which appears after this line ... '
 			echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'
-			echo 
-			echo "${bold}${cyan}Enter the requested information now${normal}:"
 			echo
-			read freeDNS_input
+			regexp=".*[[:space:]]*[[:space:]]*[[:space:]]*[[:space:]]*[[:space:]]sleep[[:space:]].*[[:space:]];[[:space:]]curl[[:space:]]-s[[:space:]]http://sync.afraid.org/u/.*/[[:space:]]>>[[:space:]]/tmp/freedns_.*log[[:space:]].*>"
+			while :; do
+				echo "${bold}${cyan}Enter the requested information now${normal}:"
+				read freeDNS_input
+				echo
+				if [[ "$freeDNS_input" =~ $regexp ]]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid information entered, try again.${normal}"
+					echo "${bold}${red}Was expecting 'something' + 'http://sync.afraid.org' + 'something' + '2>/dev/null'${normal}"
+					echo
+					echo 'Copy only the very bottom line of the page and paste in terminal (Ctrl + Shift + V).'
+					echo 'That is everything which appears after this line ... '
+					echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin'
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
 			
 			# This line below removes any existing copies of this line to prevent duplicates. This could be done in a variety of ways. 
 			# 
@@ -4717,9 +4811,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		fi
 		sudo chmod 777 /etc/samba/smb.conf
 		if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-			sudo sed -i '/workgroup = MYWORKGROUP/ c\workgroup = WORKGROUP' /etc/samba/smb.conf
-			sudo sed -i 's/workgroup = WORKGROUP$/&workgroup = WORKGROUP\n   netbios name = $HOSTNAME/' /etc/samba/smb.conf
-			sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
+			sudo sed -i '/workgroup = WORKGROUP/ c\	workgroup = workgroup' /etc/samba/smb.conf
+			sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
+			sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
 		fi
 		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 			sudo sed -i '/workgroup = SAMBA/ c\	workgroup = workgroup' /etc/samba/smb.conf
@@ -4734,11 +4828,11 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo sed -i '\!^samba_choice =!{h;s!=.*!= '"$samba_choice"'!};${x;\!^$!{s!!samba_choice = '"$samba_choice"'!;H};x}' $drawpile_configuration_values_file
 		
 		if [ "$samba_choice" == "1" ]; then
-			sudo chmod 777 /home/$current_username/Public -R
+			sudo chmod 777 $option_loc_1 -R
 		echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
-	path = /home/$current_username/Public
+	path = $option_loc_1
 	guest ok = yes
 	browsable = yes
 	read only = no
@@ -4758,14 +4852,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
 			echo
 		elif [ "$samba_choice" == "2" ]; then
-			sudo chmod 777 /home/$current_username/Public -R
-			sudo chmod 777 /home/$current_username/Music -R
-			sudo chmod 777 /home/$current_username/Pictures -R
-			sudo chmod 777 /home/$current_username/Videos -R
+			sudo chmod 777 $option_loc_1 -R
+			sudo chmod 777 $option_loc_10 -R
+			sudo chmod 777 $option_loc_4 -R
+			sudo chmod 777 $option_loc_11 -R
 			echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
-	path = /home/$current_username/Public
+	path = $option_loc_1
 	guest ok = yes
 	browsable = yes
 	read only = no
@@ -4774,7 +4868,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 [$current_username - Music]
 	comment = $current_username Music Shared Folder
-	path = /home/$current_username/Music
+	path = $option_loc_10
 	guest ok = yes
 	browsable = yes
 	read only = no
@@ -4783,7 +4877,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 [$current_username - Pictures]
 	comment = $current_username Pictures Shared Folder
-	path = /home/$current_username/Pictures
+	path = $option_loc_4
 	guest ok = yes
 	browsable = yes
 	read only = no
@@ -4792,7 +4886,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 [$current_username - Videos]
 	comment = $current_username Videos Shared Folder
-	path = /home/$current_username/Videos
+	path = $option_loc_11
 	guest ok = yes
 	browsable = yes
 	read only = no
@@ -5215,12 +5309,25 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo "This step may take a while, please be patient."
 		echo
-		# Version check provided by askmeaboutloom
-		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
-			go install 'github.com/drawpile/listserver@latest'
-		else
-			# go get github.com/drawpile/listserver
-			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+		if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+			# Version check provided by askmeaboutloom
+			if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
+				go install 'github.com/drawpile/listserver@latest'
+			else
+				# go get github.com/drawpile/listserver
+				GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+			fi
+		fi
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			package_name=golang
+			version_test_by_distro_function
+			if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
+				go install 'github.com/drawpile/listserver@latest'
+			elif [ "$test_version_simple" < "1.16" ]; then
+				GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+			else
+				echo "This message for golang's version ($test_version_simple) should not be visible."
+			fi
 		fi
 		# package_name=golang
 		# version_test_by_distro_function
@@ -6148,23 +6255,14 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 1 of 2) *****${normal}"
 	echo
-	# versionnpm=$( apt-cache policy npm | grep "Installed:" | cut -c 14-21 )
-	package_name=npm
-	version_test_by_distro_function
-	minimum_versionnpm=7.5.2+ds-2
-	if [[ "$test_installation_status" = "Not Installed" ]]; then
-		echo "Installing package npm . . ."
-		echo
-		app_does_not_exist=0
-		app_installed=0
-		app_not_installed=0
-		progs=(npm);
-		package_install_status_check_function
-		sudo $package_install_program npm
-		echo
-	else
-		echo "Package npm already installed."
-	fi
+	echo "Installing package npm . . ."
+	echo
+	app_does_not_exist=0
+	app_installed=0
+	app_not_installed=0
+	progs=(npm);
+	package_install_status_check_function
+	sudo $package_install_program npm
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -6180,16 +6278,25 @@ EOF
 		sudo $packages_update_program
 		sudo $packages_system_upgrade
 		echo
-		echo "Adding Node.JS repository to get latest version . . ."
-		echo
-		curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-		echo
 		app_does_not_exist=0
 		app_installed=0
 		app_not_installed=0
 		progs=(nodejs);
 		package_install_status_check_function
-		sudo $package_install_program nodejs
+		echo
+		if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: arm64" ]; then
+			echo "Adding Node.JS repository to get latest version . . ."
+			echo
+			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
+			echo "Adding Node.JS repository to get latest version . . ."
+			echo
+			sudo curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+		else
+			echo "Adding Node.JS repository to get latest version . . ."
+			echo
+			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+		fi
 		echo
 		echo "Installing/updating Node.JS . . ."
 		sudo $package_install_program nodejs
@@ -6528,11 +6635,11 @@ EOF
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
-			if [[ -d "home/$current_username/Desktop" ]]; then
-				if [[ ! -e "/home/$current_username/Desktop/Pi-Hole Local" ]]; then
+			if [[ -d "$option_loc_2" ]]; then
+				if [[ ! -e "$option_loc_2/Pi-Hole Local.desktop" ]]; then
 					echo Creating shortcut for Pi-Hole Local on Desktop.
 					echo
-					cat <<EOF | sudo tee "/home/$current_username/Desktop/Pi-Hole Local" >/dev/null
+					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole Local.desktop" >/dev/null
 [Desktop Entry]
 Name=Pi-Hole Local
 Comment=Pi-Hole Localhost Web Page
@@ -6542,15 +6649,15 @@ Type=Application
 Icon=/var/www/html/admin/img/favicons/android-chrome-192x192.png
 Name[en_GB]=Pi-Hole Local
 EOF
-					sudo chown $current_username "/home/$current_username/Desktop/Pi-Hole Local"
-					sudo chmod 755 "/home/$current_username/Desktop/Pi-Hole Local"
+					sudo chown $current_username "$option_loc_2/Pi-Hole Local.desktop"
+					sudo chmod 754 "$option_loc_2/Pi-Hole Local.desktop"
 				else
 					echo Shortcut for Pi-Hole Local already exists on Desktop.
 				fi
 				
-				if [[ ! -e "/home/$current_username/Desktop/Pi-Hole" ]]; then
+				if [[ ! -e "$option_loc_2/Pi-Hole.desktop" ]]; then
 					echo Creating shortcut for Pi-Hole on Desktop.
-					cat <<EOF | sudo tee "/home/$current_username/Desktop/Pi-Hole" >/dev/null
+					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole.desktop" >/dev/null
 [Desktop Entry]
 Name=Pi-Hole
 Comment=Pi-Hole Web Page
@@ -6560,8 +6667,8 @@ Type=Application
 Icon=/var/www/html/admin/img/favicons/android-chrome-192x192.png
 Name[en_GB]=Pi-Hole
 EOF
-					sudo chown $current_username "/home/$current_username/Desktop/Pi-Hole"
-					sudo chmod 755 "/home/$current_username/Desktop/Pi-Hole"
+					sudo chown $current_username "$option_loc_2/Pi-Hole.desktop"
+					sudo chmod 755 "$option_loc_2/Pi-Hole.desktop"
 				else
 					echo Shortcut for Pi-Hole already exists on Desktop.
 				fi
@@ -7216,19 +7323,19 @@ comment_EOF
 			
 			echo '--------------------------------------------------------------------------------'
 			echo
-			if [[ ! -e "/home/$current_username/Downloads/rpi-logo-img.png" ]]; then
+			if [[ ! -e "$option_loc_12/rpi-logo-img.png" ]]; then
 				echo Downloading image to use for RPi-Monitor Shortcut.
 				echo
-				sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O /home/$current_username/Downloads/rpi-logo-img.png
+				sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O $option_loc_12/rpi-logo-img.png
 			else
 				echo Image already downloaded to use for RPi-Monitor Shortcut.
 			fi
 			echo
-			if [[ -d "home/$current_username/Desktop" ]]; then
-				if [[ ! -e "/home/$current_username/Desktop/RPi-Monitor" ]]; then
+			if [[ -d "$option_loc_2" ]]; then
+				if [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
 					echo Creating shortcut for RPi-Monitor on Desktop.
 					echo
-					cat <<EOF | sudo tee /home/$current_username/Desktop/RPi-Monitor >/dev/null
+					cat <<EOF | sudo tee $option_loc_2/RPi-Monitor.desktop >/dev/null
 [Desktop Entry]
 Name=RPi-Monitor
 Comment=RPi-Monitor Web Page
@@ -7236,11 +7343,11 @@ Terminal=false
 Exec=chromium-browser http://$pihostname.local:8888
 Type=Application
 #Icon=/usr/share/rpimonitor/web/img/logo.png
-Icon=/home/$current_username/Downloads/rpi-logo-img.png
+Icon=$option_loc_12/rpi-logo-img.png
 Name[en_GB]=RPi-Monitor
 EOF
-					sudo chown $current_username /home/$current_username/Desktop/RPi-Monitor
-					sudo chmod 755 /home/$current_username/Desktop/RPi-Monitor
+					sudo chown $current_username $option_loc_2/RPi-Monitor.desktop
+					sudo chmod 754 $option_loc_2/RPi-Monitor.desktop
 				else
 					echo Shortcut for RPi-Monitor already exists on Desktop.
 				fi
@@ -7651,29 +7758,35 @@ fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
-if [[ -d "home/$current_username/Desktop" ]]; then
-	sudo rm -f "/home/$current_username/Desktop/Drawpile Admin"
-	sudo rm -f "/home/$current_username/Desktop/Drawpile ListServer"
+function drawpile_custom_shortcut_icon_preference () {
+	if [[ -e "$dp_install_loc/drawpile_list_server.png" ]]; then
+		echo Using existing image to use for Drawpile List-Server Shortcut.
+		echo $dp_install_loc/drawpile_list_server.png
+		list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
+	else
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $dp_install_loc/drawpile_list_server.png
+		list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
+	fi
 
-	function drawpile_custom_shortcut_icon_preference () {
-		if [[ -e "$dp_install_loc/drawpile_list_server.png" ]]; then
-			echo Using existing image to use for Drawpile List-Server Shortcut.
-			echo $dp_install_loc/drawpile_list_server.png
-			list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
-		else
-			sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $dp_install_loc/drawpile_list_server.png
-			list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
-		fi
-
-		if [[ -e "$dp_install_loc/drawpile_web_admin.png" ]]; then
-			echo Using existing image to use for Drawpile List-Server Shortcut.
-			echo $dp_install_loc/drawpile_web_admin.png
-			server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
-		else
-			sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $dp_install_loc/drawpile_web_admin.png
-			server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
-		fi
-	}
+	if [[ -e "$dp_install_loc/drawpile_web_admin.png" ]]; then
+		echo Using existing image to use for Drawpile List-Server Shortcut.
+		echo $dp_install_loc/drawpile_web_admin.png
+		server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
+	else
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $dp_install_loc/drawpile_web_admin.png
+		server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
+	fi
+	
+	sudo chmod 754 $list_server_shortcut_png
+	sudo chown drawpileread $list_server_shortcut_png
+	
+	sudo chmod 754 $server_web_admin_shortcut_png
+	sudo chown drawpileread $server_web_admin_shortcut_png
+}
+	
+if [[ -d "$option_loc_2" ]]; then
+	sudo rm -f "$option_loc_2/Drawpile Admin.desktop"
+	sudo rm -f "$option_loc_2/Drawpile ListServer.desktop"
 
 	echo
 	echo "${bold}${cyan}*****Drawpile List Server and Web Admin Shortcuts . . .*****${normal}"
@@ -7687,12 +7800,12 @@ if [[ -d "home/$current_username/Desktop" ]]; then
 	echo "       $dp_install_loc/drawpile_web_admin.png"
 	echo
 	echo "     If using favicon (2) , will accept these icons, preferring largest first"
-	[[ -d "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)"
-	[[ -d "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)"
-	[[ -d "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png"
-	[[ -d "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)"
-	[[ -d "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)"
-	[[ -d "$script_directory/64.png" ]] && echo "       $script_directory/64.png"
+	[[ -e "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)"
+	[[ -e "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)"
+	[[ -e "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png"
+	[[ -e "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)"
+	[[ -e "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)"
+	[[ -e "$script_directory/64.png" ]] && echo "       $script_directory/64.png"
 	
 	echo
 	echo "Press 1 for custom icons, or 2 to use favicons."
@@ -7704,61 +7817,91 @@ if [[ -d "home/$current_username/Desktop" ]]; then
 	elif [ "$drawpile_shortcut_icon_preference" == "2" ]; then
 		if [[ -e "$dp_install_loc/256.png" ]]; then
 			echo Copying 256x256 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_256.png"
+			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
 			echo
-			sudo cp "$dp_install_loc/256.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_256.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_256.png
+			sudo cp "$dp_install_loc/256.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
+			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png
 		elif [[ -e "$dp_install_loc/128.png" ]]; then
 			echo Copying 128x128 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_128.png"
+			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
 			echo
-			sudo cp "$dp_install_loc/128.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_128.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_128.png
+			sudo cp "$dp_install_loc/128.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
+			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png
 		elif [[ -e "$dp_install_loc/64.png" ]]; then
 			echo Copying 64x64 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_64.png"
+			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
 			echo
-			sudo cp "$dp_install_loc/64.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_64.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server_shortcut_64.png
+			sudo cp "$dp_install_loc/64.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
+			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png
 		else
 			:
 		fi
 		
 		if [[ -e "$script_directory/256.png" ]]; then
 			echo Copying 256x256 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_256.png"
+			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
 			echo
-			sudo cp "$script_directory/256.png" "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_256.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_256.png
+			sudo cp "$script_directory/256.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
+			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png
 		elif [[ -e "$script_directory/128.png" ]]; then
 			echo Copying 128x128 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_128.png"
+			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
 			echo
-			sudo cp "$script_directory/128.png" "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_128.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_128.png
+			sudo cp "$script_directory/128.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
+			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png
 		elif [[ -e "$script_directory/64.png" ]]; then
 			echo Copying 64x64 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_64.png"
+			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
 			echo
-			sudo cp "$script_directory/64.png" "$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_64.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server_shortcut_64.png
+			sudo cp "$script_directory/64.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
+			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png
 		else
 			:
 		fi
 		server_web_admin_shortcut_png=$server_shortcut_png
 		list_server_shortcut_png=$server_shortcut_png
+		sudo chmod 754 $server_shortcut_png
+		sudo chown drawpileread $server_shortcut_png
 	else
 		echo "Invalid option selected. Assuming option 1 intended."
 		drawpile_shortcut_icon_preference=1
 		drawpile_custom_shortcut_icon_preference
 	fi
+	
 	sudo sed -i '\!^drawpile_shortcut_icon_preference =!{h;s!=.*!= '"$drawpile_shortcut_icon_preference"'!};${x;\!^$!{s!!drawpile_shortcut_icon_preference = '"$drawpile_shortcut_icon_preference"'!;H};x}' $drawpile_configuration_values_file
 
 	echo
-	if [[ ! -e "/home/$current_username/Desktop/Drawpile ListServer" ]]; then
+	if [[ ! -e "$option_loc_2/Drawpile ListServer.desktop" ]]; then
 		echo Creating shortcut for Drawpile ListServer on Desktop.
 		echo
-		cat <<EOF | sudo tee "/home/$current_username/Desktop/Drawpile ListServer" >/dev/null
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile ListServer
+Comment=Drawpile ListServer
+Terminal=false
+Exec=/usr/bin/firefox https://$hostname
+Type=Application
+Icon=$list_server_shortcut_png
+Name[en_GB]=Drawpile ListServer
+EOF
+			# Trust the Desktop shortcut so it's launchable. 
+			# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			sudo gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
+		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile ListServer
+Comment=Drawpile ListServer
+Terminal=false
+Exec=/usr/bin/chromium %U https://$hostname
+Type=Application
+Icon=$list_server_shortcut_png
+Name[en_GB]=Drawpile ListServer
+EOF
+		else
+			# Raspbian for Pi
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile ListServer
 Comment=Drawpile ListServer
@@ -7768,16 +7911,44 @@ Type=Application
 Icon=$list_server_shortcut_png
 Name[en_GB]=Drawpile ListServer
 EOF
-	sudo chown $current_username "/home/$current_username/Desktop/Drawpile ListServer"
-	sudo chmod 755 "/home/$current_username/Desktop/Drawpile ListServer"
+		fi
+	sudo chown $current_username "$option_loc_2/Drawpile ListServer.desktop"
+	sudo chmod 754 "$option_loc_2/Drawpile ListServer.desktop"
 	else
 		echo Shortcut for Drawpile ListServer already exists on Desktop.
 	fi
 
-	if [[ ! -e "/home/$current_username/Desktop/Drawpile Admin" ]]; then
+	if [[ ! -e "$option_loc_2/Drawpile Admin.desktop" ]]; then
 		echo Creating shortcut for Drawpile Admin on Desktop.
 		echo
-		cat <<EOF | sudo tee "/home/$current_username/Desktop/Drawpile Admin" >/dev/null
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin
+Comment=Drawpile Admin
+Terminal=false
+Exec=/usr/bin/firefox https://$hostname/admin
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin
+EOF
+			# Trust the Desktop shortcut so it's launchable. 
+			# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			sudo gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin
+Comment=Drawpile Admin
+Terminal=false
+Exec=/usr/bin/chromium %U https://$hostname/admin
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin
+EOF
+		else
+			# Raspbian for Pi
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile Admin
 Comment=Drawpile Admin
@@ -7787,8 +7958,9 @@ Type=Application
 Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin
 EOF
-	sudo chown $current_username "/home/$current_username/Desktop/Drawpile Admin"
-	sudo chmod 755 "/home/$current_username/Desktop/Drawpile Admin"
+		fi	
+	sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
+	sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
 	else
 		echo Shortcut for Drawpile Admin already exists on Desktop.
 	fi
