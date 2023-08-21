@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.977
+drawpilescriptversion=2.978
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -39,8 +39,9 @@ invis=$(tput invis)
 # Text Colors
 red=$(tput setaf 1)
 green=$(tput setaf 2)
-# Text Formatting - Yellow looks orange unless used in bold mode.
-yellow=$(tput setaf 3)
+# Text Formatting - Yellow looks orange unless used in bold mode. Also looks brown in Fedora.
+# yellow=$(tput setaf 3)
+yellow=$(tput setaf 11)
 blue=$(tput setaf 4)
 magenta=$(tput setaf 5)
 cyan=$(tput setaf 6)
@@ -48,12 +49,17 @@ cyan=$(tput setaf 6)
 #Background Colors
 red_b=$(tput setab 1)
 green_b=$(tput setab 2)
-yellow_b=$(tput setab 3)
+# Text Formatting - Yellow looks orange unless used in bold mode. Also looks brown in Fedora.
+# yellow_b=$(tput setab 3)
+yellow_b=$(tput setab 11)
 blue_b=$(tput setab 4)
 magenta_b=$(tput setab 5)
 cyan_b=$(tput setab 6)
 
 normal=$(tput sgr0)
+
+TICK=$( printf '\u2714\n' )
+CROSS=$( printf '\u274c\n' )
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 app_installation_status_file=/home/drawpileuser/App-Installation-Status.txt
@@ -119,16 +125,79 @@ function drawpile_credits_urls_functions () {
 	echo "Google Doc 	--> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
 	echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
 }
-
+echo
 drawpile_credits_function
 drawpile_credits_urls_functions
 echo
 pause
+echo
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+function language_check_and_verify_not_null_function () {
+	# If value is null, check this value.
+	lang=$( locale | grep LANGUAGE | cut -d= -f2 | cut -d_ -f1 )
+	# echo "Value 01: $lang"
+	if [ "$lang" == "" ]; then
+		# If previous value is null, check this value instead.
+		# Needed in Fedora (LANGUAGE not available), or if LANGUAGE= has nothing beside it.
+		lang=$( locale | grep -m 1 LANG | cut -d= -f2 | cut -d_ -f1 )
+		# echo "Value 02: $lang"
+		if [ "$lang" == "" ]; then
+			echo
+			echo "${bold}${yellow}************************ POSSIBLE PROBLEM DETECTED *************************${normal}"
+			echo 
+			echo "${bold}${yellow}Unable to determine system language!${normal}"
+			echo "${bold}${yellow}This may cause the script to not function properly!${normal}"
+			echo
+			echo "You may need to change your system's language in order for the script to"
+			echo "     succeed. Certain prompts from text based utilities are checked"
+			echo "     against English words, causing the script logic to fail in other"
+			echo "     languages. A reboot of the system is required in most cases."
+			echo "     "
+			echo "${bold}${yellow}Pausing Script for 30 seconds . . . ${normal}"
+			echo "     "
+			echo "${bold}${yellow}************************ POSSIBLE PROBLEM DETECTED *************************${normal}"
+			echo
+			sleep 30
+		fi
+	fi
+}
+
+language_check_and_verify_not_null_function
+
+if [ "$lang" == "en" ]; then
+	:
+else
+	echo
+	echo "${bold}${red}***************************** PROBLEM DETECTED *****************************${normal}"
+	echo 
+	echo "${bold}${red}Not using English, currently using: $lang ${normal}"
+	echo "${bold}${red}This will cause the script to not function properly!${normal}"
+	echo
+	echo "You'll need to change your system's language in order for the script to"
+	echo "     succeed. Certain prompts from text based utilities are checked"
+	echo "     against English words, causing the script logic to fail in other"
+	echo "     languages. A reboot of the system is required in most cases."
+	echo "     "
+	# echo "Also, please check the user-dirs.dirs file to make sure it points at accurate"
+	# echo "     folder names after reboot."
+	# echo "sudo nano /home/USERNAME-HERE/.config/user-dirs.dirs"
+	# Nevermind, the line doesn't appear necessary as it will still work, but just look mis-spelled for some reason... 
+	echo "     "
+	echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+	echo "     "
+	echo "${bold}${red}***************************** PROBLEM DETECTED *****************************${normal}"
+	echo
+	sleep 30
+	exit
+fi
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 what_linux_name=$( cat /etc/*-release | grep -i "^NAME=" | awk '{$1=$1};1' )
 what_linux_flavor=$( cat /etc/*-release | grep -i "PRETTY_NAME=" | awk '{$1=$1};1' )
 what_architecture=$( hostnamectl | grep -i "Architecture" | awk '{$1=$1};1' )
+# verify_if_this_is_raspbian_or_debian --> https://raspberrypi.stackexchange.com/questions/6974/how-can-i-determine-which-os-image-i-am-running
+verify_if_this_is_raspbian_or_debian=$( cat /etc/rpi-issue 2>/dev/null | grep -i "Raspberry Pi" | awk '{ print $1 " " $2 }' )
 # ----------------------------------------------------------------------------------
 <<comment_EOF
 # NOTES ON SYSTEM PACKAGE INSTALLERS
@@ -143,7 +212,8 @@ https://www.techrepublic.com/article/linux-101-how-to-clean-the-dnf-and-apt-cach
 apt-get clean							dnf clean dbcache / sudo dnf clean all
 
 Will need to edit entire queries that use this command, information is formatted differently
-apt-cache policy 						dnf info PACKAGENAME
+apt-cache policy PACKAGENAME			dnf info PACKAGENAME
+apt-cache search PACKAGENAME			dnf search PACKAGENAME
 
 Should not need added, only for Pi
 apt-key adv --recv-keys --keyserver		
@@ -151,17 +221,21 @@ apt-key adv --recv-keys --keyserver
 comment_EOF
 # ----------------------------------------------------------------------------------
 function debian_x86_64_vs_arm_function () {
-	if [ "$what_architecture" == "Architecture: arm64" ]; then
-		echo "Running Raspbian on Raspberry Pi (arm64 Processor)" 
+	if [ "$what_architecture" == "Architecture: arm64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+		echo "${bold}${green}Running Raspbian on Raspberry Pi (arm64 Processor).${normal}" 
 	elif [ "$what_architecture" == "Architecture: x86-64" ]; then
-		echo "Running Debian or Raspbian for Desktop (x86-64)."
-	
-	elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
-		echo Running Debian, version may not be supported.
-		sleep 30
+		if [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+			echo "${bold}${green}Running Raspbian for Desktop (x86-64).${normal}"
+		elif [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+			echo "${bold}${green}Running Debian (x86-64).${normal}"
+		else
+			echo "${bold}${green}Running Debian or Raspbian for Desktop (x86-64).${normal}"
+		fi
 	else
-		echo Unable to identify. Exiting script.
+		echo "${bold}${red}Unable to identify architecture. Exiting script.${normal}"
+		echo
 		sleep 30
+		exit
 		exit
 	fi
 }
@@ -211,18 +285,19 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
 	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 9 (stretch)\"" ]; then
 		debian_x86_64_vs_arm_function
-		echo "Debian GNU/Linux 9 (stretch)"
+		echo "${bold}${green}Debian GNU/Linux 9 (stretch)${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 10 (buster)\"" ]; then
 		debian_x86_64_vs_arm_function
-		echo "Debian GNU/Linux 10 (buster)"
+		echo "${bold}${green}Debian GNU/Linux 10 (buster)${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 11 (bullseye)\"" ]; then
 		debian_x86_64_vs_arm_function
-		echo "Debian GNU/Linux 11 (bullseye)"
+		echo "${bold}${green}Debian GNU/Linux 11 (bullseye)${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"" ]; then
 		debian_x86_64_vs_arm_function
-		echo "Debian GNU/Linux 12 (bookworm)"
+		echo "${bold}${green}Debian GNU/Linux 12 (bookworm)${normal}"
 	else
-		echo Unable to identify. Exiting script.
+		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo
 		sleep 30
 		exit
 	fi
@@ -230,37 +305,43 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
-		echo Running Ubuntu 22.04.2 LTS.
+		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
-		echo Running Ubuntu, version may not be supported.
+		echo "${bold}${yellow}Running Ubuntu, version may not be supported.${normal}"
 		sleep 30
 	else
-		echo Unable to identify. Exiting script.
+		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo 
 		sleep 30
 		exit
 	fi	
 elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	dnf_function
 	useradd_and_groupadd_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
-		echo Running Fedora Workstation 38.
+		echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
-		echo Running Fedora Server 38.
+		echo "${bold}${green}Running Fedora Server 38.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" ]; then
-		echo Running Fedora Server 31.
+		echo "${bold}${green}Running Fedora Server 31.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-		echo Running Fedora, version may not be supported.
+		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
+		echo
 		sleep 30
 	else
-		echo Unable to identify. Exiting script.
+		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo
 		sleep 30
 		exit
 	fi
 else
-	echo Unable to identify. Exiting script.
+	echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+	echo
 	sleep 30
 	exit
 fi
+
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 # 
@@ -270,6 +351,8 @@ fi
 # Doing this three different ways in order to make sure the command
 # is absolutely available for use as the script depends on it working.
 #
+
+echo
 [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || command -v sudo > /dev/null 2>&1 || type sudo > /dev/null 2>&1 || hash sudo 2>/dev/null || { echo >&2 "Script requires sudo or root access. Exiting script in 30 seconds."; sleep 30; exit 1; }
 #
 
@@ -332,7 +415,7 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
-# Regular/Regex expression search without ". matches newline" to search for entries in Notepad++
+# Regular Expression - Regex expression - search without ". matches newline" to search for entries in Notepad++
 # chmod .* /home/drawpileuser
 
 # Cannot use sed on an empty file containing no characters or new lines. 
@@ -700,6 +783,7 @@ if [[ -e "$local_user_dirs" ]]; then
 	option_loc_3="/home/$current_username/$XDG_DOCUMENTS_DIR"
 	option_loc_4="/home/$current_username/$XDG_PICTURES_DIR"
 	option_loc_5="/usr/local/bin"
+	option_loc_6="/home/drawpileuser"
 	dp_install_loc_9_custom=""
 
 	# The locations below are used with Samba file sharing set up.
@@ -712,6 +796,7 @@ else
 	option_loc_3="/home/$current_username/Documents"
 	option_loc_4="/home/$current_username/Pictures"
 	option_loc_5="/usr/local/bin"
+	option_loc_6="/home/drawpileuser"
 	dp_install_loc_9_custom=""
 
 	# The locations below are used with Samba file sharing set up.
@@ -733,11 +818,12 @@ function display_location_selection_options () {
 	echo 'create rooms with specific settings that exist on the server at all'
 	echo 'times.'
 	echo
-	[[ -d "$option_loc_1" ]] && echo "1 - Public Folder ${underline}(Recommended for Pi)${normal}			- $option_loc_1" || echo "$invalid_path_text $option_loc_1"
+	[[ -d "$option_loc_1" ]] && echo "1 - Public Folder      ${underline}(Recommended for Pi)${normal}		- $option_loc_1" || echo "$invalid_path_text $option_loc_1"
 	[[ -d "$option_loc_2" ]] && echo "2 - Desktop Folder					- $option_loc_2" || echo "$invalid_path_text $option_loc_2"
 	[[ -d "$option_loc_3" ]] && echo "3 - Documents Folder					- $option_loc_3" || echo "$invalid_path_text $option_loc_3"
 	[[ -d "$option_loc_4" ]] && echo "4 - Pictures Folder					- $option_loc_4" || echo "$invalid_path_text $option_loc_4"
-	[[ -d "$option_loc_5" ]] && echo "5 - /usr/local/bin ${underline}(Recommended for other systems)${normal}" || echo "$invalid_path_text $option_loc_5"
+	[[ -d "$option_loc_5" ]] && echo "5 - /usr/local/bin     ${underline}(Recommended for other systems)${normal}" || echo "$invalid_path_text $option_loc_5"
+	[[ -d "$option_loc_6" ]] && echo "6 - /home/drawpileuser ${underline}(Recommended for other systems)${normal}" || echo "$invalid_path_text $option_loc_6"
 	echo
 	echo "9 - Enter your own location and create the folders if they do not exist."
 	echo '  - Specify an already existing location: simply enter the exact location'
@@ -799,8 +885,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		[[ $dp_install_loc =~ ^[0-9]+$ ]] || [[ -d "$dp_install_loc" ]] || { invalid_path_selection_01; display_location_selection_options; continue; }
 		if [[ -d "$dp_install_loc" ]] && [ "${dp_install_loc: -1}" != \" ] && [ "${dp_install_loc: -1}" != \' ] && [ "${dp_install_loc: -1}" != / ] ; then
 			break
-		elif (( "$dp_install_loc" >= "1" && "$dp_install_loc" <= "5" )) ; then
-			if [[ -d "$option_loc_1" ]] || [[ -d "$option_loc_2" ]] || [[ -d "$option_loc_3" ]] || [[ -d "$option_loc_4" ]] || [[ -d "$option_loc_5" ]]; then
+		elif (( "$dp_install_loc" >= "1" && "$dp_install_loc" <= "6" )) ; then
+			if [[ -d "$option_loc_1" ]] || [[ -d "$option_loc_2" ]] || [[ -d "$option_loc_3" ]] || [[ -d "$option_loc_4" ]] || [[ -d "$option_loc_5" ]] || [[ -d "$option_loc_6" ]]; then
 				sudo sed -i '\!^option_loc_num =!{h;s!=.*!= '"$dp_install_loc"'!};${x;\!^$!{s!!option_loc_num = '"$dp_install_loc"'!;H};x}' $drawpile_configuration_values_file
 				break
 			else
@@ -869,6 +955,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo "Install location chosen is $dp_install_loc"
 	elif [ "$dp_install_loc" == "5" ]; then
 		dp_install_loc=$option_loc_5
+		echo "Install location chosen is $dp_install_loc"
+	elif [ "$dp_install_loc" == "6" ]; then
+		dp_install_loc=$option_loc_6
 		echo "Install location chosen is $dp_install_loc"
 	elif [ "$dp_install_loc" == "9" ]; then
 		dp_install_loc=dp_install_loc_9_custom
@@ -2672,7 +2761,19 @@ function drawpile_client_shortcut_function () {
 		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_12/drawpile-icon.png"
 		drawpile_client_shortcut_png="$option_loc_12/drawpile-icon.png"
 		
-		if [[ ! -e "$option_loc_2/Drawpile Client.desktop" ]] && [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		if [[ -e  "/usr/local/bin/drawpile" ]]; then
+			location_created_executable_dp=/usr/local/bin/drawpile
+		elif [[ -e  "/usr/bin/drawpile" ]]; then
+			location_created_executable_dp=/usr/bin/drawpile
+		else
+				echo "Was unable to determine location of created executable."
+				echo "This will cause issues with the script."
+				echo
+				sleep 30
+				exit
+		fi
+		
+		if [[ ! -e "$option_loc_2/Drawpile Client.desktop" ]] && [[ -d "$option_loc_2" ]] && [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 			echo
 			echo "Fedora doesn't enable Desktop icons by default. If you want that enabled so the"
 			echo "script generated shortcuts work, go to the website below, click the link "
@@ -2696,15 +2797,17 @@ Name=Drawpile Client
 Comment=Drawpile Client
 Terminal=false
 TryExec=drawpile
-Exec=/usr/local/bin/drawpile
+Exec=$location_created_executable_dp
 Type=Application
 Icon=$drawpile_client_shortcut_png
 Name[en_GB]=Drawpile Client
 EOF
-		# Trust the Desktop shortcut so it's launchable. 
-		# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-		# gio set "~/Desktop/Drawpile Client.desktop" metadata::trusted true
-		gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			# Trust the Desktop shortcut so it's launchable. 
+			# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			# gio set "~/Desktop/Drawpile Client.desktop" metadata::trusted true
+			gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
+		fi
 		
 		sudo chown $current_username "$option_loc_2/Drawpile Client.desktop"
 		sudo chmod 754 "$option_loc_2/Drawpile Client.desktop"
@@ -3073,9 +3176,9 @@ echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
 
 if [[ -e  "/usr/local/bin/drawpile-srv" ]]; then
-	location_created_executable=/usr/local/bin/
+	location_created_executable_dpsrv=/usr/local/bin/drawpile-srv
 elif [[ -e  "/usr/bin/drawpile-srv" ]]; then
-	location_created_executable=/usr/bin/
+	location_created_executable_dpsrv=/usr/bin/drawpile-srv
 else
 		echo "Was unable to determine location of created executable."
 		echo "This will cause issues with the script."
@@ -3613,17 +3716,60 @@ function generate_self_signed_ssl () {
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	sudo mkdir -p -v "/srv/drawpile"
-	ssl_certificate=/srv/drawpile/cert.pem
-	ssl_private_cert_key=/srv/drawpile/key.pem
+	sudo mkdir -p -v "/etc/nginx/ssl/drawpile"
+	ssl_certificate=/etc/nginx/ssl/drawpile/cert.pem
+	ssl_private_cert_key=/etc/nginx/ssl/drawpile/key.pem
+	
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [ "$what_fedora_variant" == "VARIANT_ID=workstation" ]; then
+		echo Fedora Workstation, adding firewall rules.
+		sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-port=27750/tcp
+		sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-port=27780/tcp
+		# sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-port=27750/udp
+		# sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-port=27780/udp
+		sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-service=http
+		sudo firewall-cmd --zone=FedoraWorkstation --permanent --add-service=https
+		sudo firewall-cmd --reload
+		echo
+		echo Fedora Workstation, adding SELinux access to /var/www/html.
+		# Useful notes for trying to figure out why NGINX doesn't work. u3u
+		# sudo ausearch -m avc -ts today | audit2allow
+		# sudo cat /var/log/nginx/error.log
+		
+		# Needed so NGINX can access the directory
+		sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/(/.*)?"
+		sudo semanage port -a -t http_port_t -p tcp 27750
+		sudo semanage port -a -t http_port_t -p tcp 27780
+		
+		sudo setsebool -P httpd_can_network_relay 1
+	elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [ "$what_fedora_variant" == "VARIANT_ID=server" ]; then
+		echo Fedora Server.
+	elif [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+		:
+	else
+		echo This message should not be visible for Fedora Firewall Rules
+	fi
+	
 	sudo sed -i '\!^ssl_certificate =!{h;s!=.*!= '"$ssl_certificate"'!};${x;\!^$!{s!!ssl_certificate = '"$ssl_certificate"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
 	
-	sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
+	# Original Command
+	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
+	
+	# Updated for 2023 and hopefully works better
+	sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+	# sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname,DNS:*.example.com,IP:10.0.0.1"
+	
+	# echo '--------------------------------------------------------------------------------'
+	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
+	# openssl req -new -sha256 -key domain.key -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:$hostname")) -out domain.csr
+	# openssl req -new -sha256 -key domain.key -subj "/C=US/ST=CA/O=Acme, Inc./CN=example.com" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:example.com,DNS:www.example.com")) -out domain.csr
+	# echo '--------------------------------------------------------------------------------'
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
 	sudo chmod 777 /home/drawpileuser/ -R
-	sudo chown drawpileuser $ssl_certificate
-	sudo chown drawpileuser $ssl_private_cert_key
+	sudo chown drawpileuser:drawpileread $ssl_certificate
+	sudo chown drawpileuser:drawpileread $ssl_private_cert_key
+	sudo chmod 750 $ssl_certificate
+	sudo chmod 750 $ssl_private_cert_key
 	cat <<EOF | sudo tee /home/drawpileuser/ssl.sh >/dev/null
 #!/bin/bash
 app_installation_status_file=/home/drawpileuser/App-Installation-Status.txt
@@ -3975,6 +4121,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		fi
 		echo
 		sudo systemctl stop --now nginx.service
+		wait $!
 		echo
 		# Used sudo on if statement in order to be able to access the directory. Non Root users cannot access this location.
 		if sudo test -L "$ssl_fullchain_certificate"; then
@@ -4060,6 +4207,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		fi
 		ssl_certificate=$ssl_fullchain_certificate
 		sudo systemctl start --now nginx.service
+		wait $!
 	elif [ "$ssl_encryption_config" == "3" ]; then
 		:
 		# Do nothing as no error was detected.
@@ -4069,8 +4217,10 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		ssl_encryption_config=2
 		echo
 		sudo systemctl stop --now nginx.service
+		wait $!
 		generate_lets_encrypt_ssl
 		sudo systemctl start --now nginx.service
+		wait $!
 	fi
 	sudo sed -i '\!^ssl_encryption_config =!{h;s!=.*!= '"$ssl_encryption_config"'!};${x;\!^$!{s!!ssl_encryption_config = '"$ssl_encryption_config"'!;H};x}' $drawpile_configuration_values_file
 else
@@ -4135,11 +4285,16 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	discord_webhook_URL=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo
-	echo "Create a webhook to send messages from reports in Drawpile"
-	echo "in a Discord channel. Instructions below: "
+	echo "${bold}${cyan}*****Create Discord Webhook for reports . . .*****${normal}"
 	echo
-	echo "Discord, Server Settings, Integrations, Create Webhooks"
-	echo "Set the name and Channel, and copy webhook URL to paste here"
+	echo "This is so when a user goes into Drawpile's 'Session' menu,"
+	echo "'Moderation', 'Report...', that a message is sent to Discord"
+	echo "to notify about rules being broken on the server."
+	echo
+	echo "Instructions below: "
+	echo "Click on your Discord Server, open Server Settings,"
+	echo "Integrations, Create Webhooks, Set the name and Channel,"
+	echo "and copy webhook URL to paste here."
 	echo
 	# Regedit Matching in a Bash if Statement - https://linuxhint.com/regex-matching-in-bash-if-statement/
 	while :; do
@@ -4160,10 +4315,10 @@ else
 	echo "This message should not be visible."
 fi
 
-cd "$dp_install_loc/Programs"
-if [[ -d  "$dp_install_loc/Programs/abusereport" ]]; then
+cd "/home/drawpileuser"
+if [[ -d  "/home/drawpileuser/abusereport" ]]; then
 	echo Download detected of abusereport files, removing content before downloading.
-	rm -f -R "$dp_install_loc/Programs/abusereport"
+	rm -f -R "/home/drawpileuser/abusereport"
 else
 	echo Did not find abusereport folder, continuing.
 fi
@@ -4173,7 +4328,7 @@ echo
 git clone https://github.com/drawpile/abusereport
 echo
 echo Download done...
-cd "$dp_install_loc/Programs/abusereport"
+cd "/home/drawpileuser/abusereport"
 echo
 echo '--------------------------------------------------------------------------------'
 echo "Running command: python -m venv env"
@@ -4198,14 +4353,16 @@ echo "${bold}${cyan}***** Setting Abuse Report for Automatic Startup *****${norm
 # Used to exit virtual environment that is started with this command: . env/bin/activate
 deactivate
 
-sudo cp -R "$dp_install_loc/Programs/abusereport" "/usr/local/bin/abusereport"
+# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
+# sudo cp -R "$dp_install_loc/Programs/abusereport" "/usr/local/bin/abusereport"
+
 cat <<EOF | sudo tee /usr/local/bin/drawpile_abuse_report >/dev/null
 #!/bin/sh
 export PORT='$abuse_report_port'
 export AUTH_TOKEN='$abuse_report_auth_token'
 export SERVER_HOST='$hostname'
 export DISCORD_WEBHOOK='$discord_webhook_URL'
-cd /usr/local/bin/abusereport
+cd /home/drawpileuser/abusereport
 . env/bin/activate
 exec gunicorn report_relay.main:App --bind "localhost:\$PORT" --worker-class aiohttp.GunicornWebWorker
 EOF
@@ -4220,8 +4377,8 @@ Description=Drawpile abuse report tool
 [Service]
 ExecStart=/usr/local/bin/drawpile_abuse_report
 User=drawpileuser
-#ExecStart=/home/abusereport/start.sh
-#Group=abusereport
+# ExecStart=/home/abusereport/start.sh
+# Group=abusereport
 
 [Install]
 WantedBy=multi-user.target
@@ -4232,9 +4389,12 @@ echo
 sudo chmod 655 /etc/systemd/system/drawpile_abuse_report.service
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
+wait $!
 sudo systemctl enable drawpile_abuse_report.service
 sudo systemctl start --now drawpile_abuse_report.service
+wait $!
 sudo systemctl status drawpile_abuse_report.service --no-pager
+wait $!
 
 # (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
 # --report-url http://localhost:$abuse_report_port/
@@ -4614,7 +4774,7 @@ Documentation=man:drawpile-srv
 # --------------------------------------------------------------------------------
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=$location_created_executable/drawpile-srv -d /home/drawpileuser/server.db $systemd_configuration
+ExecStart=$location_created_executable_dpsrv -d /home/drawpileuser/server.db $systemd_configuration
 # --------------------------------------------------------------------------------
 # The AppImage is not built with systemd integration at the moment,
 #      so type=simple should be used with it:
@@ -4644,7 +4804,7 @@ Documentation=man:drawpile-srv
 # --------------------------------------------------------------------------------
 [Service]
 # Note: set this to the correct path and add -d or -c to load the right configuration file
-ExecStart=$location_created_executable/drawpile-srv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd_configuration
+ExecStart=$location_created_executable_dpsrv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd_configuration
 # --------------------------------------------------------------------------------
 # The AppImage is not built with systemd integration at the moment,
 #      so type=simple should be used with it:
@@ -4677,15 +4837,20 @@ echo
 echo 'Reloading systemctl and systemd.'
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
+wait $!
 echo
 # This specific step ensures a database file is generated and permissions assigned to it
 # so drawpileuser can access it.
 sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
+wait $!
 sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load
+wait $!
 sudo systemctl start --now drawpile-srv.service & sleep 1
+wait $!
 sudo chmod 770 /home/drawpileuser/server.db
 sudo chown drawpileuser /home/drawpileuser/server.db
 sudo systemctl stop --now drawpile-srv.service
+wait $!
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -4841,12 +5006,17 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo chmod 641 /etc/samba/smb.conf
 			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl restart smbd
+				wait $!
 				sudo systemctl restart nmbd
+				wait $!
 				sudo samba restart
+				wait $!
 			fi
 			if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl enable smb --now
+				wait $!
 				sudo systemctl restart smb
+				wait $!
 			fi
 			echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
 			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
@@ -4895,12 +5065,17 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo chmod 641 /etc/samba/smb.conf
 			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl restart smbd
+				wait $!
 				sudo systemctl restart nmbd
+				wait $!
 				sudo samba restart
+				wait $!
 			fi
 			if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl enable smb --now
+				wait $!
 				sudo systemctl restart smb
+				wait $!
 			fi
 			echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
 			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
@@ -4931,12 +5106,17 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo chmod 641 /etc/samba/smb.conf
 			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl restart smbd
+				wait $!
 				sudo systemctl restart nmbd
+				wait $!
 				sudo samba restart
+				wait $!
 			fi
 			if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl enable smb --now
+				wait $!
 				sudo systemctl restart smb
+				wait $!
 			fi
 		echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
 			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
@@ -4980,36 +5160,40 @@ echo "     the file where other server configuration settings are kept."
 echo "           $drawpile_configuration_values_file"
 echo "     "
 echo "     You will be given a chance to decide if you want to save this info"
-echo "     in plain text format. ${bold}${red}If you plan on doing so, do not use exclamation${normal}"
-echo "     ${bold}${red}marks (!) in your password. It will not be able to store the password.${normal}"
+echo "     in plain text format. If you wish to have the list server in"
+echo "     read-only mode so other servers cannot list on your list server,"
+echo "     you MUST consent to this option to use it."
+echo "     "
+echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!)${normal}"
+echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
 echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
 echo
-echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
-echo 'can be any password you like to use without spaces.'
+echo "${bold}${red}Where USERNAME can be any username you wish to use for login and PASSWORD${normal}"
+echo "${bold}${red}can be any password you like to use WITHOUT spaces.${normal}"
 echo
-read -r -p "Enter username: " nginx_username_1
-read -r -p "Enter username again: " nginx_username_2
+read -r -p "Enter username ONLY (no spaces or exclamation marks): " nginx_username_1
+read -r -p "Enter username again (no spaces or exclamation marks): " nginx_username_2
 while [ $nginx_username_1 != $nginx_username_2 ]
 do
 	echo
-        echo "Usernames entered do not match!"
+        echo "${bold}${red}Usernames entered do not match!${normal}"
 	echo
-        read -r -p "Enter username: " nginx_username_1
-        read -r -p "Enter username again: " nginx_username_2
+        read -r -p "Enter username ONLY (no spaces or exclamation marks): " nginx_username_1
+        read -r -p "Enter username again (no spaces or exclamation marks): " nginx_username_2
 done
 echo
 echo "Your Server Administration username is: $nginx_username_1"
 echo
 echo
-read -r -p "Enter password without spaces: " nginx_htpasswd_1
-read -r -p "Enter password without spaces again: " nginx_htpasswd_2
+read -r -p "Enter password ONLY (no spaces or exclamation marks): " nginx_htpasswd_1
+read -r -p "Enter password (no spaces or exclamation marks) again: " nginx_htpasswd_2
 while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
 do
 	echo
         echo "Passwords entered do not match!"
 	echo
-        read -r -p "Enter password without spaces: " nginx_htpasswd_1
-        read -r -p "Enter password without spaces again: " nginx_htpasswd_2
+        read -r -p "Enter password ONLY (no spaces or exclamation marks): " nginx_htpasswd_1
+        read -r -p "Enter password (no spaces or exclamation marks) again: " nginx_htpasswd_2
 done
 echo
 echo "Your Server Administration password is: $nginx_htpasswd_1"
@@ -5042,8 +5226,13 @@ echo "     This information would be used to potentially update the list server"
 echo "     configuration file in the event of a admin username and/or password"
 echo "     change. If you decide to not use this configuration, the list server"
 echo "     will NOT automatically list sessions to make it easier for users to"
-echo "     find sessions. It is recommended to enable this setting. ${bold}${red}If you have${normal}"
-echo "     ${bold}${red}an exclamation mark in your password, it will not store the password.${normal}"
+echo "     find sessions. You also cannot use the list server in read-only mode"
+echo "     so other servers cannot use your list server."
+echo "     "
+echo "     It is recommended to enable this setting."
+echo "     "
+echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!)${normal}"
+echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
 echo "${bold}${red}************************** REPEAT IMPORTANT NOTE: *************************${normal}"
 echo
 echo "${bold}${red}Do you consent to store this information in plain text format on the server?${normal}"
@@ -5225,15 +5414,19 @@ echo
 # sudo /etc/init.d/nginx restart
 
 sudo systemctl restart nginx
+wait $!
 sudo nginx -s reload
 sudo systemctl restart nginx
+wait $!
 echo
 # This specific step ensures a database file is generated and permissions assigned to it
 # so drawpileuser can access it.
 echo
 sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
 sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load
-sudo systemctl start --now drawpile-srv.service & sleep 1
+wait $!
+sudo systemctl start --now drawpile-srv.service
+wait $!
 sudo chmod 770 /home/drawpileuser/server.db
 sudo chown drawpileuser /home/drawpileuser/server.db
 # Abuse Report String
@@ -5248,6 +5441,7 @@ fi
 
 echo
 sudo systemctl stop --now drawpile-srv.service
+wait $!
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -5370,8 +5564,19 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo "Please configure how you want the list server to function by selecting the number desired ..."
 		echo
+		echo "${bold}${yellow}Setting 1 of 11${normal}"
+		echo
 		echo Possible values:
-		echo "1 - none      - listserver will be in read-only mode (includeservers must be set)"
+		if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
+			echo "1 - none      - listserver will be in read-only mode"
+		elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
+			echo "${bold}${red}1 - none      - listserver will be in read-only mode (includeservers must be set, invalid option)${normal}"
+			echo "     The earlier prompt asking to store the password was not consented to store in plain"
+			echo "     text format. Therefore this option is not available."
+		else
+			echo "  -           - ${bold}${red}This message for list server in read-only mode should not be visible.${normal}"
+		fi
+		# echo "1 - none      - listserver will be in read-only mode (includeservers must be set)"
 		echo "2 - memory    - sessions will be lost if server is restarted, but no database needed"
 		echo "3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
 		echo
@@ -5380,39 +5585,77 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " list_server_database_connection_string_num
 			[[ $list_server_database_connection_string_num =~ ^[1-3]+$ ]] || { invalid_list_server_database_connection_string; continue; }
 			if (( "$list_server_database_connection_string_num" >= "1" && "$list_server_database_connection_string_num" <= "3" )) ; then
-				if [ "$list_server_database_connection_string_num" == "1" ]; then
-					listserver_database_connection_string="none"
-				elif [ "$list_server_database_connection_string_num" == "2" ]; then
-					listserver_database_connection_string="memory"
-				elif [ "$list_server_database_connection_string_num" == "3" ]; then
-					echo
-					echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
-					echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
-					echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
-					echo
-					read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
-					echo
-					if [ "$list_server_database_connection_string_name" = "" ]; then
-						listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
-						echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+				if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
+					if [ "$list_server_database_connection_string_num" == "1" ]; then
+						listserver_database_connection_string="none"
+						break
+					elif [ "$list_server_database_connection_string_num" == "2" ]; then
+						listserver_database_connection_string="memory"
+						break
+					elif [ "$list_server_database_connection_string_num" == "3" ]; then
+						echo
+						echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
+						echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
+						echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
+						echo
+						read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
+						echo
+						if [ "$list_server_database_connection_string_name" = "" ]; then
+							listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
+							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+						else
+							listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
+							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+						fi
+						break
 					else
-						listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
-						echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+						echo
+						echo "This message should not be visible as an invalid option was provided."
+						echo
+						invalid_list_server_database_connection_string
+					fi
+				elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
+					if [ "$list_server_database_connection_string_num" == "1" ]; then
+						echo "${bold}${red}This option is invalid. You did not consent to store the password in plain text format.${normal}"
+					elif [ "$list_server_database_connection_string_num" == "2" ]; then
+						listserver_database_connection_string="memory"
+						break
+					elif [ "$list_server_database_connection_string_num" == "3" ]; then
+						echo
+						echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
+						echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
+						echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
+						echo
+						read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
+						echo
+						if [ "$list_server_database_connection_string_name" = "" ]; then
+							listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
+							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+						else
+							listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
+							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
+						fi
+						break
+					else
+						echo
+						echo "This message should not be visible as an invalid option was provided."
+						echo
+						invalid_list_server_database_connection_string
 					fi
 				else
-					echo
-					echo "This message should not be visible as an invalid option was provided."
-					echo
-					invalid_list_server_database_connection_string
+					echo "${bold}${red}This message for list server in read-only mode should not be visible.${normal}"
 				fi
-				sudo sed -i '\!^list_server_database_connection_string_num =!{h;s!=.*!= '"$list_server_database_connection_string_num"'!};${x;\!^$!{s!!list_server_database_connection_string_num = '"$list_server_database_connection_string_num"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^list_server_database_connection_string_name =!{h;s!=.*!= '"$listserver_database_connection_string"'!};${x;\!^$!{s!!list_server_database_connection_string_name = '"$listserver_database_connection_string"'!;H};x}' $drawpile_configuration_values_file
-				break
 			else
 				invalid_list_server_database_connection_string
 			fi
 		done
+		sudo sed -i '\!^list_server_database_connection_string_num =!{h;s!=.*!= '"$list_server_database_connection_string_num"'!};${x;\!^$!{s!!list_server_database_connection_string_num = '"$list_server_database_connection_string_num"'!;H};x}' $drawpile_configuration_values_file
+		wait $!
+		sudo sed -i '\!^list_server_database_connection_string_name =!{h;s!=.*!= '"$listserver_database_connection_string"'!};${x;\!^$!{s!!list_server_database_connection_string_name = '"$listserver_database_connection_string"'!;H};x}' $drawpile_configuration_values_file
+		wait $!
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 2 of 11${normal}"
 		echo
 		echo "Enter short name for this server, which a user will see when they choose their"
 		echo "list server option when hosting their session."
@@ -5433,6 +5676,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 3 of 11${normal}"
 		echo
 		echo "Enter a description for the server a user will see when joining the server"
 		echo "directly in the Drawpile client, by typing the server name at the bottom"
@@ -5455,6 +5700,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 4 of 11${normal}"
 		echo
 		echo "${bold}${yellow}Optional setting:${normal} Use the default location by typing 1 and hitting enter, leave"
 		echo "blank to disable the favicon, or Advanced Users may enter a local location for"
@@ -5516,6 +5763,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
+		echo "${bold}${yellow}Setting 5 of 11${normal}"
+		echo
 		echo "${bold}${yellow}Optional setting:${normal} Enter a welcome message for listing the session"
 		echo
 		echo "Leaving the field blank will assume there is no welcome message to be used."
@@ -5530,6 +5779,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 6 of 11${normal}"
 		echo
 		echo "${bold}${yellow}Optional setting:${normal} Configure not safe for work auto-flag sessions"
 		echo
@@ -5550,6 +5801,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 7 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per external host. ${normal}: "
@@ -5575,6 +5828,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
+		echo "${bold}${yellow}Setting 8 of 11${normal}"
+		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per named host. ${normal}: "
 			max_sessions_per_named_host_toggle="# max_sessions_per_named_host"
@@ -5598,6 +5853,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 9 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for server listing limitation. ${normal}: "
@@ -5623,6 +5880,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
+		echo "${bold}${yellow}Setting 10 of 11${normal}"
+		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for servers banned from listing. ${normal}: "
 			list_server_banned_hosts_toggle="# list_server_banned_hosts"
@@ -5646,6 +5905,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}Setting 11 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for minutes passed before session de-listed and use default. ${normal}"
@@ -5825,9 +6086,11 @@ EOF
 			fi
 			echo
 			sudo systemctl stop --now drawpile-listserver.service
+			wait $!
 			sudo rm -r -f "$list_server_config_file_location"
 			generate_list_server_config_filename
 			sudo systemctl start --now drawpile-listserver.service
+			wait $!
 		else
 			echo Invalid option selected.
 			echo List server configuration file exists, skipping . . .
@@ -5846,12 +6109,16 @@ EOF
 	elif [[ -e  "/bin/listserver" ]]; then
 		GOPATH=/bin
 	else
-			echo "Was unable to determine location of listserver."
-			echo "This will cause issues with the script."
+			echo "${bold}${red}Was unable to determine location of listserver.${normal}"
+			echo "${bold}${red}This will cause issues with the script.${normal}"
+			echo
+			echo "${bold}${red}Script will exit in 30 seconds.${normal}"
 			echo
 			sleep 30
 			exit
 	fi
+	
+	sudo cp /home/$current_username/go/bin/listserver /usr/local/bin
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Running SystemD configuration for List Server . . .*****${normal}"
@@ -5862,7 +6129,8 @@ Description=Drawpile statistics proxy
 After=network.target
 
 [Service]
-ExecStart=$GOPATH/bin/listserver -c $list_server_config_file_location
+ExecStart=/usr/local/bin/listserver -c $list_server_config_file_location
+# ExecStart=$GOPATH/bin/listserver -c $list_server_config_file_location
 User=drawpileuser
 
 [Install]
@@ -5870,12 +6138,14 @@ WantedBy=multi-user.target
 EOF
 
 	sudo systemctl enable --now drawpile-listserver.service
+	wait $!
 	echo
 	echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 	echo
 	echo "${bold}${cyan}*****Displaying Drawpile List Server Status . . .*****${normal}"
 	echo
 	systemctl status drawpile-listserver.service --no-pager
+	wait $!
 	echo
 	pause
 	echo
@@ -5992,6 +6262,12 @@ EOF
 				exit
 			fi
 		fi
+		
+		sudo chmod 754 /var/www/html/drawpile/16.png
+		sudo chmod 754 /var/www/html/drawpile/32.png
+		sudo chmod 754 /var/www/html/drawpile/48.png
+		sudo chmod 754 /var/www/html/drawpile/64.png
+		sudo chmod 754 /var/www/html/drawpile/128.png
 	}
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -6077,7 +6353,7 @@ server {
 	}
 	
 	location /listing/ {
-		proxy_pass http://localhost:8080/;
+		proxy_pass http://127.0.0.1:8080/;
 		proxy_redirect default;
 		proxy_set_header X-Real-IP \$remote_addr;
 	}
@@ -6106,7 +6382,7 @@ server {
 		auth_basic_user_file /etc/nginx/passwords;
 		try_files \$uri /admin/index.html =404;
 		location /admin/api/ {
-			proxy_pass http://localhost:27780/api/;
+			proxy_pass http://127.0.0.1:27780/api/;
 			proxy_redirect default;
 		}
 	}
@@ -6115,7 +6391,7 @@ server {
 	}
 
 	location /listing/sessions/ {
-		proxy_pass http://localhost:8080/sessions/;
+		proxy_pass http://127.0.0.1:8080/sessions/;
 		proxy_redirect default;
 		proxy_set_header X-Real-IP \$remote_addr;
 	}
@@ -6212,13 +6488,13 @@ server {
 			auth_basic_user_file /etc/nginx/passwords;
 			try_files \$uri /admin/index.html =404;
 			location /admin/api/ {
-					proxy_pass http://localhost:27780/api/;
+					proxy_pass http://127.0.0.1:27780/api/;
 					proxy_redirect default;
 			}
 	}
 	
 	location /listing/ {
-			proxy_pass http://localhost:8080/;
+			proxy_pass http://127.0.0.1:8080/;
 			proxy_redirect default;
 			proxy_set_header X-Real-IP \$remote_addr;
 	}
@@ -6241,10 +6517,12 @@ EOF
 	echo '--------------------------------------------------------------------------------'
 	echo
 	sudo systemctl restart drawpile-listserver.service & systemctl status drawpile-listserver.service --no-pager
+	wait $!
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
 	sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+	wait $!
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -6260,14 +6538,52 @@ EOF
 	app_does_not_exist=0
 	app_installed=0
 	app_not_installed=0
-	progs=(npm);
-	package_install_status_check_function
-	sudo $package_install_program npm
+	if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+		progs=(npm);
+		package_install_status_check_function
+		sudo $package_install_program npm
+	elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		progs=(nodejs-npm);
+		package_install_status_check_function
+		sudo $package_install_program nodejs-npm
+	else
+		:
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Checking for Node.JS installation and version . . . (Install 2 of 2) *****${normal}"
 	echo
+	function nodejs_warning_raspbian_for_desktop_x86_64_only () {
+		echo "**********************************************************************************"
+		echo
+		echo "${bold}${red}### WARNING ###"
+		echo "${bold}${red}DO NOT EXPOSE NODE-RED TO THE OPEN INTERNET WITHOUT SECURING IT FIRST${normal}"
+		echo 
+		echo "${bold}${red}Even if your Node-RED does not have anything valuable, (automated) attacks will${normal}"
+		echo "${bold}${red}happen and could provide a foothold in your local network"
+		echo 
+		echo "${bold}${red}Follow the guide at https://nodered.org/docs/user-guide/runtime/securing-node-red${normal}"
+		echo "${bold}${red}to setup security.${normal}"
+		echo 
+		echo "### ADDITIONAL RECOMMENDATIONS ###"
+		echo " - Remove the /etc/sudoers.d/010_pi-nopasswd file to require entering your password"
+		echo "   when performing any sudo/root commands:"
+		echo 
+		echo "sudo rm -f /etc/sudoers.d/010_pi-nopasswd"
+		echo 
+		echo " - You can customise the initial settings by running:"
+		echo 
+		echo "  node-red admin init"
+		echo 
+		echo " - After running Node-RED for the first time, change the ownership of the settings"
+		echo "   file to 'root' to prevent unauthorised changes:"
+		echo 
+		echo "	  sudo chown root:root ~/.node-red/settings.js"
+		echo
+		**********************************************************************************
+	}
+
 	function install_or_update_nodejs () {
 		echo
 		echo "Running apt update and apt upgrade"
@@ -6284,46 +6600,98 @@ EOF
 		progs=(nodejs);
 		package_install_status_check_function
 		echo
+		
+		package_name=nodejs
+		minimum_versionnodejs=14.0.0
+		
 		if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: arm64" ]; then
 			echo "Adding Node.JS repository to get latest version . . ."
 			echo
 			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
-			echo "Adding Node.JS repository to get latest version . . ."
 			echo
-			sudo curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+			echo "Installing/updating Node.JS . . ."
+			sudo $package_install_program nodejs
+			echo
+			echo "Installed version is . . ."
+			node -v
+			echo
+			version_test_by_distro_function
+		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+			echo "${bold}${cyan}Would you like to try (1) Node-RED Install or just update (2) nodejs which may not work?${normal}"
+			echo
+			read nodejs_or_red
+			if [ "$nodejs_or_red" == "1" ]; then
+				echo "Adding Node.JS repository to get latest version . . ."
+				echo
+				# sudo curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+				bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --node18
+				# Search for the line below for cleanup.
+				# echo "${bold}${cyan}*****Cleanup on Raspbian for Desktop . . . (Final Step)*****${normal}"
+				test_installation_status="Installed"
+				test_version=$(node -v | cut -c 2-100)
+			else
+				# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
+				nodered_install_log=nodered-install.log
+				tgtl18=18.4.0    # need x86 latest from https://unofficial-builds.nodejs.org/download/release/
+                tgtl=$tgtl18
+				tgta18=18.16.1    # need armv6l latest from https://unofficial-builds.nodejs.org/download/release/
+                tgta=$tgta18
+				echo "Using 32bit nodejs" | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+				curl -sSL -o /tmp/node.tgz https://unofficial-builds.nodejs.org/download/release/v$tgtl/node-v$tgtl-linux-x86.tar.gz 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+				# unpack it into the correct places
+				hd=$(head -c 9 /tmp/node.tgz)
+				if [ "$hd" == "<!DOCT" ] || [ "$hd" == "<html>" ]; then
+					CHAR="$CROSS File $f not downloaded";
+				else
+					if [[ -d /tmp/nodejs ]]; then
+						sudo rm -rf /tmp/nodejs
+					fi
+					mkdir -p /tmp/nodejs
+					sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /tmp/nodejs
+					sudo chown -R 0:0 /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+					if sudo cp -PR /tmp/nodejs/* /usr/ 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
+					sudo rm -rf /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+					# if sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /usr 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
+				fi
+				rm /tmp/node.tgz 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+				echo "  Install Node.js for i686            $CHAR"
+				echo
+				echo "Installed version is . . ."
+				node -v
+				echo
+				test_installation_status="Installed"
+				test_version=$(node -v | cut -c 2-100)
+			fi
 		else
 			echo "Adding Node.JS repository to get latest version . . ."
 			echo
 			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+			echo
+			echo "Installing/updating Node.JS . . ."
+			sudo $package_install_program nodejs
+			echo
+			echo "Installed version is . . ."
+			node -v
+			echo
+			version_test_by_distro_function
 		fi
-		echo
-		echo "Installing/updating Node.JS . . ."
-		sudo $package_install_program nodejs
-		echo
-		echo "Installed version is . . ."
-		node -v
-		echo
-		package_name=nodejs
-		version_test_by_distro_function
-		minimum_versionnodejs=14.0.0
 		if [[ "$test_installation_status" = "Not Installed" ]]; then
-			echo "Failed to install . . ."
+			echo "${bold}${red}Failed to install . . .${normal}"
 			echo "${bold}${red}The web admin interface will not work!${normal}"
 			echo
 			sleep 30
 		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
-			echo "Failed to update past minimum version $minimum_versionnodejs . . ."
+			echo "${bold}${red}Failed to update past minimum version $minimum_versionnodejs . . .${normal}"
 			echo "${bold}${red}The web admin interface will not work!${normal}"
 			echo
 			sleep 30
 		elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
-			echo "Meets minimum version $minimum_versionnodejs requirements for Node . . ."
+			echo "${bold}${red}Meets minimum version $minimum_versionnodejs requirements for Node . . .${normal}"
 			echo "${bold}${green}The web admin interface should work!${normal}"
 			echo
 			sleep 5
 		elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
-			echo "Updated successfully past minimum version $minimum_versionnodejs . . ."
+			echo "${bold}${green}Updated successfully past minimum version $minimum_versionnodejs . . .${normal}"
 			echo "${bold}${green}The web admin interface should work!${normal}"
 			echo
 			sleep 5
@@ -6404,24 +6772,54 @@ EOF
 	sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
 	# sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile moo.strongson.com Server Admin<\/title>/g" "/var/www/html/drawpile/admin/index.html"
 	sudo mv build /var/www/html/drawpile/admin
+	sudo restorecon -R /var/www/html/drawpile/
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
 	echo
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		sudo systemctl enable nginx.service
+	fi
 	sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
-
+	wait $!
+	echo
 	# https://create-react-app.dev/
 	# npx create-react-app builddpwebadmin
 	# npm install -g npm@9.5.1
 	# cd "$dp_install_loc/Programs/dpwebadmin/dpwebadmin"
 	# npm start
+	
+	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] & [ "$nodejs_or_red" == "1" ]; then
+		# https://nodered.org/docs/user-guide/runtime/securing-node-red
+		# http://stevesnoderedguide.com/securing-node-red-ssl
+		# https://flowforge.com/blog/2023/04/securing-node-red-in-production/
+		echo "${bold}${cyan}*****Cleanup on Raspbian for Desktop . . . (Final Step)*****${normal}"
+		echo
+		sudo /usr/bin/node-red-stop
+		# sudo npm remove -g node-red
+		sudo npm remove -g node-red node-red-admin
+		sudo rm /lib/systemd/system/nodered.service
+		sudo npm uninstall node-red-dashboard
+		# nodejs_warning_raspbian_for_desktop_x86_64_only
+		# echo
+		# pause
+		# echo
+		# echo "Running tool to update login info for NodeRed to better secure the default installation."
+		# echo
+		# node-red admin init
+		echo
+	fi
+elif [ "$ssl_encryption_config" == "3" ]; then
+	echo "${bold}${red}List server needs HTTPS in order to work.${normal}"
+	echo "${bold}${red}Skipping List Server setup.${normal}"
+	echo
+	echo "Waiting 30 seconds before continuing."
+	echo
+	sleep 30
 else
-	# echo Invalid option selected. Assuming option 2 intended.
-	# echo 'Press 2 for Lets Encrypt'
-	# The options below configured the server to use SSL, so restarting Drawpile systemd services would be necessary.
-	echo This message should not be visible,
-	echo regarding list server and web admin.
+	echo "${bold}${red}This message should not be visible,${normal}"
+	echo "${bold}${red}regarding list server and web admin.${normal}"
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -7371,9 +7769,8 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 
-sudo chmod 770 /home/drawpileuser/ -R
-sudo chmod 770 $app_installation_status_file
-sudo chmod 770 $drawpile_configuration_values_file
+sudo chmod 777 $app_installation_status_file
+sudo chmod 777 $drawpile_configuration_values_file
 # sudo adduser $current_username drawpileread
 if [[ -e "/home/drawpileuser/cert.pem" ]]; then sudo chmod 700 /home/drawpileuser/cert.pem; fi
 if [[ -e "/home/drawpileuser/key.pem" ]]; then sudo chmod 700 /home/drawpileuser/key.pem; fi
@@ -7418,27 +7815,27 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo
 	if [ "$dp_srv_startup" == "1" ]; then
 		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
-		wait
+		wait $!
 		echo
 		echo 'Reloading systemctl and systemd.'
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
-		wait
+		wait $!
 		echo
 		sudo systemctl enable --now drawpile-srv.socket
-		wait
+		wait $!
 		#Read more on systemd --> https://drawpile.net/help/server
 	elif [ "$dp_srv_startup" == "2" ]; then
 		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
-		wait
+		wait $!
 		echo
 		echo 'Reloading systemctl and systemd.'
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
-		wait
+		wait $!
 		echo
 		sudo systemctl enable --now drawpile-srv.service
-		wait
+		wait $!
 		#Read more on systemd --> https://drawpile.net/help/server
 	else
 		echo "This message should not be visible."
@@ -7544,6 +7941,7 @@ function testing_config_for_certbot_function () {
 	# sudo systemctl enable --now /usr/lib/systemd/system/certbot.service
 	# sudo systemctl enable --now certbot.service
 	sudo systemctl enable --now certbot.timer
+	wait $!
 }
 
 if [ "$ssl_encryption_config" == "1" ] || [ "$ssl_encryption_config" == "3" ]; then
@@ -7648,20 +8046,15 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Scripts to be generated for managing server.
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+echo "${bold}${cyan}*****Scripts to be downloaded for managing server. . . .*****${normal}"
+echo "${bold}${red}*****     (To be completed at a later date)             *****${normal}"
+echo
 sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7778,10 +8171,10 @@ function drawpile_custom_shortcut_icon_preference () {
 	fi
 	
 	sudo chmod 754 $list_server_shortcut_png
-	sudo chown drawpileread $list_server_shortcut_png
+	sudo chown $current_username $list_server_shortcut_png
 	
 	sudo chmod 754 $server_web_admin_shortcut_png
-	sudo chown drawpileread $server_web_admin_shortcut_png
+	sudo chown $current_username $server_web_admin_shortcut_png
 }
 	
 if [[ -d "$option_loc_2" ]]; then
@@ -7807,7 +8200,7 @@ if [[ -d "$option_loc_2" ]]; then
 	echo "Press 1 for custom icons, or 2 to use favicons."
 	echo
 	read -r -p "Enter your selection now. Invalid option will select 1: " drawpile_shortcut_icon_preference
-
+	# --------------------------------------------------------------------------------
 	if [ "$drawpile_shortcut_icon_preference" == "1" ]; then
 		drawpile_custom_shortcut_icon_preference
 	elif [ "$drawpile_shortcut_icon_preference" == "2" ]; then
@@ -7857,16 +8250,15 @@ if [[ -d "$option_loc_2" ]]; then
 		server_web_admin_shortcut_png=$server_shortcut_png
 		list_server_shortcut_png=$server_shortcut_png
 		sudo chmod 754 $server_shortcut_png
-		sudo chown drawpileread $server_shortcut_png
+		sudo chown drawpileuser drawpileread $server_shortcut_png
 	else
 		echo "Invalid option selected. Assuming option 1 intended."
 		drawpile_shortcut_icon_preference=1
 		drawpile_custom_shortcut_icon_preference
 	fi
-	
 	sudo sed -i '\!^drawpile_shortcut_icon_preference =!{h;s!=.*!= '"$drawpile_shortcut_icon_preference"'!};${x;\!^$!{s!!drawpile_shortcut_icon_preference = '"$drawpile_shortcut_icon_preference"'!;H};x}' $drawpile_configuration_values_file
-
 	echo
+	# --------------------------------------------------------------------------------
 	if [[ ! -e "$option_loc_2/Drawpile ListServer.desktop" ]]; then
 		echo Creating shortcut for Drawpile ListServer on Desktop.
 		echo
@@ -7881,9 +8273,8 @@ Type=Application
 Icon=$list_server_shortcut_png
 Name[en_GB]=Drawpile ListServer
 EOF
-			# Trust the Desktop shortcut so it's launchable. 
-			# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-			sudo gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
 		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
 			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
 [Desktop Entry]
@@ -7913,7 +8304,7 @@ EOF
 	else
 		echo Shortcut for Drawpile ListServer already exists on Desktop.
 	fi
-
+	# --------------------------------------------------------------------------------
 	if [[ ! -e "$option_loc_2/Drawpile Admin.desktop" ]]; then
 		echo Creating shortcut for Drawpile Admin on Desktop.
 		echo
@@ -7928,9 +8319,8 @@ Type=Application
 Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin
 EOF
-			# Trust the Desktop shortcut so it's launchable. 
-			# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-			sudo gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
 		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
 			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin.desktop" >/dev/null
 [Desktop Entry]
@@ -7954,14 +8344,21 @@ Type=Application
 Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin
 EOF
-		fi	
+		fi
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+		gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+	fi
 	sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
 	sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
 	else
 		echo Shortcut for Drawpile Admin already exists on Desktop.
 	fi
-	
-	cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin GUI.desktop" >/dev/null
+	# --------------------------------------------------------------------------------
+	if [[ ! -e "$option_loc_2/Drawpile Admin GUI.desktop" ]]; then
+		echo Creating shortcut for Drawpile Admin GUI on Desktop.
+		echo
+		cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin GUI.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile Admin GUI
 Comment=Drawpile Admin GUI
@@ -7971,10 +8368,17 @@ Type=Application
 Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin GUI
 EOF
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile Admin GUI.desktop" metadata::trusted true
+		fi
+		sudo chown $current_username "$option_loc_2/Drawpile Admin GUI.desktop"
+		sudo chmod 754 "$option_loc_2/Drawpile Admin GUI.desktop"
+	else
+		echo Shortcut for Drawpile Admin GUI already exists on Desktop.
+	fi
+	# --------------------------------------------------------------------------------
 fi
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
 
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -7983,6 +8387,7 @@ echo 'If socket activation is enabled, it will say enabled on the line starting 
 echo '\"Loaded:\" and it should be running. Ignore the part after vendor preset.'
 echo
 systemctl status drawpile-srv.socket --no-pager
+wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
@@ -7990,6 +8395,7 @@ echo 'If start up on Pi power up is enabled, it will say enabled on the line sta
 echo 'with \"Loaded:\" and it should be running. Ignore the part after vendor preset.'
 echo
 systemctl status drawpile-srv.service --no-pager
+wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -8000,6 +8406,8 @@ drawpile_credits_urls_functions
 echo
 drawpile_credits_function
 echo
+echo "Device IP Address:"
+hostname -I
 echo
 echo "To set up remote server administration instead of the web interface, read more"
 echo "here in Google Docs:"
@@ -8013,16 +8421,23 @@ echo '     auto reset at 17.50 MB. This is especially important to make the valu
 echo '     for large boards being hosted on the server. I suggest using 25 MB for the setting '
 echo '     when remotely accessing the server to administrate the server settings.'
 echo
-read -r -p 'Press [Enter] key to close window...'
-echo
+
 # The sort command used at the end sorts the list alphabetically.
 sudo sort $app_installation_status_file -o $app_installation_status_file
+wait $!
 # This removes any duplicates that may exist in the file.
 perl -i -ne 'print if ! $a{$_}++' $app_installation_status_file
+wait $!
 
 # sudo sort $drawpile_configuration_values_file -o $drawpile_configuration_values_file
-
 sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_script_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
-#
+wait $!
+# sudo chmod 770 /home/drawpileuser/ -R
+sudo chmod 770 $app_installation_status_file
+sudo chmod 770 $drawpile_configuration_values_file
+
+read -r -p 'Press [Enter] key to close window...'
+echo
 #
 # - End of Script. -
+#
