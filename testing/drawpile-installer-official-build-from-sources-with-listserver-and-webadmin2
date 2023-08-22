@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.978
+drawpilescriptversion=2.979
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -1757,7 +1757,7 @@ if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command"
 	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 
@@ -3742,7 +3742,26 @@ function generate_self_signed_ssl () {
 		
 		sudo setsebool -P httpd_can_network_relay 1
 	elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [ "$what_fedora_variant" == "VARIANT_ID=server" ]; then
-		echo Fedora Server.
+		echo Fedora Server, adding firewall rules.
+		sudo firewall-cmd --zone=FedoraServer --permanent --add-port=27750/tcp
+		sudo firewall-cmd --zone=FedoraServer --permanent --add-port=27780/tcp
+		# sudo firewall-cmd --zone=FedoraServer --permanent --add-port=27750/udp
+		# sudo firewall-cmd --zone=FedoraServer --permanent --add-port=27780/udp
+		sudo firewall-cmd --zone=FedoraServer --permanent --add-service=http
+		sudo firewall-cmd --zone=FedoraServer --permanent --add-service=https
+		sudo firewall-cmd --reload
+		echo
+		echo Fedora Workstation, adding SELinux access to /var/www/html.
+		# Useful notes for trying to figure out why NGINX doesn't work. u3u
+		# sudo ausearch -m avc -ts today | audit2allow
+		# sudo cat /var/log/nginx/error.log
+		
+		# Needed so NGINX can access the directory
+		sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/(/.*)?"
+		sudo semanage port -a -t http_port_t -p tcp 27750
+		sudo semanage port -a -t http_port_t -p tcp 27780
+		
+		sudo setsebool -P httpd_can_network_relay 1
 	elif [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
 		:
 	else
@@ -4454,19 +4473,19 @@ echo '--------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 function sessions_folder_function () {
 	sudo mkdir -p -v sessions
-	sudo chmod 666 "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
+	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
 	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
 }
 
 function sessions_record_folder_function () {
 	sudo mkdir -p -v session-record
-	sudo chmod 666 "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
+	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
 	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
 }
 
 function template_folder_function () {
 	sudo mkdir -p -v templates
-	sudo chmod 666 "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
+	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
 	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
 }
 #---------------------------------------------------------------------------------------------------------------------------------
