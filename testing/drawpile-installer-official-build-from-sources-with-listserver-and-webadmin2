@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.980
+drawpilescriptversion=2.981
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -165,7 +165,7 @@ function language_check_and_verify_not_null_function () {
 
 language_check_and_verify_not_null_function
 
-if [ "$lang" == "en" ]; then
+if [ "$lang" == "en" ] || [ "$lang" == "C.UTF-8" ]; then
 	:
 else
 	echo
