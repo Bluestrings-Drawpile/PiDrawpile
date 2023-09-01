@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.984
+drawpilescriptversion=2.985
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -362,19 +362,19 @@ function useradd_and_groupadd_function () {
 	# sudo groupdel drawpileread
 }
 # ----------------------------------------------------------------------------------
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 9 (stretch)\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 9 (stretch)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Raspbian GNU/Linux 9 (stretch)\"" ]; then
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 9 (stretch)${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 10 (buster)\"" ]; then
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 10 (buster)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Raspbian GNU/Linux 10 (buster)\"" ]; then
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 10 (buster)${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 11 (bullseye)\"" ]; then
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 11 (bullseye)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Raspbian GNU/Linux 11 (bullseye)\"" ]; then
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 11 (bullseye)${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"" ]; then
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Raspbian GNU/Linux 12 (bookworm)\"" ]; then
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 12 (bookworm)${normal}"
 	else
@@ -1359,7 +1359,7 @@ using_what_rasp_release=$( lsb_release -a 2>/dev/null | grep "Release:" | awk '{
 using_what_rasp_codename=$( lsb_release -a 2>/dev/null | grep "Codename:" | awk '{ print $2 }' )
 
 
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	if [[ "$using_what_linux_kernel" == "4.14" ]] && [[ "$using_what_rasp_codename" == "stretch" ]] ; then
 		echo '--------------------------------------------------------------------------------'
 		echo '--------------------------------------------------------------------------------'
@@ -7357,10 +7357,10 @@ EOF
 		
 		package_name=nodejs
 		minimum_versionnodejs=14.0.0
-		if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
+		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
 			echo "Skipping Node.JS Installation for Pi Zero W . . ."
 		else
-			if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+			if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 				echo "Adding Node.JS repository to get latest version . . ."
 				echo
 				
@@ -7672,7 +7672,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 	variable_to_read_1="Pi_Hole_Status"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -7944,7 +7944,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 	variable_to_read_1="RPi_Monitor_Status"
 	variable_to_read_2="RPi_Monitor_Dark_Mode"
 	variable_to_read_3=""
