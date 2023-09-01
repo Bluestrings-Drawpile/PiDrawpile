@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.982
+drawpilescriptversion=2.983
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -439,20 +439,21 @@ function select_non_root_account () {
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "When running script with sudo or su, please specify your user account name."
+	echo "When running script with sudo or su, please specify your user account name"
+	echo "with a valid user directory indicated below."
 	echo
 	echo "Here are a list of folders in the home directory:"
 	ls -d /home/*/
-	echo
 	echo
 	read -r -p "Enter username: " current_username
 	echo
 	while [[ ! -e "/home/$current_username" ]]
 	do
+		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "Invalid user name entered. Please enter a valid user name. User"
-		echo "name verified by checking for valid folder path listed below:"
-		echo "     /home/$current_username"
+		echo "Invalid user name entered (no matching home directory). Please "
+		echo "enter a valid user name with a user directory indicated below:"
+		ls -d /home/*/
 		echo
 		read -r -p "Enter user name: " current_username
 		echo
@@ -464,7 +465,7 @@ function select_non_root_account () {
 
 if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; then
 	current_username=pi
-	if [[ -e  "/home/$current_username" ]]; then
+	if [[ -e "/home/$current_username" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	else
@@ -487,7 +488,69 @@ else
 		sudo usermod -a $current_username -G drawpileread
 	fi
 fi
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
+mem_total=$( free -m | grep -i "Mem" | awk '{ print $2 }' )
+# mem_free=$( free -m | grep -i "Mem" | awk '{ print $4 }' )
+swap_total=$( free -m | grep -i "Swap" | awk '{ print $2 }' )
+# swap_free=$( free -m | grep -i "Swap" | awk '{ print $4 }' )
+
+if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "It appears the system memory is less than 512 MB and that your system does"
+	echo "not have a swap file. This will probably cause issues with generating"
+	echo "Listserver with 'go install'."
+	echo
+	echo "Sample Problem this attempts to address:"
+	echo '--------------------------------------------------------------------------------'
+	echo "apt-get install -y -q golang"
+	echo "go install 'github.com/drawpile/listserver@latest'"
+	echo "crawshaw.io/sqlite"
+	echo "gcc: fatal error: Killed signal terminated program cc1"
+	echo "Compilation terminated."
+	echo '--------------------------------------------------------------------------------'
+	echo
+	if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+		echo "It appears the system memory is less than 512 MB and that your system does"
+		echo "Sample configuration commands for Ubuntu which may help, increases swap to"
+		echo "1024MB of space."
+		echo
+		echo "fallocate -l 1G /swapfile"
+		echo "chmod 600 /swapfile"
+		echo "sudo mkswap /swapfile"
+		echo "sudo swapon /swapfile"
+		echo
+		echo "Would you like to attempt this fix automatically?"
+		echo "Script will exit if you select not to do this."
+		echo
+		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
+		echo
+		if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] ; then
+			fallocate -l 1G /swapfile
+			chmod 600 /swapfile
+			sudo mkswap /swapfile
+			sudo swapon /swapfile
+		else
+			echo
+			echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+			sleep 30
+			exit
+		fi
+	else
+		echo "Should consider increasing swap file size to at least 1024 MB to ensure"
+		echo "adequate resources available for setup."
+		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+		sleep 30
+		exit
+	fi
+fi
+
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -762,10 +825,10 @@ function version_test_by_distro_function () {
 			if [ "$installation_status" == "Installed Packages" ]; then
 				if [ "$installation_status_candidate_check" == "Available Packages" ]; then
 					# Package is installed, but an update is available.
-					candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
-					candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" |  tail -1 | awk '{ print $3 }' )
-					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" |  tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" |  tail -1 | awk '{ print $3 }' )
+					candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+					candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
+					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$candidate_status-$candidate_status_02"
@@ -773,8 +836,8 @@ function version_test_by_distro_function () {
 					test_installation_status="Installed and not up to date"
 				elif [ "$installation_status_candidate_check" == "" ]; then
 					# Package is installed and up to date
-					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" |  tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" |  tail -1 | awk '{ print $3 }' )
+					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$version-$version_02"
@@ -788,8 +851,8 @@ function version_test_by_distro_function () {
 				fi
 			elif [ "$installation_status" == "Available Packages" ]; then
 				# Package is not yet installed.
-				candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
-				candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" |  tail -1 | awk '{ print $3 }' )
+				candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+				candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
 				test_version="Not Installed"
 				test_update_version="$candidate_status-$candidate_status_02"
 				test_update_version_simple="$candidate_status"
@@ -1074,7 +1137,8 @@ echo
 function script_update_check_function () {
 	sudo mkdir -p -v "$dp_install_loc/Programs"
 	cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name"
+	echo
+	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
 	sudo chmod 777 "$dp_install_loc/Programs" -R
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
@@ -1097,7 +1161,7 @@ function script_update_check_function () {
 	fi
 	# --------------------------------------------------------------------------------
 	if [[ "$drawpile_script_version" < "$dp_check_version" ]]; then
-		echo "Newest Script is using version $dp_check_version."
+		echo "${bold}${yellow}Newest Script is using version $dp_check_version.${normal}"
 		echo "Newer version of script available, the old script has been copied over"
 		echo "the old script. Please re-run this script to use newest version."
 		echo
@@ -1112,10 +1176,10 @@ function script_update_check_function () {
 		sleep 30
 		exit
 	elif [[ "$drawpile_script_version" = "$dp_check_version" ]]; then
-		echo "Script is newest version available."
+		echo "${bold}${green}Script is newest version available.${normal}"
 		sudo rm -rf "$dp_install_loc/Programs/$script_name"
 	elif [[ "$drawpile_script_version" > "$dp_check_version" ]]; then
-		echo "It appears the creator of the script has failed to update github with the newest version."
+		echo "${bold}${yellow}It appears the creator of the script has failed to update github with the newest version.${normal}"
 		echo "Please reach on github or reach out to Bluestrings on the official Drawpile Discord"
 		echo "server. Invite link is found on the lower left corner of the website."
 		echo
@@ -1127,7 +1191,7 @@ function script_update_check_function () {
 		sudo rm -rf "$dp_install_loc/Programs/$script_name"
 		sleep 5s
 	else
-		echo "Unable to determine script version, proceeding with script."
+		echo "${bold}${red}Unable to determine script version, proceeding with script.${normal}"
 	fi
 }
 # ----------------------------------------------------------------------------------
@@ -1431,7 +1495,7 @@ function version_apt_or_dnf_function () {
 		# candidate_status=$( apt-cache policy $package_name | grep "Candidate:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
 	fi
 	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-		version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" |  tail -1 | awk '{ print $3 }' )
+		version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
 		installation_status=$( dnf info $package_name | sed -n '2 p' )
 		# Installed Packages
 		# Available Packages
@@ -1855,18 +1919,19 @@ if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" != "NAME=
 	port_443_listening=$( netstat -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
 fi
 
+# cargo clang
 if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
@@ -1876,7 +1941,7 @@ if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 
@@ -1917,6 +1982,10 @@ echo
 # zlib-devel - is a general-purpose, patent-free, lossless data compression library which is used by many different programs.						zlib-devel						*
 # cronie - Cronie contains the standard UNIX daemon crond that runs specified programs at scheduled times and related tools. It is a 				cronie							*
 #       fork of the original vixie-cron and has security and configuration enhancements like the ability to use pam and SELinux.					-
+# cargo - Rust's package manager and build tool - that allows Rust projects to declare their various dependencies
+#         and ensure that you'll always get a repeatable build.
+# clang - A C language family front-end for LLVM. The goal of the Clang project is to create a new C, C++, Objective C and Objective C++ 
+#			front-end for the LLVM compiler. Its tools are built as libraries and designed to be loosely-coupled and extensible.
 
 sudo $package_install_program $program_list_to_install_actual_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
@@ -1939,6 +2008,9 @@ echo
 
 sudo $package_install_program $program_list_to_install_optional_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
 echo
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Verify curl is installed, not available on either Debian or Ubuntu by default, I forget which... 
@@ -2036,6 +2108,44 @@ drawpile_program_version_release_on_website=$( curl -s -N https://raw.githubuser
 
 # Find Latest Beta Version - <release version="2.2.0-beta.5" type="development" date="2023-06-21">
 drawpile_program_version_beta_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep 'type="development"' | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}***** Update Rust Installation . . . *****${normal}"
+# https://www.rust-lang.org/tools/install
+echo
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+	# Needed for Raspbian for Desktop
+	# rustup installs incorrect version when 64 bit kernel enabled in 32bit OS
+	#     https://github.com/rust-lang/rustup/issues/3307
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+	echo
+	. ~/.cargo/env
+	rustup install --force-non-host stable-i686-unknown-linux-gnu
+	echo
+	rustup default stable-i686-unknown-linux-gnu
+else
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+	echo
+	. ~/.cargo/env
+fi
+echo
+rustc --version
+
+<<comment_EOF
+Do not need sudo for cmake build options (server, headless, client, etc) nor 'cmake --build', as it won't read the rustup version that was just installed. Sudo changes the environment or something. 
+To avoid that issue, chown is done to the build directory and the command '. ~/.cargo/env' is re-issued right before running it. The end user should have rust version 1.66.1 or newer. 
+     https://github.com/drawpile/Drawpile/commit/bd11c10a748e8ea93ecb0f01d3cadf531dd95508
+
+
+The changes below in the script were made due to it failing to compile otherwise. 
+Changed --> make -j "$thread_count"
+To Cmd  --> cmake --build . -j "$thread_count"
+
+Changed --> sudo make install
+To Cmd  --> sudo cmake --install .
+comment_EOF
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -2517,11 +2627,11 @@ echo "     1 - Latest Drawpile, which may not be stable or compile ..."
 echo "         Beta client does not have drawpile-cmd to generate images"
 echo "         with script, nor does Drawpile drawing client have built"
 echo "         in server."
-echo "              Script check: $drawpile_program_version_with_git" # $drawpile_program_version_on_website (or newer)
+echo "              Script check: $drawpile_program_version_with_git" # $drawpile_prograDm_version_on_website (or newer)
 echo "     2 - Drawpile latest stable release code for server and client."
 echo "              Script check: $drawpile_program_version_release_on_website"
 echo "     3 - Drawpile 2.1.20 code for server and client ${underline}(Recommended).${normal}"
-echo "			    Manually typed in: $drawpile_version_manual_type_for_script"
+echo "              Manually typed in: $drawpile_version_manual_type_for_script"
 echo
 
 read -r -p 'Enter a number and hit enter to continue: ' git_clone_dp_checkout
@@ -2680,11 +2790,14 @@ function compile_drawpile_client_only_function () {
 	echo
 	echo "${bold}${cyan}*****Compiling with $thread_count threads.*****${normal}"
 	echo
-	sudo make -j "$thread_count"
+	. ~/.cargo/env
+	cmake --build . -j "$thread_count"
+	# make -j "$thread_count"
 	echo
 	echo 'Making installation of compiled program, libraries, and documentation to proper locations.'
 	echo
-	sudo make install
+	sudo cmake --install .
+	# sudo make install
 	echo
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
@@ -2918,7 +3031,7 @@ comment_EOF_delete
 
 function drawpile_tools_compile_verification_function () {
 	drawpile_cmd_version=$( drawpile-cmd -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
-	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool| awk '{ print $2 }' )
+	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
 
 	if [[ -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
 		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" ]] && [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
@@ -2959,7 +3072,7 @@ function drawpile_tools_compile_verification_function () {
 }
 
 function drawpile_dprectool_compile_verification_function () {
-	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool| awk '{ print $2 }' )
+	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
 
 	if [[ "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/dprectool" ]]; then
 		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
@@ -3061,7 +3174,7 @@ function drawpile_build_and_compile_function () {
 	#
 	# QString("ZIP error")
 	#
-	# It is presumable that the current (09/18/2017)  stable release of KArchive at 5.28.0-2 has this issue fixed with 
+	# It is presumable that the current (09/18/2017) stable release of KArchive at 5.28.0-2 has this issue fixed with 
 	# the testing version of KArchive which is 5.37.0-2. Once updated to or past that number, this section below should
 	# no longer be necessary to use.
 	#
@@ -3076,7 +3189,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 		package_name=kf5-karchive-devel
-		version=$( dnf info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
+		version=$( dnf info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version"
 	echo
@@ -3116,7 +3229,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 		package_name=qt5-qtbase-devel
-		version_qt=$( dnf info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
+		version_qt=$( dnf info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version_qt"
 	echo
@@ -3272,7 +3385,8 @@ function drawpile_build_and_compile_function () {
 		echo 'more likely to complete without freezing up.'
 		echo
 		echo 'This is the command to be run, where # is a number input by you:'
-		echo 'sudo make -j #'
+		echo 'cmake --build . -j #'
+		# echo 'sudo make -j #'
 		echo
 		read -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
 		while [ true ] ; do
@@ -3312,25 +3426,32 @@ function drawpile_build_and_compile_function () {
 	#---------------------------------------------------------------------------------------------------------------------------------
 	echo "${bold}${cyan}*****Preliminary Build Setup . . . *****${normal}"
 	echo
+	sudo chown $current_username "$dp_install_loc/Programs/Drawpile/build" -R
 	if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "9" ]; then
 		if [[ "$drawpile_build_configuration" = "1" ]]; then drawpile_build_configuration_number_desc="1 - Server - Graphical User Interface (GUI) and dprectool"; fi
 		if [[ "$drawpile_build_configuration" = "9" ]]; then drawpile_build_configuration_number_desc="9 - Server - Graphical User Interface (GUI) and dprectool WARNING NO SERVER CONFIGURATION"; fi
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVER=ON -DTOOLS=on"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVER=ON -DTOOLS=on"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 	elif [ "$drawpile_build_configuration" == "2" ] || [ "$drawpile_build_configuration" == "10" ]; then
 		if [[ "$drawpile_build_configuration" = "2" ]]; then drawpile_build_configuration_number_desc="2 - Server - Non-GUI (also known as headless) and dprectool"; fi
-		if [[ "$drawpile_build_configuration" = "10" ]]; then drawpile_build_configuration_number_desc="10 - Server - Non-GUI (also known as headless)  and dprectool WARNING NO SERVER CONFIGURATION"; fi
+		if [[ "$drawpile_build_configuration" = "10" ]]; then drawpile_build_configuration_number_desc="10 - Server - Non-GUI (also known as headless) and dprectool WARNING NO SERVER CONFIGURATION"; fi
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DSERVER=ON -DTOOLS=on"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DSERVER=ON -DTOOLS=on"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 	elif [ "$drawpile_build_configuration" == "3" ]; then
 		drawpile_build_configuration_number_desc="3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DSERVER=ON"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DSERVER=ON"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings
 		app_does_not_exist=0
 		app_installed=0
@@ -3342,26 +3463,34 @@ function drawpile_build_and_compile_function () {
 	elif [ "$drawpile_build_configuration" == "4" ]; then
 		drawpile_build_configuration_number_desc="4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DSERVER=ON"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DSERVER=ON -DTOOLS=on"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 	elif [ "$drawpile_build_configuration" == "5" ]; then
 		drawpile_build_configuration_number_desc="5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVER=ON"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVER=ON"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 	elif [ "$drawpile_build_configuration" == "6" ]; then
 		drawpile_build_configuration_number_desc="6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVERGUI=off -DSERVER=ON"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVERGUI=off -DSERVER=ON"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 	elif [ "$drawpile_build_configuration" == "7" ]; then
 		drawpile_build_configuration_number_desc="7 - Drawpile Client Only - with Wacom Tablet drivers Installed"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings
 		app_does_not_exist=0
 		app_installed=0
@@ -3374,8 +3503,10 @@ function drawpile_build_and_compile_function () {
 	elif [ "$drawpile_build_configuration" == "8" ]; then
 		drawpile_build_configuration_number_desc="8 - Drawpile Client Only - Client program only"
 		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
+		drawpile_build_configuration_settings="cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
 		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		# May cause shell to exit so do this right before command runs to make sure it reads it.
+		. ~/.cargo/env
 		$drawpile_build_configuration_settings	
 		compile_drawpile_client_only_function
 	else
@@ -3392,7 +3523,9 @@ function drawpile_build_and_compile_function () {
 	echo
 	echo "${bold}${cyan}*****Compiling with $thread_count threads . . . *****${normal}"
 	echo
-	sudo make -j "$thread_count"
+	. ~/.cargo/env
+	cmake --build . -j "$thread_count"
+	# make -j "$thread_count"
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -3402,7 +3535,8 @@ function drawpile_build_and_compile_function () {
 	echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
 	echo
 	#Location of created executable --> /usr/local/bin/
-	sudo make install
+	sudo cmake --install .
+	# sudo make install
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -3499,14 +3633,17 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 		else
 			echo "${red}${bold}Some error occurred in the script. (Check if built and up to date already) ${normal}"
 			echo "${red}${bold}This message should not be visible.${normal}"
+			drawpile_build_and_compile_function
 		fi
 	else
 		# Continue to build Drawpile, build configuration value is null or equal sign.
 		skip_build_checks=0
+		drawpile_build_and_compile_function
 	fi
 else
 	# Continue to build Drawpile, hasn't compiled yet.
 	skip_build_checks=0
+	drawpile_build_and_compile_function
 fi
 
 #---------------------------------------------------------------------------------------------------------------------------------
@@ -4487,6 +4624,7 @@ ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
 ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
 ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
+ssl_certificate=$ssl_cert_pem
 
 sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
 sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
@@ -4678,8 +4816,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo '      Creates 3rd party signed certificate.'
 	echo "${bold}Cons:${normal} 'Should' be automated with certbot."
 	echo
-	echo "${bold}${red}IMPORTANT NOTE:${normal} Selecting option 3 or invalid options will prevent you from using"
-	echo "the list server function or web admin function. Selecting these options also changes"
+	echo "${bold}${red}IMPORTANT NOTE:${normal} Selecting option 3 will prevent you from using"
+	echo "the list server function or web admin function. Selecting this option also changes"
 	echo "the options available to systemd configuration setup."
 	echo
 	echo "Do you want to use self signed certificate or Lets Encrypt? Please note, if you want"
@@ -5486,6 +5624,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo 'server to your computer.'
 	echo
 	echo 'What folders would you like to share to access on the network?'
+	echo
+	echo "${red}${bold}NOTE: If using server remotely that is NOT on your home network, you${normal}"
+	echo "${red}${bold}      should NOT use this option. Select 4 to skip this step.${normal}"
 	echo
 	echo
 	echo "							${bold}Actual Path to be shared${normal}"
@@ -9078,6 +9219,19 @@ elif [[ ! -d "$option_loc_2" ]]; then
 	echo
 	echo "Please save this somewhere securely, then delete the file."
 	echo
+	
+	echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
+	if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
+	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
+	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+	echo
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
+	if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
+	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
+	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+	
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 ***********************************************************************
 ************************ My Server Information ************************
@@ -9087,13 +9241,45 @@ elif [[ ! -d "$option_loc_2" ]]; then
 http://$hostname
 
 **** Drawpile List Server Page For Drawpile Client ****
+EOF
+	wait $!
+	if [[ "$ssl_encryption_config" = "1" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 http://$hostname/listing/
+EOF
+		wait $!
+	fi
+	if [[ "$ssl_encryption_config" = "2" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+https://$hostname/listing/
+EOF
+		wait $!
+	fi
+	if [[ "$ssl_encryption_config" = "3" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+Not Available without SSL enabled
+EOF
+		wait $!
+	fi
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **** Drawpile Admin Web Page ****
-https://$hostname/admin/ 
-
+EOF
+	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+https://$hostname/admin/
+EOF
+		wait $!
+	fi
+	if [[ "$ssl_encryption_config" = "3" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+Not Available without SSL enabled
+EOF
+		wait $!
+	fi
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 ***** Drawpile Admin GUI Desktop on another machine *****
 **** (For Emergency Use Only, messes with web admin) ****
 drawpile-srv --gui --remote http://$hostname:8081/
@@ -9115,7 +9301,9 @@ fi
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+echo "${bold}${green}***********************************************************${normal}"
 echo "${bold}${green}**********    Displaying Server Status  . . .    **********${normal}"
+echo "${bold}${green}***********************************************************${normal}"
 echo 
 echo 'If socket activation is enabled, it will say enabled on the line starting with'
 echo '\"Loaded:\" and it should be running. Ignore the part after vendor preset.'
@@ -9210,12 +9398,16 @@ echo "${bold}${cyan}**** Drawpile List Server Page ****${normal}"
 echo "http://$hostname"
 echo
 echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
-echo "http://$hostname/listing/"
+if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
+if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
+if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
 echo
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
 echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
-echo "https://$hostname/admin/" 
+if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
+if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
+if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
 echo
 echo "${bold}${cyan}***** Drawpile Admin GUI Desktop on another machine *****${normal}"
 echo "${bold}${cyan}**** (For Emergency Use Only, messes with web admin) ****${normal}"
