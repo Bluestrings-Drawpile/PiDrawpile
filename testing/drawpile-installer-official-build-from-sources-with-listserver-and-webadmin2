@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.981
+drawpilescriptversion=2.982
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -2581,269 +2581,6 @@ elif [ "$git_clone_dp_checkout" == "3" ]; then
 else
 	echo "This message for git_clone_dp_checkout should not be visible."
 fi
-
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}*****Preparing to Build Drawpile . . .*****${normal}"
-echo
-cd "$dp_install_loc/Programs/Drawpile"
-sudo mkdir -p -v build > /dev/null
-sudo chmod 777 "$dp_install_loc/Programs/Drawpile/build" -R
-cd "$dp_install_loc/Programs/Drawpile/build"
-#
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# These lines are to fix an issue with an older version of KArchive which cannot be easily upgraded.
-# KArchive apparently doesn't supply a version number macro so this can't be detected at compile time as a problem.
-# File is located under Drawpile/src/libclient/ora/orawriter.cpp and replaces the following text
-# zip.errorLine() 
-# zf.errorLine() 
-#
-# with this instead as per the creator of Drawpile
-#
-# QString("ZIP error")
-#
-# It is presumable that the current (09/18/2017)  stable release of KArchive at 5.28.0-2 has this issue fixed with 
-# the testing version of KArchive which is 5.37.0-2. Once updated to or past that number, this section below should
-# no longer be necessary to use.
-#
-# Page for newest KArchive download ---> https://api.kde.org/frameworks/karchive/html/index.html
-# Also see https://tracker.debian.org/pkg/karchive
-# Or see https://packages.qa.debian.org/k/karchive.html
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-	package_name=libkf5archive-dev
-	version=$( apt-cache policy libkf5archive-dev | grep "Installed:" | cut -c 14-40 )
-fi
-if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-	package_name=kf5-karchive-devel
-	version=$( dnf info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
-fi
-echo "$package_name is using version $version"
-echo
-
-if [ "$version" > "5.29" ]; then
-		echo "${green}Installed version of K Archive is greater than 5.29.${normal}"
-	echo "${green}No modification of source files required.${normal}"
-elif [ "$version" = "5.29" ]; then
-	echo "${green}Installed version of K Archive is equal to 5.29.${normal}"
-	echo "${green}No modification of source files required.${normal}"
-elif [ "$version" < "5.29" ]; then
-	echo "${yellow}${bold}Installed version of K Archive is less than 5.29.${normal}"
-	echo "${yellow}${bold}Modification of source files required.${normal}"
-	echo
-	echo 'Creating backup of file orawriter.cpp before modification.'
-	sudo cp "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp" "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp.backup"
-	echo
-	echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
-	sudo sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
-	sudo sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
-else
-	echo "Unable to make a determination of which version of K Archive is installed."
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# These lines are to fix an issue with an older version of QTBase5-dev.
-# Q_FALLTHROUGH was introduced in Qt 5.8, this can be fixed by adding
-# the following to the loginhandler.cpp file: #define Q_FALLTHROUGH (void)0
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-echo
-if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-	package_name=qtbase5-dev
-	version_qt=$( apt-cache policy qtbase5-dev | grep "Installed:" | cut -c 14-18 )
-fi
-if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-	package_name=qt5-qtbase-devel
-	version_qt=$( dnf info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
-fi
-echo "$package_name is using version $version_qt"
-echo
-
-if [ "$version_qt" > "5.8" ]; then
-	echo "${green}Installed version of $package_name is greater than 5.8.${normal}"
-	echo "${green}No modification of source files required.${normal}"
-elif [ "$version_qt" = "5.8" ]; then
-	echo "${green}Installed version of $package_name is equal to 5.8.${normal}"
-	echo "${green}No modification of source files required.${normal}"
-elif [ "$version_qt" < "5.8" ]; then
-	echo "${yellow}${bold}Installed version of $package_name is less than 5.8.${normal}"
-	echo "${yellow}${bold}Modification of source files required.${normal}"
-	echo '--------------------------------------------------------------------------------'
-	echo 'Creating backup of file loginhandler.cpp before modification.'	
-	sudo cp "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp" "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp.backup"
-	echo
-	echo 'Modifying file loginhandler.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/#include <QNetworkReply>/#include <QNetworkReply>\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp"
-	echo '--------------------------------------------------------------------------------'
-	echo 'Creating backup of file aclfilter.cpp before modification.'
-	sudo cp "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp" "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp.backup"
-	echo
-	echo 'Modifying file aclfilter.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/#include "..\/shared\/net\/undo.h"/#include "..\/shared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
-	sudo sed -i -e 's/#include "..\/libshared\/net\/undo.h"/#include "..\/libshared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
-	echo '--------------------------------------------------------------------------------'
-	echo 'Creating backup of file navigator.cpp before modification.'
-	sudo cp "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp" "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp.backup"
-	echo
-	echo 'Modifying file navigator.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/right.center()/0.5 * right.p1() + 0.5 * right.p2()/g' "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
-	echo '--------------------------------------------------------------------------------'
-	echo 'Creating backup of file joindialog.cpp before modification.'
-	sudo cp "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp" "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp.backup"
-	echo
-	echo 'Modifying file joindialog.cpp for use with older version of qtbase5-dev.'
-	sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
-	echo '--------------------------------------------------------------------------------'
-	cd "$dp_install_loc/Programs/Drawpile"
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer.patch"
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
-	echo '--------------------------------------------------------------------------------'
-	patch -p1 < elapsed-timer.patch
-	echo '--------------------------------------------------------------------------------'
-	patch -p1 < elapsed-timer2.patch
-	#
-	# Changing back to prior directory before continuing script.
-	#
-	cd "$dp_install_loc/Programs/Drawpile/build"
-else
-	echo "Unable to make a determination of which version of qtbase5-dev is installed."
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}*****Drawpile Build Configuration . . .*****${normal}"
-
-variable_to_read_1="drawpile_build_configuration"
-variable_to_read_2="drawpile_build_configuration_number_desc"
-variable_to_read_3="drawpile_build_configuration_settings"
-
-value_description_1="This value corresponds to these build settings: "
-
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Using stored value and moving on."
-	drawpile_build_configuration=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo 'These options configure the installation of Drawpile for your device.'
-	echo 'All options with the server assume systemd will be in use, which helps'
-	echo 'manage server startup. This does not apply to client only options.'
-	echo
-	echo "${bold}${cyan}Definitions:${normal}"
-	echo "${bold}Drawpile-cmd${normal} - tool is used for converting recordings to pictures. This"
-	echo '     is useful if using file backed sessions with archive set or recordings set.'
-	echo '     That step will be presented to you later. A script for automatically converting '
-	echo '     recordings and naming them to user friendly formats is included in the server'
-	echo '     management script.'
-	echo "${bold}File backed sessions${normal} - write sessions to file, helps sessions to survive"
-	echo '    power outages and server crashes. Can serve as a recording if server'
-	echo '    database set to Archive terminated sessions, however filenames are'
-	echo '    saved like 926a80d5-3168-401d-b406-f05d3fc05c32.dprec with a'
-	echo '    corresponding text file, the session title is inside the text file.'
-	echo "${bold}GUI${normal} - Graphical User Interface, this script right now is an example"
-	echo '    of a non GUI interface, command line, or terminal.'
-	echo "${bold}Headless${normal} - No graphical user interface. Changes must be done by script"
-	echo '    or by remote server management.' 
-	echo "${bold}Recording${normal} - records all sessions, may not be necessary with file backed"
-	echo '    sessions turned on, though it can be useful for debugging broken boards or '
-	echo '    recovering art from broken boards. This can be turned on an individual basis'
-	echo '    when a room is active on the server by going to File and then Record... ,'
-	echo "    or by combining the file backed sessions option and checking ${underline}Archive${normal}"
-	echo "    ${underline}terminated sessions${normal}."
-	echo
-	echo "${bold}Other Notes${normal} - If installing server only, will need to use another computer to"
-	echo '    host and draw.'
-	echo
-	echo "${bold}${cyan}Recommended Option:${normal} 4"
-	echo
-	echo "${bold}Drawpile Server Only Options:${normal}"
-	echo ' 1 - Server - Graphical User Interface (GUI)'
-	echo ' 2 - Server - Non-GUI (also known as headless)'
-	echo
-	echo "${bold}Drawpile Server And Client Options:${normal}"
-	echo ' 3 - Server and Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool'
-	echo ' 4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool'
-	echo ' 5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool'
-	echo ' 6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool'
-	echo
-	echo "${bold}Drawpile Client Only Options:${normal}"
-	echo ' 7 - Drawpile Client Only - with Wacom Tablet drivers Installed'
-	echo ' 8 - Drawpile Client Only - Client program only'
-	echo
-	echo "${bold}${red}Drawpile Server Only & No Server Configuration Options:${normal}"
-	echo "${bold}${red}WARNING - ADVANCED USERS ONLY${normal}"
-	echo ' 9 - Server - Graphical User Interface (GUI)'
-	echo '10 - Server - Non-GUI (also known as headless)'
-	echo "${bold}${red}WARNING - ADVANCED USERS ONLY${normal}"
-	echo
-	while :; do
-		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " drawpile_build_configuration
-		[[ $drawpile_build_configuration =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
-		if (( $drawpile_build_configuration >= 1 && $drawpile_build_configuration <= 10)); then
-			break
-		else
-			echo
-			echo "Invalid number selection, try again."
-			echo
-		fi
-	done
-	sudo sed -i '\!^drawpile_build_configuration =!{h;s!=.*!= '"$drawpile_build_configuration"'!};${x;\!^$!{s!!drawpile_build_configuration = '"$drawpile_build_configuration"'!;H};x}' $drawpile_configuration_values_file
-else
-	echo "This message should not be visible."
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-t_max=$(grep -c ^processor /proc/cpuinfo)
-
-echo "${bold}${cyan}*****Determine Compile Speed . . .*****${normal}"
-echo
-
-if [ "$t_max" == "1" ] ; then
-	echo "Only one core available for compiling. Continuing Script."
-	thread_count=1
-else
-	echo 'You can hit enter to continue here, as it will pick the maximum amount of'
-	echo 'threads available from the processor. If the script froze at this stage, try'
-	echo "a lower number than $t_max. This uses less system resources on the Pi and is "
-	echo 'more likely to complete without freezing up.'
-	echo
-	echo 'This is the command to be run, where # is a number input by you:'
-	echo 'sudo make -j #'
-	echo
-	read -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
-	while [ true ] ; do
-		if [ -z "$thread_count" ] ; then
-			echo "Compiling using maximum"
-			thread_count=$t_max
-			echo
-			break
-		elif [[ $thread_count =~ ^[0-9]+$ ]] ; then
-			if (($thread_count>0)) && (($thread_count<=$t_max)) ; then
-				break
-			else
-				echo "Value: '$thread_count' is not within the range [1,$t_max]"
-				echo
-			fi
-		else
-			echo "Value: '$thread_count' is not a positive integer"
-			echo
-		fi
-		read -r -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
-	done
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 <<comment_EOF_delete
@@ -3036,18 +2773,27 @@ comment_EOF_delete
 }
 
 function drawpile_client_compile_verification_function () {
+	drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
 		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+			drawpile_client_compile_verification=1
 			echo
 		else
+			drawpile_client_compile_verification=0
 			echo "${red}Drawpile $drawpile_version has been detected but is not${normal}"
 			echo "${red}the correct version of $drawpile_version_script_check.${normal}"
-			echo "Please copy output from terminal for diagnostic purposes."
-			echo "${red}${bold}Pausing script for 30 seconds.${normal}"
+			if [ "$skip_build_checks" == "1" ]; then
+				:
+			else
+				# elif [ "$skip_build_checks" == "0" ]; then
+				echo "Please copy output from terminal for diagnostic purposes."
+				echo "${red}${bold}Pausing script for 30 seconds.${normal}"
+				echo
+				sleep 30
+			fi
 			echo
-			sleep 30
 		fi
 	
 <<comment_EOF_delete
@@ -3085,18 +2831,33 @@ comment_EOF_delete
 }
 
 function drawpile_srv_compile_verification_function () {
+	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
+		# echo "Provide the password for: drawpileuser"
+		drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+	else
+		drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+	fi
+	
 	if [[ -e  "/usr/local/bin/drawpile-srv" ]] || [[ -e  "/usr/bin/drawpile-srv" ]]; then
 		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
+			drawpile_srv_compile_verification=1
 			echo
 		else
+			drawpile_srv_compile_verification=0
 			echo "${red}Drawpile-srv $drawpile_srv_version has been detected but is not${normal}"
 			echo "${red}the correct version of $drawpile_version_script_check.${normal}"
-			echo "Please copy output from terminal for diagnostic purposes."
-			echo "${red}${bold}Exiting script in 30 seconds.${normal}"
+			if [ "$skip_build_checks" == "1" ]; then
+				:
+			else
+				# elif [ "$skip_build_checks" == "0" ]; then
+				echo "Please copy output from terminal for diagnostic purposes."
+				echo "${red}${bold}Exiting script in 30 seconds.${normal}"
+				echo
+				sleep 30
+				exit
+			fi
 			echo
-			sleep 30
-			exit
 		fi
 <<comment_EOF_delete
 		if [[ "$git_clone_dp_checkout" = "1" ]]; then
@@ -3128,14 +2889,23 @@ function drawpile_srv_compile_verification_function () {
 		fi
 comment_EOF_delete
 	elif [[ ! -e  "/usr/local/bin/drawpile-srv" && ! -e  "/usr/bin/drawpile-srv" ]]; then
-		echo "${red}${bold}Drawpile-srv failed to compile. Stopping script.${normal}"
-		echo "Please copy output from terminal for diagnostic purposes."
-		echo
-		echo "${red}${bold}Exiting script in 30 seconds.${normal}"
-		echo 
-		sleep 30
-		exit
+		drawpile_srv_compile_verification=0
+		echo "${red}${bold}Drawpile-srv failed to compile.${normal}"
+		if [ "$skip_build_checks" == "1" ]; then
+			:
+		else
+			# elif [ "$skip_build_checks" == "0" ]; then
+			echo
+			echo "${red}${bold}Stopping script.${normal}"
+			echo "Please copy output from terminal for diagnostic purposes."
+			echo
+			echo "${red}${bold}Exiting script in 30 seconds.${normal}"
+			echo 
+			sleep 30
+			exit
+		fi
 	else
+		drawpile_srv_compile_verification=0
 		echo "${red}${bold}Unable to tell if Drawpile compiled successfully.${normal}"
 		echo "This message should not be visible."
 		echo
@@ -3180,25 +2950,46 @@ function drawpile_tools_compile_verification_function () {
 			echo "If you selected 2 or 3 when cloning the Drawpile repository,"
 			echo "please copy output from terminal for diagnostic purposes."
 		else
-			echo "This message for git_clone_dp_checkout,drawpile-cmd, and dprectool should not be visible."
+			echo "This message for git_clone_dp_checkout, drawpile-cmd, and dprectool should not be visible."
 		fi
 	else
 		echo "Unable to tell if Drawpile tools compiled successfully."
 		echo "This message should not be visible."
 	fi
 }
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# Read more here --->		https://github.com/drawpile/Drawpile/wiki/Building-from-sources
-# -DCLIENT=off				: Compile only the server
-# -DCMAKE_BUILD_TYPE=debug	: Compile a debugging version
-# -DINITSYS=systemd			: enable systemd socket activation and logging support for the dedicated server
-# -DSERVER=off				: Don't build the standalone server (-DSERVER=ON)
-#	Prior to build scripts being re-written, you did not need to specify this option to enable server. It is now required to be explicitly enabled.
-# -DSERVERGUI=off			: Do not include the server GUI. (Good when deploying to a headless server.)
-# -DTOOLS=on				: Compile additional tools (Generates dprectool. Also generates drawpile-cmd when the client is set to be built)
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
+
+function drawpile_dprectool_compile_verification_function () {
+	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool| awk '{ print $2 }' )
+
+	if [[ "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/dprectool" ]]; then
+		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
+			echo "${green}Dprectool $dprec_tool_version compiled successfully!${normal}"
+			echo
+		else
+			echo "${red}Dprectool $dprec_tool_version have been detected but${normal}"
+			echo "${red}aren't the correct version of $drawpile_version_script_check.${normal}"
+			echo "Please copy output from terminal for diagnostic purposes."
+		fi
+	elif [[ ! -e "/usr/local/bin/dprectool" && ! -e "/usr/bin/dprectool" ]]; then
+		echo
+		echo "${red}Drawpile failed to compile dprectool.${normal}"
+		echo "git_clone_dp_checkout=$git_clone_dp_checkout"
+		echo 
+		if [ "$git_clone_dp_checkout" == "1" ]; then
+			echo "This behavior is expected if you selected 1 for latest Drawpile build"
+			echo "when cloning the Drawpile repository. This will not be corrected"
+			echo "until the beta version is done with fixes."
+		elif [ "$git_clone_dp_checkout" == "2" ] || [ "$git_clone_dp_checkout" == "3" ]; then
+			echo "If you selected 2 or 3 when cloning the Drawpile repository,"
+			echo "please copy output from terminal for diagnostic purposes."
+		else
+			echo "This message for git_clone_dp_checkout and dprectool should not be visible."
+		fi
+	else
+		echo "Unable to tell if Drawpile tools compiled successfully."
+		echo "This message should not be visible."
+	fi
+}
 
 function drawpile_compile_verification_function () {
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
@@ -3213,6 +3004,7 @@ function drawpile_compile_verification_function () {
 		# 1 - Server - Graphical User Interface (GUI)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF
 		# 2 - Server - Non-GUI (also known as headless)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off
 		drawpile_srv_compile_verification_function
+		drawpile_dprectool_compile_verification_function
 	elif [ "$drawpile_build_configuration" == "3" ] || [ "$drawpile_build_configuration" == "4" ] || [ "$drawpile_build_configuration" == "5" ] || [ "$drawpile_build_configuration" == "6" ]; then
 		# 3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool		sudo cmake .. -DINITSYS=systemd -DTOOLS=on												--> sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
 		# 4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool							sudo cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=release
@@ -3225,6 +3017,7 @@ function drawpile_compile_verification_function () {
 		# 9 - Server - Graphical User Interface (GUI) WARNING NO SERVER CONFIGURATION							sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF
 		# 10 - Server - Non-GUI (also known as headless) WARNING NO SERVER CONFIGURATION						sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off
 		drawpile_srv_compile_verification_function
+		drawpile_dprectool_compile_verification_function
 		echo
 		echo "Exiting script in 30 seconds since no further"
 		echo "configuration is required."
@@ -3239,125 +3032,485 @@ function drawpile_compile_verification_function () {
 		sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_script_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
 		exit
 	else
-		echo "${red}${bold}Some error occurred in the script.${normal}"
+		echo "${red}${bold}Some error occurred in the script. (Drawpile Compile Verification Function)${normal}"
 		echo "${red}${bold}This message should not be visible.${normal}"
 	fi
 }
 
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-# Read more here --->		https://github.com/drawpile/Drawpile/wiki/Building-from-sources
-# -DCLIENT=off				: Compile only the server
-# -DCMAKE_BUILD_TYPE=debug	: Compile a debugging version
-# -DINITSYS=systemd			: enable systemd socket activation and logging support for the dedicated server
-# -DSERVER=off				: Don't build the standalone server
-# -DSERVERGUI=off			: Do not include the server GUI. (Good when deploying to a headless server.)
-# -DTOOLS=on				: Compile additional tools (Generates dprectool. Also generates drawpile-cmd when the client is set to be built)
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-echo "${bold}${cyan}*****Preliminary Build Setup . . . *****${normal}"
-echo
-if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "9" ]; then
-	if [[ "$drawpile_build_configuration" = "1" ]]; then drawpile_build_configuration_number_desc="1 - Server - Graphical User Interface (GUI)"; fi
-	if [[ "$drawpile_build_configuration" = "9" ]]; then drawpile_build_configuration_number_desc="9 - Server - Graphical User Interface (GUI) WARNING NO SERVER CONFIGURATION"; fi
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-elif [ "$drawpile_build_configuration" == "2" ] || [ "$drawpile_build_configuration" == "10" ]; then
-	if [[ "$drawpile_build_configuration" = "2" ]]; then drawpile_build_configuration_number_desc="2 - Server - Non-GUI (also known as headless)"; fi
-	if [[ "$drawpile_build_configuration" = "10" ]]; then drawpile_build_configuration_number_desc="10 - Server - Non-GUI (also known as headless) WARNING NO SERVER CONFIGURATION"; fi
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-elif [ "$drawpile_build_configuration" == "3" ]; then
-	drawpile_build_configuration_number_desc="3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings
-	app_does_not_exist=0
-	app_installed=0
-	app_not_installed=0
-	progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
-	package_install_status_check_function
-	sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-	wacom_explanation_function
-elif [ "$drawpile_build_configuration" == "4" ]; then
-	drawpile_build_configuration_number_desc="4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-elif [ "$drawpile_build_configuration" == "5" ]; then
-	drawpile_build_configuration_number_desc="5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-elif [ "$drawpile_build_configuration" == "6" ]; then
-	drawpile_build_configuration_number_desc="6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVERGUI=off -DSERVER=ON"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-elif [ "$drawpile_build_configuration" == "7" ]; then
-	drawpile_build_configuration_number_desc="7 - Drawpile Client Only - with Wacom Tablet drivers Installed"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings
-	app_does_not_exist=0
-	app_installed=0
-	app_not_installed=0
-	progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
-	package_install_status_check_function
-	sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-	wacom_explanation_function
-	compile_drawpile_client_only_function
-elif [ "$drawpile_build_configuration" == "8" ]; then
-	drawpile_build_configuration_number_desc="8 - Drawpile Client Only - Client program only"
-	sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
-	drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
-	sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
-	$drawpile_build_configuration_settings	
-	compile_drawpile_client_only_function
-else
-	echo "${red}This message should not be visible.${normal}"
+function drawpile_build_and_compile_function () {
 	echo
-	echo "${red}Exiting script in 30 seconds.${normal}"
-	echo 
-	sleep 30
-	exit
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Preparing to Build Drawpile . . .*****${normal}"
+	echo
+	cd "$dp_install_loc/Programs/Drawpile"
+	sudo mkdir -p -v build > /dev/null
+	sudo chmod 777 "$dp_install_loc/Programs/Drawpile/build" -R
+	cd "$dp_install_loc/Programs/Drawpile/build"
+	#
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# These lines are to fix an issue with an older version of KArchive which cannot be easily upgraded.
+	# KArchive apparently doesn't supply a version number macro so this can't be detected at compile time as a problem.
+	# File is located under Drawpile/src/libclient/ora/orawriter.cpp and replaces the following text
+	# zip.errorLine() 
+	# zf.errorLine() 
+	#
+	# with this instead as per the creator of Drawpile
+	#
+	# QString("ZIP error")
+	#
+	# It is presumable that the current (09/18/2017)  stable release of KArchive at 5.28.0-2 has this issue fixed with 
+	# the testing version of KArchive which is 5.37.0-2. Once updated to or past that number, this section below should
+	# no longer be necessary to use.
+	#
+	# Page for newest KArchive download ---> https://api.kde.org/frameworks/karchive/html/index.html
+	# Also see https://tracker.debian.org/pkg/karchive
+	# Or see https://packages.qa.debian.org/k/karchive.html
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+		package_name=libkf5archive-dev
+		version=$( apt-cache policy libkf5archive-dev | grep "Installed:" | cut -c 14-40 )
+	fi
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		package_name=kf5-karchive-devel
+		version=$( dnf info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
+	fi
+	echo "$package_name is using version $version"
+	echo
+
+	if [ "$version" > "5.29" ]; then
+			echo "${green}Installed version of K Archive is greater than 5.29.${normal}"
+		echo "${green}No modification of source files required.${normal}"
+	elif [ "$version" = "5.29" ]; then
+		echo "${green}Installed version of K Archive is equal to 5.29.${normal}"
+		echo "${green}No modification of source files required.${normal}"
+	elif [ "$version" < "5.29" ]; then
+		echo "${yellow}${bold}Installed version of K Archive is less than 5.29.${normal}"
+		echo "${yellow}${bold}Modification of source files required.${normal}"
+		echo
+		echo 'Creating backup of file orawriter.cpp before modification.'
+		sudo cp "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp" "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp.backup"
+		echo
+		echo 'Modifying file orawriter.cpp for use with older version of KArchive (5.28.0-2).'
+		sudo sed -i -e 's/zip.errorString()/QString("ZIP error")/g' "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
+		sudo sed -i -e 's/zf.errorString()/QString("ZIP error")/g' "$dp_install_loc/Programs/Drawpile/src/libclient/ora/orawriter.cpp"
+	else
+		echo "Unable to make a determination of which version of K Archive is installed."
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# These lines are to fix an issue with an older version of QTBase5-dev.
+	# Q_FALLTHROUGH was introduced in Qt 5.8, this can be fixed by adding
+	# the following to the loginhandler.cpp file: #define Q_FALLTHROUGH (void)0
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	echo
+	if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+		package_name=qtbase5-dev
+		version_qt=$( apt-cache policy qtbase5-dev | grep "Installed:" | cut -c 14-18 )
+	fi
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+		package_name=qt5-qtbase-devel
+		version_qt=$( dnf info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" |  tail -1 | awk '{ print $3 }' )
+	fi
+	echo "$package_name is using version $version_qt"
+	echo
+
+	if [ "$version_qt" > "5.8" ]; then
+		echo "${green}Installed version of $package_name is greater than 5.8.${normal}"
+		echo "${green}No modification of source files required.${normal}"
+	elif [ "$version_qt" = "5.8" ]; then
+		echo "${green}Installed version of $package_name is equal to 5.8.${normal}"
+		echo "${green}No modification of source files required.${normal}"
+	elif [ "$version_qt" < "5.8" ]; then
+		echo "${yellow}${bold}Installed version of $package_name is less than 5.8.${normal}"
+		echo "${yellow}${bold}Modification of source files required.${normal}"
+		echo '--------------------------------------------------------------------------------'
+		echo 'Creating backup of file loginhandler.cpp before modification.'	
+		sudo cp "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp" "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp.backup"
+		echo
+		echo 'Modifying file loginhandler.cpp for use with older version of qtbase5-dev.'
+		sudo sed -i -e 's/#include <QNetworkReply>/#include <QNetworkReply>\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libserver/loginhandler.cpp"
+		echo '--------------------------------------------------------------------------------'
+		echo 'Creating backup of file aclfilter.cpp before modification.'
+		sudo cp "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp" "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp.backup"
+		echo
+		echo 'Modifying file aclfilter.cpp for use with older version of qtbase5-dev.'
+		sudo sed -i -e 's/#include "..\/shared\/net\/undo.h"/#include "..\/shared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
+		sudo sed -i -e 's/#include "..\/libshared\/net\/undo.h"/#include "..\/libshared\/net\/undo.h"\n#define Q_FALLTHROUGH() (void)0/g' "$dp_install_loc/Programs/Drawpile/src/libclient/canvas/aclfilter.cpp"
+		echo '--------------------------------------------------------------------------------'
+		echo 'Creating backup of file navigator.cpp before modification.'
+		sudo cp "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp" "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp.backup"
+		echo
+		echo 'Modifying file navigator.cpp for use with older version of qtbase5-dev.'
+		sudo sed -i -e 's/right.center()/0.5 * right.p1() + 0.5 * right.p2()/g' "$dp_install_loc/Programs/Drawpile/src/desktop/docks/navigator.cpp"
+		echo '--------------------------------------------------------------------------------'
+		echo 'Creating backup of file joindialog.cpp before modification.'
+		sudo cp "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp" "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp.backup"
+		echo
+		echo 'Modifying file joindialog.cpp for use with older version of qtbase5-dev.'
+		sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
+		echo '--------------------------------------------------------------------------------'
+		cd "$dp_install_loc/Programs/Drawpile"
+		sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer.patch"
+		sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
+		echo '--------------------------------------------------------------------------------'
+		patch -p1 < elapsed-timer.patch
+		echo '--------------------------------------------------------------------------------'
+		patch -p1 < elapsed-timer2.patch
+		#
+		# Changing back to prior directory before continuing script.
+		#
+		cd "$dp_install_loc/Programs/Drawpile/build"
+	else
+		echo "Unable to make a determination of which version of qtbase5-dev is installed."
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Drawpile Build Configuration . . .*****${normal}"
+
+	variable_to_read_1="drawpile_build_configuration"
+	variable_to_read_2="drawpile_build_configuration_number_desc"
+	variable_to_read_3="drawpile_build_configuration_settings"
+
+	value_description_1="This value corresponds to these build settings: "
+
+	read_stored_config_value_query_function
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Using stored value and moving on."
+		drawpile_build_configuration=$read_stored_config_value_query_1
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+		echo 'These options configure the installation of Drawpile for your device.'
+		echo 'All options with the server assume systemd will be in use, which helps'
+		echo 'manage server startup. This does not apply to client only options.'
+		echo
+		echo "${bold}${cyan}Definitions:${normal}"
+		echo "${bold}Drawpile-cmd${normal} - tool is used for converting recordings to pictures. This"
+		echo '     is useful if using file backed sessions with archive set or recordings set.'
+		echo '     That step will be presented to you later. A script for automatically converting '
+		echo '     recordings and naming them to user friendly formats is included in the server'
+		echo '     management script. This only compiles when the client is also built.'
+		echo "${bold}File backed sessions${normal} - write sessions to file, helps sessions to survive"
+		echo '    power outages and server crashes. Can serve as a recording if server'
+		echo '    database set to Archive terminated sessions, however filenames are'
+		echo '    saved like 926a80d5-3168-401d-b406-f05d3fc05c32.dprec with a'
+		echo '    corresponding text file, the session title is inside the text file.'
+		echo "${bold}GUI${normal} - Graphical User Interface, this script right now is an example"
+		echo '    of a non GUI interface, command line, or terminal.'
+		echo "${bold}Headless${normal} - No graphical user interface. Changes must be done by script"
+		echo '    or by remote server management.' 
+		echo "${bold}Recording${normal} - records all sessions, may not be necessary with file backed"
+		echo '    sessions turned on, though it can be useful for debugging broken boards or '
+		echo '    recovering art from broken boards. This can be turned on an individual basis'
+		echo '    when a room is active on the server by going to File and then Record... ,'
+		echo "    or by combining the file backed sessions option and checking ${underline}Archive${normal}"
+		echo "    ${underline}terminated sessions${normal}."
+		echo
+		echo "${bold}Other Notes${normal} - If installing server only, will need to use another computer to"
+		echo '    host and draw.'
+		echo
+		echo "${bold}${cyan}Recommended Option:${normal} 4"
+		echo
+		echo "${bold}Drawpile Server Only Options:${normal}"
+		echo ' 1 - Server - Graphical User Interface (GUI) and dprectool'
+		echo ' 2 - Server - Non-GUI (also known as headless) and dprectool'
+		echo
+		echo "${bold}Drawpile Server And Client Options:${normal}"
+		echo ' 3 - Server and Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool'
+		echo ' 4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool'
+		echo ' 5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool'
+		echo ' 6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool'
+		echo
+		echo "${bold}Drawpile Client Only Options:${normal}"
+		echo ' 7 - Drawpile Client Only - with Wacom Tablet drivers Installed'
+		echo ' 8 - Drawpile Client Only - Client program only'
+		echo
+		echo "${bold}${red}Drawpile Server Only & No Server Configuration Options:${normal}"
+		echo "${bold}${red}WARNING - ADVANCED USERS ONLY${normal}"
+		echo ' 9 - Server - Graphical User Interface (GUI) and dprectool'
+		echo '10 - Server - Non-GUI (also known as headless) and dprectool'
+		echo "${bold}${red}WARNING - ADVANCED USERS ONLY${normal}"
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " drawpile_build_configuration
+			[[ $drawpile_build_configuration =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+			if (( $drawpile_build_configuration >= 1 && $drawpile_build_configuration <= 10)); then
+				break
+			else
+				echo
+				echo "Invalid number selection, try again."
+				echo
+			fi
+		done
+		sudo sed -i '\!^drawpile_build_configuration =!{h;s!=.*!= '"$drawpile_build_configuration"'!};${x;\!^$!{s!!drawpile_build_configuration = '"$drawpile_build_configuration"'!;H};x}' $drawpile_configuration_values_file
+	else
+		echo "This message should not be visible."
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	t_max=$(grep -c ^processor /proc/cpuinfo)
+
+	echo "${bold}${cyan}*****Determine Compile Speed . . .*****${normal}"
+	echo
+
+	if [ "$t_max" == "1" ] ; then
+		echo "Only one core available for compiling. Continuing Script."
+		thread_count=1
+	else
+		echo 'You can hit enter to continue here, as it will pick the maximum amount of'
+		echo 'threads available from the processor. If the script froze at this stage, try'
+		echo "a lower number than $t_max. This uses less system resources on the Pi and is "
+		echo 'more likely to complete without freezing up.'
+		echo
+		echo 'This is the command to be run, where # is a number input by you:'
+		echo 'sudo make -j #'
+		echo
+		read -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
+		while [ true ] ; do
+			if [ -z "$thread_count" ] ; then
+				echo "Compiling using maximum"
+				thread_count=$t_max
+				echo
+				break
+			elif [[ $thread_count =~ ^[0-9]+$ ]] ; then
+				if (($thread_count>0)) && (($thread_count<=$t_max)) ; then
+					break
+				else
+					echo "Value: '$thread_count' is not within the range [1,$t_max]"
+					echo
+				fi
+			else
+				echo "Value: '$thread_count' is not a positive integer"
+				echo
+			fi
+			read -r -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
+		done
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# Read more here --->		https://github.com/drawpile/Drawpile/wiki/Building-from-sources
+	# -DCLIENT=off				: Compile only the server
+	# -DCMAKE_BUILD_TYPE=debug	: Compile a debugging version
+	# -DINITSYS=systemd			: enable systemd socket activation and logging support for the dedicated server
+	# -DSERVER=off				: Don't build the standalone server
+	# -DSERVERGUI=off			: Do not include the server GUI. (Good when deploying to a headless server.)
+	# -DTOOLS=on				: Compile additional tools (Generates dprectool. Also generates drawpile-cmd when the client is set to be built)
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	echo "${bold}${cyan}*****Preliminary Build Setup . . . *****${normal}"
+	echo
+	if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "9" ]; then
+		if [[ "$drawpile_build_configuration" = "1" ]]; then drawpile_build_configuration_number_desc="1 - Server - Graphical User Interface (GUI) and dprectool"; fi
+		if [[ "$drawpile_build_configuration" = "9" ]]; then drawpile_build_configuration_number_desc="9 - Server - Graphical User Interface (GUI) and dprectool WARNING NO SERVER CONFIGURATION"; fi
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVER=ON -DTOOLS=on"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+	elif [ "$drawpile_build_configuration" == "2" ] || [ "$drawpile_build_configuration" == "10" ]; then
+		if [[ "$drawpile_build_configuration" = "2" ]]; then drawpile_build_configuration_number_desc="2 - Server - Non-GUI (also known as headless) and dprectool"; fi
+		if [[ "$drawpile_build_configuration" = "10" ]]; then drawpile_build_configuration_number_desc="10 - Server - Non-GUI (also known as headless)  and dprectool WARNING NO SERVER CONFIGURATION"; fi
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DSERVER=ON -DTOOLS=on"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+	elif [ "$drawpile_build_configuration" == "3" ]; then
+		drawpile_build_configuration_number_desc="3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DSERVER=ON"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings
+		app_does_not_exist=0
+		app_installed=0
+		app_not_installed=0
+		progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
+		package_install_status_check_function
+		sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+		wacom_explanation_function
+	elif [ "$drawpile_build_configuration" == "4" ]; then
+		drawpile_build_configuration_number_desc="4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DSERVER=ON"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+	elif [ "$drawpile_build_configuration" == "5" ]; then
+		drawpile_build_configuration_number_desc="5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVER=ON"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+	elif [ "$drawpile_build_configuration" == "6" ]; then
+		drawpile_build_configuration_number_desc="6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVERGUI=off -DSERVER=ON"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+	elif [ "$drawpile_build_configuration" == "7" ]; then
+		drawpile_build_configuration_number_desc="7 - Drawpile Client Only - with Wacom Tablet drivers Installed"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings
+		app_does_not_exist=0
+		app_installed=0
+		app_not_installed=0
+		progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
+		package_install_status_check_function
+		sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+		wacom_explanation_function
+		compile_drawpile_client_only_function
+	elif [ "$drawpile_build_configuration" == "8" ]; then
+		drawpile_build_configuration_number_desc="8 - Drawpile Client Only - Client program only"
+		sudo sed -i '\!^drawpile_build_configuration_number_desc =!{h;s!=.*!= '"$drawpile_build_configuration_number_desc"'!};${x;\!^$!{s!!drawpile_build_configuration_number_desc = '"$drawpile_build_configuration_number_desc"'!;H};x}' $drawpile_configuration_values_file
+		drawpile_build_configuration_settings="sudo cmake .. -DCMAKE_BUILD_TYPE=Release -DSERVER=off"
+		sudo sed -i '\!^drawpile_build_configuration_settings =!{h;s!=.*!= '"$drawpile_build_configuration_settings"'!};${x;\!^$!{s!!drawpile_build_configuration_settings = '"$drawpile_build_configuration_settings"'!;H};x}' $drawpile_configuration_values_file
+		$drawpile_build_configuration_settings	
+		compile_drawpile_client_only_function
+	else
+		echo "${red}This message should not be visible.${normal}"
+		echo
+		echo "${red}Exiting script in 30 seconds.${normal}"
+		echo 
+		sleep 30
+		exit
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Compiling with $thread_count threads . . . *****${normal}"
+	echo
+	sudo make -j "$thread_count"
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
+	echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
+	echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
+	echo
+	#Location of created executable --> /usr/local/bin/
+	sudo make install
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Verifying if Drawpile Compiled Successfully . . . *****${normal}"
+	echo
+	drawpile_compile_verification_function
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+}
+#---------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------
+
+if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e "/usr/local/bin/drawpile" || -e "/usr/bin/drawpile" ]]; then
+	echo
+	echo "${bold}${cyan}*****     Located Drawpile on System . . .    *****${normal}"
+	echo "${bold}${cyan}***** Testing if compiling is necessary . . . *****${normal}"
+	echo
+	# If Drawpile server or client exists, then read file to check build configuration and test that it is up to date.
+	read_stored_build_value_query_1=$( grep -m 1 "drawpile_build_configuration = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	drawpile_build_configuration=$read_stored_build_value_query_1
+	if [ ! -z "$read_stored_build_value_query_1" ] || [ "$read_stored_build_value_query_1" != "=" ]; then
+		skip_build_checks=1
+		# If value read from file is not null or the equal sign, verify it compiled properly.
+		if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "2" ]; then
+			# 1 - Server - Graphical User Interface (GUI)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DTOOLS=on
+			# 2 - Server - Non-GUI (also known as headless)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DTOOLS=on
+			drawpile_srv_compile_verification_function
+			drawpile_dprectool_compile_verification_function
+			echo
+			# If compiled, skip action and continue on with script setup. If failure, attempt compiling again.
+			if [ "$drawpile_srv_compile_verification" == "1" ]; then
+				echo "${bold}${green}Drawpile Server successfully built.${normal}"
+				echo
+				echo "${bold}${green}Skipping compiling step.${normal}"
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo '--------------------------------------------------------------------------------'
+			elif [ "$drawpile_srv_compile_verification" == "0" ]; then
+				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
+				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+				echo
+				drawpile_build_and_compile_function
+			else
+				echo "${bold}${red}This message should not be visible for skipping compiling check."
+			fi
+		elif [ "$drawpile_build_configuration" == "3" ] || [ "$drawpile_build_configuration" == "4" ] || [ "$drawpile_build_configuration" == "5" ] || [ "$drawpile_build_configuration" == "6" ]; then
+			# 3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool		sudo cmake .. -DINITSYS=systemd -DTOOLS=on												--> sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
+			# 4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool							sudo cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=release
+			# 5 - Server And Client - GUI Server, debugging client, dprectool, and drawpile-cmd tool					sudo cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug
+			# 6 - Server And Client - Headless server, debugging client, dprectool, and drawpile-cmd tool				sudo cmake .. -DINITSYS=systemd -DTOOLS=on -DCMAKE_BUILD_TYPE=debug -DSERVERGUI=off
+			drawpile_srv_compile_verification_function
+			drawpile_client_compile_verification_function
+			drawpile_tools_compile_verification_function
+			echo
+			# If compiled, skip action and continue on with script setup.
+			if [ "$drawpile_srv_compile_verification" == "1" ] && [ "$drawpile_client_compile_verification" == "1" ]; then
+				echo "${bold}${green}Drawpile Client and Server successfully built.${normal}"
+				echo
+				echo "${bold}${green}Skipping compiling step.${normal}"
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo '--------------------------------------------------------------------------------'
+			elif [ "$drawpile_srv_compile_verification" == "0" ] || [ "$drawpile_client_compile_verification" == "0" ]; then
+				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
+				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+				echo
+				drawpile_build_and_compile_function
+			else
+				echo "${bold}${red}This message should not be visible for skipping compiling check."
+			fi
+		elif [ "$drawpile_build_configuration" == "9" ] || [ "$drawpile_build_configuration" == "10" ]; then
+			# 9 - Server - Graphical User Interface (GUI) WARNING NO SERVER CONFIGURATION							sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DTOOLS=on
+			# 10 - Server - Non-GUI (also known as headless) WARNING NO SERVER CONFIGURATION						sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DSERVERGUI=off -DTOOLS=on
+			skip_build_checks=0
+			drawpile_srv_compile_verification_function
+			drawpile_dprectool_compile_verification_function
+			# If compiled, skip action and continue on with script exit. If failure, attempt compiling again.
+			echo
+			echo "Exiting script in 30 seconds since no further"
+			echo "configuration is required."
+			echo
+			sleep 30
+			# The sort command used at the end sorts the list alphabetically.
+			sudo sort $app_installation_status_file -o $app_installation_status_file
+			# This removes any duplicates that may exist in the file.
+			perl -i -ne 'print if ! $a{$_}++' $app_installation_status_file
+			perl -i -ne 'print if ! $a{$_}++' $app_installation_status_file
+			# sudo sort $drawpile_configuration_values_file -o $drawpile_configuration_values_file
+			sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_script_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
+			exit
+		else
+			echo "${red}${bold}Some error occurred in the script. (Check if built and up to date already) ${normal}"
+			echo "${red}${bold}This message should not be visible.${normal}"
+		fi
+	else
+		# Continue to build Drawpile, build configuration value is null or equal sign.
+		skip_build_checks=0
+	fi
+else
+	# Continue to build Drawpile, hasn't compiled yet.
+	skip_build_checks=0
 fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}*****Compiling with $thread_count threads . . . *****${normal}"
-echo
-sudo make -j "$thread_count"
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
-echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
-echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
-echo
-#Location of created executable --> /usr/local/bin/
-sudo make install
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}*****Verifying if Drawpile Compiled Successfully . . . *****${normal}"
-echo
-drawpile_compile_verification_function
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
+
+#---------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------
 echo
 echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
@@ -5950,9 +6103,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	if [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
-		echo "Drawpile List Server already pulled."
-	elif [[ -e  "/home/pi/go/bin/listserver" ]]; then
+	# Type the following to get a list of Go variables/info: go env
+	go_path=$( go env GOPATH )
+	if [[ -e  "/home/$current_username/go/bin/listserver" ]] || [[ -e  "/home/pi/go/bin/listserver" ]] || [[ -e  "$go_path/bin/listserver" ]]; then
 		echo "Drawpile List Server already pulled."
 	else
 		echo "${bold}${cyan}***** Installing Drawpile List Server . . . *****${normal}"
@@ -5989,6 +6142,29 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		# 	echo "This message for golang's version ($test_version_simple) should not be visible."
 		# fi
 	fi
+	
+	if [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
+		go_path=/home/$current_username/go
+		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+	elif [[ -e  "/home/pi/go/bin/listserver" ]]; then
+		go_path=/home/pi/go
+		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+	elif [[ -e  "$go_path/bin/listserver" ]]; then
+		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+	else
+		echo "${bold}${red}Was unable to determine location of listserver.${normal}"
+		echo "${bold}${red}This will cause issues with the script.${normal}"
+		echo
+		sudo free -m
+		echo
+		echo "Please copy output from terminal for diagnostic purposes."
+		echo "${bold}${red}Script will exit in 30 seconds.${normal}"
+		echo
+		sleep 30
+		exit
+	fi
+	
+	sudo cp $go_path/bin/listserver /usr/local/bin
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -6558,27 +6734,6 @@ EOF
 	else
 		generate_list_server_config_filename
 	fi
-	# Type the following to get a list of Go variables/info: go env
-	go_path=$( go env GOPATH )
-	if [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
-		go_path=/home/$current_username/go
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
-	elif [[ -e  "/home/pi/go/bin/listserver" ]]; then
-		go_path=/home/pi/go
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
-	elif [[ -e  "$go_path/bin/listserver" ]]; then
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
-	else
-		echo "${bold}${red}Was unable to determine location of listserver.${normal}"
-		echo "${bold}${red}This will cause issues with the script.${normal}"
-		echo
-		echo "${bold}${red}Script will exit in 30 seconds.${normal}"
-		echo
-		sleep 30
-		exit
-	fi
-	
-	sudo cp $go_path/bin/listserver /usr/local/bin
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
