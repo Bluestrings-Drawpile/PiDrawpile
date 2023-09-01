@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.983
+drawpilescriptversion=2.984
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -198,6 +198,15 @@ what_linux_flavor=$( cat /etc/*-release | grep -i "PRETTY_NAME=" | awk '{$1=$1};
 what_architecture=$( hostnamectl | grep -i "Architecture" | awk '{$1=$1};1' )
 # verify_if_this_is_raspbian_or_debian --> https://raspberrypi.stackexchange.com/questions/6974/how-can-i-determine-which-os-image-i-am-running
 verify_if_this_is_raspbian_or_debian=$( cat /etc/rpi-issue 2>/dev/null | grep -i "Raspberry Pi" | awk '{ print $1 " " $2 }' )
+verify_pi_model=$( cat /proc/cpuinfo | tr -d '\t' | grep -i "Model:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' | sed 's/Rev.*//' )
+# Samples Below WITHOUT editing content
+# Raspberry Pi Zero W Rev 1.1
+# Raspberry Pi 3 Model B Rev 1.2
+# Raspberry Pi 4 Model B Rev 1.1
+# Samples Below WITH edited content based on string above
+# Raspberry Pi Zero W
+# Raspberry Pi 3 Model B
+# Raspberry Pi 4 Model B
 # ----------------------------------------------------------------------------------
 <<comment_EOF
 # NOTES ON SYSTEM PACKAGE INSTALLERS
@@ -293,7 +302,7 @@ function debian_update_check_online_working_function () {
 }
 
 function debian_x86_64_vs_arm_function () {
-	if [ "$what_architecture" == "Architecture: arm64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+	if [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
 		echo "${bold}${green}Running Raspbian on Raspberry Pi (arm64 Processor).${normal}" 
 	elif [ "$what_architecture" == "Architecture: x86-64" ]; then
 		if [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
@@ -7348,54 +7357,56 @@ EOF
 		
 		package_name=nodejs
 		minimum_versionnodejs=14.0.0
-		
-		if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: arm64" ]; then
-			echo "Adding Node.JS repository to get latest version . . ."
-			echo
-			
-			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-			echo
-			echo "Installing/updating Node.JS . . ."
-			sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-			echo
-			echo "Installed version is . . ."
-			node -v
-			echo
-			version_test_by_distro_function
-		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
-			echo "${bold}${cyan}Installing NodeJS from Node-Red Script (need 32 bit binary)${normal}"
-			echo
-			# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
-			nodered_install_log=nodered-install.log
-			tgtl18=18.4.0    # need x86 latest from https://unofficial-builds.nodejs.org/download/release/
-			tgtl=$tgtl18
-			tgta18=18.16.1    # need armv6l latest from https://unofficial-builds.nodejs.org/download/release/
-			tgta=$tgta18
-			echo "Using 32bit nodejs" | sudo tee -a /var/log/$nodered_install_log >>/dev/null
-			curl -sSL -o /tmp/node.tgz https://unofficial-builds.nodejs.org/download/release/v$tgtl/node-v$tgtl-linux-x86.tar.gz 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null
-			# unpack it into the correct places
-			hd=$(head -c 9 /tmp/node.tgz)
-			if [ "$hd" == "<!DOCT" ] || [ "$hd" == "<html>" ]; then
-				CHAR="$CROSS File $f not downloaded";
-			else
-				if [[ -d /tmp/nodejs ]]; then
-					sudo rm -rf /tmp/nodejs
+		if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
+			echo "Skipping Node.JS Installation for Pi Zero W . . ."
+		else
+			if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+				echo "Adding Node.JS repository to get latest version . . ."
+				echo
+				
+				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+				echo
+				echo "Installing/updating Node.JS . . ."
+				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				echo
+				echo "Installed version is . . ."
+				node -v
+				echo
+				version_test_by_distro_function
+			elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+				echo "${bold}${cyan}Installing NodeJS from Node-Red Script (need 32 bit binary)${normal}"
+				echo
+				# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
+				nodered_install_log=nodered-install.log
+				tgtl18=18.4.0    # need x86 latest from https://unofficial-builds.nodejs.org/download/release/
+				tgtl=$tgtl18
+				tgta18=18.16.1    # need armv6l latest from https://unofficial-builds.nodejs.org/download/release/
+				tgta=$tgta18
+				echo "Using 32bit nodejs" | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+				curl -sSL -o /tmp/node.tgz https://unofficial-builds.nodejs.org/download/release/v$tgtl/node-v$tgtl-linux-x86.tar.gz 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+				# unpack it into the correct places
+				hd=$(head -c 9 /tmp/node.tgz)
+				if [ "$hd" == "<!DOCT" ] || [ "$hd" == "<html>" ]; then
+					CHAR="$CROSS File $f not downloaded";
+				else
+					if [[ -d /tmp/nodejs ]]; then
+						sudo rm -rf /tmp/nodejs
+					fi
+					mkdir -p /tmp/nodejs
+					sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /tmp/nodejs
+					sudo chown -R 0:0 /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+					if sudo cp -PR /tmp/nodejs/* /usr/ 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
+					sudo rm -rf /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+					# if sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /usr 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
 				fi
-				mkdir -p /tmp/nodejs
-				sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /tmp/nodejs
-				sudo chown -R 0:0 /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-				if sudo cp -PR /tmp/nodejs/* /usr/ 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
-				sudo rm -rf /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-				# if sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /usr 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
-			fi
-			# rm /tmp/node.tgz 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-			echo "  Install Node.js for i686            $CHAR"
-			echo
-			echo "Installed version is . . ."
-			node -v
-			echo
-			test_installation_status="Installed"
-			test_version=$(node -v | cut -c 2-100)
+				# rm /tmp/node.tgz 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+				echo "  Install Node.js for i686            $CHAR"
+				echo
+				echo "Installed version is . . ."
+				node -v
+				echo
+				test_installation_status="Installed"
+				test_version=$(node -v | cut -c 2-100)
 			
 <<comment_EOF_delete
 			echo "${bold}${cyan}Would you like to try (1) Node-RED Install or just update (2) nodejs which may not work?${normal}"
@@ -7444,19 +7455,20 @@ EOF
 				test_version=$(node -v | cut -c 2-100)
 			fi
 comment_EOF_delete
-		else
-			echo "Adding Node.JS repository to get latest version . . ."
-			echo
-			sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-			sleep 20
-			echo
-			echo "Installing/updating Node.JS . . ."
-			sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-			echo
-			echo "Installed version is . . ."
-			node -v
-			echo
-			version_test_by_distro_function
+			else
+				echo "Adding Node.JS repository to get latest version . . ."
+				echo
+				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+				sleep 20
+				echo
+				echo "Installing/updating Node.JS . . ."
+				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				echo
+				echo "Installed version is . . ."
+				node -v
+				echo
+				version_test_by_distro_function
+			fi
 		fi
 		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "${bold}${red}Failed to install . . .${normal}"
@@ -7660,7 +7672,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: arm64" ]; then
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 	variable_to_read_1="Pi_Hole_Status"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -7932,7 +7944,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: arm64" ]; then
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 	variable_to_read_1="RPi_Monitor_Status"
 	variable_to_read_2="RPi_Monitor_Dark_Mode"
 	variable_to_read_3=""
