@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9872
+drawpilescriptversion=2.9873
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -2019,7 +2019,7 @@ echo
 # ***** Debian Packages (* means in use) ******																										Fedora Alternates (* means in use)
 # libmicrohttpd-dev * library embedding HTTP server functionality (development, used for remote administration of drawpile server)					libmicrohttpd-devel				*
 # libsodium-dev * Network communication, cryptography and signaturing library - headers (server only, enables external authentication support)		libsodium-devel					*
-# libsystemd * systemd utility library - development files (enable socket drawpile server startup I believe)										systemd-devel
+# libsystemd-dev * systemd utility library - development files (enable socket drawpile server startup I believe)										systemd-devel
 # mini-httpd * Small HTTP server (Used for creating password for use with NGINX)																	httpd-core
 # nginx * small, powerful, scalable web/proxy server (used for reverse proxy to manage drawpile server in a more secure manner)						nginx
 # openssl * Secure Sockets Layer toolkit - cryptographic utility (used to create SSL key for encrypted drawing sessions)							openssl
@@ -4139,30 +4139,27 @@ $freeDNS_input #Drawpile Hostname") | crontab
 			echo "This message should not be visible."
 		fi
 	elif [ "$dns_choice" == "2" ]; then
-		echo '*****Installing No-IP...*****'
+		echo
+		echo "${bold}${cyan}***** Installing No-IP Service . . . *****${normal}"
+		echo 
+		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!NoIP = '"yes"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
 		cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo mkdir -p -v noip
 		cd "$dp_install_loc/Programs/noip" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
-		sudo wget -q --show-progress http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+		sudo wget -q --show-progress https://www.noip.com/client/linux/noip-duc-linux.tar.gz
 		sudo tar vzxf noip-duc-linux.tar.gz
 		cd noip-2.1.9-1
 		cd "$dp_install_loc/Programs/noip/noip-2.1.9-1" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo make
-		if [[ -e  "/usr/local/bin/noip2" ]]; then
-			location_created_noip2_executable=/usr/local/bin
-		elif [[ -e  "/usr/bin/noip2" ]]; then
-			location_created_noip2_executable=/usr/bin
-		else
-			echo Was unable to determine location of noip2 executable.
-			echo This will cause issues with the script.
-			echo
-			sleep 30
-			exit
-		fi
 		echo
-		echo 'https://www.noip.com/'
+		echo '--------------------------------------------------------------------------------'
 		echo
-		echo 'Requirements: Once logged in, you should be looking at the dashboard. You will '
+		echo "${bold}${cyan}*****Setting up noip account for auto update of IP . . . *****${normal}"
+		echo
+		echo "${bold}${cyan}Website:${normal} https://www.noip.com/"
+		echo
+		echo "${bold}${cyan}Requirements:${normal} Once logged in, you should be looking at the dashboard. You will "
 		echo 'know if the hyperlink at the top is https://my.noip.com/#!/. Just type'
 		echo 'your desired hostname and choose a domain drop down that you like. from the '
 		echo 'Free Domains options. Click the button Add Hostname. You will just need your '
@@ -4180,18 +4177,22 @@ $freeDNS_input #Drawpile Hostname") | crontab
 		echo 'is listed in minutes, if you choose 5 the update interval will be 5 minutes.'
 		echo 'If you choose 30 the interval will be 30 minutes.'
 		echo
-		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!NoIP = '"yes"'!;H};x}' $app_installation_status_file
-		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
+		echo '--------------------------------------------------------------------------------'
+		echo
 		sudo make install
-		sudo $location_created_noip2_executable/noip2
+		# sudo $location_created_noip2_executable/noip2
 		# echo 'Confirming service is working properly...'
 		# sudo noip2 -S
 		# Read install process here --> http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
-
-		echo 'If you made a typo when putting in your password for no IP, simply'
-		echo 'type the following:'
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${yellow}If you made a typo when putting in your password for no IP, simply${normal}"
+		echo "${bold}${yellow}type the following:${normal}"
 		echo
 		echo 'noip2 -C -c /usr/local/etc/no-ip2.conf'
+		echo
+		sleep 5
 	elif [ "$dns_choice" == "3" ]; then
 		echo 'No IP update service to be set up!'
 		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
@@ -4204,6 +4205,20 @@ $freeDNS_input #Drawpile Hostname") | crontab
 else
 	echo "This message should not be visible."
 fi
+
+<<comment_EOF
+		if [[ -e  "/usr/local/bin/noip2" ]]; then
+			location_created_noip2_executable=/usr/local/bin
+		elif [[ -e  "/usr/bin/noip2" ]]; then
+			location_created_noip2_executable=/usr/bin
+		else
+			echo Was unable to determine location of noip2 executable.
+			echo This will cause issues with the script.
+			echo
+			sleep 30
+			exit
+		fi
+comment_EOF
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -4290,19 +4305,19 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		else
 			if [[ $hostname_1 != $hostname_2 ]]; then
 				echo
-				echo "Hostnames entered do not match!"
+				echo "${bold}${red}Hostnames entered do not match!${normal}"
 				echo
-				read -r -p "Enter hostname: " hostname_1
-				read -r -p "Enter hostname again: " hostname_2
+				read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
+				read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2
 			elif [[ $hostname_1 = $hostname_2 ]] || [[ $external_ip_4 != $dns_verification_4_stripped ]]; then
 				echo
-				echo "Hostnames entered match but not appear to point to this server's IPv4 address!"
-				echo "Please check for typos and try again."
+				echo "${bold}${red}Hostnames entered match but not appear to point to this server's IPv4 address!${normal}"
+				echo "${bold}${red}Please check for typos and try again.${normal}"
 				echo
-				read -r -p "Enter hostname: " hostname_1
-				read -r -p "Enter hostname again: " hostname_2	
+				read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
+				read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2	
 			else
-				echo This message should not be visible for IP verification.
+				echo "${bold}${red}This message should not be visible for Hostname IP verification.${normal}"
 			fi
 			dns_ip_check
 		fi	
@@ -4312,14 +4327,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [[ $hostname_1 = $hostname_2 ]] && [[ "$hostname_1" = "" ]] && [[ "$hostname_2" = "" ]]; then
 		hostname=no_value_selected
 		echo
-		echo "Your hostname is was left blank"
+		echo "${bold}${red}Your hostname is was left blank.${normal}"
 		echo
-		echo 'No hostname will be used.'
+		echo "${bold}${red}No hostname will be used.${normal}"
 		sudo sed -i '\!^hostname =!{h;s!=.*!= '"blank"'!};${x;\!^$!{s!!hostname = '"blank"'!;H};x}' $drawpile_configuration_values_file
 	else
 		hostname=$hostname_1
 		echo
-		echo "Your hostname is: $hostname"
+		echo "${bold}${green}Your hostname is: $hostname ${normal}"
 		echo
 		echo 'This will be used to display in the session listing instead of your'
 		echo 'public IP address.'
@@ -4552,16 +4567,17 @@ ssl_unitname=\$( grep -m 1 "ssl_unitname = " "$drawpile_configuration_values_fil
 hostname=\$( grep -m 1 "hostname = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
 ssl_email=\$( grep -m 1 "ssl_email = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
 
-
-
+<<comment_EOF
 ssl_organization=	\$( grep -m 1 "ssl_organization = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
 ssl_unitname=		\$( grep -m 1 "ssl_organization = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
 hostname=			\$( grep -m 1 "ssl_organization = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
+comment_EOF
 
-
-sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=\$ssl_country/ST=\$ssl_state/L=\$ssl_locality/O=\$ssl_organization/OU=\$ssl_unitname/CN=\$hostname/emailAddress=\$ssl_email"
+sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=\$ssl_country/ST=\$ssl_state/L=\$ssl_locality/O=\$ssl_organization/OU=\$ssl_unitname/CN=\$hostname/emailAddress=\$ssl_email"
 sudo chown drawpileuser $ssl_certificate
 sudo chown drawpileuser $ssl_private_cert_key
+sudo nginx -s reload
 echo
 sudo chmod 770 /home/drawpileuser/ -R
 sudo chmod 777 /home/drawpileuser/ssl.sh
@@ -5807,6 +5823,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	read only = no
 	create mask = 0777
 	directory mask = 0777
+	force user = root
 
 [$current_username - Music]
 	comment = $current_username Music Shared Folder
@@ -5816,6 +5833,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	read only = no
 	create mask = 0777
 	directory mask = 0777
+	force user = root
 
 [$current_username - Pictures]
 	comment = $current_username Pictures Shared Folder
@@ -5825,6 +5843,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	read only = no
 	create mask = 0777
 	directory mask = 0777
+	force user = root
 
 [$current_username - Videos]
 	comment = $current_username Videos Shared Folder
@@ -5833,7 +5852,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	browsable = yes
 	read only = no
 	create mask = 0777
-	directory mask = 0777" >> /etc/samba/smb.conf
+	directory mask = 0777
+	force user = root" >> /etc/samba/smb.conf
 			sudo chmod 641 /etc/samba/smb.conf
 			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
 				sudo systemctl restart smbd
@@ -5862,7 +5882,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	browsable = yes
 	read only = no
 	create mask = 0777
-	directory mask = 0777" >> /etc/samba/smb.conf
+	directory mask = 0777
+	force user = root" >> /etc/samba/smb.conf
 			else	
 				sudo chmod 777 "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files/" -R
 				echo "
@@ -5873,7 +5894,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	browsable = yes
 	read only = no
 	create mask = 0777
-	directory mask = 0777" >> /etc/samba/smb.conf
+	directory mask = 0777
+	force user = root" >> /etc/samba/smb.conf
 			fi
 		sudo chmod 641 /etc/samba/smb.conf
 			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
@@ -7373,7 +7395,47 @@ EOF
 		package_name=nodejs
 		minimum_versionnodejs=14.0.0
 		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
-			echo "Skipping Node.JS Installation for Pi Zero W . . ."
+			echo "${bold}${red}Pi Zero can only get to NodeJS version 10 by default. That's${normal}"
+			echo "${bold}${red}a pretty big problem since we need at least version 14 or later.${normal}"
+			echo
+			echo "Would you like to try an unofficial install of NodeJS LTS?"
+			echo "Note that this has not currently been tested by the maker of"
+			echo "this script, this was something that someone else tried as they"
+			echo "wanted to run it on a Pi Zero W. Do this at your own risk!"
+			echo
+			echo "Read more here --> https://gist.github.com/mandrean/71f2cbf707025a5983c0fc04d78f3e9a"
+			echo 
+			read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " pi_zero_nodejs
+			echo
+			if [ "$pi_zero_nodejs" == "yes" ] || [ "$pi_zero_nodejs" == "YES" ] || [ "$pi_zero_nodejs" == "Yes" ] ; then
+				# update system
+				sudo apt update && sudo apt upgrade
+				#
+				# uninstall old node (v10?)
+				sudo apt remove nodejs npm -y
+				#
+				# install nvm
+				curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
+				#
+				# use 'unofficial builds' in nvm
+				echo "export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release" >> ~/.bashrc
+				#
+				# reload bashrc
+				source ~/.bashrc
+				#
+				# install latest LTS
+				nvm install --lts
+				nvm use --lts
+				#
+				# verify versions
+				node -v
+				npm -v
+			elif [ "$pi_zero_nodejs" == "no" ] || [ "$pi_zero_nodejs" == "NO" ] || [ "$pi_zero_nodejs" == "No" ] ; then
+				echo "Skipping Node.JS Installation for Pi Zero W . . ."
+			else
+				echo "Invalid selection option, skipping installation of unofficial NodeJS LTS."
+				pi_zero_nodejs=no
+			fi
 		else
 			if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
 				echo "Adding Node.JS repository to get latest version . . ."
@@ -9246,7 +9308,6 @@ elif [[ ! -d "$option_loc_2" ]]; then
 	echo
 	echo "Please save this somewhere securely, then delete the file."
 	echo
-	
 	echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
 	if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
 	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
@@ -9263,6 +9324,11 @@ elif [[ ! -d "$option_loc_2" ]]; then
 ***********************************************************************
 ************************ My Server Information ************************
 ***********************************************************************
+
+**** Drawpile Server Files ****
+$dp_install_loc/Programs/Drawpile-Srv-Files
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **** Drawpile List Server Page ****
 http://$hostname
@@ -9292,6 +9358,16 @@ EOF
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+EOF
+	if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+**** Drawpile Admin Web Page Login Information ****
+nginx_username_1=$nginx_username_1
+nginx_htpasswd_1=$nginx_htpasswd_1
+
+EOF
+	fi
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 **** Drawpile Admin Web Page ****
 EOF
 	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
@@ -9312,15 +9388,16 @@ EOF
 drawpile-srv --gui --remote http://$hostname:8081/
 
 EOF
-	if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-**** Drawpile Admin Web Page Login Information ****
-nginx_username_1=$nginx_username_1
-nginx_htpasswd_1=$nginx_htpasswd_1
+**** Samba Network Configuration ****
+Type this into address bar of file explorer to check contents of local server.
+\\$HOSTNAME"
+
 EOF
-	fi
+fi
 else
 	echo "This message for Desktop Icon should not be visible. (Drawpile Admin and Drawpile Admin GUI)"
 fi
@@ -9420,7 +9497,12 @@ comment_EOF_delete
 echo "${bold}${cyan}***********************************************************************${normal}"
 echo "${bold}${cyan}************************ My Server Information ************************${normal}"
 echo "${bold}${cyan}***********************************************************************${normal}"
-echo 
+echo
+echo "${bold}${cyan}**** Drawpile Server Files ****${normal}"
+echo "dp_install_loc/Programs/Drawpile-Srv-Files"
+echo
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo
 echo "${bold}${cyan}**** Drawpile List Server Page ****${normal}"
 echo "http://$hostname"
 echo
@@ -9431,6 +9513,10 @@ if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL en
 echo
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
+echo "${bold}${cyan}**** Drawpile Admin Web Page Login Information ****${normal}"
+echo "Web Admin Username = $nginx_username_1"
+echo "Web Admin Password = $nginx_htpasswd_1"
+echo
 echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
 if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
 if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
@@ -9440,11 +9526,15 @@ echo "${bold}${cyan}***** Drawpile Admin GUI Desktop on another machine *****${n
 echo "${bold}${cyan}**** (For Emergency Use Only, messes with web admin) ****${normal}"
 echo "drawpile-srv --gui --remote http://$hostname:8081/"
 echo
-echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
-echo
-echo "${bold}${cyan}**** Drawpile Admin Web Page Login Information ****${normal}"
-echo "Web Admin Username = $nginx_username_1"
-echo "Web Admin Password = $nginx_htpasswd_1"
+if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "${bold}${cyan}**** Samba Network Configuration ****${normal}"
+	echo "Type this into address bar of file explorer to check contents of local server."
+	echo "\\\\$HOSTNAME"
+	echo
+fi
+"${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
