@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.987
+drawpilescriptversion=2.9871
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -1169,7 +1169,7 @@ function script_update_check_function () {
 	fi
 	# --------------------------------------------------------------------------------
 	if [[ "$drawpile_script_version" < "$dp_check_version" ]]; then
-		validate_script_download_complete=$( grep -io -m 1 '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' "$dp_install_loc/Programs/$script_name" )
+		validate_script_download_complete=$( tail -10 "$dp_install_loc/Programs/$script_name" | grep -io -m 1 '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' )
 		if [[ "$validate_script_download_complete" == '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' ]]; then
 			# Do nothing, entire file is present presumably.
 			echo "${invis}Verified that the download of updated script is successful.${normal}"
