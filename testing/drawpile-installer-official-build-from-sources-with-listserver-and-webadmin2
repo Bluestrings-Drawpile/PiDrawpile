@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.986
+drawpilescriptversion=2.987
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -1146,17 +1146,8 @@ echo
 function script_update_check_function () {
 	sudo mkdir -p -v "$dp_install_loc/Programs"
 	cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
-	echo
 	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
 	sudo chmod 777 "$dp_install_loc/Programs" -R
-	validate_script_download_complete=$( grep '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' "$dp_install_loc/Programs/$script_name" )
-	if [[ "$validate_script_download_complete" == "} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #" ]]; then
-		# Do nothing, entire file is present presumably.
-		:
-	else
-		echo Lol download failed. NOOB!
-		pause
-	fi
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
 	dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dp_install_loc/Programs/$script_name" | cut -c 23-40)
@@ -1178,6 +1169,20 @@ function script_update_check_function () {
 	fi
 	# --------------------------------------------------------------------------------
 	if [[ "$drawpile_script_version" < "$dp_check_version" ]]; then
+		validate_script_download_complete=$( grep -io -m 1 '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' "$dp_install_loc/Programs/$script_name" )
+		if [[ "$validate_script_download_complete" == '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' ]]; then
+			# Do nothing, entire file is present presumably.
+			echo "${invis}Verified that the download of updated script is successful.${normal}"
+		else
+			echo "${bold}${yellow}Newest Script is using version $dp_check_version.${normal}"
+			echo "${bold}${red}However, download of updated script failed. Removing file and exiting script.${normal}"
+			echo
+			echo "Please try running the script again to re-attempt the download."
+			echo
+			sudo rm -rf "$dp_install_loc/Programs/$script_name"
+			pause
+			exit
+		fi
 		echo "${bold}${yellow}Newest Script is using version $dp_check_version.${normal}"
 		echo "Newer version of script available, the old script has been copied over"
 		echo "the old script. Please re-run this script to use newest version."
