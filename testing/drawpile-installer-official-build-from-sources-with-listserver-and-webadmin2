@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.985
+drawpilescriptversion=2.986
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -641,17 +641,14 @@ fi
 
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
+drawpile_script_completed_test=$( grep 'drawpile_script_completed = ' $drawpile_configuration_values_file 2>/dev/null )
 
-if grep 'drawpile_script_completed = no' $drawpile_configuration_values_file > /dev/null; then
+if [[ "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]]; then
 	echo "${invis}Script not yet completed one run successfully.${normal}"
 	# Do nothing, no action required
 	:
-else
-	echo "${invis}First time script is running. Adding value for later query.${normal}"
-	sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_script_completed = '"no"'!;H};x}' $drawpile_configuration_values_file
-fi
-
-if grep 'drawpile_script_completed = yes' $drawpile_configuration_values_file > /dev/null; then
+elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then
+	# if grep 'drawpile_script_completed = yes' $drawpile_configuration_values_file > /dev/null; then
 	echo "${red}${bold}WOAH BUDDY! THIS SCRIPT WAS NOT INTENDED FOR MULTIPLE RUNS AFTER${normal}"
 	echo "${red}${bold}A SUCCESSFUL INSTALLATION/RUN OF THE SCRIPT!!!!!${normal}"
 	echo
@@ -671,6 +668,9 @@ if grep 'drawpile_script_completed = yes' $drawpile_configuration_values_file > 
 		sleep 10
 		exit
 	fi
+else
+	echo "${invis}First time script is running. Adding value for later query.${normal}"
+	sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_script_completed = '"no"'!;H};x}' $drawpile_configuration_values_file
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -1149,6 +1149,14 @@ function script_update_check_function () {
 	echo
 	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
 	sudo chmod 777 "$dp_install_loc/Programs" -R
+	validate_script_download_complete=$( grep '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' "$dp_install_loc/Programs/$script_name" )
+	if [[ "$validate_script_download_complete" == "} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #" ]]; then
+		# Do nothing, entire file is present presumably.
+		:
+	else
+		echo Lol download failed. NOOB!
+		pause
+	fi
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
 	dpcheckversion=$(grep -m 1 "drawpilescriptversion=" "$dp_install_loc/Programs/$script_name" | cut -c 23-40)
@@ -1307,6 +1315,8 @@ else
 	echo "Unable to make a determination of which version of wget is installed."
 	echo "This message should not be visible."
 fi
+
+{ # this ensures the entire script is downloaded, other part is at very end of script #
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
@@ -9465,7 +9475,8 @@ wait $!
 
 # sudo sort $drawpile_configuration_values_file -o $drawpile_configuration_values_file
 sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_script_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
-wait $!
+sleep 5
+# wait $!
 # sudo chmod 770 /home/drawpileuser/ -R
 sudo chmod 770 $app_installation_status_file
 sudo chmod 770 $drawpile_configuration_values_file
@@ -9475,3 +9486,4 @@ echo
 #
 # - End of Script. -
 #
+} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #
