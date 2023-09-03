@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9873
+drawpilescriptversion=2.9874
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -3437,6 +3437,56 @@ function drawpile_build_and_compile_function () {
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
+<<comment_EOF
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# Raspbian Package Descriptions
+	#----------------------------------------
+		libwacom-bin ______________	libwacom is a library to identify wacom tablets and their model-specific features.
+									It provides easy access to information such as "is this a built-in on-screen tablet",
+									"what is the size of this model", etc. This package contains the utilities which 
+									are used by the libraries.
+		libwacom-common ___________ Same as above description.
+		libwacom-dev ______________ Same as above description.
+		libwacom2 _________________ Same as above description.
+		libwacom2-dbg _____________ Same as above description. (Doesn't appear to be available any longer)
+									https://packages.debian.org/buster/libwacom2-dbg
+		xserver-xorg-input-wacom __ This package provides the X.Org driver for Wacom tablet devices.
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# Fedora Package Descriptions
+	#----------------------------------------
+		kcm_wacomtablet ___________	This module implements a GUI for the Wacom Linux Drivers and extends it with 
+									profile support to handle different button/pen layouts per profile.
+		libwacom __________________ libwacom is a library that provides information about Wacom tablets and tools. 
+									This information can then be used by drivers or applications to tweak the UI
+									or general settings to match the physical tablet.
+		libwacom-data _____________ Tablet information client library data files.
+		libwacom-devel ____________ Tablet information client library development package.
+		libwacom-utils ____________ Utilities to handle and/or debug libwacom devices.
+		xorg-x11-drv-wacom ________ X.Org X11 wacom input driver for Wacom tablets.
+		xorg-x11-drv-wacom-devel __ X.Org X11 wacom input driver development files.
+	#---------------------------------------------------------------------------------------------------------------------------------
+comment_EOF
+
+	if [ "$drawpile_build_configuration" == "3" ] || [ "$drawpile_build_configuration" == "7" ]; then
+		# For builds that install Wacom drivers and such also
+		app_does_not_exist=0
+		app_installed=0
+		app_not_installed=0
+		if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+			program_list_to_install_wacom="libwacom-bin libwacom-common libwacom-dev libwacom2 xserver-xorg-input-wacom"
+			progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 xserver-xorg-input-wacom);
+		fi
+		if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+			program_list_to_install_wacom="libwacom-bin libwacom-common libwacom-dev xserver-xorg-input-wacom"
+			progs=(libwacom-bin libwacom-common libwacom-dev xserver-xorg-input-wacom);
+		fi
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			program_list_to_install_wacom="kcm_wacomtablet libwacom libwacom-data libwacom-devel libwacom-utils xorg-x11-drv-wacom xorg-x11-drv-wacom-devel"
+			progs=(kcm_wacomtablet libwacom libwacom-data libwacom-devel libwacom-utils xorg-x11-drv-wacom xorg-x11-drv-wacom-devel);
+		fi
+		# package_install_status_check_function
+	fi
+
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	# Read more here --->		https://github.com/drawpile/Drawpile/wiki/Building-from-sources
@@ -3477,12 +3527,8 @@ function drawpile_build_and_compile_function () {
 		# May cause shell to exit so do this right before command runs to make sure it reads it.
 		. ~/.cargo/env
 		$drawpile_build_configuration_settings
-		app_does_not_exist=0
-		app_installed=0
-		app_not_installed=0
-		progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
 		package_install_status_check_function
-		sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+		sudo $package_install_program $program_list_to_install_wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 		wacom_explanation_function
 	elif [ "$drawpile_build_configuration" == "4" ]; then
 		drawpile_build_configuration_number_desc="4 - Server And Client - GUI server, client, dprectool, and drawpile-cmd tool"
@@ -3516,12 +3562,8 @@ function drawpile_build_and_compile_function () {
 		# May cause shell to exit so do this right before command runs to make sure it reads it.
 		. ~/.cargo/env
 		$drawpile_build_configuration_settings
-		app_does_not_exist=0
-		app_installed=0
-		app_not_installed=0
-		progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom);
 		package_install_status_check_function
-		sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+		sudo $package_install_program $program_list_to_install_wacom # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 		wacom_explanation_function
 		compile_drawpile_client_only_function
 	elif [ "$drawpile_build_configuration" == "8" ]; then
@@ -4024,16 +4066,24 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${bold}Cons:${normal} Must renew the hostname via notification received in email every 30 days"
 	echo '      or lose access. Might not be able to get the same name back.'
 	echo
-	echo 'Do you want to use freeDNS.afraid.org or No-IP?'
+	echo "${underline}https://www.duckdns.org/ ${normal}"
+	echo "${bold}Pros:${normal} Free registration, simple setup, lots of configuration options available."
+	echo '      can use your own domain name (read the FAQs page).'
+	echo "${bold}Cons:${normal} Cannot detect IPv6 addresses as of September 2023."
+	echo '      It must be manually specified for now.'
+	echo
+	echo 'Do you want to use freeDNS.afraid.org, No-IP, or DuckDNS?'
 	echo
 	echo 'Press 1 for freeDNS.afraid.org'
 	echo 'Press 2 for No-IP'
-	echo 'Press 3 to skip this step.'
+	echo 'Press 3 for DuckDNS'
+	echo
+	echo 'Press 9 to skip this step.'
 	echo
 	while :; do
 		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " dns_choice
 		[[ $dns_choice =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
-		if (( $dns_choice >= 1 && $dns_choice <= 3)); then
+		if (( $dns_choice >= 1 && $dns_choice <= 3 || $dns_choice == 9 )); then
 			break
 		else
 			echo
@@ -4062,11 +4112,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 			# Assuming value is being set for first time, this should be no. If changed to yes, SSL certs and SSL script should probably also be updated.
 			crontab_change=1
-			if sudo crontab -u $current_username -l | grep '#Drawpile Hostname' > /dev/null 2>&1; then
+			if sudo crontab -u root -l | grep '#Drawpile Hostname' > /dev/null 2>&1; then
 				echo
-				echo Crontab set up. Removing old info before adding new content.
+				echo "${bold}${yellow}Crontab set up for FreeDNS.${normal}"
+				echo "${bold}${yellow}Removing old info before adding new content.${normal}"
 				crontab_change=yes
-				sudo crontab -u $current_username -l | grep -v '#Drawpile Hostname' | sudo crontab -u $current_username -
+				sudo crontab -u root -l | grep -v '#Drawpile Hostname' | sudo crontab -u root -
 				echo
 			else
 				:
@@ -4130,11 +4181,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# echo "Removing duplicate entries, may have small error message that follows:"
 			# crontab -u $USERNAME -l | grep -v '#Drawpile Hostname' | crontab -u $USERNAME -
 
-			(crontab -l 2>>/dev/null; echo "PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin #Drawpile Hostname
-$freeDNS_input #Drawpile Hostname") | crontab
-			sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
-			sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!freeDNS = '"yes"'!;H};x}' $app_installation_status_file
+			(sudo crontab -l -u root 2>>/dev/null; echo "PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin #Drawpile Hostname
+$freeDNS_input #Drawpile Hostname") | sudo crontab -u root -
+			# (sudo crontab -l -u root 2>>/dev/null; echo "PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin #Drawpile Hostname
+# $freeDNS_input #Drawpile Hostname") | sudo crontab -u root -
 			sudo sed -i '\!^freeDNS_input =!{h;s!=.*!= '"$freeDNS_input"'!};${x;\!^$!{s!!freeDNS_input = '"$freeDNS_input"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!freeDNS = '"yes"'!;H};x}' $app_installation_status_file
+			sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
+			sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!DuckDNS = '"no"'!;H};x}' $app_installation_status_file
 		else
 			echo "This message should not be visible."
 		fi
@@ -4142,8 +4196,6 @@ $freeDNS_input #Drawpile Hostname") | crontab
 		echo
 		echo "${bold}${cyan}***** Installing No-IP Service . . . *****${normal}"
 		echo 
-		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!NoIP = '"yes"'!;H};x}' $app_installation_status_file
-		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
 		cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo mkdir -p -v noip
 		cd "$dp_install_loc/Programs/noip" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
@@ -4152,10 +4204,13 @@ $freeDNS_input #Drawpile Hostname") | crontab
 		cd noip-2.1.9-1
 		cd "$dp_install_loc/Programs/noip/noip-2.1.9-1" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo make
+		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!NoIP = '"yes"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!DuckDNS = '"no"'!;H};x}' $app_installation_status_file
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "${bold}${cyan}*****Setting up noip account for auto update of IP . . . *****${normal}"
+		echo "${bold}${cyan}*****Setting up NoIP account for auto update of IP . . . *****${normal}"
 		echo
 		echo "${bold}${cyan}Website:${normal} https://www.noip.com/"
 		echo
@@ -4194,12 +4249,106 @@ $freeDNS_input #Drawpile Hostname") | crontab
 		echo
 		sleep 5
 	elif [ "$dns_choice" == "3" ]; then
+		variable_to_read_1="DuckDNS_input"
+		variable_to_read_2=""
+		variable_to_read_3=""
+		
+		value_description_1=""
+		value_description_2=""
+		value_description_3=""
+		value_description_4=""
+		value_description_5=""
+
+		read_stored_config_value_query_function
+		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+			echo "Storing value in script memory and moving on."
+			DuckDNS_input=$read_stored_config_value_query_1
+		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+			# Assuming value is being set for first time, this should be no. If changed to yes, SSL certs and SSL script should probably also be updated.
+			crontab_change=1
+			if sudo crontab -u root -l | grep '#Drawpile Hostname' > /dev/null 2>&1; then
+				echo
+				echo "${bold}${yellow}Crontab set up for DuckDNS.${normal}"
+				echo "${bold}${yellow}Removing old info before adding new content.${normal}"
+				crontab_change=yes
+				sudo crontab -u root -l | grep -v '#Drawpile Hostname' | sudo crontab -u root -
+				echo
+			else
+				:
+				# echo No crontab, sadge. Adding in crontab jerb.
+			fi
+			echo "${bold}${cyan}*****Setting up DuckDNS.org cronjob for auto update of IP . . . *****${normal}"
+			echo 
+			echo 'Requirements: Sign in using an existing account (Persona, Twitter, Github,'
+			echo 'or Google).'
+			echo
+			echo 'Pick a name that you wish to use and click "add domain". Go to Google and '
+			echo 'search "what is my IP", if you get an IPv6 address, update it on DuckDNS. '
+			echo 'Your hostname will be something like: hostname-example.duckdns.org'
+			echo 'That full address will need to be provided after this step is complete.'
+			echo
+			echo 'Click "install" (or use right click, open in new tab). At the bottom where '
+			echo 'it says "first step - choose a domain.", click on the down box and select '
+			echo 'your domain name. Back at the top under "Operating Systems", select the'
+			echo 'option called "linux cron".'
+			echo
+			echo 'Scroll down to the fourth code box with the following text just above it:'
+			echo '     hit ESC then use use arrow keys to move the cursor x deletes, i puts'
+			echo '     you back into insert mode'
+			echo
+			echo 'Select the first part leading up to, but not including, the pipe symbol. '
+			echo 'The pipe symbol is a vertical line --> |'
+			echo
+			echo 'The information copied should look something like this:'
+			echo '     echo url="https://www.duckdns.org/update?domains=exampledomain&token=a7c4d0ad-114e-40ef-ba1d-d217904a50f2&ip="'
+			# echo "     'echo url=\"https://www.duckdns.org/update?domains=' + name + '&token=' + random numbers + '&ip=\"'"
+			echo
+			echo 'Copy that and paste it into the script below.'
+			echo
+			regexp="echo[[:space:]]url=\"https://www.duckdns.org/update\?domains=.*\&token=.*\&ip=\""
+			while :; do
+				echo "${bold}${cyan}Enter the requested information now${normal}:"
+				read DuckDNS_input
+				if [[ "$DuckDNS_input" =~ $regexp ]] && [[ "$DuckDNS_input" != *" |"* ]]; then
+					break
+				else
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+					echo "${bold}${red}Invalid information entered, try again. Was expecting the following:${normal}"
+					echo "     'echo url=\"https://www.duckdns.org/update?domains=' + name + '&token=' + random numbers + '&ip=\"'"
+					echo
+					echo 'Copy only the part mentioned above.'
+					echo
+				fi
+			done
+			sudo mkdir -p -v "/home/drawpileuser/duckdns"
+			cat <<EOF | sudo tee /home/drawpileuser/duckdns/duck.sh >/dev/null
+$DuckDNS_input | curl -k -o /home/drawpileuser/duckdns/duck.log -K -
+EOF
+			sudo chmod 700 /home/drawpileuser/duckdns/duck.sh
+			(sudo crontab -l -u root 2>>/dev/null; echo "*/5 * * * * /home/drawpileuser/duckdns/duck.sh >/dev/null 2>&1 #Drawpile Hostname") | sudo crontab -u root -
+			sudo sed -i '\!^DuckDNS_input =!{h;s!=.*!= '"$DuckDNS_input"'!};${x;\!^$!{s!!DuckDNS_input = '"$DuckDNS_input"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
+			sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
+			sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!DuckDNS = '"yes"'!;H};x}' $app_installation_status_file
+		else
+			echo "This message should not be visible."
+		fi
+	elif [ "$dns_choice" == "9" ]; then
 		echo 'No IP update service to be set up!'
-		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
 		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!DuckDNS = '"no"'!;H};x}' $app_installation_status_file
 	else
-		echo 'Invalid option selected. No DNS IP update service'
-		echo 'to be set up! Moving on . . .'
+		echo "${bold}${red}Invalid option selected. No DNS IP update service${normal}"
+		echo "${bold}${red}to be set up!${normal}"
+		echo
+		echo "Moving on . . ."
+		dns_choice=9
+		sudo sed -i '\!^freeDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!freeDNS = '"no"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
+		sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!DuckDNS = '"no"'!;H};x}' $app_installation_status_file
 	fi
 	sudo sed -i '\!^dns_choice =!{h;s!=.*!= '"$dns_choice"'!};${x;\!^$!{s!!dns_choice = '"$dns_choice"'!;H};x}' $drawpile_configuration_values_file
 else
@@ -4282,8 +4431,15 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo 'not be able to connect to hosted sessions with the server using'
 	echo 'encryption by SSL.'
 	echo
-	echo "${bold}For example:${normal}"
+	echo "${bold}Examples below:${normal}"
 	echo "${underline}example.hostwebsite.com ${normal}"
+	if [ "$dns_choice" == "2" ]; then
+		echo "${underline}example.ddns.net ${normal}"
+	if [ "$dns_choice" == "3" ]; then
+		echo "${underline}example.duckdns.org ${normal}"
+	else
+		echo "${underline}example.chickenkiller.com ${normal}"
+	fi
 	echo
 	echo 'If you do not have one, simply leave it blank and hit enter'
 	echo 'twice. However, it is highly recommended to have one, they'
@@ -4632,10 +4788,10 @@ EOF
 	#	https://askubuntu.com/questions/408611/how-to-remove-or-delete-single-cron-job-using-linux-command
 	# The line below adds a job to crontab. Read more here --> https://stackoverflow.com/questions/8579330/appending-to-crontab-with-a-shell-script-on-ubuntu
 	# Use "crontab -r" to reset crontab's configuration. Manual editing "crontab -e" --> https://askubuntu.com/questions/793578/resetting-crontab-file-to-default
-	if sudo crontab -u $current_username -l | grep '#Drawpile ssl.sh' > /dev/null; then
+	if sudo crontab -u root -l | grep '#Drawpile ssl.sh' > /dev/null; then
 		echo
 		echo Crontab set up for drawpile ssl self signed certificates. Removing old info before adding new content.
-		sudo crontab -u $current_username -l | grep -v '#Drawpile ssl.sh' | sudo crontab -u $current_username -
+		sudo crontab -u root -l | grep -v '#Drawpile ssl.sh' | sudo crontab -u root -
 		echo
 	else
 		:
@@ -4653,7 +4809,9 @@ EOF
 		echo "next year via crontab!"
 		echo
 	fi
-	(crontab -l 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | crontab 
+	# Need root for le crontab, this installed into current user. 
+	# (crontab -l 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | crontab 
+	(sudo crontab -l -u root 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | sudo crontab -u root -
 	sudo sed -i '\!^ssl_current_minute =!{h;s!=.*!= '"$current_minute"'!};${x;\!^$!{s!!ssl_current_minute = '"$current_minute"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_current_hour =!{h;s!=.*!= '"$current_hour"'!};${x;\!^$!{s!!ssl_current_hour = '"$current_hour"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_current_day =!{h;s!=.*!= '"$current_day"'!};${x;\!^$!{s!!ssl_current_day = '"$current_day"'!;H};x}' $drawpile_configuration_values_file
@@ -4969,13 +5127,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				exit
 			fi
 		else
-			echo No certs yet generated for Lets Encrypt hostname $hostname . . .
+			echo "No certs yet generated for Lets Encrypt hostname $hostname . . ."
 			echo
 			echo 'Press 1 to generate Lets Encrypt keys'
 			echo 'Press 2 to redownload cert that was not previously revoked, revoke all'
 			echo '        certs, and set up new Lets Encrypt Certs with certbot.'
 			echo
-			read -r 'Enter a number and hit enter to continue.' lets_encrypt_config
+			read -r -p 'Enter a number and hit enter to continue.' lets_encrypt_config
 			echo
 			if [ "$lets_encrypt_config" == "1" ]; then
 				generate_lets_encrypt_ssl
@@ -5305,7 +5463,19 @@ function systemd_options_with_ssl_enabled_function () {
 	echo '  12 - web admin & templates'
 	echo '  13 - web admin'
 	echo
-	read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+	while :; do
+		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+		[[ $systemd_selection =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $systemd_selection >= 1 && $systemd_selection <= 13 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
 	echo
 }
 
@@ -5393,7 +5563,19 @@ function systemd_options_without_ssl_with_hostname_function () {
 	echo '  12 - web admin & templates'
 	echo '  13 - web admin'
 	echo
-	read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+	while :; do
+		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+		[[ $systemd_selection =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $systemd_selection == 5 || $systemd_selection == 7 || $systemd_selection == 9 || $systemd_selection == 10 || $systemd_selection == 12 || $systemd_selection == 13 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
 	echo
 }
 
@@ -5450,7 +5632,19 @@ function systemd_options_without_ssl_without_hostname_function () {
 	echo '  19  - web admin & templates'
 	echo '  20  - web admin'
 	echo
-	read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+	while :; do
+		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
+		[[ $systemd_selection =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $systemd_selection >= 14 && $systemd_selection <= 20 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
 	echo
 }
 
@@ -5782,6 +5976,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		
 		if [ "$samba_choice" == "1" ]; then
 			sudo chmod 777 $option_loc_1 -R
+			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+			fi
 		echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
@@ -5814,6 +6011,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo chmod 777 $option_loc_10 -R
 			sudo chmod 777 $option_loc_4 -R
 			sudo chmod 777 $option_loc_11 -R
+			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
+			fi
 			echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
@@ -5874,6 +6077,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		elif [ "$samba_choice" == "3" ]; then
 			if [ -z "$dp_install_loc_9_custom" ]; then
 				sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
+				if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
+				fi
 				echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
@@ -5886,6 +6092,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	force user = root" >> /etc/samba/smb.conf
 			else	
 				sudo chmod 777 "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files/" -R
+				if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
+				fi
 				echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
@@ -5926,8 +6135,183 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo 'Invalid option selected. No Windows file sharing to be'
 			echo 'set up! Moving on . . .'
 			samba_choice=4
+		fi	
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
+	# This section checks for SELinux and firewall-cmd blocks against Samba, and removes them accordingly.
+	
+	if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
+		#---------------------------------------------------------------------------------------------------------------------------------
+		# https://docs.fedoraproject.org/en-US/quick-docs/samba/
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+			echo "Set password for connecting to Samba share."
+			echo "This will use the username: $current_username"
+			echo
+			sudo smbpasswd -a $current_username
+			echo
+		fi
+		#---------------------------------------------------------------------------------------------------------------------------------
+		function selinux_samba_adjustments_function () {
+			if [ "$samba_choice" == "1" ]; then
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+				sudo restorecon -R "$option_loc_1"
+			elif [ "$samba_choice" == "2" ]; then
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
+				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
+				sudo restorecon -R "$option_loc_1"
+				sudo restorecon -R "$option_loc_10"
+				sudo restorecon -R "$option_loc_4"
+				sudo restorecon -R "$option_loc_11"
+			elif [ "$samba_choice" == "3" ]; then
+				if [ -z "$dp_install_loc_9_custom" ]; then
+					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
+					sudo restorecon -R "$dp_install_loc/Programs/Drawpile-Srv-Files"
+				else	
+					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
+					sudo restorecon -R "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files"
+				fi
+			else
+				echo "${bold}${red}This message for SELinux Samba check should not be visible.${normal}"
+				echo
+				sleep 10
+			fi
+		}
+		selinux_status=$( getenforce 2>/dev/null )
+		selinux_available_check=$?
+
+		if [ "$selinux_available_check" -eq "0" ]; then
+			# SELinux installed.
+			if [ "$selinux_status" == "Disabled" ]; then
+				echo "${bold}${green}SELinux status is: Disabled.${normal}"
+				echo "No action is required. However, if you enable it in the future,"
+				echo "it will cause samba to not function as intended."
+				echo
+				sleep 30
+			else
+				selinux_config_status=$( sestatus 2>/dev/null | grep -i "Mode from config file:" | awk '{ print $5 }' )
+				# echo "SELinux Config Status:	$selinux_config_status"
+				# echo
+				if [ "${selinux_status,,}" == "${selinux_config_status,,}" ]; then
+					echo "${bold}${green}SELinux status is not temporarily changed.${normal}"
+					if [ "$selinux_status" == "Enforcing" ]; then
+						echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+						echo
+						echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+						echo
+						echo '-------------------------------------------'				
+						echo 
+						selinux_samba_adjustments_function
+						echo
+						sleep 10
+					elif [ "$selinux_status" == "Permissive" ]; then
+						echo "${bold}${green}SELinux status is: Permissive.${normal}"
+						echo
+						echo "No action is required."
+						echo
+					sleep 10
+					else
+						echo "${bold}${red}This message for SELinux status Samba (1) should not be visible.${normal}"
+					fi
+				elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
+					echo "${bold}${yellow}SELinux status is temporarily changed."
+					if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
+						echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+						echo
+						echo "However, on system reboot the status will return to permissive."
+						echo "No action is required. It is recommended that you reboot when"
+						echo "the script is completed or turn it back to permissive mode with"
+						echo "the following command:"
+						echo "     sudo setenforce 0"
+						echo
+						pause
+						echo
+					elif [ "$selinux_status" == "Permissive" ] && [ "$selinux_config_status" == "enforcing" ]; then
+						echo "${bold}${yellow}SELinux status is: Permissive.${normal}"
+						echo
+						echo "However, on system reboot the status will return to enforcing."
+						echo "Action required to ensure samba works on reboot."
+						echo
+						echo '-------------------------------------------'				
+						echo
+						selinux_samba_adjustments_function
+						echo
+						sleep 10
+					else
+						echo "${bold}${red}This message for SELinux status Samba (2) should not be visible.${normal}"
+						echo
+					sleep 10
+					fi
+				else
+					echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
+					echo
+					sleep 10
+				fi
+			fi
+		elif [ "$selinux_available_check" -eq "127" ]; then
+			echo "${bold}${green}SELinux is not available. No action required.${normal}"
+			echo
+			sleep 10
+		else
+			echo "${bold}${red}This message for SELinux check should not be visible.${normal}"
+			echo
+			sleep 10
+		fi
+		#---------------------------------------------------------------------------------------------------------------------------------
+		function firewall_cmd_samba_adjustments_function () {
+			firewall_zone_name=$( sudo firewall-cmd --list-all | sed -n '1 p' | awk '{ print $1 }' )
+			
+			echo "sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba"
+			sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba
+		}
+
+		firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
+		firewall_cmd_available_check=$?
+		# echo Check: $firewall_cmd_available_check
+
+		if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_check" -eq "252" ] || [ "$firewall_cmd_available_check" -ne "1" ]; then
+			# 0 is running, 252 is not running.
+			# echo State: $firewall_cmd_status
+			echo "${bold}${yellow}Firewall-cmd installed.${normal}"
+			if [ "$firewall_cmd_status" == "running" ]; then
+				echo "${bold}${yellow}Firewall-cmd is running currently.${normal}"
+				echo
+				echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+				echo
+				echo '-------------------------------------------'				
+				echo
+				firewall_cmd_samba_adjustments_function
+				echo
+				sleep 10
+			elif [ "$firewall_cmd_status" == "not running" ]; then
+				echo "${bold}${green}Firewall-cmd is not running currently.${normal}"
+				echo
+				echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+				echo
+				echo '-------------------------------------------'				
+				echo
+				firewall_cmd_samba_adjustments_function
+				echo
+				sleep 10
+			else
+				echo "${bold}${red}This message should not be visible for firewall-cmd status.${normal}"
+				echo
+				sleep 10
+			fi
+		elif [ "$firewall_cmd_available_check" -eq "1" ]; then
+			echo "${bold}${green}Firewall_cmd is not available. No action required.${normal}"
+			echo
+			sleep 10
+		else
+			echo "${bold}${red}This message for Firewall_cmd check should not be visible.${normal}"
+			echo
+			sleep 10
 		fi
 	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
 else
 	echo "This message should not be visible."
 fi
@@ -9534,7 +9918,7 @@ if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice"
 	echo "\\\\$HOSTNAME"
 	echo
 fi
-"${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
