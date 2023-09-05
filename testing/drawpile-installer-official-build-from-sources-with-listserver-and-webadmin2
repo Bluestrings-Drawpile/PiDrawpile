@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9874
+drawpilescriptversion=2.9875
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -2752,8 +2752,9 @@ function wacom_explanation_function () {
 
 function drawpile_client_shortcut_function () {
 	if (( "$drawpile_build_configuration" >= "3" && "$drawpile_build_configuration" <= "8" )) ; then
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_12/drawpile-icon.png"
-		drawpile_client_shortcut_png="$option_loc_12/drawpile-icon.png"
+		mkdir -p -v "$option_loc_4/drawpile_icons"
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_4/drawpile_icons/drawpile-icon.png"
+		drawpile_client_shortcut_png="$option_loc_4/drawpile_icons/drawpile-icon.png"
 		echo
 		
 		if [[ -e  "/usr/local/bin/drawpile" ]]; then
@@ -2795,15 +2796,15 @@ Type=Application
 Icon=$drawpile_client_shortcut_png
 Name[en_GB]=Drawpile Client
 EOF
-			if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+			sudo chown $current_username "$option_loc_2/Drawpile Client.desktop"
+			sudo chmod 754 "$option_loc_2/Drawpile Client.desktop"
+			if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 				# Trust the Desktop shortcut so it's launchable. 
 				# https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
 				# gio set "~/Desktop/Drawpile Client.desktop" metadata::trusted true
 				gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
 				echo
 			fi
-		sudo chown $current_username "$option_loc_2/Drawpile Client.desktop"
-		sudo chmod 754 "$option_loc_2/Drawpile Client.desktop"
 		else
 			echo Shortcut for Drawpile Client already exists on Desktop.
 		fi
@@ -9029,10 +9030,10 @@ comment_EOF
 			
 			echo '--------------------------------------------------------------------------------'
 			echo
-			if [[ ! -e "$option_loc_12/rpi-logo-img.png" ]]; then
+			if [[ ! -e "$option_loc_4/drawpile_icons/rpi-logo-img.png" ]]; then
 				echo Downloading image to use for RPi-Monitor Shortcut.
 				echo
-				sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O $option_loc_12/rpi-logo-img.png
+				sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O $option_loc_4/drawpile_icons/rpi-logo-img.png
 			else
 				echo Image already downloaded to use for RPi-Monitor Shortcut.
 			fi
@@ -9049,7 +9050,7 @@ Terminal=false
 Exec=chromium-browser http://$pihostname.local:8888
 Type=Application
 #Icon=/usr/share/rpimonitor/web/img/logo.png
-Icon=$option_loc_12/rpi-logo-img.png
+Icon=$option_loc_4/drawpile_icons/rpi-logo-img.png
 Name[en_GB]=RPi-Monitor
 EOF
 					sudo chown $current_username $option_loc_2/RPi-Monitor.desktop
@@ -9460,22 +9461,27 @@ fi
 # --------------------------------------------------------------------------------
 
 function drawpile_custom_shortcut_icon_preference () {
+	mkdir -p -v "$option_loc_4/drawpile_icons"
 	if [[ -e "$dp_install_loc/drawpile_list_server.png" ]]; then
-		echo Using existing image to use for Drawpile List-Server Shortcut.
-		echo $dp_install_loc/drawpile_list_server.png
-		list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
+		echo "Using existing image to use for Drawpile List-Server Shortcut."
+		echo "Copying to: $option_loc_4/drawpile_icons"
+		echo
+		sudo cp "$dp_install_loc/drawpile_list_server.png" "$option_loc_4/drawpile_icons/drawpile_list_server.png"
+		list_server_shortcut_png=$option_loc_4/drawpile_icons/drawpile_list_server.png
 	else
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $dp_install_loc/drawpile_list_server.png
-		list_server_shortcut_png=$dp_install_loc/drawpile_list_server.png
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $option_loc_4/drawpile_icons/drawpile_list_server.png
+		list_server_shortcut_png=$option_loc_4/drawpile_icons/drawpile_list_server.png
 	fi
 
 	if [[ -e "$dp_install_loc/drawpile_web_admin.png" ]]; then
-		echo Using existing image to use for Drawpile List-Server Shortcut.
-		echo $dp_install_loc/drawpile_web_admin.png
-		server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
+		echo "Using existing image to use for Drawpile List-Server Shortcut."
+		echo "Copying to: $option_loc_4/drawpile_icons"
+		echo 
+		sudo cp "$dp_install_loc/drawpile_web_admin.png" "$option_loc_4/drawpile_icons/drawpile_web_admin.png"
+		server_web_admin_shortcut_png=$option_loc_4/drawpile_icons/drawpile_web_admin.png
 	else
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $dp_install_loc/drawpile_web_admin.png
-		server_web_admin_shortcut_png=$dp_install_loc/drawpile_web_admin.png
+		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $option_loc_4/drawpile_icons/drawpile_web_admin.png
+		server_web_admin_shortcut_png=$option_loc_4/drawpile_icons/drawpile_web_admin.png
 	fi
 	
 	sudo chmod 754 $list_server_shortcut_png
@@ -9511,46 +9517,47 @@ if [[ -d "$option_loc_2" ]]; then
 	if [ "$drawpile_shortcut_icon_preference" == "1" ]; then
 		drawpile_custom_shortcut_icon_preference
 	elif [ "$drawpile_shortcut_icon_preference" == "2" ]; then
+		mkdir -p -v "$option_loc_4/drawpile_icons"
 		if [[ -e "$dp_install_loc/256.png" ]]; then
 			echo Copying 256x256 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-256.png"
 			echo
-			sudo cp "$dp_install_loc/256.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-256.png
+			sudo cp "$dp_install_loc/256.png" "$option_loc_4/drawpile_icons/server-shortcut-256.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-256.png
 		elif [[ -e "$dp_install_loc/128.png" ]]; then
 			echo Copying 128x128 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-128.png"
 			echo
-			sudo cp "$dp_install_loc/128.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-128.png
+			sudo cp "$dp_install_loc/128.png" "$option_loc_4/drawpile_icons/server-shortcut-128.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-128.png
 		elif [[ -e "$dp_install_loc/64.png" ]]; then
 			echo Copying 64x64 favicon image to use for Drawpile Shortcuts.
-			echo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-64.png"
 			echo
-			sudo cp "$dp_install_loc/64.png" "$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
-			server_shortcut_png=$dp_install_loc/Programs/Drawpile-Srv-Files/server-shortcut-64.png
+			sudo cp "$dp_install_loc/64.png" "$option_loc_4/drawpile_icons/server-shortcut-64.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-64.png
 		else
 			:
 		fi
 		
 		if [[ -e "$script_directory/256.png" ]]; then
 			echo Copying 256x256 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-256.png"
 			echo
-			sudo cp "$script_directory/256.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-256.png
+			sudo cp "$script_directory/256.png" "$option_loc_4/drawpile_icons/server-shortcut-256.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-256.png
 		elif [[ -e "$script_directory/128.png" ]]; then
 			echo Copying 128x128 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-128.png"
 			echo
-			sudo cp "$script_directory/128.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-128.png
+			sudo cp "$script_directory/128.png" "$option_loc_4/drawpile_icons/server-shortcut-128.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-128.png
 		elif [[ -e "$script_directory/64.png" ]]; then
 			echo Copying 64x64 favicon image to use for Drawpile Shortcuts.
-			echo "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
+			echo "$option_loc_4/drawpile_icons/server-shortcut-64.png"
 			echo
-			sudo cp "$script_directory/64.png" "$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png"
-			server_shortcut_png=$script_directory/Programs/Drawpile-Srv-Files/server-shortcut-64.png
+			sudo cp "$script_directory/64.png" "$option_loc_4/drawpile_icons/server-shortcut-64.png"
+			server_shortcut_png=$option_loc_4/drawpile_icons/server-shortcut-64.png
 		else
 			:
 		fi
@@ -9569,7 +9576,7 @@ if [[ -d "$option_loc_2" ]]; then
 	if [[ ! -e "$option_loc_2/Drawpile ListServer.desktop" ]]; then
 		echo Creating shortcut for Drawpile ListServer on Desktop.
 		echo
-		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
 [Desktop Entry]
 Name=Drawpile ListServer
@@ -9580,8 +9587,6 @@ Type=Application
 Icon=$list_server_shortcut_png
 Name[en_GB]=Drawpile ListServer
 EOF
-			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-			gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
 			echo
 		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
 			cat <<EOF | sudo tee "$option_loc_2/Drawpile ListServer.desktop" >/dev/null
@@ -9609,6 +9614,10 @@ EOF
 		fi
 	sudo chown $current_username "$option_loc_2/Drawpile ListServer.desktop"
 	sudo chmod 754 "$option_loc_2/Drawpile ListServer.desktop"
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
+		# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+		gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
+	fi
 	else
 		echo Shortcut for Drawpile ListServer already exists on Desktop.
 	fi
@@ -9651,13 +9660,13 @@ Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin
 EOF
 		fi
-	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+	sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
+	sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 		# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
 		gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
 		echo
 	fi
-	sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
-	sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
 	else
 		echo Shortcut for Drawpile Admin already exists on Desktop.
 	fi
@@ -9677,7 +9686,7 @@ Name[en_GB]=Drawpile Admin GUI
 EOF
 		sudo chown $current_username "$option_loc_2/Drawpile Admin GUI.desktop"
 		sudo chmod 754 "$option_loc_2/Drawpile Admin GUI.desktop"
-		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
 			gio set "$option_loc_2/Drawpile Admin GUI.desktop" metadata::trusted true
 			echo
@@ -9810,6 +9819,23 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+if [[ -d "$option_loc_2" ]] && [[ "$USER" = "root" || "$USER" = "Root" || "$USER" = "ROOT" || $EUID == 0 ]]; then
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
+		cat <<EOF | sudo tee "$option_loc_2/trusted_shortcuts.sh" >/dev/null
+#!/bin/bash
+gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
+gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
+gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+gio set "$option_loc_2/Drawpile Admin GUI.desktop" metadata::trusted true
+EOF
+		wait $!
+		sudo chmod 777 "$option_loc_2/trusted_shortcuts.sh"
+		wait $!
+		su -c "$option_loc_2/trusted_shortcuts.sh" $current_username
+		wait $!
+		sudo rm -rf $option_loc_2/trusted_shortcuts.sh
+	fi
+fi
 <<comment_EOF_delete
 if [[ "$what_linux_name" == "NAME=\"Ubuntu\"" && -d "$option_loc_2" ]]; then
 	# Originally made this mess because I couldn't get gio set to work with a variable set location, had to be explicitly noted.
