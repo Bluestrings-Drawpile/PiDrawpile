@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9878
+drawpilescriptversion=2.9879
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -6154,6 +6154,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	
 	if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
 		# https://docs.fedoraproject.org/en-US/quick-docs/samba/
+		<<comment_EOF_delete
 		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 			echo
 			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
@@ -6172,9 +6173,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo smbpasswd -a $current_username
 			echo
 			sudo systemctl restart smb
-			echo
-			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 		fi
+comment_EOF_delete
 		#---------------------------------------------------------------------------------------------------------------------------------
 		function selinux_samba_adjustments_function () {
 			if [ "$samba_choice" == "1" ]; then
