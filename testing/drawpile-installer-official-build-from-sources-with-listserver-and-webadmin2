@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9877
+drawpilescriptversion=2.9878
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -4825,7 +4825,7 @@ EOF
 	# Need root for le crontab, this installed into current user. 
 	# (crontab -l 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | crontab 
 	(sudo crontab -l -u root 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | sudo crontab -u root -
-	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 		sudo systemctl enable crond.service
 		sudo systemctl start --now crond.service
 		sudo systemctl status crond.service --no-pager
@@ -6153,41 +6153,72 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	# https://docs.fedoraproject.org/en-US/quick-docs/samba/
 	
 	if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
-		#---------------------------------------------------------------------------------------------------------------------------------
 		# https://docs.fedoraproject.org/en-US/quick-docs/samba/
 		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
-			echo "Set password for connecting to Samba share."
-			echo "This will use the following command:"
 			echo
-			echo "sudo smbpasswd -a $current_username"
+			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 			echo
-			echo "If you mistype the password, it will continue on. Type the command"
-			echo "above to set a password."
+			echo "${bold}${cyan}Set password for connecting to Samba share.${normal}"
+			echo "${bold}${cyan}If you mistype the password, it will continue${normal}"
+			echo "${bold}${cyan}on. Copy the commands below to set a password ${normal}"
+			echo "${bold}${cyan}after the script has completed. ${normal}"
+			echo
+			echo "${bold}${cyan}This will use the following commands:${normal}"
+			echo "     sudo smbpasswd -a $current_username"
+			echo "     sudo systemctl restart smb"
+			echo
+			echo "Enter the password now to connect to the machine over the network:"
 			echo
 			sudo smbpasswd -a $current_username
 			echo
 			sudo systemctl restart smb
+			echo
+			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 		fi
 		#---------------------------------------------------------------------------------------------------------------------------------
 		function selinux_samba_adjustments_function () {
 			if [ "$samba_choice" == "1" ]; then
+				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
 				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+				echo
+				echo "sudo restorecon -R \"$option_loc_1\""
 				sudo restorecon -R "$option_loc_1"
 			elif [ "$samba_choice" == "2" ]; then
+				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
 				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
+				echo
+				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_10(/.*)?\""
 				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
+				echo
+				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_4(/.*)?\""
 				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
+				echo
+				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_11(/.*)?\""
 				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
+				echo
+				sudo "restorecon -R \"$option_loc_1\""
 				sudo restorecon -R "$option_loc_1"
+				echo
+				sudo "restorecon -R \"$option_loc_10\""
 				sudo restorecon -R "$option_loc_10"
+				echo
+				sudo "restorecon -R \"$option_loc_4\""
 				sudo restorecon -R "$option_loc_4"
+				echo
+				sudo "restorecon -R \"$option_loc_11\""
 				sudo restorecon -R "$option_loc_11"
 			elif [ "$samba_choice" == "3" ]; then
 				if [ -z "$dp_install_loc_9_custom" ]; then
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?\""
 					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
+					echo
+					echo "sudo restorecon -R \"$dp_install_loc/Programs/Drawpile-Srv-Files\""
 					sudo restorecon -R "$dp_install_loc/Programs/Drawpile-Srv-Files"
 				else	
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?\""
 					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
+					echo
+					echo "sudo restorecon -R \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files\""
 					sudo restorecon -R "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files"
 				fi
 			else
@@ -6198,7 +6229,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		}
 		selinux_status=$( getenforce 2>/dev/null )
 		selinux_available_check=$?
-
+		echo
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		echo
 		if [ "$selinux_available_check" -eq "0" ]; then
 			# SELinux installed.
 			if [ "$selinux_status" == "Disabled" ]; then
@@ -6282,13 +6315,17 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			
 			echo "sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba"
 			sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba
+			echo
+			echo "sudo firewall-cmd --reload"
 			sudo firewall-cmd --reload
 		}
 
 		firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
 		firewall_cmd_available_check=$?
 		# echo Check: $firewall_cmd_available_check
-
+		echo
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		echo
 		if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_check" -eq "252" ] || [ "$firewall_cmd_available_check" -ne "1" ]; then
 			# 0 is running, 252 is not running.
 			# echo State: $firewall_cmd_status
@@ -6337,7 +6374,8 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-echo "${bold}Setting up NGINX for remote authentication for Server Administration.${normal}"
+echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
+echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
 echo
 echo 'Please type in a username you wish to use for making changes to your drawpile'
 echo 'server. If you make a mistake or need to update the server login, open a new'
