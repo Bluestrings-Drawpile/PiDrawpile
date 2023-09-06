@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9875
+drawpilescriptversion=2.9876
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -3919,7 +3919,7 @@ if [ "$selinux_available_check" -eq "0" ]; then
 				echo "${bold}${red}This message for SELinux status (1) should not be visible.${normal}"
 			fi
 		elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
-			echo "${bold}${yellow}SELinux status is temporarily changed."
+			echo "${bold}${yellow}SELinux status is temporarily changed.${normal}"
 			if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
 				echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
 				echo
@@ -4436,7 +4436,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${underline}example.hostwebsite.com ${normal}"
 	if [ "$dns_choice" == "2" ]; then
 		echo "${underline}example.ddns.net ${normal}"
-	if [ "$dns_choice" == "3" ]; then
+	elif [ "$dns_choice" == "3" ]; then
 		echo "${underline}example.duckdns.org ${normal}"
 	else
 		echo "${underline}example.chickenkiller.com ${normal}"
@@ -4901,6 +4901,8 @@ function permissions_lets_encrypt_ssl () {
 
 function generate_lets_encrypt_ssl () {
 	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
 	echo "${bold}${cyan}***** Lets Encrypt Signed Certs . . .*****${normal}"
 	echo
 	echo You will have to enter a valid email address for urgent renewal and security notices.
@@ -5042,6 +5044,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo
 		fi
 	done
+	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
 	if [ "$ssl_encryption_config" == "1" ]; then
@@ -5050,17 +5053,21 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		version_certbot=$( apt-cache policy certbot | grep "Installed:" | cut -c 14-21 )
 		minimum_versioncertbot=1.12.0-2
 		if [[ "$version_certbot" = "(none)" ]]; then
-			echo "Installing package certbot . . ."
+			echo "${bold}${cyan}***** Installing packages certbot and python3-certbot-nginx. . . *****${normal}"
+			# https://phoenixnap.com/kb/letsencrypt-nginx
+			# sudo certbot --nginx -d example.com -d www.example.com
+			# sudo certbot --nginx --test-cert
 			echo
+			sudo apt install certbot 
 			app_does_not_exist=0
 			app_installed=0
 			app_not_installed=0
-			progs=(certbot);
+			progs=(certbot python3-certbot-nginx);
 			package_install_status_check_function
 			sudo $package_install_program certbot # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 			echo
 		else
-			echo "Package certbot already installed."
+			echo "${bold}${green}Package certbot already installed.${normal}"
 		fi
 		echo
 		sudo systemctl stop --now nginx.service
@@ -5069,14 +5076,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		# Used sudo on if statement in order to be able to access the directory. Non Root users cannot access this location.
 		if sudo test -L "$ssl_fullchain_certificate"; then
 			if sudo test -L "$ssl_private_cert_key"; then
-				echo 'Symbolic links to certs already generated for Lets Encrypt.'
+				echo "${bold}${cyan}***** Symbolic links to certs already generated for Lets Encrypt. *****${normal}"
 				echo
 				echo 'Press 1 to use these existing keys'
 				echo 'Press 2 to revoke keys and generate new Lets Encrypt certs with certbot'
 				echo
 				echo 'Press 9 to revoke keys and generate self signed certs'
 				echo
-				read -r -p 'Enter a number and hit enter to continue: ' lets_encrypt_config
+				read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " lets_encrypt_config
 				echo
 				if [ "$lets_encrypt_config" == "1" ]; then
 					echo Continuing script . . .
@@ -5096,14 +5103,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			fi
 		elif sudo test -e "$ssl_fullchain_certificate"; then
 			if sudo test -e "$ssl_private_cert_key"; then
-				echo 'Found certs already generated for Lets Encrypt.'
+				echo "${bold}${cyan}***** Found certs already generated for Lets Encrypt. *****${normal}"
 				echo
 				echo 'Press 1 to use these existing keys'
 				echo 'Press 2 to revoke keys and generate new Lets Encrypt certs with certbot'
 				echo
 				echo 'Press 9 to revoke keys and generate self signed certs'
 				echo
-				read -r -p 'Enter a number and hit enter to continue: ' lets_encrypt_config
+				read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " lets_encrypt_config
 
 				echo
 				if [ "$lets_encrypt_config" == "1" ]; then
@@ -5128,13 +5135,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				exit
 			fi
 		else
-			echo "No certs yet generated for Lets Encrypt hostname $hostname . . ."
+			echo "${bold}${cyan}***** No certs yet generated for Lets Encrypt . . . *****${normal}"
 			echo
 			echo 'Press 1 to generate Lets Encrypt keys'
 			echo 'Press 2 to redownload cert that was not previously revoked, revoke all'
 			echo '        certs, and set up new Lets Encrypt Certs with certbot.'
 			echo
-			read -r -p 'Enter a number and hit enter to continue.' lets_encrypt_config
+			read -r -p "${bold}${cyan}Enter a number and hit enter to continue: ${normal}" lets_encrypt_config
 			echo
 			if [ "$lets_encrypt_config" == "1" ]; then
 				generate_lets_encrypt_ssl
@@ -5175,7 +5182,7 @@ echo '--------------------------------------------------------------------------
 echo
 
 # dp_install_loc=/home/pi/Public
-# hostname=wildhoof.strongson.com
+# hostname=drawpile-test.duckdns.org
 # sudo systemctl stop --now drawpile_abuse_report.service
 # sudo systemctl disable drawpile_abuse_report.service
 # discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
@@ -5543,7 +5550,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
 		systemd_selection_text="2  - all options except session recording" && echo "Selected - $systemd_selection_text - ${underline}recommended${normal}"
-		systemd_configuration=2
+		systemd_selection=2
 		echo
 		sessions_folder_function
 		template_folder_function
@@ -5611,7 +5618,7 @@ function systemd_options_without_ssl_with_hostname_options_function () {
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
 		systemd_selection_text="5 - web admin, file backed sessions, & templates" && echo "Selected - $systemd_selection_text - ${underline}recommended${normal}"
-		systemd_configuration=5
+		systemd_selection=5
 		echo
 		sessions_folder_function
 		template_folder_function
@@ -5687,7 +5694,7 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
 		systemd_selection_text="15 - all options except session recording" && echo "Selected - $systemd_selection_text ${underline}recommended${normal}"
-		systemd_configuration=15
+		systemd_selection=15
 		echo
 		sessions_folder_function
 		template_folder_function
@@ -6212,7 +6219,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 						echo
 						echo "No action is required."
 						echo
-					sleep 10
+						sleep 10
 					else
 						echo "${bold}${red}This message for SELinux status Samba (1) should not be visible.${normal}"
 					fi
@@ -6243,7 +6250,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 					else
 						echo "${bold}${red}This message for SELinux status Samba (2) should not be visible.${normal}"
 						echo
-					sleep 10
+						sleep 10
 					fi
 				else
 					echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
@@ -7656,7 +7663,25 @@ EOF
 		echo
 		echo "*****${bold}${cyan}Generating systemd configuration for list server and web admin. . .${normal}*****"
 		echo
-	cat <<EOF | sudo tee -a /etc/nginx/conf.d/localsite.conf >/dev/null
+	cat <<EOF | sudo tee -a /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
+server {
+        listen *:80;
+        listen [::]:80;
+
+        root /var/www/html/drawpile;
+
+        location / {
+                return 307 https://\$host:443\$request_uri;
+                # return 307 https://$request_uri;
+                # try_files $uri $uri/ =404;
+        }
+
+        location /.well-known/acme-challenge/ {
+                # root /var/www/certbot;
+				root /etc/letsencrypt/renewal;
+        }
+}
+
 server {
 	# listen *:80;
 	# listen [::]:80;
@@ -9160,6 +9185,7 @@ fi
 
 function certbot_configure_deploy_hook_function () {
 	sudo sed -i -e '$adeploy-hook = systemctl reload nginx.service' /etc/letsencrypt/cli.ini
+	
 	if [ "$dp_srv_startup" == "1" ]; then
 		sudo sed -i -e '$adeploy-hook = systemctl reload drawpile-srv.socket' /etc/letsencrypt/cli.ini
 		sudo sed -i -e '$adeploy-hook = systemctl reload drawpile-srv.service' /etc/letsencrypt/cli.ini
@@ -9173,79 +9199,61 @@ function certbot_configure_deploy_hook_function () {
 function testing_config_for_certbot_function () {
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}***** Testing configuration for Certbot auto renewal . . .*****${normal}"
+	echo "${bold}${cyan}***** Testing Lets Encrypt Certbot config for auto renewal . . . *****${normal}"
 	echo
-	
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "${bold}${cyan}Stopping NGINX web server ... ${normal}"
+	sudo systemctl stop --now nginx.service
+	echo
+	echo "${bold}${cyan}Initiating certbot renewal dry run ... ${normal}"
+	sudo certbot renew --dry-run
+	echo
+	echo "${bold}${cyan}Starting NGINX web server ... ${normal}"
+	sudo systemctl start --now nginx.service
+	echo
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "You should get a message similar to the following near the bottom."
+	echo
+	echo "Congratulations, all simulated renewals succeeded:"
+	echo "  ssl_fullchain_certificate (success)"
+	echo
+	echo "Note that if you did not, something was done wrong or is configured"
+	echo "differently than this script was expecting. The server will not"
+	echo "behave as intended."
+	echo
+	echo "${bold}Note:${normal} An error message indicating the following:"
+	echo "${red}     Dry run: skipping deploy hook command: systemctl restart drawpile-srv.service${normal}"
+	echo "is not necessarily a sign of failure. I haven't yet tested this"
+	echo "as Raspbian has an older version of certbot that will not restart"
+	echo "the Drawpile server if no cert renewal actually occurred."
+	echo "It is currently believed this is needed to read the new SSL cert"
+	echo "when they are generated so users can connect."
+	echo
 	# The following command with deploy hooks appears to only be available to recent versions of certbot.
 	# sudo certbot renew --dry-run --run-deploy-hooks
 
 	if [[ "$is_apache_2_installed" = "(none)" ]]; then
-		echo "Default NGINX website disabled."
-		# sudo rm /etc/nginx/sites-enabled/default
-		# sudo systemctl restart nginx.service
-		echo
-		sudo certbot renew --dry-run
-		echo
-		echo "You should get a message similar to the following near the bottom."
-		echo
-		echo "Congratulations, all simulated renewals succeeded:"
-		echo "  ssl_fullchain_certificate (success)"
-		echo
-		echo "Note that if you did not, something was done wrong or is configured"
-		echo "differently than this script was expecting. The server will not"
-		echo "behave as intended."
-		echo
-		echo "${bold}Note:${normal} An error message indicating the following:"
-		echo "${red}     Dry run: skipping deploy hook command: systemctl restart drawpile-srv.service${normal}"
-		echo "is not necessarily a sign of failure. I haven't yet tested this"
-		echo "as Raspbian has an older version of certbot that will not restart"
-		echo "the Drawpile server if no cert renewal actually occurred."
-		echo "It is currently believed this is needed to read the new SSL cert"
-		echo "when they are generated so users can connect."
-		echo
-		echo "If all is well, press any key to continue set up for automatic"
-		echo "SSL Key renewal by certbot."
-		echo
-		pause
-		echo
+		# Do nothing as no error was detected.
+		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
 	elif [[ $is_apache_2_installed == *.* ]]; then
-		echo
-		echo "${bold}${white}--------------------------------------------------------------------------------${normal}"
-		echo "${bold}${white}--------------------------------------------------------------------------------${normal}"
-		echo
-		sudo certbot renew --dry-run
-		echo
-		echo "${bold}${white}--------------------------------------------------------------------------------${normal}"
-		echo "${bold}${white}--------------------------------------------------------------------------------${normal}"
-		echo
-		echo "You should get a message similar to the following near the bottom."
-		echo
-		echo "Congratulations, all simulated renewals succeeded:"
-		echo "  ssl_fullchain_certificate (success)"
-		echo
-		echo "Note that if you did not, something was done wrong or is configured"
-		echo "differently than this script was expecting. The server will not"
-		echo "behave as intended. Apache appears to be installed and will need"
-		echo "to be manually configured to work with certbot if port 80 is in use."
-		echo
-		echo "${bold}Note:${normal} An error message indicating the following:"
-		echo "${red}     Dry run: skipping deploy hook command: systemctl restart drawpile-srv.service${normal}"
-		echo "is not necessarily a sign of failure. I haven't yet tested this"
-		echo "as Raspbian has an older version of certbot that will not restart"
-		echo "the Drawpile server if no cert renewal actually occurred."
-		echo "It is currently believed this is needed to read the new SSL cert"
-		echo "when they are generated so users can connect."
-		echo
-		echo "If all is well, press any key to continue set up for automatic"
-		echo "SSL Key renewal by certbot."
-		echo
-		pause
+		echo "${bold}${red}Apache appears to be installed and will need to be manually${normal}"
+		echo "${bold}${red}configured to work with certbot if port 80 is in use.${normal}"
 	else
 		# Do nothing as no error was detected.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	fi
-
+	echo
+	echo "If all is well, press any key to continue set up for automatic"
+	echo "SSL Key renewal by certbot."
+	echo
+	pause
+	echo
 	#Files are located here: /usr/lib/systemd/system/
 	# sudo systemctl enable --now /usr/lib/systemd/system/certbot.service
 	# sudo systemctl enable --now certbot.service
@@ -9254,31 +9262,32 @@ function testing_config_for_certbot_function () {
 }
 
 if [ "$ssl_encryption_config" == "1" ] || [ "$ssl_encryption_config" == "3" ]; then
-	# echo 'Press 1 for Self Signed Certificates'
-	# echo 'Press 3 for no SSL security.'
-	:
+	# echo 'Press 1 for Self Signed Certificates' / # echo 'Press 3 for no SSL security.'
+	echo "${invis}SSL Encryption Config set to 1 or 3, skipping certbot testing and timer.${normal}"
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-elif [ "$ssl_encryption_config" == "2" ] || [ "$ssl_encryption_config" != "1" && "$ssl_encryption_config" != "3" ]; then
+elif [ "$ssl_encryption_config" == "2" ] || [[ "$ssl_encryption_config" != "1" && "$ssl_encryption_config" != "3" ]]; then
 	# echo 'Press 2 for Lets Encrypt'
 	# echo Invalid option selected. Assuming option 2 intended.
+	echo "${invis}SSL Encryption Config set to 2 or invalid option, certbot testing required.${normal}"
 	# The options below configured the server to use SSL, so restarting Drawpile systemd services would be necessary.
 	if [ "$systemd_selection" == "1" ] || [ "$systemd_selection" == "2" ] || [ "$systemd_selection" == "3" ] || [ "$systemd_selection" == "4" ] || [ "$systemd_selection" == "6" ] || [ "$systemd_selection" == "8" ] ||  [ "$systemd_selection" == "11" ]; then
-		# The above options are systemd configurations that involve the use of SSL certs.
+		echo "${invis}The systemd_selection was set to 1, 2, 3, 4, 6, 8, or 11.${normal}"
 		certbot_configure_deploy_hook_function
 		testing_config_for_certbot_function
 	elif [ "$systemd_selection" == "5" ] || [ "$systemd_selection" == "7" ] || [ "$systemd_selection" == "9" ] || [ "$systemd_selection" == "10" ] || [ "$systemd_selection" == "12" ] || [ "$systemd_selection" == "13" ] || [ "$systemd_selection" == "14" ] || [ "$systemd_selection" == "15" ] || [ "$systemd_selection" == "16" ] || [ "$systemd_selection" == "17" ] || [ "$systemd_selection" == "18" ] || [ "$systemd_selection" == "19" ] || [ "$systemd_selection" == "20" ]; then
 		# Numbers 5, 7, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, and 20 option do not use SSL
-		:
+		echo "${invis}The systemd_selection was set to 5, 7, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, or 20, and do not use SSL.${normal}"
 		# Do nothing as no error was detected.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	else
 		# This is because the user provided invalid input, which assumed the use of SSL certs with systemd configuration.
+		echo "${invis}SSL Encryption Config set to invalid option, certbot testing required.${normal}"
 		certbot_configure_deploy_hook_function
 		testing_config_for_certbot_function
 	fi
 else
-	:
+	echo "${invis}Error: SSL Encryption Config is somehow wrong for certbot timer. Skipping step.${normal}"
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 fi
