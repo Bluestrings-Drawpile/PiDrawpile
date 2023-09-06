@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9876
+drawpilescriptversion=2.9877
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -4073,7 +4073,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${bold}Cons:${normal} Cannot detect IPv6 addresses as of September 2023."
 	echo '      It must be manually specified for now.'
 	echo
-	echo 'Do you want to use freeDNS.afraid.org, No-IP, or DuckDNS?'
+	echo "${underline}Note: ${normal}"
+	echo "      If you have purchased your own domain name, usually they will provide the ability to set"
+	echo "      a DNS A-record for you. In which case, this step is not needed and can be safely skipped."
+	echo "      This step is primarily intended for small servers ran from home with a dynamic IP address"
+	echo "      which may change without notice."
+	echo
+	echo 'Do you want to use freeDNS.afraid.org, No-IP, DuckDNS, or skip this step?'
 	echo
 	echo 'Press 1 for freeDNS.afraid.org'
 	echo 'Press 2 for No-IP'
@@ -4354,6 +4360,12 @@ EOF
 	sudo sed -i '\!^dns_choice =!{h;s!=.*!= '"$dns_choice"'!};${x;\!^$!{s!!dns_choice = '"$dns_choice"'!;H};x}' $drawpile_configuration_values_file
 else
 	echo "This message should not be visible."
+fi
+
+if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
+	sudo systemctl enable crond.service
+	sudo systemctl start --now crond.service
+	sudo systemctl status crond.service --no-pager
 fi
 
 <<comment_EOF
@@ -4813,6 +4825,11 @@ EOF
 	# Need root for le crontab, this installed into current user. 
 	# (crontab -l 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | crontab 
 	(sudo crontab -l -u root 2>>/dev/null; echo "$current_minute $current_hour $current_day $current_month * /home/drawpileuser/ssl.sh #Drawpile ssl.sh") | sudo crontab -u root -
+	if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
+		sudo systemctl enable crond.service
+		sudo systemctl start --now crond.service
+		sudo systemctl status crond.service --no-pager
+	fi
 	sudo sed -i '\!^ssl_current_minute =!{h;s!=.*!= '"$current_minute"'!};${x;\!^$!{s!!ssl_current_minute = '"$current_minute"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_current_hour =!{h;s!=.*!= '"$current_hour"'!};${x;\!^$!{s!!ssl_current_hour = '"$current_hour"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_current_day =!{h;s!=.*!= '"$current_day"'!};${x;\!^$!{s!!ssl_current_day = '"$current_day"'!;H};x}' $drawpile_configuration_values_file
@@ -5984,9 +6001,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		
 		if [ "$samba_choice" == "1" ]; then
 			sudo chmod 777 $option_loc_1 -R
-			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
-			fi
 		echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
@@ -6019,12 +6033,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo chmod 777 $option_loc_10 -R
 			sudo chmod 777 $option_loc_4 -R
 			sudo chmod 777 $option_loc_11 -R
-			if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
-			fi
 			echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
@@ -6085,9 +6093,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		elif [ "$samba_choice" == "3" ]; then
 			if [ -z "$dp_install_loc_9_custom" ]; then
 				sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
-				if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
-				fi
 				echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
@@ -6100,9 +6105,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	force user = root" >> /etc/samba/smb.conf
 			else	
 				sudo chmod 777 "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files/" -R
-				if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
-					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
-				fi
 				echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
@@ -6148,16 +6150,23 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	# This section checks for SELinux and firewall-cmd blocks against Samba, and removes them accordingly.
+	# https://docs.fedoraproject.org/en-US/quick-docs/samba/
 	
 	if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
 		#---------------------------------------------------------------------------------------------------------------------------------
 		# https://docs.fedoraproject.org/en-US/quick-docs/samba/
 		if [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 			echo "Set password for connecting to Samba share."
-			echo "This will use the username: $current_username"
+			echo "This will use the following command:"
+			echo
+			echo "sudo smbpasswd -a $current_username"
+			echo
+			echo "If you mistype the password, it will continue on. Type the command"
+			echo "above to set a password."
 			echo
 			sudo smbpasswd -a $current_username
 			echo
+			sudo systemctl restart smb
 		fi
 		#---------------------------------------------------------------------------------------------------------------------------------
 		function selinux_samba_adjustments_function () {
@@ -6273,6 +6282,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			
 			echo "sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba"
 			sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba
+			sudo firewall-cmd --reload
 		}
 
 		firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
@@ -9811,16 +9821,16 @@ echo "${bold}${green}***********************************************************
 echo "${bold}${green}**********    Displaying Server Status  . . .    **********${normal}"
 echo "${bold}${green}***********************************************************${normal}"
 echo 
-echo 'If socket activation is enabled, it will say enabled on the line starting with'
-echo '\"Loaded:\" and it should be running. Ignore the part after vendor preset.'
+echo "${bold}${green}If socket activation is enabled, it will say enabled on the line starting with${normal}"
+echo "${bold}${green}\"Loaded:\" and it should be running. Ignore the part after vendor preset.${normal}"
 echo
 systemctl status drawpile-srv.socket --no-pager
 wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
-echo 'If start up on Pi power up is enabled, it will say enabled on the line starting'
-echo 'with \"Loaded:\" and it should be running. Ignore the part after vendor preset.'
+echo "${bold}${green}If start up on Pi power up is enabled, it will say enabled on the line starting${normal}"
+echo "${bold}${green}with \"Loaded:\" and it should be running. Ignore the part after vendor preset.${normal}"
 echo
 systemctl status drawpile-srv.service --no-pager
 wait $!
