@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9879
+drawpilescriptversion=2.9880
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -344,16 +344,24 @@ function dnf_function () {
 }
 
 function adduser_and_addgroup_function () {
+	# Debian and Ubuntu
 	user_add_program="adduser"
+	# sudo $user_add_program $current_username drawpileread
+	# sudo $user_add_program drawpileuser $user_add_options_program_01 $user_add_options_program_02
 	group_add_program="addgroup"
+	# sudo $group_add_program drawpileread
 	user_add_options_program_01="-ingroup users"
 	user_add_options_program_02="--gecos \"\""
 	user_add_options_program_03="adduser drawpileuser drawpileread"
 }
 
 function useradd_and_groupadd_function () {
+	# Fedora
 	user_add_program="useradd"
+	# sudo $user_add_program $current_username drawpileread
+	# sudo $user_add_program drawpileuser $user_add_options_program_01 $user_add_options_program_02
 	group_add_program="groupadd"
+	# sudo $group_add_program drawpileread
 	user_add_options_program_01="-g users"
 	user_add_options_program_02=""
 	user_add_options_program_03="usermod -a drawpileuser -G drawpileread"
