@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9880
+drawpilescriptversion=2.9881
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -1381,8 +1381,7 @@ using_what_rasp_release=$( lsb_release -a 2>/dev/null | grep "Release:" | awk '{
 # Sample Output: bullseye
 using_what_rasp_codename=$( lsb_release -a 2>/dev/null | grep "Codename:" | awk '{ print $2 }' )
 
-
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
+if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
 	if [[ "$using_what_linux_kernel" == "4.14" ]] && [[ "$using_what_rasp_codename" == "stretch" ]] ; then
 		echo '--------------------------------------------------------------------------------'
 		echo '--------------------------------------------------------------------------------'
@@ -4052,8 +4051,8 @@ variable_to_read_3=""
 value_description_1="This value is for keeping your hostname and IP address synchronized."
 value_description_2="1 for freeDNS.afraid.org"
 value_description_3="2 for No-IP"
-value_description_4="3 for no DNS update service."
-value_description_5=""
+value_description_4="3 for DuckDNS."
+value_description_5="9 for no DNS update service."
 
 read_stored_config_value_query_function
 
@@ -4725,6 +4724,9 @@ function generate_self_signed_ssl () {
 	# echo '--------------------------------------------------------------------------------'
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
 	sudo chmod 777 /home/drawpileuser/ -R
+	if [ "$what_linux_name" != "NAME=\"Fedora Linux\"" ]; then
+		sudo $user_add_program www-data drawpileread
+	fi
 	sudo chown drawpileuser:drawpileread $ssl_certificate
 	sudo chown drawpileuser:drawpileread $ssl_private_cert_key
 	sudo chmod 750 $ssl_certificate
@@ -4844,17 +4846,6 @@ EOF
 	sudo sed -i '\!^ssl_current_month =!{h;s!=.*!= '"$current_month"'!};${x;\!^$!{s!!ssl_current_month = '"$current_month"'!;H};x}' $drawpile_configuration_values_file
 }
 
-ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
-ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
-ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
-ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
-ssl_certificate=$ssl_cert_pem
-
-sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
-sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
-sudo sed -i '\!^ssl_fullchain_certificate =!{h;s!=.*!= '"$ssl_fullchain_certificate"'!};${x;\!^$!{s!!ssl_fullchain_certificate = '"$ssl_fullchain_certificate"'!;H};x}' $drawpile_configuration_values_file
-sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
-
 function permissions_lets_encrypt_ssl () {
 	# echo
 	# echo "${bold}Warning.${normal} In order for drawpile-srv to use the SSL files generated"
@@ -4939,8 +4930,8 @@ function generate_lets_encrypt_ssl () {
 	echo
 	pause
 	echo 
-	sudo certbot certonly --standalone -d $hostname
-	# sudo certbot certonly --standalone -d example.hostwebsite.com
+	sudo certbot certonly --nginx -d $hostname
+	# sudo certbot certonly --nginx -d example.hostwebsite.com
 
 	if sudo test -e  "/etc/letsencrypt/live/$hostname/fullchain.pem"; then
 		echo "Setting variable for SSL Certificate location."
@@ -4981,8 +4972,6 @@ function revoke_lets_encrypt_ssl () {
 	echo '         the revocation request, you must not provide'
 	echo '         a reason code other than unspecified.'
 	echo
-	echo
-	read -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " cert_revocation_reason_entry
 	while :; do
 		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " cert_revocation_reason_entry
 		[[ $cert_revocation_reason_entry =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
@@ -5029,6 +5018,18 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo
 	echo "Storing value and moving on."
 	ssl_encryption_config=$read_stored_config_value_query_1
+	if [ "$ssl_encryption_config" == "1" ]; then
+		ssl_certificate=/etc/nginx/ssl/drawpile/cert.pem
+		ssl_private_cert_key=/etc/nginx/ssl/drawpile/key.pem
+	elif [ "$ssl_encryption_config" == "2" ]; then
+		ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
+		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
+		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
+		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
+		ssl_certificate=$ssl_cert_pem	
+	else
+		echo "${invis}No SSL being used.${normal}"
+	fi
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo "${bold}${cyan}***** Setting up SSL Certificate Creation . . . *****${normal}"
 	echo
@@ -5036,11 +5037,14 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${bold}Pros:${normal} No registration, renew cert via script every year."
 	echo "${bold}Cons:${normal} If script does not update SSL cert, users cannot connect."
 	echo '      Requires users to replace cert or cannot connect.'
+	echo '      Also less trusted on web browsers due to it being self signed.'
 	echo 
 	echo "${underline}Let's Encrypt ${normal}"
 	echo "${bold}Pros:${normal} Free, simple setup, only slightly more complex."
 	echo '      Creates 3rd party signed certificate.'
 	echo "${bold}Cons:${normal} 'Should' be automated with certbot."
+	echo '      May not be available when using free hostnames as there'
+	echo '      are too many hostnames using it for SSL encryption.'
 	echo
 	echo "${bold}${red}IMPORTANT NOTE:${normal} Selecting option 3 will prevent you from using"
 	echo "the list server function or web admin function. Selecting this option also changes"
@@ -5089,14 +5093,24 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			app_not_installed=0
 			progs=(certbot python3-certbot-nginx);
 			package_install_status_check_function
-			sudo $package_install_program certbot # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+			sudo $package_install_program certbot python3-certbot-nginx # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 			echo
 		else
 			echo "${bold}${green}Package certbot already installed.${normal}"
 		fi
+		ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
+		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
+		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
+		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
+		ssl_certificate=$ssl_cert_pem
+
+		sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_fullchain_certificate =!{h;s!=.*!= '"$ssl_fullchain_certificate"'!};${x;\!^$!{s!!ssl_fullchain_certificate = '"$ssl_fullchain_certificate"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
 		echo
-		sudo systemctl stop --now nginx.service
-		wait $!
+		# sudo systemctl stop --now nginx.service
+		# wait $!
 		echo
 		# Used sudo on if statement in order to be able to access the directory. Non Root users cannot access this location.
 		if sudo test -L "$ssl_fullchain_certificate"; then
@@ -5171,7 +5185,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			if [ "$lets_encrypt_config" == "1" ]; then
 				generate_lets_encrypt_ssl
 			elif [ "$lets_encrypt_config" == "2" ]; then 
-				sudo certbot certonly --standalone -d $hostname
+				sudo certbot certonly --nginx -d $hostname
 				revoke_lets_encrypt_ssl
 				generate_lets_encrypt_ssl
 			else
@@ -5181,8 +5195,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			fi
 		fi
 		ssl_certificate=$ssl_fullchain_certificate
-		sudo systemctl start --now nginx.service
-		wait $!
+		# sudo systemctl start --now nginx.service
+		# wait $!
 	elif [ "$ssl_encryption_config" == "3" ]; then
 		:
 		# Do nothing as no error was detected.
@@ -5190,12 +5204,23 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	else
 		echo Invalid option selected. Assuming option 2 intended.
 		ssl_encryption_config=2
+		
+		ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
+		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
+		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
+		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
+		ssl_certificate=$ssl_cert_pem
+
+		sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_fullchain_certificate =!{h;s!=.*!= '"$ssl_fullchain_certificate"'!};${x;\!^$!{s!!ssl_fullchain_certificate = '"$ssl_fullchain_certificate"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
 		echo
-		sudo systemctl stop --now nginx.service
-		wait $!
+		# sudo systemctl stop --now nginx.service
+		# wait $!
 		generate_lets_encrypt_ssl
-		sudo systemctl start --now nginx.service
-		wait $!
+		# sudo systemctl start --now nginx.service
+		# wait $!
 	fi
 	sudo sed -i '\!^ssl_encryption_config =!{h;s!=.*!= '"$ssl_encryption_config"'!};${x;\!^$!{s!!ssl_encryption_config = '"$ssl_encryption_config"'!;H};x}' $drawpile_configuration_values_file
 else
@@ -5871,18 +5896,18 @@ variable_to_read_1="samba_choice"
 variable_to_read_2="option_loc_num"
 variable_to_read_3="dp_install_loc_9_custom"
 
-value_description_1="Query 02: option_loc_num"
-value_description_2="Number selected when selecting download/server set up location."
-value_description_3=" "
+value_description_1="***** Set up file sharing with other computers . . . (Samba) *****"
+value_description_2="Query 02: option_loc_num"
+value_description_3="     Number selected when selecting download/server set up location."
 value_description_4="Query 03: dp_install_loc_9_custom"
-value_description_5="If this has a value, this is the user specified location."
+value_description_5="     If this has a value, this is the user specified location."
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	samba_choice=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}*****Set up file sharing with other computers . . .*****${normal}"
+	echo "${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
 	echo
 	echo 'This stage will give you an option to set up your Raspberry Pi for file'
 	echo 'sharing with Windows so that you can copy or move files to and from'
@@ -7182,20 +7207,37 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Number of minutes after which a session is automatically de-listed unless refreshed"
 			echo "A good example is that a server went offline due to loss of power or internet connection. Or that all"
-			echo "users left the session and it closed."
+			echo "users left the session and it closed. Do not select a value under 10 minutes!"
 			echo
 			echo "For example: 10"
 			echo
 			echo "Leaving it blank will assume default value of 10 minutes"
 			echo
-			read -r -p "${bold}${cyan} Enter minutes after which session is automatically de-listed ${normal}: " list_server_delist_time
+			echo "${bold}${yellow}Note: ${normal}"
+			echo "The value can be set to 2 minutes (but not lower), however, drawpile-srv updates the list server every"
+			echo "10 minutes. Which means this value should not be under 10, as it will cause issues with people listing"
+			echo "sessions on the server that keep disappearing and re-appearing."
 			echo
-			if [ "$list_server_delist_time" = "" ]; then
-				list_server_delist_time="10"
-				echo "${bold}${cyan}Left blank, assuming default time of 10 minutes.${normal}"
-			else
-				echo "${bold}${cyan}Selected:${normal} $list_server_delist_time"
-			fi
+			while :; do
+				read -r -p "${bold}${cyan} Enter minutes after which session is automatically de-listed ${normal}: " list_server_delist_time
+				echo
+				[[ "$list_server_delist_time" = "" || $list_server_delist_time =~ ^[0-9]+$ ]] || { echo "Enter a valid number, 10 or above."; echo; echo '--------------------------------------------------------------------------------'; echo; continue; }
+				if [ "$list_server_delist_time" = "" ]; then
+					echo "${bold}${cyan}Left blank, assuming default time of 10 minutes.${normal}"
+					list_server_delist_time="10"
+					break
+				elif (( $list_server_delist_time >= 10 && $list_server_delist_time <= 1440 )); then
+					echo "${bold}${cyan}Selected:${normal} $list_server_delist_time"
+					break
+				else
+					echo
+					echo "Invalid number selection, try again. Selecting a value under 10 minutes"
+					echo "will result in list server issues."
+					echo
+					echo '--------------------------------------------------------------------------------'
+					echo
+				fi
+			done
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
@@ -7634,6 +7676,7 @@ server {
 		auth_basic "admin";
 		auth_basic_user_file /etc/nginx/passwords;
 		try_files \$uri /admin/index.html =404;
+		
 		location /admin/api/ {
 			proxy_pass http://127.0.0.1:27780/api/;
 			proxy_redirect default;
@@ -8127,7 +8170,7 @@ comment_EOF_delete
 	echo
 	echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
 	echo
-cat <<EOF | tee -a .env >/dev/null
+cat <<EOF | tee -a .env.local >/dev/null
 REACT_APP_BASENAME=/admin
 REACT_APP_APIROOT=/admin/api
 REACT_APP_AUTHMODE=basic
@@ -8138,7 +8181,8 @@ EOF
 	echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
 	echo
 	mv package.json package-orig.json
-	node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
+	node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
+	# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -9260,14 +9304,14 @@ function testing_config_for_certbot_function () {
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 	echo
-	echo "${bold}${cyan}Stopping NGINX web server ... ${normal}"
-	sudo systemctl stop --now nginx.service
-	echo
+	# echo "${bold}${cyan}Stopping NGINX web server ... ${normal}"
+	# sudo systemctl stop --now nginx.service
+	# echo
 	echo "${bold}${cyan}Initiating certbot renewal dry run ... ${normal}"
 	sudo certbot renew --dry-run
 	echo
-	echo "${bold}${cyan}Starting NGINX web server ... ${normal}"
-	sudo systemctl start --now nginx.service
+	# echo "${bold}${cyan}Starting NGINX web server ... ${normal}"
+	# sudo systemctl start --now nginx.service
 	echo
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
