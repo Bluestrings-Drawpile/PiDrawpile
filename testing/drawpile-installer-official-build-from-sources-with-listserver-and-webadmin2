@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9888
+drawpilescriptversion=2.9889
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -371,11 +371,27 @@ function useradd_and_groupadd_function () {
 }
 
 function fedora_end_of_life_function () {
+	fedora_release_recommended=38
+	fedora_release_minimum=37
+	
 	echo "${bold}${red}It is not recommended to continue without updating${normal}"
-	echo "${bold}${red}to a new version.${normal}"
+	echo "${bold}${red}to a new, supported version ($fedora_release_minimum or higher).${normal}"
 	echo 
 	echo "https://docs.fedoraproject.org/en-US/releases/eol/"
 	echo
+	echo
+	echo "Use these commands to prep upgrade:"
+	echo "     dnf --refresh upgrade"
+	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_minimum" # echo "     sudo dnf system-upgrade download --releasever=32"
+	echo
+	echo "Use this command to start upgrade:"
+	echo "     dnf system-upgrade reboot"
+	echo
+	echo "Remove cached metadata and transaction:"
+	echo "     dnf system-upgrade clean"
+	echo "Remove cached packages:"
+	echo "     dnf clean packages"
+	echo.
 	echo "Waiting 30 seconds before continuing script."
 	sleep 30
 }
@@ -425,9 +441,9 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
 		echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Server 38.${normal}"
+		echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Server 37.${normal}"
+		echo "${bold}${green}Running Fedora Server 37.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2023-11-14.${normal}"
 	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 36.${normal}" && echo && echo "${bold}${red}End of Life support since 2023-05-16.${normal}"
 		fedora_end_of_life_function
@@ -2260,7 +2276,8 @@ package_version_length=14-20
 version_apt_or_dnf_function
 # Removes non period and non-dash characters, but doesn't appear to be necessary with single bracket comparison test.
 # clean_version="$(echo "$version" | perl -pe 's/[^0-9.-]//g')"
-minimum_version=3.7.2-1
+minimum_version=3.18
+# minimum_version=3.7.2-1 (old version)
 package_available_dpkg_or_dnf_function
 package_description_1="cmake is a cross platform open source make system"
 package_description_2=
@@ -2533,10 +2550,10 @@ package_action_3_not_min=
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-dev
 fi
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	package_name=libmicrohttpd-devel
-elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
 	package_name=libmicrohttpd
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	package_name=libmicrohttpd-devel
 else
 	package_name=libmicrohttpd-devel
 fi
@@ -2555,10 +2572,10 @@ package_version_check_and_update_function
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libsodium-dev
 fi
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	package_name=libsodium-devel
-elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
 	package_name=libsodium
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	package_name=libsodium-devel
 else
 	package_name=libsodium-devel
 fi
