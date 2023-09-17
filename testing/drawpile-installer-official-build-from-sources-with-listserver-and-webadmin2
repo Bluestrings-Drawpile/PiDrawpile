@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9882
+drawpilescriptversion=2.9883
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -427,27 +427,27 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		echo "${bold}${green}Running Fedora Server 38.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
 		echo "${bold}${green}Running Fedora Server 37.${normal}"
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 31.${normal}"
 		echo "${bold}${red}End of Life support since 2023-05-16.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 35 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 35 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 35 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 35 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 31.${normal}"
 		echo "${bold}${red}End of Life support since 2022-12-13.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 34 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 34 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 34 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 34 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 34.${normal}"
 		echo "${bold}${red}End of Life support since 2022-06-07.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 33 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 33 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 33 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 33 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 33.${normal}"
 		echo "${bold}${red}End of Life support since 2021-11-30.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 32.${normal}"
 		echo "${bold}${red}End of Life support since 2021-05-25.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]|; then
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
 		echo "${bold}${red}Running Fedora Server 31.${normal}"
 		echo "${bold}${red}End of Life support since 2020-11-24.${normal}"
 		fedora_end_of_life_function
