@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9883
+drawpilescriptversion=2.9884
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -416,7 +416,7 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		sleep 30
 		exit
 	fi	
-elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=\"Fedora\"" ]]; then
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	dnf_function
 	useradd_and_groupadd_function
@@ -451,7 +451,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		echo "${bold}${red}Running Fedora Server 31.${normal}"
 		echo "${bold}${red}End of Life support since 2020-11-24.${normal}"
 		fedora_end_of_life_function
-	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=\"Fedora\"" ]]; then
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
 		sleep 30
