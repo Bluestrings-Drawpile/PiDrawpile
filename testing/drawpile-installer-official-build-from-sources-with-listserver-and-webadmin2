@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9887
+drawpilescriptversion=2.9888
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -2004,6 +2004,17 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+	# dnf search PROGRAM
+	# Minimal List
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
+	
+	# Full List
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang"
+	program_list_to_install_optional_dependencies="libmicrohttpd libsodium systemd-devel httpd nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+fi
+
 app_does_not_exist=0
 app_installed=0
 app_not_installed=0
@@ -2524,6 +2535,10 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-devel
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+	package_name=libmicrohttpd
+else
+	package_name=libmicrohttpd-devel
 fi
 package_version_length=14-21
 version_apt_or_dnf_function
@@ -2541,6 +2556,10 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_name=libsodium-dev
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	package_name=libsodium-devel
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+	package_name=libsodium
+else
 	package_name=libsodium-devel
 fi
 package_version_length=14-21
