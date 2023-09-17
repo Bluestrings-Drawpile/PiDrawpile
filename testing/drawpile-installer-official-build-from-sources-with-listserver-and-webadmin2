@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9886
+drawpilescriptversion=2.9887
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -783,7 +783,7 @@ comment_EOF
 # --------------------------------------------------------------------------------
 
 function version_test_by_distro_function () {
-	if [[[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]] ; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] ; then
 		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" = "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ "$what_linux_name" == "NAME=\"Ubuntu\"" ]]; then
 			apt-cache show $package_name > /dev/null 2>&1
 			not_available_check=$?
