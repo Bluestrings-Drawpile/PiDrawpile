@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9881
+drawpilescriptversion=2.9882
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -369,6 +369,15 @@ function useradd_and_groupadd_function () {
 	# sudo rm -R /home/drawpileuser
 	# sudo groupdel drawpileread
 }
+
+function fedora_end_of_life_function () {
+	echo "${bold}${red}It is not recommended to continue without updating${normal}"
+	echo "${bold}${red}to a new version.${normal}"
+	echo 
+	echo "https://docs.fedoraproject.org/en-US/releases/eol/"
+	echo
+	sleep 30
+}
 # ----------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	apt_get_function
@@ -407,7 +416,7 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		sleep 30
 		exit
 	fi	
-elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=\"Fedora\"" ]]; then
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	dnf_function
 	useradd_and_groupadd_function
@@ -416,9 +425,33 @@ elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
 		echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
 		echo "${bold}${green}Running Fedora Server 38.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Server 31.${normal}"
-	elif [ "$what_linux_name" == "NAME=\"Fedora Linux\"" ]; then
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
+		echo "${bold}${green}Running Fedora Server 37.${normal}"
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 31.${normal}"
+		echo "${bold}${red}End of Life support since 2023-05-16.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 35 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 35 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 31.${normal}"
+		echo "${bold}${red}End of Life support since 2022-12-13.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 34 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 34 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 34.${normal}"
+		echo "${bold}${red}End of Life support since 2022-06-07.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 33 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 33 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 33.${normal}"
+		echo "${bold}${red}End of Life support since 2021-11-30.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 32.${normal}"
+		echo "${bold}${red}End of Life support since 2021-05-25.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]|; then
+		echo "${bold}${red}Running Fedora Server 31.${normal}"
+		echo "${bold}${red}End of Life support since 2020-11-24.${normal}"
+		fedora_end_of_life_function
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=\"Fedora\"" ]]; then
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
 		sleep 30
