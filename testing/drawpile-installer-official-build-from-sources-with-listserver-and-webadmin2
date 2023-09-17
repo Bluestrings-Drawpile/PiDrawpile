@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9891
+drawpilescriptversion=2.9892
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -377,15 +377,18 @@ function fedora_end_of_life_function () {
 	echo "${bold}${red}It is not recommended to continue without updating${normal}"
 	echo "${bold}${red}to a new, supported version ($fedora_release_minimum or higher).${normal}"
 	echo
-	echo "${bold}${red}Version 33 at minimum should work with Drawpile Beta 2.2${normal}"
+	echo "${bold}${red}Version 33 at minimum should work with Drawpile Beta 2.2 server${normal}"
 	echo "${bold}${red}as of 2023-09-16, though the latest version $fedora_release_recommended ${normal}"
-	echo "${bold}${red}is recommended for security reasons.${normal}"
+	echo "${bold}${red}is recommended for security reasons. However, don't go up more than 2${normal}"
+	echo "${bold}${red}versions at one time (it won't work). You may need to reboot again${normal}"
+	echo "${bold}${red}after the update has completed. ${normal}"
 	echo 
 	echo "${bold}${white}${underline}https://docs.fedoraproject.org/en-US/releases/eol/${normal}"
 	echo
 	echo
 	echo "${bold}${yellow}Use these commands to prep upgrade:${normal}"
 	echo "     dnf --refresh upgrade"
+	echo "     sudo dnf install -y -q dnf-plugin-system-upgrade"
 	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_recommended" # echo "     sudo dnf system-upgrade download --releasever=32"
 	echo
 	echo "${bold}${yellow}Use this command to start upgrade:${normal}"
@@ -396,6 +399,12 @@ function fedora_end_of_life_function () {
 	echo "${bold}${yellow}Remove cached packages:${normal}"
 	echo "     dnf clean packages"
 	echo
+	# Failing that, you may need to remove old kernels.
+	# https://haydenjames.io/fix-least-xmb-space-needed-boot-filesystem/
+	# df -h
+	#
+	# https://almalinux.discourse.group/t/cleaning-old-kernels-alternatives-to-package-cleanup-oldkernels/695
+	# dnf remove $(dnf repoquery --installonly --latest-limit=-2 -q)
 	echo "Waiting 30 seconds before continuing script."
 	sleep 30
 }
