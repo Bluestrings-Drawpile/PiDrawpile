@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9890
+drawpilescriptversion=2.9891
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -376,13 +376,17 @@ function fedora_end_of_life_function () {
 	
 	echo "${bold}${red}It is not recommended to continue without updating${normal}"
 	echo "${bold}${red}to a new, supported version ($fedora_release_minimum or higher).${normal}"
+	echo
+	echo "${bold}${red}Version 33 at minimum should work with Drawpile Beta 2.2${normal}"
+	echo "${bold}${red}as of 2023-09-16, though the latest version $fedora_release_recommended ${normal}"
+	echo "${bold}${red}is recommended for security reasons.${normal}"
 	echo 
-	echo "https://docs.fedoraproject.org/en-US/releases/eol/"
+	echo "${bold}${white}${underline}https://docs.fedoraproject.org/en-US/releases/eol/${normal}"
 	echo
 	echo
 	echo "${bold}${yellow}Use these commands to prep upgrade:${normal}"
 	echo "     dnf --refresh upgrade"
-	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_minimum" # echo "     sudo dnf system-upgrade download --releasever=32"
+	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_recommended" # echo "     sudo dnf system-upgrade download --releasever=32"
 	echo
 	echo "${bold}${yellow}Use this command to start upgrade:${normal}"
 	echo "     dnf system-upgrade reboot"
@@ -6848,9 +6852,10 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			package_name=golang
 			version_test_by_distro_function
-			if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
+			echo "Go Version: $test_version_simple"
+			if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
 				go install 'github.com/drawpile/listserver@latest'
-			elif [ "$test_version_simple" < "1.16" ]; then
+			elif [[ "$test_version_simple" < "1.16" ]]; then
 				GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
 			else
 				echo "This message for golang's version ($test_version_simple) should not be visible."
