@@ -3139,8 +3139,11 @@ comment_EOF_delete
 }
 
 function drawpile_tools_compile_verification_function () {
-	drawpile_cmd_version=$( drawpile-cmd -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
 	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	drawpile_cmd_version=$( drawpile-cmd -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+	if [ -z $drawpile_cmd_version ]; then
+		drawpile_cmd_version=$( drawpile-cmd -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+	fi
 
 	if [[ -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
 		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" ]] && [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
@@ -7461,7 +7464,7 @@ EOF
 			echo 'the content of the file? This is a fairly large document to read.'
 			echo
 			echo 'Press 1 for yes'
-			echo 'Press 2 to no'
+			echo 'Press 2 for no'
 			echo
 			read list_server_config_contents
 			echo
