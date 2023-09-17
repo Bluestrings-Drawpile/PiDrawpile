@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9885
+drawpilescriptversion=2.9886
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -526,7 +526,7 @@ else
 	echo "Group: drawpileread - does not exist."
 	sudo $group_add_program drawpileread
 	# sudo -s -u ${USER}
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		sudo $user_add_program $current_username drawpileread
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -783,7 +783,7 @@ comment_EOF
 # --------------------------------------------------------------------------------
 
 function version_test_by_distro_function () {
-	if [[[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]] ; then
+	if [[[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]] ; then
 		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" = "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ "$what_linux_name" == "NAME=\"Ubuntu\"" ]]; then
 			apt-cache show $package_name > /dev/null 2>&1
 			not_available_check=$?
@@ -1256,7 +1256,7 @@ function script_update_check_function () {
 # Verify wget is installed.
 # ----------------------------------------------------------------------------------
 
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -1548,7 +1548,7 @@ echo
 
 
 function version_apt_or_dnf_function () {
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		version=$( apt-cache policy $package_name | grep "Installed:" | cut -c "$package_version_length" )
 		# version=$( apt-cache policy $package_name | grep "Installed:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
 		# candidate_status=$( apt-cache policy $package_name | grep "Candidate:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
@@ -1563,11 +1563,11 @@ function version_apt_or_dnf_function () {
 }
 
 function package_available_dpkg_or_dnf_function () {
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]] && [ "$package_name" != "git" ]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] && [ "$package_name" != "git" ]; then
 		dpkg -l $package_name > /dev/null 2>&1
 		not_available_check=$?
 	fi
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]] && [ "$package_name" == "git" ]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] && [ "$package_name" == "git" ]; then
 		# For some reason, the dpkg -l command doesn't seem to work in Ubuntu on git ... ¯\_(ツ)_/¯
 		not_available_check=0
 	fi
@@ -1826,7 +1826,7 @@ fi
 
 function package_install_status_check_function () {
 	for p in "${progs[@]}"; do
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			# Verifies if app exists in repository and is installed.
 			# if [[ $(apt-cache --quiet=0 policy "$p" 2>&1 | grep "Unable to locate package $p" | cut -c 4-80) != "Unable to locate package $p" ]] && [[ $(apt-cache policy "$p" | grep "Installed:" | cut -c 14-80) != "(none)" ]]; then
 			#       if [[ "$package_install_status_check_decision_tree_q1" != "$package_install_status_check_decision_tree_a1" ]] && [[ "$package_install_status_check_decision_tree_q2" != "$package_install_status_check_decision_tree_a2" ]]; then
@@ -1979,7 +1979,7 @@ if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" != "NAME=
 fi
 
 # cargo clang
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
@@ -2273,7 +2273,7 @@ install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
 
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=g++
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -2291,7 +2291,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libgif-dev
 	package_version_length=14-24
 	version_apt_or_dnf_function
@@ -2319,7 +2319,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libkf5archive-dev
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -2350,7 +2350,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libkf5dnssd-dev
 	package_version_length=14-21
 	version_apt_or_dnf_function
@@ -2365,7 +2365,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libminiupnpc-dev
 	package_version_length=14-27
 	version_apt_or_dnf_function
@@ -2380,7 +2380,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libqt5network5
 	package_version_length=14-18
 	version_apt_or_dnf_function
@@ -2395,7 +2395,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libqt5svg5-dev
 	package_version_length=14-18
 	version_apt_or_dnf_function
@@ -2410,7 +2410,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=miniupnpc
 	package_version_length=14-27
 	version_apt_or_dnf_function
@@ -2425,7 +2425,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=qtbase5-dev
 	package_description_1="qtbase5-dev - Qt 5 base development files"
 fi
@@ -2445,7 +2445,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=qtmultimedia5-dev
 	package_version_length=14-18
 	version_apt_or_dnf_function
@@ -2460,7 +2460,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=qttools5-dev
 	package_version_length=14-20
 	version_apt_or_dnf_function
@@ -2519,7 +2519,7 @@ package_action_3_not_min=
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-dev
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -2537,7 +2537,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libsodium-dev
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -2555,7 +2555,7 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libsystemd-dev
 	package_version_length=14-19
 	version_apt_or_dnf_function
@@ -2570,7 +2570,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=mini-httpd
 	package_version_length=14-21
 	version_apt_or_dnf_function
@@ -2585,7 +2585,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=openssl
 	package_version_length=14-18
 	version_apt_or_dnf_function
@@ -2601,7 +2601,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=qt5keychain-dev
 	package_version_length=14-21
 	version_apt_or_dnf_function
@@ -2617,7 +2617,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libvpx-dev
 	package_version_length=14-20
 	version_apt_or_dnf_function
@@ -2633,7 +2633,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NA
 fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=sqlite3
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -3243,7 +3243,7 @@ function drawpile_build_and_compile_function () {
 	# Or see https://packages.qa.debian.org/k/karchive.html
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		package_name=libkf5archive-dev
 		version=$( apt-cache policy libkf5archive-dev | grep "Installed:" | cut -c 14-40 )
 	fi
@@ -3283,7 +3283,7 @@ function drawpile_build_and_compile_function () {
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	echo
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		package_name=qtbase5-dev
 		version_qt=$( apt-cache policy qtbase5-dev | grep "Installed:" | cut -c 14-18 )
 	fi
@@ -3508,7 +3508,7 @@ comment_EOF
 		app_does_not_exist=0
 		app_installed=0
 		app_not_installed=0
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			program_list_to_install_wacom="libwacom-bin libwacom-common libwacom-dev libwacom2 xserver-xorg-input-wacom"
 			progs=(libwacom-bin libwacom-common libwacom-dev libwacom2 xserver-xorg-input-wacom);
 		fi
@@ -3888,7 +3888,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	sudo semanage port -a -t http_port_t -p tcp 27780
 	
 	sudo setsebool -P httpd_can_network_relay 1
-elif [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+elif [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	:
 else
 	echo This message should not be visible for Fedora Firewall Rules
@@ -4752,7 +4752,7 @@ function generate_self_signed_ssl () {
 	# echo '--------------------------------------------------------------------------------'
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /home/drawpileuser/key.pem -out /home/drawpileuser/cert.pem -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
 	sudo chmod 777 /home/drawpileuser/ -R
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		sudo $user_add_program www-data drawpileread
 	fi
 	sudo chown drawpileuser:drawpileread $ssl_certificate
@@ -5990,7 +5990,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 		echo "${bold}${cyan}*****Installing Samba for Windows Network Sharing . . . *****${normal}"
 		echo
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			version_samba=$( apt-cache policy samba | grep "Installed:" | cut -c 14-22 )
 			# minimum_version_samba=2:4.13.13
 			version_samba_common_bin=$( apt-cache policy samba-common-bin | grep "Installed:" | cut -c 14-22 )
@@ -6025,7 +6025,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		if [[ "$version_samba_common_bin" = "(none)" ]] || [[ "$installation_status_samba_common_bin" = "Available Packages" ]]; then
 			echo "Installing package samba . . ."
 			echo
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				package_name=samba-common-bin
 			fi
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -6043,7 +6043,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo Backup made of smb.conf to smb.conf.bak
 		fi
 		sudo chmod 777 /etc/samba/smb.conf
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			sudo sed -i '/workgroup = WORKGROUP/ c\	workgroup = workgroup' /etc/samba/smb.conf
 			sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
 			sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
@@ -6072,7 +6072,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	create mask = 0777
 	directory mask = 0777" >> /etc/samba/smb.conf
 			sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				sudo systemctl restart smbd
 				wait $!
 				sudo systemctl restart nmbd
@@ -6135,7 +6135,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	directory mask = 0777
 	force user = root" >> /etc/samba/smb.conf
 			sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				sudo systemctl restart smbd
 				wait $!
 				sudo systemctl restart nmbd
@@ -6178,7 +6178,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	force user = root" >> /etc/samba/smb.conf
 			fi
 		sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				sudo systemctl restart smbd
 				wait $!
 				sudo systemctl restart nmbd
@@ -6559,7 +6559,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo
 
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	is_apache_2_installed=$( apt-cache policy apache2 | grep "Installed:" | cut -c 14-40 )
 	package_name=apache2
 fi
@@ -6757,7 +6757,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	echo "${bold}${cyan}*****Preparing setup for Drawpile List Server . . . *****${normal}"
 	echo
 	
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		version_golang=$( apt-cache policy golang | grep "Installed:" | cut -c 14-21 )
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -6774,7 +6774,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		app_does_not_exist=0
 		app_installed=0
 		app_not_installed=0
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			progs=(golang);
 			package_install_status_check_function
 			sudo $package_install_program golang # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
@@ -6800,7 +6800,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo "This step may take a while, please be patient."
 		echo
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 			# Version check provided by askmeaboutloom
 			if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
 				go install 'github.com/drawpile/listserver@latest'
@@ -8151,7 +8151,7 @@ comment_EOF_delete
 			app_does_not_exist=0
 			app_installed=0
 			app_not_installed=0
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" || "$what_linux_name" != "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				progs=(npm);
 				package_install_status_check_function
 				sudo $package_install_program npm # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
