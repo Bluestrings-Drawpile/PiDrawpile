@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9889
+drawpilescriptversion=2.9890
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -380,18 +380,18 @@ function fedora_end_of_life_function () {
 	echo "https://docs.fedoraproject.org/en-US/releases/eol/"
 	echo
 	echo
-	echo "Use these commands to prep upgrade:"
+	echo "${bold}${yellow}Use these commands to prep upgrade:${normal}"
 	echo "     dnf --refresh upgrade"
 	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_minimum" # echo "     sudo dnf system-upgrade download --releasever=32"
 	echo
-	echo "Use this command to start upgrade:"
+	echo "${bold}${yellow}Use this command to start upgrade:${normal}"
 	echo "     dnf system-upgrade reboot"
 	echo
-	echo "Remove cached metadata and transaction:"
+	echo "${bold}${yellow}Remove cached metadata and transaction:${normal}"
 	echo "     dnf system-upgrade clean"
-	echo "Remove cached packages:"
+	echo "${bold}${yellow}Remove cached packages:${normal}"
 	echo "     dnf clean packages"
-	echo.
+	echo
 	echo "Waiting 30 seconds before continuing script."
 	sleep 30
 }
@@ -2020,7 +2020,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -2550,7 +2550,7 @@ package_action_3_not_min=
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-dev
 fi
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	package_name=libmicrohttpd
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-devel
@@ -2572,7 +2572,7 @@ package_version_check_and_update_function
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	package_name=libsodium-dev
 fi
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	package_name=libsodium
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	package_name=libsodium-devel
