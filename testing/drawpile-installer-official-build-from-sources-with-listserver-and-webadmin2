@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9893
+drawpilescriptversion=2.9894
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -118,6 +118,8 @@ function drawpile_credits_function () {
 	echo 'you want to donate some money as thanks for all that he does!'
 	echo "${underline}laakkonenc@gmail.com${normal}"
 	echo
+	echo 'If you want to send a Ko-Fi my way'
+	echo '     https://ko-fi.com/bluestrings'
 }
 
 function drawpile_credits_urls_functions () {
@@ -2561,15 +2563,15 @@ package_action_3_not_min=
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	package_name=libmicrohttpd-dev
-fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	package_name=libmicrohttpd
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	package_name=libmicrohttpd-devel
 else
-	package_name=libmicrohttpd-devel
+	package_name=libmicrohttpd-dev
+fi
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	package_name=libmicrohttpd-dev
 fi
 package_version_length=14-21
 version_apt_or_dnf_function
@@ -2583,15 +2585,15 @@ package_description_5=
 install_package_set="no"
 package_version_check_and_update_function
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	package_name=libsodium-dev
-fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	package_name=libsodium
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	package_name=libsodium-devel
 else
-	package_name=libsodium-devel
+	package_name=libmicrohttpd-dev
+fi
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	package_name=libsodium-dev
 fi
 package_version_length=14-21
 version_apt_or_dnf_function
@@ -4478,6 +4480,8 @@ echo "${bold}${cyan}***** Configure Hostname for Server . . .*****${normal}"
 #---------------------------------------------------------------------------------------------------------------------------------
 external_ip_4=$(curl -s ipv4.icanhazip.com)
 external_ip_6=$(curl -s ipv6.icanhazip.com)
+hostname_attempt=1
+hostname_same_attempt=1
 
 function dns_ip_check () {
 	if [[ $hostname_1 = $hostname_2 ]] && [[ "$hostname_1" = "" ]] && [[ "$hostname_2" = "" ]]; then
@@ -4558,15 +4562,60 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	while [[ $hostname_1 != $hostname_2 ]] || [[ $external_ip_4 != $dns_verification_4_stripped ]]
 	do
 		if [[ $hostname_1 = $hostname_2 ]] && [[ "$hostname_1" = "" ]] && [[ "$hostname_2" = "" ]]; then
+			hostname_attempt=$((hostname_attempt+1))
+			hostname_same_attempt=$((hostname_same_attempt+1))
 			break
 		else
 			if [[ $hostname_1 != $hostname_2 ]]; then
+				hostname_attempt=$((hostname_attempt+1))
+				hostname_same_attempt=1
 				echo
 				echo "${bold}${red}Hostnames entered do not match!${normal}"
 				echo
 				read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
 				read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2
+			elif [[ $hostname_1 = $hostname_2 ]] && (( $hostname_same_attempt >= 2 )); then
+				echo
+				echo "${bold}${yellow}Hostnames entered match but not appear to point to this server's IPv4 address!${normal}"
+				echo "${bold}${yellow}Please be sure that you have not entered any typos.${normal}"
+				echo
+				echo "${bold}${red}You have the option to skip the DNS check, however, if the hostname is incorrect,${normal}"
+				echo "${bold}${red}the script will need to be re-ran fresh, things will not work properly!${normal}"
+				echo
+				while :; do
+					read -r -p "Would you like to skip DNS verification? (Y)es or (n)o? : " hostname_dns_verification_skip
+					echo
+					if [ "$hostname_dns_verification_skip" == "y" ] || [ "$hostname_dns_verification_skip" == "Y" ] || [ "$hostname_dns_verification_skip" == "yes" ] || [ "$hostname_dns_verification_skip" == "YES" ] || [ "$hostname_dns_verification_skip" == "Yes" ] || [ "$hostname_dns_verification_skip" == "n" ] || [ "$hostname_dns_verification_skip" == "N" ] || [ "$hostname_dns_verification_skip" == "no" ] || [ "$hostname_dns_verification_skip" == "NO" ] || [ "$hostname_dns_verification_skip" == "No" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$hostname_dns_verification_skip" == "y" ] || [ "$hostname_dns_verification_skip" == "Y" ] || [ "$hostname_dns_verification_skip" == "yes" ] || [ "$hostname_dns_verification_skip" == "YES" ] || [ "$hostname_dns_verification_skip" == "Yes" ]; then
+					echo "Skipping DNS Verification."
+					break
+				elif [ "$hostname_dns_verification_skip" == "n" ] || [ "$hostname_dns_verification_skip" == "N" ] || [ "$hostname_dns_verification_skip" == "no" ] || [ "$hostname_dns_verification_skip" == "NO" ] || [ "$hostname_dns_verification_skip" == "No" ]; then
+					if [[ $hostname_1 = $hostname_2 ]] || [[ $external_ip_4 != $dns_verification_4_stripped ]]; then
+						# hostname_same_attempt=$((hostname_same_attempt-1))
+						echo
+						echo "${bold}${red}Hostnames entered match but not appear to point to this server's IPv4 address!${normal}"
+						echo "${bold}${red}Please check for typos and try again.${normal}"
+						echo
+						read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
+						read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2	
+					else
+						echo "${bold}${red}This message should not be visible for Hostname IP verification.${normal}"
+					fi
+					dns_ip_check	
+				else
+					echo "This message should not be visible for DNS Hostname verification."
+				fi
 			elif [[ $hostname_1 = $hostname_2 ]] || [[ $external_ip_4 != $dns_verification_4_stripped ]]; then
+				hostname_same_attempt=$((hostname_same_attempt+1))
 				echo
 				echo "${bold}${red}Hostnames entered match but not appear to point to this server's IPv4 address!${normal}"
 				echo "${bold}${red}Please check for typos and try again.${normal}"
@@ -7045,7 +7094,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			[[ "$dp_install_loc" == "$script_directory" ]] && echo "Once prepared, please place them here: "
 			[[ "$dp_install_loc" == "$script_directory" ]] && echo "     $dp_install_loc"
 			[[ "$dp_install_loc" != "$script_directory" ]] && echo "Once prepared, please place in one of these two locations below: "
-			[[ "$dp_install_loc" != "$script_directory" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" != "$script_directory" ]] && echo "     $script_directory"
 			[[ "$dp_install_loc" != "$script_directory" ]] && echo "     $dp_install_loc"
 			echo
 			echo "The script will handle the rest of the required configuration."
@@ -9546,6 +9595,237 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+function journalctl_set_size_function () {
+	echo "${bold}${cyan}Please select a size limit by number only:${normal}"
+	echo "1 -    512 Megabytes (0.5 Gigabytes)"
+	echo "2 -  1,024 Megabytes (1 Gigabyte)"
+	echo "3 -  2,048 Megabytes (2 Gigabytes)"
+	echo "4 -  4,096 Megabytes (4 Gigabytes) - Default Maximum"
+	echo "5 -  8,192 Megabytes (8 Gigabytes)"
+	echo "6 - 16,384 Megabytes (16 Gigabytes)"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " journalctl_systemmaxuse
+		[[ $journalctl_systemmaxuse =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $journalctl_systemmaxuse >= 1 && $journalctl_systemmaxuse <= 6 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
+	if [[ "$journalctl_systemmaxuse" = "1" ]]; then journalctl_systemmaxuse="512M"; fi
+	if [[ "$journalctl_systemmaxuse" = "2" ]]; then journalctl_systemmaxuse="1024M"; fi
+	if [[ "$journalctl_systemmaxuse" = "3" ]]; then journalctl_systemmaxuse="2048M"; fi
+	if [[ "$journalctl_systemmaxuse" = "4" ]]; then journalctl_systemmaxuse="4096M"; fi
+	if [[ "$journalctl_systemmaxuse" = "5" ]]; then journalctl_systemmaxuse="8192M"; fi
+	if [[ "$journalctl_systemmaxuse" = "6" ]]; then journalctl_systemmaxuse="16384M"; fi
+}
+function journalctl_set_time_function () {
+	echo "${bold}${cyan}Please select a time frame by number only:${normal}"
+	echo "1 - 14 days"
+	echo
+	echo "2 - 1 month"
+	echo "3 - 2 months"
+	echo "4 - 3 months"
+	echo "5 - 6 months"
+	echo
+	echo "6 - 1 year"
+	echo "7 - 2 years"
+	echo
+	echo "${bold}${red}Note:${normal} This does not set a size limit, and very busy servers may still fill up the disk."
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " journalctl_maxretentionsec
+		[[ $journalctl_maxretentionsec =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $journalctl_maxretentionsec >= 1 && $journalctl_maxretentionsec <= 7 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
+	if [[ "$journalctl_maxretentionsec" = "1" ]]; then journalctl_maxretentionsec="14day"; fi
+	if [[ "$journalctl_maxretentionsec" = "2" ]]; then journalctl_maxretentionsec="1month"; fi
+	if [[ "$journalctl_maxretentionsec" = "3" ]]; then journalctl_maxretentionsec="2month"; fi
+	if [[ "$journalctl_maxretentionsec" = "4" ]]; then journalctl_maxretentionsec="3month"; fi
+	if [[ "$journalctl_maxretentionsec" = "5" ]]; then journalctl_maxretentionsec="6month"; fi
+	if [[ "$journalctl_maxretentionsec" = "6" ]]; then journalctl_maxretentionsec="1year"; fi
+	if [[ "$journalctl_maxretentionsec" = "7" ]]; then journalctl_maxretentionsec="2year"; fi
+}
+variable_to_read_1="journalctl_log_limit"
+variable_to_read_2=""
+variable_to_read_3=""
+
+value_description_1=""
+value_description_2=""
+value_description_3=""
+value_description_4=""
+value_description_5=""
+
+read_stored_config_value_query_function
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	journalctl_log_limit=$read_stored_config_value_query_1
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo
+	echo "${bold}${cyan}***** Configure Journalctl Logging Limits . . . *****${normal}"
+	echo
+	echo "${bold}${cyan}Current Disk Usage:${normal}"
+	df -h
+	echo
+	echo "${bold}${cyan}Logging Disk Usage:${normal}"
+	sudo journalctl --disk-usage
+	echo
+	echo "${bold}${cyan}Why should I do this?${normal}"
+	echo "The purpose of limiting logging is that excessively large logs could"
+	echo " take up a large amount of disk space. Over time, that prevents the server"
+	echo " from operating properly due to no disk space available."
+	echo 
+	echo "Note that journalctl logs up to 10% of drive space or 4 GB at max, which"
+	echo " ever value is smaller. Also note that changing this setting requires a "
+	echo " system reboot once the script has completed all operations in order to"
+	echo " take effect."
+	echo
+	if [[ ! -d "/etc/systemd/journald.conf.d" ]]; then
+		echo "If configured, the script will create a conf file here:"
+	fi
+	if [[ -d "/etc/systemd/journald.conf.d" ]]; then
+		if test -n "$(find /etc/systemd/journald.conf.d -maxdepth 1 -name '*.conf' -print -quit)"; then echo "There are journalctl conf files already."; echo "Try investigating this directory manually:"; fi
+	fi
+	echo "     /etc/systemd/journald.conf.d/journald-local.conf"
+	echo
+	echo "${bold}${cyan}Would you like to limit the size of journalctl logs on the system:${normal}"
+	echo " 1 - By file size"
+	echo " 2 - By file size and by length of time"
+	echo " 3 - By length of time"
+	echo "     ${bold}${red}Note:${normal} This does not set a size limit, and very busy servers may still"
+	echo "           fill up the disk."
+	echo
+	echo " 9 - Do not limit size of journalctl logs"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " journalctl_log_limit
+		[[ $journalctl_log_limit =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $journalctl_log_limit >= 1 && $journalctl_log_limit <= 3 || $journalctl_log_limit == 9 )); then
+			break
+		else
+			echo
+			echo "Invalid number selection, try again."
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+		fi
+	done
+	echo
+	sudo sed -i '\!^journalctl_log_limit =!{h;s!=.*!= '"$journalctl_log_limit"'!};${x;\!^$!{s!!journalctl_log_limit = '"$journalctl_log_limit"'!;H};x}' $drawpile_configuration_values_file
+	if [ "$journalctl_log_limit" == "1" ]; then
+		journalctl_set_size_function
+		journalctl_systemmaxuse="SystemMaxUse=$journalctl_systemmaxuse"
+		journalctl_maxretentionsec="#MaxRetentionSec="
+	elif [ "$journalctl_log_limit" == "2" ]; then
+		journalctl_set_size_function
+		echo
+		journalctl_set_time_function
+		journalctl_systemmaxuse="SystemMaxUse=$journalctl_systemmaxuse"
+		journalctl_maxretentionsec="MaxRetentionSec=$journalctl_maxretentionsec"
+	elif [ "$journalctl_log_limit" == "3" ]; then
+		journalctl_set_time_function
+		journalctl_systemmaxuse="#SystemMaxUse="
+		journalctl_maxretentionsec="MaxRetentionSec=$journalctl_maxretentionsec"
+	elif [ "$journalctl_log_limit" == "9" ]; then
+		echo "Skipping setup of journalctl limitations."
+	else
+		echo "This message should not be visible for journalctl."
+	fi
+	if [ "$journalctl_log_limit" != "9" ]; then
+		sudo sed -i '\!^journalctl_systemmaxuse =!{h;s!=.*!= '"$journalctl_systemmaxuse"'!};${x;\!^$!{s!!journalctl_systemmaxuse = '"$journalctl_systemmaxuse"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^journalctl_maxretentionsec =!{h;s!=.*!= '"$journalctl_maxretentionsec"'!};${x;\!^$!{s!!journalctl_maxretentionsec = '"$journalctl_maxretentionsec"'!;H};x}' $drawpile_configuration_values_file
+		if [[ ! -d "/etc/systemd/journald.conf.d" ]]; then
+			sudo mkdir -p -v "/etc/systemd/journald.conf.d"
+		fi
+		cat <<EOF | sudo tee "/etc/systemd/journald.conf.d/journald-local.conf" >/dev/null
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it under the
+#  terms of the GNU Lesser General Public License as published by the Free
+#  Software Foundation; either version 2.1 of the License, or (at your option)
+#  any later version.
+#
+# Entries in this file show the compile time defaults. Local configuration
+# should be created by either modifying this file, or by creating "drop-ins" in
+# the journald.conf.d/ subdirectory. The latter is generally recommended.
+# Defaults can be restored by simply deleting this file and all drop-ins.
+#
+# Use 'systemd-analyze cat-config systemd/journald.conf' to display the full config.
+#
+# See journald.conf(5) for details.
+# Or go to this web page:
+# https://www.freedesktop.org/software/systemd/man/journald.conf.html
+
+[Journal]
+#Storage=auto
+#Compress=yes
+#Seal=yes
+#SplitMode=uid
+#SyncIntervalSec=5m
+#RateLimitIntervalSec=30s
+#RateLimitBurst=10000
+$journalctl_systemmaxuse
+#     SystemMaxUse=
+#SystemKeepFree=
+#SystemMaxFileSize=
+#SystemMaxFiles=100
+#RuntimeMaxUse=
+#RuntimeKeepFree=
+#RuntimeMaxFileSize=
+#RuntimeMaxFiles=100
+$journalctl_maxretentionsec
+#     MaxRetentionSec=
+#MaxFileSec=1month
+#ForwardToSyslog=yes 	# Debian, Ubuntu, Raspbian
+#ForwardToSyslog=no 	# Fedora
+#ForwardToKMsg=no
+#ForwardToConsole=no
+#ForwardToWall=yes
+#TTYPath=/dev/console
+#MaxLevelStore=debug
+#MaxLevelSyslog=debug
+#MaxLevelKMsg=notice
+#MaxLevelConsole=info
+#MaxLevelWall=emerg
+#LineMax=48K
+#ReadKMsg=yes
+#Audit=no				# Debian, Ubuntu, Raspbian
+#Audit=yes				# Fedora
+EOF
+	fi
+	echo
+	echo "To reload the configuration, you should restart the server when the script"
+	echo "has completed, as this is much easier than reloading every single running"
+	echo "service."
+	echo
+	echo "Read more on why this is here (warning for technical content):"
+	echo "https://unix.stackexchange.com/questions/253203/how-to-tell-journald-to-re-read-its-configuration"
+	echo
+	echo "You can reboot the system with this command:"
+	echo "sudo reboot"
+	echo
+	echo "Waiting 30 seconds before continuing script."
+	sleep 30
+else
+	echo "This message should not be visible."
+fi
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
 echo "${bold}${cyan}*****Scripts to be downloaded for managing server. . . .*****${normal}"
 echo "${bold}${red}*****     (To be completed at a later date)             *****${normal}"
 echo
@@ -10176,6 +10456,45 @@ sleep 5
 # sudo chmod 770 /home/drawpileuser/ -R
 sudo chmod 770 $app_installation_status_file
 sudo chmod 770 $drawpile_configuration_values_file
+
+if [ "$journalctl_log_limit" != "9" ]; then
+	echo
+	echo "Journalctl was modified."
+	echo 
+	echo "To reload the configuration, you should restart the server now that the"
+	echo "script has completed, as this is much easier than reloading every single"
+	echo "running service. Be sure to copy server info located just above before"
+	echo "you reboot."
+	echo
+	echo "Read more on why this required here (warning for technical content):"
+	echo "https://unix.stackexchange.com/questions/253203/how-to-tell-journald-to-re-read-its-configuration"
+	echo
+	echo "The script can reboot the system with this command:"
+	echo "sudo reboot"
+	echo
+	while :; do
+		read -r -p "${bold}${red}Type (y)es to confirm reboot, or (n)o to skip the reboot:${normal} " script_complete_reboot_for_journalctl
+		echo
+		if [ "$script_complete_reboot_for_journalctl" == "y" ] || [ "$script_complete_reboot_for_journalctl" == "Y" ] || [ "$script_complete_reboot_for_journalctl" == "yes" ] || [ "$script_complete_reboot_for_journalctl" == "YES" ] || [ "$script_complete_reboot_for_journalctl" == "Yes" ] || [ "$script_complete_reboot_for_journalctl" == "n" ] || [ "$script_complete_reboot_for_journalctl" == "N" ] || [ "$script_complete_reboot_for_journalctl" == "no" ] || [ "$script_complete_reboot_for_journalctl" == "NO" ] || [ "$script_complete_reboot_for_journalctl" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$script_complete_reboot_for_journalctl" == "y" ] || [ "$script_complete_reboot_for_journalctl" == "Y" ] || [ "$script_complete_reboot_for_journalctl" == "yes" ] || [ "$script_complete_reboot_for_journalctl" == "YES" ] || [ "$script_complete_reboot_for_journalctl" == "Yes" ]; then
+		echo "${bold}${red}RECOMMENDED - Rebooting in 30 seconds${normal}"
+		sleep 30
+		sudo reboot
+	elif [ "$script_complete_reboot_for_journalctl" == "n" ] || [ "$script_complete_reboot_for_journalctl" == "N" ] || [ "$script_complete_reboot_for_journalctl" == "no" ] || [ "$script_complete_reboot_for_journalctl" == "NO" ] || [ "$script_complete_reboot_for_journalctl" == "No" ]; then
+		echo "${bold}${red}NOT RECOMMENDED - Skipping Reboot${normal}"
+	else
+		echo "${bold}${red}This message should not be visible for system reboot.${normal}"
+	fi
+fi
 
 read -r -p 'Press [Enter] key to close window...'
 echo
