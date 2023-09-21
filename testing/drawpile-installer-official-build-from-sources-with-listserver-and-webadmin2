@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9894
+drawpilescriptversion=2.9895
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -120,6 +120,7 @@ function drawpile_credits_function () {
 	echo
 	echo 'If you want to send a Ko-Fi my way'
 	echo '     https://ko-fi.com/bluestrings'
+	echo
 }
 
 function drawpile_credits_urls_functions () {
@@ -511,66 +512,35 @@ echo
 # 
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
-function select_non_root_account () {
-	echo '--------------------------------------------------------------------------------'
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "When running script with sudo or su, please specify your user account name"
-	echo "with a valid user directory indicated below."
-	echo
-	echo "Here are a list of folders in the home directory:"
-	ls -d /home/*/
-	echo
-	read -r -p "Enter username: " current_username
-	echo
-	while [[ ! -e "/home/$current_username" ]]
-	do
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "Invalid user name entered (no matching home directory). Please "
-		echo "enter a valid user name with a user directory indicated below:"
-		ls -d /home/*/
-		echo
-		read -r -p "Enter user name: " current_username
-		echo
-	done
-}
-
-# Prompt for user name change if root detected, first attempting Pi (and verifying), 
-#     and requesting user input with verification directory exists.
-
-if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; then
-	current_username=pi
-	if [[ -e "/home/$current_username" ]]; then
-		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-		:
-	else
-		select_non_root_account
-	fi
-else
-	current_username=$USER
-fi
-
-if [ $(getent group drawpileread) ]; then
-	echo "Group: drawpileread - exists."
-else
-	echo "Group: drawpileread - does not exist."
-	sudo $group_add_program drawpileread
-	# sudo -s -u ${USER}
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-		sudo $user_add_program $current_username drawpileread
-	fi
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		sudo usermod -a $current_username -G drawpileread
-	fi
-fi
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
 
 mem_total=$( free -m | grep -i "Mem" | awk '{ print $2 }' )
 # mem_free=$( free -m | grep -i "Mem" | awk '{ print $4 }' )
 swap_total=$( free -m | grep -i "Swap" | awk '{ print $2 }' )
 # swap_free=$( free -m | grep -i "Swap" | awk '{ print $4 }' )
+
+function no_swap_function () {
+	echo "fallocate -l 1G /swapfile"
+	echo "chmod 600 /swapfile"
+	echo "sudo mkswap /swapfile"
+	echo "sudo swapon /swapfile"
+	echo
+	echo "Would you like to attempt this fix automatically?"
+	echo "Script will exit if you select not to do this."
+	echo
+	read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
+	echo
+	if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] ; then
+		fallocate -l 1G /swapfile
+		chmod 600 /swapfile
+		sudo mkswap /swapfile
+		sudo swapon /swapfile
+	else
+		echo
+		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+		sleep 30
+		exit
+	fi
+}
 
 if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	echo
@@ -592,30 +562,18 @@ if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	echo
 	if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "It appears the system memory is less than 512 MB and that your system does"
-		echo "Sample configuration commands for Ubuntu which may help, increases swap to"
-		echo "1024MB of space."
+		echo "not have enough memory to set up certain parts of the script. However, there"
+		echo "are some configuration commands for Ubuntu which may help, as it increases "
+		echo "swap to 1024MB of space."
 		echo
-		echo "fallocate -l 1G /swapfile"
-		echo "chmod 600 /swapfile"
-		echo "sudo mkswap /swapfile"
-		echo "sudo swapon /swapfile"
+		no_swap_function
+	elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
+		echo "It appears the system memory is less than 512 MB and that your system does"
+		echo "not have enough memory to set up certain parts of the script. However, there"
+		echo "are some configuration commands for Ubuntu which work on Debian, as it "
+		echo "increases swap to 1024MB of space."
 		echo
-		echo "Would you like to attempt this fix automatically?"
-		echo "Script will exit if you select not to do this."
-		echo
-		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
-		echo
-		if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] ; then
-			fallocate -l 1G /swapfile
-			chmod 600 /swapfile
-			sudo mkswap /swapfile
-			sudo swapon /swapfile
-		else
-			echo
-			echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
-			sleep 30
-			exit
-		fi
+		no_swap_function
 	else
 		echo "Should consider increasing swap file size to at least 1024 MB to ensure"
 		echo "adequate resources available for setup."
@@ -708,6 +666,63 @@ fi
 
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
+
+function select_non_root_account () {
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "When running script with sudo or su, please specify your user account name"
+	echo "with a valid user directory indicated below."
+	echo
+	echo "Here are a list of folders in the home directory:"
+	ls -d /home/*/
+	echo
+	read -r -p "Enter username: " current_username
+	echo
+	while [[ ! -e "/home/$current_username" ]]
+	do
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "Invalid user name entered (no matching home directory). Please "
+		echo "enter a valid user name with a user directory indicated below:"
+		ls -d /home/*/
+		echo
+		read -r -p "Enter user name: " current_username
+		echo
+	done
+}
+
+# Prompt for user name change if root detected, first attempting Pi (and verifying), 
+#     and requesting user input with verification directory exists.
+
+if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; then
+	current_username=pi
+	if [[ -e "/home/$current_username" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		select_non_root_account
+	fi
+else
+	current_username=$USER
+fi
+
+if [ $(getent group drawpileread) ]; then
+	echo "Group: drawpileread - exists."
+else
+	echo "Group: drawpileread - does not exist."
+	sudo $group_add_program drawpileread
+	# sudo -s -u ${USER}
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+		sudo $user_add_program $current_username drawpileread
+	fi
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		sudo usermod -a $current_username -G drawpileread
+	fi
+fi
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+
 drawpile_script_completed_test=$( grep 'drawpile_script_completed = ' $drawpile_configuration_values_file 2>/dev/null )
 
 if [[ "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]]; then
