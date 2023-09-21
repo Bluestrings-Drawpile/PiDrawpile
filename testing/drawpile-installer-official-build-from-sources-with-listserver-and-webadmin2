@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9895
+drawpilescriptversion=2.9896
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -588,6 +588,17 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+
+if [ $(getent group drawpileread) ]; then
+	echo "Group: drawpileread - exists."
+	drawpileread_test=yes
+else
+	echo "Group: drawpileread - does not exist."
+	sudo $group_add_program drawpileread
+	# sudo -s -u ${USER}
+	drawpileread_test=no
+fi
+
 # Regular Expression - Regex expression - search without ". matches newline" to search for entries in Notepad++
 # chmod .* /home/drawpileuser
 
@@ -707,12 +718,10 @@ else
 	current_username=$USER
 fi
 
-if [ $(getent group drawpileread) ]; then
-	echo "Group: drawpileread - exists."
-else
-	echo "Group: drawpileread - does not exist."
-	sudo $group_add_program drawpileread
-	# sudo -s -u ${USER}
+if [ "$drawpileread_test" == "yes" ]; then
+	# Do nothing, no action required
+	:
+elif [ "$drawpileread_test" == "yes" ]; then
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		sudo $user_add_program $current_username drawpileread
 	fi
@@ -720,6 +729,7 @@ else
 		sudo usermod -a $current_username -G drawpileread
 	fi
 fi
+
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 
