@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9896
+drawpilescriptversion=2.9897
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -721,7 +721,7 @@ fi
 if [ "$drawpileread_test" == "yes" ]; then
 	# Do nothing, no action required
 	:
-elif [ "$drawpileread_test" == "yes" ]; then
+elif [ "$drawpileread_test" == "no" ]; then
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		sudo $user_add_program $current_username drawpileread
 	fi
