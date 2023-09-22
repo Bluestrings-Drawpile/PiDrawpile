@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9898
+drawpilescriptversion=2.9890
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -6562,6 +6562,20 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+function allowed_and_disallowed_characters_function () {
+	echo
+	echo "${bold}${green}You can use the following characters: ${normal}"
+	echo "${bold}${green} $ & * ( ) - _ + = ; , . ${normal}"
+	# Technically the symbols: ! @ : '
+	# work, however they are disallowed because of List Server and possibly confusing the script
+	# Original Expression
+	# [[ $nginx_username_1 =~ ^[a-zA-Z0-9@*_=:\'\&\(\)\+\;\,\.\$-]*$ ]]
+	echo
+	echo "${bold}${red}You CANNOT use the following characters: ${normal}"
+	echo "${bold}${red} ! @ # ^ : ' / [ ] { } \ \" < > ?${normal}"
+	echo
+}
+
 echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
 echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
 echo
@@ -6590,36 +6604,83 @@ echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!
 echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
 echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
 echo
-echo "${bold}${red}Where USERNAME can be any username you wish to use for login and PASSWORD${normal}"
-echo "${bold}${red}can be any password you like to use WITHOUT spaces.${normal}"
-echo
-read -r -p "Enter username ONLY (no spaces or exclamation marks): " nginx_username_1
-read -r -p "Enter username again (no spaces or exclamation marks): " nginx_username_2
+echo "${bold}${green}Where USERNAME can be any username you wish to use for login and PASSWORD${normal}"
+echo "${bold}${green}can be any password you like to use WITHOUT spaces.${normal}"
+allowed_and_disallowed_characters_function
+#---------------------------------------------------------------------------------------------------------------------------------
+function nginx_username_function () {
+	read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+	while :; do
+		if [[ $nginx_username_1 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+		fi
+	done
+
+	read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+	while :; do
+		if [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+		fi
+	done
+}
+nginx_username_function
+#---------------------------------------------------------------------------------------------------------------------------------
 while [ $nginx_username_1 != $nginx_username_2 ]
 do
 	echo
-        echo "${bold}${red}Usernames entered do not match!${normal}"
+    echo "${bold}${red}Usernames entered do not match!${normal}"
 	echo
-        read -r -p "Enter username ONLY (no spaces or exclamation marks): " nginx_username_1
-        read -r -p "Enter username again (no spaces or exclamation marks): " nginx_username_2
+	nginx_username_function
 done
+#---------------------------------------------------------------------------------------------------------------------------------
 echo
 echo "Your Server Administration username is: $nginx_username_1"
 echo
-echo
-read -r -p "Enter password ONLY (no spaces or exclamation marks): " nginx_htpasswd_1
-read -r -p "Enter password (no spaces or exclamation marks) again: " nginx_htpasswd_2
+#---------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------
+function nginx_password_function () {
+	read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+	while :; do
+		if [[ $nginx_htpasswd_1 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+		fi
+	done
+
+	read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+	while :; do
+		if [[ $nginx_htpasswd_2 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+		fi
+	done
+}
+nginx_password_function
+#---------------------------------------------------------------------------------------------------------------------------------
 while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
 do
 	echo
-        echo "Passwords entered do not match!"
+    echo "Passwords entered do not match!"
 	echo
-        read -r -p "Enter password ONLY (no spaces or exclamation marks): " nginx_htpasswd_1
-        read -r -p "Enter password (no spaces or exclamation marks) again: " nginx_htpasswd_2
+	nginx_password_function
 done
+#---------------------------------------------------------------------------------------------------------------------------------
 echo
 echo "Your Server Administration password is: $nginx_htpasswd_1"
 echo
+#---------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------
 sudo htpasswd -bc /etc/nginx/passwords $nginx_username_1 $nginx_htpasswd_1
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
@@ -6627,6 +6688,39 @@ echo
 # Refer to help with this command.
 # https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
 #
+
+<<comment_server_management_script_later
+nginx_username_1=ADMIN
+nginx_username_2=ADMIN2
+nginx_htpasswd_1=Password0123456789012
+
+echo "${cyan}${bold}Contents of /etc/nginx/passwords${normal}"
+cat /etc/nginx/passwords 
+echo
+echo
+if cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" > /dev/null 2>&1; then
+
+	echo Found Username $nginx_username_1
+	echo
+	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered${normal}"
+	passwords_filtered=$( cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" )
+	echo $passwords_filtered
+	echo
+	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered, inverted${normal}"
+	grep -v "$passwords_filtered" /etc/nginx/passwords
+	echo
+	pause
+	echo
+	echo Removing $nginx_username_1
+	grep -v "$passwords_filtered" /etc/nginx/passwords | sudo tee /etc/nginx/passwords > /dev/null 2>&1
+	echo
+	sudo htpasswd -b /etc/nginx/passwords $nginx_username_2 $nginx_htpasswd_1
+	echo
+	cat /etc/nginx/passwords 
+fi
+comment_server_management_script_later
+
+
 
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
 
@@ -7403,13 +7497,15 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "No messages should show up in this section."
 		echo
 		if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-			list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1@"
+			list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_1:$nginx_htpasswd_1@localhost:27780/api/\"]"
+			# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
 		elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-			list_server_include_servers_username_and_pass=""
+			list_server_include_servers_username_and_pass="# includeservers="
+			# list_server_include_servers_username_and_pass=""
 		else
 			echo "This message should not be visible."
 		fi
-		cat <<EOF | sudo tee -a "$script_directory/$list_server_config_filename" >/dev/null
+		cat <<EOF | sudo tee "$script_directory/$list_server_config_filename" >/dev/null
 # This is a sample List Server settings file.
 # When creating your own site specific configuration,
 # set at least the settings in the "important" section.
@@ -7427,8 +7523,9 @@ listen = "$list_server_address_listen:$list_server_port"
 database="$listserver_database_connection_string"
 
 # Include sessions fetched from a drawpile server's admin API (optional)
-# includeservers=["http://username:password@localhost:27780/api"]
-includeservers=["http://$list_server_include_servers_username_and_passlocalhost:27780/api/"]
+# includeservers=["http://username:password@localhost:27780/api/"]
+$list_server_include_servers_username_and_pass
+# includeservers=["http://$list_server_include_servers_username_and_pass@localhost:27780/api/"]
 
 #
 # Note. You should set at least one of database or includeserver settings.
@@ -9830,7 +9927,6 @@ $journalctl_maxretentionsec
 #Audit=no				# Debian, Ubuntu, Raspbian
 #Audit=yes				# Fedora
 EOF
-	fi
 	echo
 	echo "To reload the configuration, you should restart the server when the script"
 	echo "has completed, as this is much easier than reloading every single running"
@@ -9844,6 +9940,7 @@ EOF
 	echo
 	echo "Waiting 30 seconds before continuing script."
 	sleep 30
+	fi
 else
 	echo "This message should not be visible."
 fi
