@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9897
+drawpilescriptversion=2.9898
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -10405,7 +10405,7 @@ echo "${bold}${cyan}************************ My Server Information *************
 echo "${bold}${cyan}***********************************************************************${normal}"
 echo
 echo "${bold}${cyan}**** Drawpile Server Files ****${normal}"
-echo "dp_install_loc/Programs/Drawpile-Srv-Files"
+echo "$dp_install_loc/Programs/Drawpile-Srv-Files"
 echo
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
