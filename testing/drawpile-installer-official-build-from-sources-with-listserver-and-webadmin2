@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9890
+drawpilescriptversion=2.9891
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -6562,20 +6562,69 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+# This function is no longer used but was a lot of work, so keeping for notes
 function allowed_and_disallowed_characters_function () {
 	echo
-	echo "${bold}${green}You can use the following characters: ${normal}"
-	echo "${bold}${green} $ & * ( ) - _ + = ; , . ${normal}"
+	echo "${bold}${green}You can use the following special characters: ${normal}"
+	echo "${bold}${green} ~ \` ! @ # $ % ^ & * ( ) - _ = + { } [ ] | \ ; : ' \" , . < > ? ${normal}"
+	echo
+	echo "${bold}${red}You CANNOT use the ! character. ${normal}"
+	# Old Notes
 	# Technically the symbols: ! @ : '
 	# work, however they are disallowed because of List Server and possibly confusing the script
+	# Expression vs 2.1
+	# [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]
 	# Original Expression
 	# [[ $nginx_username_1 =~ ^[a-zA-Z0-9@*_=:\'\&\(\)\+\;\,\.\$-]*$ ]]
 	echo
-	echo "${bold}${red}You CANNOT use the following characters: ${normal}"
-	echo "${bold}${red} ! @ # ^ : ' / [ ] { } \ \" < > ?${normal}"
-	echo
 }
+# ----------------------------------------------------------------------------------
+# This function is no longer used but was a lot of work, so keeping for notes
+function nginx_username_function () {
+	read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+	while :; do
+		if [[ $nginx_username_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+		fi
+	done
 
+	read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+	while :; do
+		if [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+		fi
+	done
+}
+# ----------------------------------------------------------------------------------
+# This function is no longer used but was a lot of work, so keeping for notes
+function nginx_password_function () {
+	read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+	while :; do
+		if [[ $nginx_htpasswd_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+		fi
+	done
+
+	read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+	while :; do
+		if [[ $nginx_htpasswd_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+		fi
+	done
+}
+# ----------------------------------------------------------------------------------
 echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
 echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
 echo
@@ -6604,87 +6653,53 @@ echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!
 echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
 echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
 echo
-echo "${bold}${green}Where USERNAME can be any username you wish to use for login and PASSWORD${normal}"
-echo "${bold}${green}can be any password you like to use WITHOUT spaces.${normal}"
-allowed_and_disallowed_characters_function
-#---------------------------------------------------------------------------------------------------------------------------------
-function nginx_username_function () {
-	read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
-	while :; do
-		if [[ $nginx_username_1 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
-		fi
-	done
+echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
+echo
+read -r -p "Enter username                    : " nginx_username_1
+read -r -p "Enter username again              : " nginx_username_2
 
-	read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
-	while :; do
-		if [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
-		fi
-	done
-}
-nginx_username_function
-#---------------------------------------------------------------------------------------------------------------------------------
 while [ $nginx_username_1 != $nginx_username_2 ]
 do
 	echo
-    echo "${bold}${red}Usernames entered do not match!${normal}"
+		echo "Usernames entered do not match!"
 	echo
-	nginx_username_function
+		read -r -p "Enter username                    : " nginx_username_1
+		read -r -p "Enter username again              : " nginx_username_2
 done
-#---------------------------------------------------------------------------------------------------------------------------------
 echo
-echo "Your Server Administration username is: $nginx_username_1"
+echo "Server Administration username is : $nginx_username_1"
 echo
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-function nginx_password_function () {
-	read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
-	while :; do
-		if [[ $nginx_htpasswd_1 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
-		fi
-	done
-
-	read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
-	while :; do
-		if [[ $nginx_htpasswd_2 =~ ^[a-zA-Z0-9*_=\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
-		fi
-	done
-}
-nginx_password_function
-#---------------------------------------------------------------------------------------------------------------------------------
+echo
+read -r -p "Enter password                    : " nginx_htpasswd_1
+read -r -p "Enter password again              : " nginx_htpasswd_2
 while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
 do
 	echo
-    echo "Passwords entered do not match!"
+		echo "Passwords entered do not match!"
 	echo
-	nginx_password_function
+		read -r -p "Enter password                    : " nginx_htpasswd_1
+		read -r -p "Enter password again              : " nginx_htpasswd_2
 done
-#---------------------------------------------------------------------------------------------------------------------------------
 echo
-echo "Your Server Administration password is: $nginx_htpasswd_1"
+echo "Server Administration password is : $nginx_htpasswd_1"
 echo
-#---------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------
-sudo htpasswd -bc /etc/nginx/passwords $nginx_username_1 $nginx_htpasswd_1
+sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
+echo
+
+# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
+nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+echo "Value Encoded $nginx_username_encoded_1"
+
+# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
+nginx_htpasswd_encoded_1="$(echo "$nginx_htpasswd_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+echo "Value Encoded $nginx_htpasswd_encoded_1"
+
+# To be used later with server management scripts, to decode URL encoded usernames/passwords
+# raw_password="$(echo "$encoded_password" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+
 # Refer to help with this command.
 # https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
 #
@@ -6720,11 +6735,11 @@ if cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" > /dev/null 2>&1;
 fi
 comment_server_management_script_later
 
-
-
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
 
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
+sudo nginx -s reload
+
 echo
 echo ----------------------------------------------------------------------------------
 echo
@@ -6768,8 +6783,8 @@ done
 sudo sed -i '\!^nginx_username_password_consent_query =!{h;s!=.*!= '"$nginx_username_password_consent_query"'!};${x;\!^$!{s!!nginx_username_password_consent_query = '"$nginx_username_password_consent_query"'!;H};x}' $drawpile_configuration_values_file
 
 if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-	sudo sed -i '\!^nginx_username_1 =!{h;s!=.*!= '"$nginx_username_1"'!};${x;\!^$!{s!!nginx_username_1 = '"$nginx_username_1"'!;H};x}' $drawpile_configuration_values_file
-	sudo sed -i '\!^nginx_htpasswd_1 =!{h;s!=.*!= '"$nginx_htpasswd_1"'!};${x;\!^$!{s!!nginx_htpasswd_1 = '"$nginx_htpasswd_1"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
 elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
 	# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	:
@@ -7497,7 +7512,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "No messages should show up in this section."
 		echo
 		if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-			list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_1:$nginx_htpasswd_1@localhost:27780/api/\"]"
+			list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_encoded_1:$nginx_htpasswd_encoded_1@localhost:27780/api/\"]"
 			# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
 		elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
 			list_server_include_servers_username_and_pass="# includeservers="
@@ -7505,6 +7520,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		else
 			echo "This message should not be visible."
 		fi
+		# Example configuration file
+		# https://github.com/drawpile/listserver/blob/master/example.cfg
 		cat <<EOF | sudo tee "$script_directory/$list_server_config_filename" >/dev/null
 # This is a sample List Server settings file.
 # When creating your own site specific configuration,
@@ -7513,6 +7530,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 #### Important settings #####
 
 # HTTP server listening address port
+# listen = "127.0.0.1:8080"
 listen = "$list_server_address_listen:$list_server_port"
 
 # The database connection string
@@ -7525,7 +7543,6 @@ database="$listserver_database_connection_string"
 # Include sessions fetched from a drawpile server's admin API (optional)
 # includeservers=["http://username:password@localhost:27780/api/"]
 $list_server_include_servers_username_and_pass
-# includeservers=["http://$list_server_include_servers_username_and_pass@localhost:27780/api/"]
 
 #
 # Note. You should set at least one of database or includeserver settings.
@@ -7604,6 +7621,10 @@ roomcodes = true
 # checkServer = true
 checkServer = true
 
+# Number of seconds to wait while connections are still open before shutting down
+# Used for testing the list server for development reasons, not needed. 
+# shutdownTimeout = 1
+
 # Number of minutes after which a session is automatically delisted unless refreshed
 # sessionTimeout = 10
 sessionTimeout = $list_server_delist_time
@@ -7611,6 +7632,13 @@ sessionTimeout = $list_server_delist_time
 # Log requests?
 # logRequests = false
 logRequests = false
+
+# Enable administration API?
+# Set the environment variable DRAWPILE_LISTSERVER_USER to the username and
+# DRAWPILE_LISTSERVER_PASS to the password to allow connecting as an admin user.
+# You can create additional accounts from there.
+# Not available in read-only mode, there's nothing to administer in it.
+# enableAdminApi = true
 EOF
 
 		sudo mv "$script_directory/$list_server_config_filename" "$list_server_config_file_location"
@@ -7843,8 +7871,37 @@ EOF
 
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
-
-		sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
+		echo
+		echo "${bold}${cyan}Would you like NSFM sessions to show up on the web page for the list server?${normal}"
+		echo "Leaving this blank will default to (N)o."
+		echo
+		echo " (Y)es - Show NSFM sessions on the web page for list server."
+		echo " (N)o  - Do not show NSFM sessions on the web page for list server."
+		echo
+		while :; do
+			read -r -p "${bold}${red}Type (y)es to allow NSFM listings, or (n)o to hide:${normal} " toggle_nsfm_on_list_server_web_page
+			echo
+			if [ "$toggle_nsfm_on_list_server_web_page" == "y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "YES" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "n" ] || [ "$toggle_nsfm_on_list_server_web_page" == "N" ] || [ "$toggle_nsfm_on_list_server_web_page" == "no" ] || [ "$toggle_nsfm_on_list_server_web_page" == "NO" ] || [ "$toggle_nsfm_on_list_server_web_page" == "No" ] || [ "$toggle_nsfm_on_list_server_web_page" == "" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		if [ "$toggle_nsfm_on_list_server_web_page" == "y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "YES" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Yes" ]; then
+			echo "${bold}${red}Show NSFM sessions on list server web page.${normal}"
+			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"\/listing\/sessions\/?nsfm=true\"/g" /var/www/html/drawpile/index.html
+		elif [ "$toggle_nsfm_on_list_server_web_page" == "n" ] || [ "$toggle_nsfm_on_list_server_web_page" == "N" ] || [ "$toggle_nsfm_on_list_server_web_page" == "no" ] || [ "$toggle_nsfm_on_list_server_web_page" == "NO" ] || [ "$toggle_nsfm_on_list_server_web_page" == "No" ]; then
+			echo "${bold}${cyan}Do not show NSFM sessions on list server web page.${normal}"
+		else
+			echo "${bold}${cyan}Left blank. Will not show NSFM sessions on list server web page.${normal}"
+		fi
+		# Previous version before I realized I didn't need to specify the website name....
+		# sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
+		# Original
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="http:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		# --------------------------------------------------------------------------------
 		echo
