@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9891
+drawpilescriptversion=2.9892
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -7068,13 +7068,16 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		# fi
 	fi
 	
-	if [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
-		go_path=/home/$current_username/go
+	sudo cp $go_path/bin/listserver /usr/local/bin
+	
+	if [[ -e  "$go_path/bin/listserver" ]]; then
+		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+		go_path_manual=$go_path/bin/listserver
+	elif [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
+		go_path_manual=/home/$current_username/go
 		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
 	elif [[ -e  "/home/pi/go/bin/listserver" ]]; then
-		go_path=/home/pi/go
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
-	elif [[ -e  "$go_path/bin/listserver" ]]; then
+		go_path_manual=/home/pi/go
 		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
 	else
 		echo "${bold}${red}Was unable to determine location of listserver.${normal}"
@@ -7083,13 +7086,13 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		sudo free -m
 		echo
 		echo "Please copy output from terminal for diagnostic purposes."
-		echo "${bold}${red}Script will exit in 30 seconds.${normal}"
+		# No longer needed I think
+		# echo "${bold}${red}Script will exit in 30 seconds.${normal}"
 		echo
 		sleep 30
-		exit
+		# exit
 	fi
-	
-	sudo cp $go_path/bin/listserver /usr/local/bin
+
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -7704,7 +7707,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/local/bin/listserver -c $list_server_config_file_location
-# ExecStart=$go_path/bin/listserver -c $list_server_config_file_location
+# ExecStart=$go_path_manual/bin/listserver -c $list_server_config_file_location
 User=drawpileuser
 
 [Install]
@@ -8256,20 +8259,8 @@ EOF
 				pi_zero_nodejs=no
 			fi
 		else
-			if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
-				echo "Adding Node.JS repository to get latest version . . ."
-				echo
-				
-				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-				echo
-				echo "Installing/updating Node.JS . . ."
-				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-				echo
-				echo "Installed version is . . ."
-				node -v
-				echo
-				version_test_by_distro_function
-			elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+			if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+				# Raspbian for Desktop
 				echo "${bold}${cyan}Installing NodeJS from Node-Red Script (need 32 bit binary)${normal}"
 				echo
 				# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
@@ -8351,7 +8342,60 @@ EOF
 				test_version=$(node -v | cut -c 2-100)
 			fi
 comment_EOF_delete
+			elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && ( "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+				# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop
+				# https://github.com/nodesource/distributions
+				# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
+				sudo apt-get update
+				sudo apt-get install -y ca-certificates curl gnupg
+				sudo mkdir -p /etc/apt/keyrings
+				curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+				NODE_MAJOR=18
+				# NODE_MAJOR=20
+				echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+				sudo apt-get update
+				sudo apt-get install nodejs -y
+				version_test_by_distro_function
+			elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+				# https://github.com/nodesource/distributions
+				# https://github.com/nodesource/distributions#fedora-versions
+				#
+				# NODE_MAJOR=18 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
+				sudo yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+				sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
+				#
+				# NODE_MAJOR=20 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
+				# sudo yum install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+				# sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
+				version_test_by_distro_function
+			elif [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+				# See the "SCRIPT DEPRECATION WARNING" in the 'else' section below.
+				echo "Adding Node.JS repository to get latest version . . ."
+				echo
+				
+				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+				echo
+				echo "Installing/updating Node.JS . . ."
+				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				echo
+				echo "Installed version is . . ."
+				node -v
+				echo
+				version_test_by_distro_function
 			else
+				#						SCRIPT DEPRECATION WARNING                   
+				#	This script, located at https://deb.nodesource.com/setup_X, used to
+				#	install Node.js is deprecated now and will eventually be made inactive.
+				#
+				#	Please visit the NodeSource distributions Github and follow the
+				#	instructions to migrate your repo.
+				#	https://github.com/nodesource/distributions
+				#
+				#	The NodeSource Node.js Linux distributions GitHub repository contains
+				#	information about which versions of Node.js and which Linux distributions
+				#	are supported and how to install it.
+				#	https://github.com/nodesource/distributions
+				#						SCRIPT DEPRECATION WARNING
 				echo "Adding Node.JS repository to get latest version . . ."
 				echo
 				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
@@ -8490,8 +8534,14 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
 	echo
-	mv package.json package-orig.json
-	node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
+	if [[ ! -e "$dp_install_loc/Programs/dpwebadmin/package-orig.json" ]]; then
+		cp "$dp_install_loc/Programs/dpwebadmin/package.json" "$dp_install_loc/Programs/dpwebadmin/package-orig.json"
+	fi
+	sudo sed -i "s|\"proxy\": \"http://localhost:27780/\"|\"proxy\": \"http://localhost:27780/\",\n  \"homepage\": \"/admin/\"|g" "$dp_install_loc/Programs/dpwebadmin/package.json"
+	# Olde commands
+	# mv package.json package-orig.json
+	# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
+	#
 	# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
 	echo
 	echo '--------------------------------------------------------------------------------'
