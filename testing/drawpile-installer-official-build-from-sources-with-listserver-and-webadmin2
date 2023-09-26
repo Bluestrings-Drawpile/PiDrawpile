@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9892
+drawpilescriptversion=2.9893
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -5481,6 +5481,10 @@ git clone https://github.com/drawpile/abusereport
 echo
 echo Download done...
 cd "/home/drawpileuser/abusereport"
+# Doesn't work
+# drawpile_abuse_report_version_with_git=$( git describe )
+# sudo sed -i '\!^drawpile_abuse_report_version_with_git =!{h;s!=.*!= '"$drawpile_abuse_report_version_with_git"'!};${x;\!^$!{s!!drawpile_abuse_report_version_with_git = '"$drawpile_abuse_report_version_with_git"'!;H};x}' $drawpile_configuration_values_file
+# git describe - fatal: No names found, cannot describe anything.
 echo
 echo '--------------------------------------------------------------------------------'
 echo "Running command: python -m venv env"
@@ -8519,6 +8523,10 @@ comment_EOF_delete
 	cd "$dp_install_loc/Programs"
 	git clone https://github.com/drawpile/dpwebadmin.git
 	cd "$dp_install_loc/Programs/dpwebadmin"
+	# Doesn't work
+	# drawpile_dp_webadmin_version_with_git=$( git describe )
+	# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
+	# git describe - fatal: No names found, cannot describe anything.
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
