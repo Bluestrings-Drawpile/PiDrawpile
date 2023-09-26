@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9895
+drawpilescriptversion=2.9896
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -6712,11 +6712,11 @@ echo
 
 # Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
 nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
-echo "Value Encoded $nginx_username_encoded_1"
+# echo "Value Encoded $nginx_username_encoded_1"
 
 # Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
 nginx_htpasswd_encoded_1="$(echo "$nginx_htpasswd_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
-echo "Value Encoded $nginx_htpasswd_encoded_1"
+# echo "Value Encoded $nginx_htpasswd_encoded_1"
 
 # To be used later with server management scripts, to decode URL encoded usernames/passwords
 # raw_password="$(echo "$encoded_password" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
@@ -8575,8 +8575,23 @@ EOF
 	echo
 	echo This step may take a while to complete. Please be patient.
 	echo
+	echo '--------------------------------------------------------------------------------'
+	echo "Running Commaand: npm install"
+	echo '--------------------------------------------------------------------------------'
 	npm install
+	echo
+	node_return_status_01=$?
+	# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+	echo Return status of command: $node_return_status_01
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
+	echo '--------------------------------------------------------------------------------'
 	NODE_OPTIONS=--openssl-legacy-provider npm run build
+	echo
+	node_return_status_02=$?
+	# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
+	echo Return status of command: $node_return_status_02
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
