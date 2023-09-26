@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9893
+drawpilescriptversion=2.9894
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -436,7 +436,9 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.3 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.3 LTS.${normal}"
@@ -529,9 +531,9 @@ function no_swap_function () {
 	echo
 	read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
 	echo
-	if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] ; then
-		fallocate -l 1G /swapfile
-		chmod 600 /swapfile
+	if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] || [ "$ubuntu_pagefile_fix" == "Y" ] || [ "$ubuntu_pagefile_fix" == "y" ] ; then
+		sudo fallocate -l 1G /swapfile
+		sudo chmod 600 /swapfile
 		sudo mkswap /swapfile
 		sudo swapon /swapfile
 	else
@@ -577,6 +579,21 @@ if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	else
 		echo "Should consider increasing swap file size to at least 1024 MB to ensure"
 		echo "adequate resources available for setup."
+		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+		sleep 30
+		exit
+	fi
+fi
+
+if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] || [ "$ubuntu_pagefile_fix" == "Y" ] || [ "$ubuntu_pagefile_fix" == "y" ] ; then
+	mem_total=$( free -m | grep -i "Mem" | awk '{ print $2 }' )
+	# mem_free=$( free -m | grep -i "Mem" | awk '{ print $4 }' )
+	swap_total=$( free -m | grep -i "Swap" | awk '{ print $2 }' )
+	# swap_free=$( free -m | grep -i "Swap" | awk '{ print $4 }' )
+	if (( "$swap_total" == "0" )); then
+		echo "${bold}${red}It appears the swap increase attempt failed.${normal}"
+		echo "${bold}${red}Please manually adjust and restart the script.${normal}"
+		echo
 		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
 		sleep 30
 		exit
