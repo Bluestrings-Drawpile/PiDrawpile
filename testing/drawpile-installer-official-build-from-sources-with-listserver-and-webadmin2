@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9894
+drawpilescriptversion=2.9895
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -521,8 +521,8 @@ swap_total=$( free -m | grep -i "Swap" | awk '{ print $2 }' )
 # swap_free=$( free -m | grep -i "Swap" | awk '{ print $4 }' )
 
 function no_swap_function () {
-	echo "fallocate -l 1G /swapfile"
-	echo "chmod 600 /swapfile"
+	echo "sudo fallocate -l 1G /swapfile"
+	echo "sudo chmod 600 /swapfile"
 	echo "sudo mkswap /swapfile"
 	echo "sudo swapon /swapfile"
 	echo
