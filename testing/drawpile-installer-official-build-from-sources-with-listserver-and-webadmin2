@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9897
+drawpilescriptversion=2.9898
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -562,10 +562,21 @@ function no_swap_function () {
 	echo "Changes can be made manually with: sudo nano /etc/fstab"
 	echo
 	echo "Would you like to attempt this fix automatically?"
-	echo "Script will exit if you select not to do this."
+	echo "Script will exit otherwise."
 	echo
-	read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
-	echo
+	while :; do
+		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
+		echo
+		if [ "$ubuntu_pagefile_fix" == "y" ] || [ "$ubuntu_pagefile_fix" == "Y" ] || [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] || [ "$ubuntu_pagefile_fix" == "n" ] || [ "$ubuntu_pagefile_fix" == "N" ] || [ "$ubuntu_pagefile_fix" == "no" ] || [ "$ubuntu_pagefile_fix" == "NO" ] || [ "$ubuntu_pagefile_fix" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
 	if [ "$ubuntu_pagefile_fix" == "yes" ] || [ "$ubuntu_pagefile_fix" == "YES" ] || [ "$ubuntu_pagefile_fix" == "Yes" ] || [ "$ubuntu_pagefile_fix" == "Y" ] || [ "$ubuntu_pagefile_fix" == "y" ] ; then
 		sudo fallocate -l 1G /swapfile
 		sudo chmod 600 /swapfile
@@ -582,15 +593,17 @@ function no_swap_function () {
 				echo "${bold}${yellow}Making backup of /etc/fstab${normal}".
 				sudo cp -v /etc/fstab /etc/fstab.backup
 			else
-				echo "${bold}${yellow}Backup exists of /etc/fstab.backup${normal}".
+				echo "${bold}${green}Backup exists of /etc/fstab.backup${normal}".
 			fi
-		fi
-		echo
-		echo "${bold}${yellow}Appending data to /etc/fstab${normal}".
-		echo "     /swapfile none swap sw 0 0"
-		cat <<EOF | sudo tee -a /etc/fstab >/dev/null
+			echo
+			echo "${bold}${yellow}Appending data to /etc/fstab${normal}".
+			echo "     /swapfile none swap sw 0 0"
+			#  Might want to add an extra blank line in case someone saved their fstab without a terminating newline.
+			cat <<EOF | sudo tee -a /etc/fstab >/dev/null
+
 /swapfile none swap sw 0 0
 EOF
+		fi
 		echo
 		echo "Operations complete."
 	else
@@ -601,7 +614,9 @@ EOF
 	fi
 }
 
+no_swap_available=false
 if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
+	no_swap_available=true
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -7722,10 +7737,14 @@ EOF
 	if [[ -e  "/home/drawpileuser/listserverconfig.cfg" ]]; then
 		echo "${bold}${cyan}*****List server configuration file exists . . . *****${normal}"
 		echo
-		echo 'Enter a number and hit enter to continue.'
+		echo 'You should regenerate the configuration if you set up a'
+		echo 'different username or password for web admin and elected'
+		echo 'to store the password in plain text on the server.'
 		echo
 		echo 'Press 1 to use this existing configuration'
 		echo 'Press 2 to re-generate configuration for List Server'
+		echo
+		echo 'Enter a number and hit enter to continue.'
 		echo
 		read list_server_config
 		echo
@@ -8624,11 +8643,21 @@ EOF
 	echo
 	echo This step may take a while to complete. Please be patient.
 	echo
-	echo '--------------------------------------------------------------------------------'
-	echo "Running Command: npm install"
-	echo '--------------------------------------------------------------------------------'
-	if ! npm install; then
-		command_die "${bold}${red}Command 'npm install' failed${normal}"
+	if [ "$no_swap_available" == "true" ]; then
+		echo '--------------------------------------------------------------------------------'
+		echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+		echo '--------------------------------------------------------------------------------'
+		if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		fi
+	else
+		# elif [ "$no_swap_available" == "false" ]; then
+		echo '--------------------------------------------------------------------------------'
+		echo "Running Command: npm install"
+		echo '--------------------------------------------------------------------------------'
+		if ! npm install; then
+			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		fi
 	fi
 	# node_return_status_01=$?
 	# echo
