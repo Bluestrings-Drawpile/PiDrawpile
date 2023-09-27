@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9896
+drawpilescriptversion=2.9897
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -113,6 +113,12 @@ function pause () {
 	read -s -n 1 -p "Press any key to continue . . ."
 	echo ""
 }
+
+function command_die () {
+    echo "$@" 1>&2
+    exit 1
+}
+
 function drawpile_credits_function () {
 	echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
 	echo 'you want to donate some money as thanks for all that he does!'
@@ -521,10 +527,39 @@ swap_total=$( free -m | grep -i "Swap" | awk '{ print $2 }' )
 # swap_free=$( free -m | grep -i "Swap" | awk '{ print $4 }' )
 
 function no_swap_function () {
-	echo "sudo fallocate -l 1G /swapfile"
-	echo "sudo chmod 600 /swapfile"
-	echo "sudo mkswap /swapfile"
-	echo "sudo swapon /swapfile"
+	# How do I increase swapfile in Ubuntu 18.04? [duplicate]	--> https://askubuntu.com/questions/1075505/how-do-i-increase-swapfile-in-ubuntu-18-04
+	# 																https://cdn.discordapp.com/attachments/556300450228338740/1147000402424893570/image.png?ex=6514e9de&is=6513985e&hm=6c4be23be022eacfb1a53526014de22aeadd6f3b3fd4510c4c8be47d7676ac0b&
+	# Check Swap File to Prevent npm install From Being Killed	--> https://codentrick.com/check-swap-file-to-prevent-npm-install-can-be-killed/
+	# Understanding vm.swappiness 								--> https://linuxhint.com/understanding_vm_swappiness/
+	echo "It appears the system memory is less than 512 MB and that your system does"
+	echo "not have enough memory to set up certain parts of the script. However, here"
+	echo "are some configuration commands which should help, as it permanently"
+	echo "increases swap to 1024MB of space."
+	echo
+	echo "Creates a swap file of the designated size:"
+	echo "     sudo fallocate -l 1G /swapfile"
+	echo
+	echo "Assigns read/write permissions for root only (tightens security)."
+	echo "     sudo chmod 600 /swapfile"
+	echo
+	echo "Formats the file as swap."
+	echo "     sudo mkswap /swapfile"
+	echo
+	echo "The file will be activated on the next reboot, however, if you want to"
+	echo "activate it for the current session, use this command: "
+	echo "     sudo swapon /swapfile"
+	echo
+	echo "Configure the swap file usage to prevent application crashes. Setting it to"
+	echo "10% means that if there is less than 10% to use the swap file."
+	echo "     echo 10 | sudo tee /proc/sys/vm/swappiness"
+	echo "     echo vm.swappiness = 10 | sudo tee -a /etc/sysctl.conf"
+	echo
+	echo "To make the above changes permanent, the script will check /etc/fstab to see"
+	echo "if a swapfile line exists already. If it exists, no changes will be made. If"
+	echo "it does not exist, then the following line will be added:"
+	echo "     /swapfile none swap sw 0 0"
+	echo
+	echo "Changes can be made manually with: sudo nano /etc/fstab"
 	echo
 	echo "Would you like to attempt this fix automatically?"
 	echo "Script will exit if you select not to do this."
@@ -536,6 +571,28 @@ function no_swap_function () {
 		sudo chmod 600 /swapfile
 		sudo mkswap /swapfile
 		sudo swapon /swapfile
+		echo 10 | sudo tee /proc/sys/vm/swappiness
+		echo vm.swappiness = 10 | sudo tee -a /etc/sysctl.conf
+		if grep -qw "/swapfile" /etc/fstab; then
+			echo "${bold}${red}Found content indicating swap file already made persistent.${normal}"
+			echo "${bold}${red}Skipping addition of content.${normal}"
+		else
+			echo "${bold}${yellow}Did not find persistent swap file in /etc/fstab${normal}".
+			if [ ! -e /etc/fstab.backup ]; then
+				echo "${bold}${yellow}Making backup of /etc/fstab${normal}".
+				sudo cp -v /etc/fstab /etc/fstab.backup
+			else
+				echo "${bold}${yellow}Backup exists of /etc/fstab.backup${normal}".
+			fi
+		fi
+		echo
+		echo "${bold}${yellow}Appending data to /etc/fstab${normal}".
+		echo "     /swapfile none swap sw 0 0"
+		cat <<EOF | sudo tee -a /etc/fstab >/dev/null
+/swapfile none swap sw 0 0
+EOF
+		echo
+		echo "Operations complete."
 	else
 		echo
 		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
@@ -563,18 +620,8 @@ if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	echo '--------------------------------------------------------------------------------'
 	echo
 	if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
-		echo "It appears the system memory is less than 512 MB and that your system does"
-		echo "not have enough memory to set up certain parts of the script. However, there"
-		echo "are some configuration commands for Ubuntu which may help, as it increases "
-		echo "swap to 1024MB of space."
-		echo
 		no_swap_function
 	elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
-		echo "It appears the system memory is less than 512 MB and that your system does"
-		echo "not have enough memory to set up certain parts of the script. However, there"
-		echo "are some configuration commands for Ubuntu which work on Debian, as it "
-		echo "increases swap to 1024MB of space."
-		echo
 		no_swap_function
 	else
 		echo "Should consider increasing swap file size to at least 1024 MB to ensure"
@@ -7089,7 +7136,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		# fi
 	fi
 	
-	sudo cp $go_path/bin/listserver /usr/local/bin
+	if [[ ! -e  "/usr/local/bin/listserver" ]]; then
+		sudo cp $go_path/bin/listserver /usr/local/bin
+	fi
 	
 	if [[ -e  "$go_path/bin/listserver" ]]; then
 		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
@@ -8576,22 +8625,26 @@ EOF
 	echo This step may take a while to complete. Please be patient.
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo "Running Commaand: npm install"
+	echo "Running Command: npm install"
 	echo '--------------------------------------------------------------------------------'
-	npm install
-	echo
-	node_return_status_01=$?
+	if ! npm install; then
+		command_die "${bold}${red}Command 'npm install' failed${normal}"
+	fi
+	# node_return_status_01=$?
+	# echo
 	# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
-	echo Return status of command: $node_return_status_01
+	# echo Return status of command: $node_return_status_01
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
 	echo '--------------------------------------------------------------------------------'
-	NODE_OPTIONS=--openssl-legacy-provider npm run build
-	echo
-	node_return_status_02=$?
+	if ! NODE_OPTIONS=--openssl-legacy-provider npm run build; then
+		command_die "${bold}${red}Command 'NODE_OPTIONS=--openssl-legacy-provider npm run build' failed${normal}"
+	fi
+	# node_return_status_02=$?
+	# echo
 	# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
-	echo Return status of command: $node_return_status_02
+	# echo Return status of command: $node_return_status_02
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
