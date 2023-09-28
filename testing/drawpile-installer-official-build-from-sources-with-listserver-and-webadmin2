@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9898
+drawpilescriptversion=2.9899
 drawpile_script_version=$drawpilescriptversion
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -8547,7 +8547,6 @@ comment_EOF_delete
 		echo Version installed is $test_version . . .
 		echo Status: $test_installation_status
 		echo
-		pause
 		node -v
 		echo
 		install_or_update_nodejs
@@ -8643,7 +8642,8 @@ EOF
 	echo
 	echo This step may take a while to complete. Please be patient.
 	echo
-	if [ "$no_swap_available" == "true" ]; then
+	# if [ "$no_swap_available" == "true" ]; then
+	if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
 		echo '--------------------------------------------------------------------------------'
 		echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
 		echo '--------------------------------------------------------------------------------'
