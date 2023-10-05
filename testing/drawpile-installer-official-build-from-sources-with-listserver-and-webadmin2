@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9904
+drawpilescriptversion=2.9905
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -817,8 +817,10 @@ elif [ "$drawpileread_test" == "no" ]; then
 	fi
 fi
 
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 # SSH Section to verify using public key encryption and NOT Username/Password
 # type authentication, as this opens the server to automated attacks.
 # ----------------------------------------------------------------------------------
@@ -953,8 +955,10 @@ if [ "$local_or_remote" == "Remote" ]; then
 		fi
 	fi
 fi
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
+echo
+echo "${invis}--------------------------------------------------------------------------------${normal}"
+echo "${invis}--------------------------------------------------------------------------------${normal}"
+echo
 
 drawpile_script_completed_test=$( grep 'drawpile_script_completed = ' $drawpile_configuration_values_file 2>/dev/null )
 
