@@ -1,10 +1,12 @@
 #!/bin/bash
-drawpilescriptversion=2.9902
+drawpilescriptversion=2.9903
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
-	echo local_or_remote=Remote
+	local_or_remote="Remote"
+	# https://askubuntu.com/questions/538453/how-do-i-detect-if-the-current-session-is-an-ssh-session-via-bash
+	# https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh
 else
-    echo local_or_remote=Local
+    local_or_remote="Local"
 fi
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -522,126 +524,6 @@ echo
 [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || command -v sudo > /dev/null 2>&1 || type sudo > /dev/null 2>&1 || hash sudo 2>/dev/null || { echo >&2 "Script requires sudo or root access. Exiting script in 30 seconds."; sleep 30; exit 1; }
 #
 
-# 
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
-# SSH Section to verify using public key encryption and NOT Username/Password
-# type authentication, as this opens the server to automated attacks.
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
-# This portion of the script inspired by using Linode
-# Harden SSH Access
-#		https://www.linode.com/docs/products/compute/compute-instances/guides/set-up-and-secure/?tabs=linux%2Cmost-distributions%2Cubuntu-debian-kali-linux#harden-ssh-access
-
-function add_authorized_keys_file_function () {
-	echo "${bold}${red}WARNING. FILE 'authorized_keys' DOES NOT EXIST.${normal}"
-	if [ ! -d /.ssh ]; then
-		sudo mkdir /.ssh
-	fi
-	sudo chmod -R 700 ~/.ssh
-	sudo touch /.ssh/authorized_keys
-	sudo chmod 600 /.ssh/authorized_keys
-}
-# ----------------------------------------------------------------------------------
-function add_ssh_key_function () {
-	echo "${bold}${red}WARNING. AN SSH KEY DOES NOT EXIST.${normal}"
-	echo
-	echo "However, the script can add an SSH public key from PuTTYgen to securely"
-	echo "connect remotely. If you do not have PuTTYgen installed, you can get it"
-	echo "from the following website:        https://ninite.com/putty-winscp/"
-	echo
-	echo "Note that this includes PuTTY and WinSCP for use with your server also."
-	echo 
-	while :; do
-		read -r -p "${bold}${cyan}Would you like to add an SSH key now with PuTTYgen, (Y)es or (N)o?: ${normal} " add_ssh_key_query
-		echo
-		if [ "$add_ssh_key_query" == "y" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "n" ] || [ "$add_ssh_key_query" == "N" ] || [ "$add_ssh_key_query" == "no" ] || [ "$add_ssh_key_query" == "NO" ] || [ "$add_ssh_key_query" == "No" ]; then
-			break
-		else
-			echo
-			echo "${bold}${red}Invalid input selection, try again.${normal}"
-			echo
-			echo ----------------------------------------------------------------------------------
-			echo
-		fi
-	done
-	if [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "y" ] ; then		
-		echo "Open PuTTYGen. Leaving options to the default with RSA selected, click "
-		echo " 'Generate' and move your mouse randomly over the blank area to generate "
-		echo " some randomness with the security key."
-		echo
-		echo "Fill out 'Key passphrase' and 'Confirm passphrase' with something that is "
-		echo "AT LEAST 12 characters long. You can also set 'Key comment' to your username"
-		echo "for the server or an easy-to-remember identifier."
-		echo
-		echo "Copy the data listed under" 
-		echo " 'Public key for pasting into OpenSSH authorized_keys file:'"
-		echo 
-		echo "Do not close PuTTYgen! Make sure you have ALL the data. The script cannot"
-		echo "verify if you are missing any data. An example key is noted below, which"
-		echo "is probably much shorter than yours since this is only an example."
-		echo
-		echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAIQDONx0gKMldSZllpt2JxRjcHjq9h9xWTRxjjF8EUX8qpQ== USERNAME-GOES-HERE'
-		echo
-		read -r -p "${bold}${cyan}Paste this information into the script now.: ${normal}" add_ssh_key_value
-		cat <<EOF | sudo tee -a /.ssh/authorized_keys >/dev/null
-$add_ssh_key_value
-EOF
-		echo
-		echo "${bold}${cyan}Entered public key into: /.ssh/authorized_keys${normal}"
-		cat /.ssh/authorized_keys
-		echo
-		echo "${bold}${cyan}Once that is done, make sure to save the public and private keys to your${normal}"
-		echo "${bold}${cyan} computer in PuTTYgen. DO NOT SHARE THE PRIVATE KEY WITH ANYONE. TREAT${normal}"
-		echo "${bold}${cyan} THIS LIKE YOU WOULD A KEY TO YOUR HOUSE OR OTHER VALUABLES!${normal}"
-		echo
-		if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
-			echo "${bold}${yellow}Will disable SSH Password Authentication based-login.${normal}"
-			sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
-			sudo systemctl restart sshd
-		fi
-		echo "Waiting 30 seconds before continuing script..."
-		sleep 30
-	else
-		echo "${bold}${red}Skipping addition of SSH public key. Not recommended if server is remote!${normal}"
-	fi
-}
-# ----------------------------------------------------------------------------------
-echo Script running: $local_or_remote
-# ----------------------------------------------------------------------------------
-if [ "$local_or_remote" == "Remote" ]; then
-	ssh_password_authentication_status=$( cat /etc/ssh/sshd_config 2>/dev/null | grep -ie "^PasswordAuthentication yes"  )
-	# Default value when set to yes --> PasswordAuthentication yes
-	if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
-		echo "${bold}${red}SSH Password Authentication is enabled. This is not recommended.${normal}"
-		if [ -e /.ssh/authorized_keys ]; then
-			ssh_authorized_keys=$( sudo cat /.ssh/authorized_keys )
-			if [ "$ssh_authorized_keys" != "" ]; then
-				echo "${bold}${yellow}An SSH key exists. Will disable SSH Password Authentication based-login.${normal}"
-				sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
-				sudo systemctl restart sshd
-			else
-				add_ssh_key_function
-			fi
-		else
-			add_authorized_keys_file_function
-			add_ssh_key_function
-		fi
-	else
-		echo "${bold}${green}SSH Password Authentication is disabled. This is recommended.${normal}"
-		if [ -e /.ssh/authorized_keys ]; then
-			ssh_authorized_keys=$( sudo cat /.ssh/authorized_keys )
-			if [ "$ssh_authorized_keys" != "" ]; then
-				echo "${bold}${green}An SSH key exists. This is also recommended.${normal}"
-			else
-				add_ssh_key_function
-			fi
-		else
-			add_authorized_keys_file_function
-			add_ssh_key_function
-		fi
-	fi
-fi
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 
@@ -935,6 +817,142 @@ elif [ "$drawpileread_test" == "no" ]; then
 	fi
 fi
 
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# SSH Section to verify using public key encryption and NOT Username/Password
+# type authentication, as this opens the server to automated attacks.
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# This portion of the script inspired by using Linode
+# Harden SSH Access
+#		https://www.linode.com/docs/products/compute/compute-instances/guides/set-up-and-secure/?tabs=linux%2Cmost-distributions%2Cubuntu-debian-kali-linux#harden-ssh-access
+
+function add_authorized_keys_file_function () {
+	echo "${bold}${red}WARNING. FILE 'authorized_keys' DOES NOT EXIST.${normal}"
+	if [ ! -d /.ssh ]; then
+		sudo mkdir /.ssh
+	fi
+	sudo chmod -R 700 /.ssh
+	sudo touch /.ssh/authorized_keys
+	sudo chmod 600 /.ssh/authorized_keys
+}
+# ----------------------------------------------------------------------------------
+function add_ssh_key_function () {
+	echo "${bold}${red}WARNING. AN SSH KEY DOES NOT EXIST.${normal}"
+	echo
+	echo "However, the script can add an SSH public key from PuTTYgen to securely"
+	echo "connect remotely. If you do not have PuTTYgen installed, you can get it"
+	echo "from the following website:        https://ninite.com/putty-winscp/"
+	echo
+	echo "Note that this includes PuTTY and WinSCP for use with your server also."
+	echo 
+	while :; do
+		read -r -p "${bold}${cyan}Would you like to add an SSH key now with PuTTYgen, (Y)es or (N)o?: ${normal} " add_ssh_key_query
+		echo
+		if [ "$add_ssh_key_query" == "y" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "n" ] || [ "$add_ssh_key_query" == "N" ] || [ "$add_ssh_key_query" == "no" ] || [ "$add_ssh_key_query" == "NO" ] || [ "$add_ssh_key_query" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "y" ] ; then		
+		echo "Open PuTTYGen. Leaving options to the default with RSA selected, click "
+		echo " 'Generate' and move your mouse randomly over the blank area to generate "
+		echo " some randomness with the security key."
+		echo
+		echo "Fill out 'Key passphrase' and 'Confirm passphrase' with something that is "
+		echo "AT LEAST 12 characters long. You can also set 'Key comment' to your username"
+		echo "for the server or an easy-to-remember identifier."
+		echo
+		echo "Copy the data listed under" 
+		echo " 'Public key for pasting into OpenSSH authorized_keys file:'"
+		echo 
+		echo "Do not close PuTTYgen! Make sure you have ALL the data. The script cannot"
+		echo "verify if you are missing any data. An example key is noted below, which"
+		echo "is probably much shorter than yours since this is only an example."
+		echo
+		echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAIQDONx0gKMldSZllpt2JxRjcHjq9h9xWTRxjjF8EUX8qpQ== USERNAME-GOES-HERE'
+		echo
+		read -r -p "${bold}${cyan}Paste this information into the script now.: ${normal}" add_ssh_key_value
+		cat <<EOF | sudo tee -a /.ssh/authorized_keys >/dev/null
+$add_ssh_key_value
+EOF
+		echo
+		echo "${bold}${cyan}Entered public key into: /.ssh/authorized_keys${normal}"
+		cat /.ssh/authorized_keys
+		echo
+		echo "${bold}${cyan}Once that is done, make sure to save the public and private keys to your${normal}"
+		echo "${bold}${cyan} computer in PuTTYgen. DO NOT SHARE THE PRIVATE KEY WITH ANYONE. TREAT${normal}"
+		echo "${bold}${cyan} THIS LIKE YOU WOULD A KEY TO YOUR HOUSE OR OTHER VALUABLES!${normal}"
+		echo
+		if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
+			echo "${bold}${yellow}Will disable SSH Password Authentication based-login.${normal}"
+			sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
+			sudo systemctl restart sshd
+		fi
+		echo "Waiting 30 seconds before continuing script..."
+		sleep 30
+	else
+		echo "${bold}${red}Skipping addition of SSH public key. Not recommended if server is remote!${normal}"
+	fi
+}
+# ----------------------------------------------------------------------------------
+echo "Script running: $local_or_remote"
+# ----------------------------------------------------------------------------------
+if [ "$local_or_remote" == "Remote" ]; then
+	ssh_password_authentication_status=$( cat /etc/ssh/sshd_config 2>/dev/null | grep -ie "^PasswordAuthentication yes"  )
+	# Default value when set to yes --> PasswordAuthentication yes
+	# ----------------------------------------------------------------------------------
+	if [ -e /.ssh/authorized_keys ]; then
+		ssh_authorized_keys=$( sudo cat /.ssh/authorized_keys )
+	else
+		ssh_authorized_keys=""
+	fi
+	# ----------------------------------------------------------------------------------
+	if [ -e /root/.ssh/authorized_keys ]; then
+		root_ssh_authorized_keys=$( sudo cat /root/.ssh/authorized_keys )
+	else
+		root_ssh_authorized_keys=""
+	fi
+	# ----------------------------------------------------------------------------------
+	if [ -e /home/$current_username/.ssh/authorized_keys ]; then
+		current_username_ssh_authorized_keys=$( sudo cat /home/$current_username/.ssh/authorized_keys )
+	else
+		current_username_ssh_authorized_keys=""
+	fi
+	# ----------------------------------------------------------------------------------
+	if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
+		echo "${bold}${red}SSH Password Authentication is enabled. This is not recommended.${normal}"
+		if [ -e /.ssh/authorized_keys ]; then
+			if [ "$ssh_authorized_keys" != "" ] || [ "$root_ssh_authorized_keys" != "" ] || [ "$current_username_ssh_authorized_keys" != "" ]; then
+				echo "${bold}${yellow}An SSH key exists. Will disable SSH Password Authentication based-login.${normal}"
+				sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
+				sudo systemctl restart sshd
+			else
+				add_ssh_key_function
+			fi
+		else
+			add_authorized_keys_file_function
+			add_ssh_key_function
+		fi
+	else
+		echo "${bold}${green}SSH Password Authentication is disabled. This is recommended.${normal}"
+		if [ -e /.ssh/authorized_keys ]; then
+			if [ "$ssh_authorized_keys" != "" ] || [ "$root_ssh_authorized_keys" != "" ] || [ "$current_username_ssh_authorized_keys" != "" ]; then
+				echo "${bold}${green}An SSH key exists. This is also recommended.${normal}"
+			else
+				add_ssh_key_function
+			fi
+		else
+			add_authorized_keys_file_function
+			add_ssh_key_function
+		fi
+	fi
+fi
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 
