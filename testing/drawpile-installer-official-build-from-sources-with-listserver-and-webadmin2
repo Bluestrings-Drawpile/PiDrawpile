@@ -1,10 +1,10 @@
 #!/bin/bash
-drawpilescriptversion=2.9901
+drawpilescriptversion=2.9902
 drawpile_script_version=$drawpilescriptversion
-if [ "$(ps h -o comm -p "$PPID")" == "sshd" ] ; then 
-    local_or_remote=Remote
+if echo $SSH_TTY | grep -q "/dev/pts/" ; then
+	echo local_or_remote=Remote
 else
-    local_or_remote=Local
+    echo local_or_remote=Local
 fi
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
