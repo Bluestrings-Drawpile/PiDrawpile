@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9903
+drawpilescriptversion=2.9904
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -927,7 +927,7 @@ if [ "$local_or_remote" == "Remote" ]; then
 	# ----------------------------------------------------------------------------------
 	if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
 		echo "${bold}${red}SSH Password Authentication is enabled. This is not recommended.${normal}"
-		if [ -e /.ssh/authorized_keys ]; then
+		if [ -e /.ssh/authorized_keys ] || [ -e /root/.ssh/authorized_keys ] || [ -e /home/$current_username/.ssh/authorized_keys ]; then
 			if [ "$ssh_authorized_keys" != "" ] || [ "$root_ssh_authorized_keys" != "" ] || [ "$current_username_ssh_authorized_keys" != "" ]; then
 				echo "${bold}${yellow}An SSH key exists. Will disable SSH Password Authentication based-login.${normal}"
 				sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
