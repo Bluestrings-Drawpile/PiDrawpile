@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9905
+drawpilescriptversion=2.9906
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -835,8 +835,8 @@ function add_authorized_keys_file_function () {
 		sudo mkdir /.ssh
 	fi
 	sudo chmod -R 700 /.ssh
-	sudo touch /.ssh/authorized_keys
-	sudo chmod 600 /.ssh/authorized_keys
+	sudo touch ~/.ssh/authorized_keys
+	sudo chmod 600 ~/.ssh/authorized_keys
 }
 # ----------------------------------------------------------------------------------
 function add_ssh_key_function () {
@@ -879,13 +879,22 @@ function add_ssh_key_function () {
 		echo
 		echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAIQDONx0gKMldSZllpt2JxRjcHjq9h9xWTRxjjF8EUX8qpQ== USERNAME-GOES-HERE'
 		echo
-		read -r -p "${bold}${cyan}Paste this information into the script now.: ${normal}" add_ssh_key_value
-		cat <<EOF | sudo tee -a /.ssh/authorized_keys >/dev/null
+		read -r -p "${bold}${cyan}Paste this information into the script now: ${normal}" add_ssh_key_value
+		if [ ! -e ~/.ssh/authorized_keys ]; then
+			if [ ! -d ~/.ssh ]; then
+				sudo mkdir /.ssh
+			fi
+			sudo chmod -R 700 /.ssh
+			sudo touch ~/.ssh/authorized_keys
+			sudo chmod 600 ~/.ssh/authorized_keys
+		fi
+		cat <<EOF | sudo tee -a ~/.ssh/authorized_keys >/dev/null
 $add_ssh_key_value
 EOF
+		sleep 2
 		echo
-		echo "${bold}${cyan}Entered public key into: /.ssh/authorized_keys${normal}"
-		cat /.ssh/authorized_keys
+		echo "${bold}${cyan}Entered public key into: ~/.ssh/authorized_keys${normal}"
+		cat ~/.ssh/authorized_keys
 		echo
 		echo "${bold}${cyan}Once that is done, make sure to save the public and private keys to your${normal}"
 		echo "${bold}${cyan} computer in PuTTYgen. DO NOT SHARE THE PRIVATE KEY WITH ANYONE. TREAT${normal}"
@@ -909,31 +918,20 @@ if [ "$local_or_remote" == "Remote" ]; then
 	ssh_password_authentication_status=$( cat /etc/ssh/sshd_config 2>/dev/null | grep -ie "^PasswordAuthentication yes"  )
 	# Default value when set to yes --> PasswordAuthentication yes
 	# ----------------------------------------------------------------------------------
-	if [ -e /.ssh/authorized_keys ]; then
-		ssh_authorized_keys=$( sudo cat /.ssh/authorized_keys )
+	if [ -e ~/.ssh/authorized_keys ]; then
+		ssh_authorized_keys=$( sudo cat ~/.ssh/authorized_keys )
 	else
 		ssh_authorized_keys=""
 	fi
 	# ----------------------------------------------------------------------------------
-	if [ -e /root/.ssh/authorized_keys ]; then
-		root_ssh_authorized_keys=$( sudo cat /root/.ssh/authorized_keys )
-	else
-		root_ssh_authorized_keys=""
-	fi
-	# ----------------------------------------------------------------------------------
-	if [ -e /home/$current_username/.ssh/authorized_keys ]; then
-		current_username_ssh_authorized_keys=$( sudo cat /home/$current_username/.ssh/authorized_keys )
-	else
-		current_username_ssh_authorized_keys=""
-	fi
-	# ----------------------------------------------------------------------------------
 	if [ "${ssh_password_authentication_status,,}" == "passwordauthentication yes" ]; then
 		echo "${bold}${red}SSH Password Authentication is enabled. This is not recommended.${normal}"
-		if [ -e /.ssh/authorized_keys ] || [ -e /root/.ssh/authorized_keys ] || [ -e /home/$current_username/.ssh/authorized_keys ]; then
-			if [ "$ssh_authorized_keys" != "" ] || [ "$root_ssh_authorized_keys" != "" ] || [ "$current_username_ssh_authorized_keys" != "" ]; then
+		if [ -e ~/.ssh/authorized_keys ]; then
+			if [ "$ssh_authorized_keys" != "" ]; then
 				echo "${bold}${yellow}An SSH key exists. Will disable SSH Password Authentication based-login.${normal}"
 				sudo sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
 				sudo systemctl restart sshd
+				sleep 5
 			else
 				add_ssh_key_function
 			fi
@@ -943,8 +941,8 @@ if [ "$local_or_remote" == "Remote" ]; then
 		fi
 	else
 		echo "${bold}${green}SSH Password Authentication is disabled. This is recommended.${normal}"
-		if [ -e /.ssh/authorized_keys ]; then
-			if [ "$ssh_authorized_keys" != "" ] || [ "$root_ssh_authorized_keys" != "" ] || [ "$current_username_ssh_authorized_keys" != "" ]; then
+		if [ -e ~/.ssh/authorized_keys ]; then
+			if [ "$ssh_authorized_keys" != "" ]; then
 				echo "${bold}${green}An SSH key exists. This is also recommended.${normal}"
 			else
 				add_ssh_key_function
