@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9906
+drawpilescriptversion=2.9907
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -772,6 +772,10 @@ function select_non_root_account () {
 	echo "When running script with sudo or su, please specify your user account name"
 	echo "with a valid user directory indicated below."
 	echo
+	echo "Generating list of system users:"
+	id -nu 0
+	eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
+	echo
 	echo "Here are a list of folders in the home directory:"
 	ls -d /home/*/
 	echo
@@ -867,8 +871,15 @@ function add_ssh_key_function () {
 		echo " some randomness with the security key."
 		echo
 		echo "Fill out 'Key passphrase' and 'Confirm passphrase' with something that is "
-		echo "AT LEAST 12 characters long. You can also set 'Key comment' to your username"
-		echo "for the server or an easy-to-remember identifier."
+		echo "AT LEAST 12 characters long. You should also set 'Key comment' to an "
+		echo "existing username on the server."
+		echo
+		echo "Generating list of system users:"
+		# if [[ "$USER" = "root" ]]; then echo "root"; fi
+		# if [[ "$USER" = "Root" ]]; then echo "Root"; fi
+		# if [[ "$USER" = "ROOT" ]]; then echo "ROOT"; fi
+		id -nu 0
+		eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
 		echo
 		echo "Copy the data listed under" 
 		echo " 'Public key for pasting into OpenSSH authorized_keys file:'"
