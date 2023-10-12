@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9907
+drawpilescriptversion=2.9908
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -772,14 +772,14 @@ function select_non_root_account () {
 	echo "When running script with sudo or su, please specify your user account name"
 	echo "with a valid user directory indicated below."
 	echo
-	echo "Generating list of system users:"
+	echo "Generating list of system users (may take up to a minute or so):"
 	id -nu 0
 	eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
 	echo
 	echo "Here are a list of folders in the home directory:"
 	ls -d /home/*/
 	echo
-	read -r -p "Enter username: " current_username
+	read -r -p "Enter ONLY the username: " current_username
 	echo
 	while [[ ! -e "/home/$current_username" ]]
 	do
@@ -835,10 +835,10 @@ echo
 
 function add_authorized_keys_file_function () {
 	echo "${bold}${red}WARNING. FILE 'authorized_keys' DOES NOT EXIST.${normal}"
-	if [ ! -d /.ssh ]; then
-		sudo mkdir /.ssh
+	if [ ! -d ~/.ssh ]; then
+		sudo mkdir ~/.ssh
 	fi
-	sudo chmod -R 700 /.ssh
+	sudo chmod -R 700 ~/.ssh
 	sudo touch ~/.ssh/authorized_keys
 	sudo chmod 600 ~/.ssh/authorized_keys
 }
@@ -872,9 +872,9 @@ function add_ssh_key_function () {
 		echo
 		echo "Fill out 'Key passphrase' and 'Confirm passphrase' with something that is "
 		echo "AT LEAST 12 characters long. You should also set 'Key comment' to an "
-		echo "existing username on the server."
+		echo "existing username on the server OR IT WILL NOT WORK."
 		echo
-		echo "Generating list of system users:"
+		echo "Generating list of system users (may take up to a minute or so):"
 		# if [[ "$USER" = "root" ]]; then echo "root"; fi
 		# if [[ "$USER" = "Root" ]]; then echo "Root"; fi
 		# if [[ "$USER" = "ROOT" ]]; then echo "ROOT"; fi
@@ -8972,8 +8972,25 @@ if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" ==
 			echo '--------------------------------------------------------------------------------'
 			echo
 			curl -sSL https://install.pi-hole.net | bash
+			
+			if [[ ! -e "/etc/dnsmasq.d/02-pidrawpile-custom-settings.conf" ]]; then
+				# Maximum number of concurrent DNS queries reached
+				# https://discourse.pi-hole.net/t/resolved-maximum-number-of-concurrent-dns-queries-reached/60970/2
+				echo
+				echo "Creating custom config to allow more concurrent DNS queries."
+				
+				cat <<EOF | sudo tee /etc/dnsmasq.d/02-pidrawpile-custom-settings.conf >/dev/null
+#### EDIT SETTINGS
+dns-forward-max=4096
+min-cache-ttl=300
+rebind-domain-ok=
+#### END EDIT
+EOF
+				# pihole restartdns ---> https://www.reddit.com/r/pihole/comments/hx04e7/how_do_you_restart_pihole_in_ubuntu_server/
+				sudo systemctl restart pihole-FTL.service
+			fi	
 			echo
-			echo '--------------------------------------------------------------------------------'
+			echo '--------------------------------------------------------------------------------'	
 			echo
 			echo Pi-Hole installed. Will start configuration to work with nginx.
 			sleep 10
