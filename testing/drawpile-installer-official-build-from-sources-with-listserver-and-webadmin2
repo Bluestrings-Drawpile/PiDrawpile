@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9908
+drawpilescriptversion=2.9909
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -127,12 +127,17 @@ function command_die () {
 }
 
 function drawpile_credits_function () {
-	echo 'Made with the assistance of the Creator of Drawpile! His PayPal E-mail if'
-	echo 'you want to donate some money as thanks for all that he does!'
-	echo "${underline}laakkonenc@gmail.com${normal}"
+	echo 'Made with the assistance of the original creator of Drawpile (Calle Laakkonen)'
+	echo 'and the new developer askmeaboutloom! Donation links provided below.'
 	echo
-	echo 'If you want to send a Ko-Fi my way'
-	echo '     https://ko-fi.com/bluestrings'
+	echo 'For Calle Laakkonen (PayPal):'
+	echo "     ${underline}laakkonenc@gmail.com${normal}"
+	echo
+	echo 'For askmeaboutloom: - Not yet provided'
+	echo "     ${underline}https://github.com/askmeaboutlo0m${normal}"
+	echo
+	echo 'Bluestrings (Ko-Fi):'
+	echo "     ${underline}https://ko-fi.com/bluestrings${normal}"
 	echo
 }
 
@@ -520,9 +525,7 @@ fi
 # is absolutely available for use as the script depends on it working.
 #
 
-echo
 [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || command -v sudo > /dev/null 2>&1 || type sudo > /dev/null 2>&1 || hash sudo 2>/dev/null || { echo >&2 "Script requires sudo or root access. Exiting script in 30 seconds."; sleep 30; exit 1; }
-#
 
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
@@ -735,9 +738,8 @@ if ! id -u drawpileuser > /dev/null 2>&1; then
 	echo 'user. This is being created immediately in order to accomodate Drawpile' 
 	echo 'specific configuration information which is now saved for later reference.'
 	echo
-	echo 'This has potential applications, like uninstalling the script changes made'
-	echo 'to your machine, reading server specific configuration, making updates and'
-	echo 'changes to script features easier in the future.'
+	echo 'This has potential uses like reading server specific configuration, update'
+	echo 'configurations, and changes to script features easier in the future.'
 	echo
 	sudo $user_add_program drawpileuser $user_add_options_program_01 $user_add_options_program_02
 	sudo $user_add_options_program_03
@@ -770,26 +772,31 @@ function select_non_root_account () {
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "When running script with sudo or su, please specify your user account name"
-	echo "with a valid user directory indicated below."
+	echo "with a valid user directory indicated below." 
 	echo
-	echo "Generating list of system users (may take up to a minute or so):"
+	echo "${bold}${cyan}Note:${normal} Portions of the script do require some things to run without root access."
+	echo "     Also, if you are running a graphical user interface with your setup,"
+	echo "     prefer YOUR user account over selecting drawpileuser or root. This"
+	echo "     enables shortcut creation on your desktop for server tools."
+	echo
+	echo "${bold}${underline}Generating list of system users (may take up to a minute or so):${normal}"
 	id -nu 0
 	eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
 	echo
-	echo "Here are a list of folders in the home directory:"
+	echo "${bold}${underline}Here are a list of folders in the home directory:${normal}"
 	ls -d /home/*/
 	echo
-	read -r -p "Enter ONLY the username: " current_username
+	read -r -p "${bold}${cyan}Enter ONLY the username:${normal} " current_username
 	echo
 	while [[ ! -e "/home/$current_username" ]]
 	do
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "Invalid user name entered (no matching home directory). Please "
-		echo "enter a valid user name with a user directory indicated below:"
+		echo "${bold}${red}Invalid user name entered (no matching home directory). Please ${normal}"
+		echo "${bold}${red}enter a valid user name with a user directory indicated below:${normal}"
 		ls -d /home/*/
 		echo
-		read -r -p "Enter user name: " current_username
+		read -r -p "${bold}${cyan}Enter user name:${normal} " current_username
 		echo
 	done
 }
@@ -965,14 +972,14 @@ if [ "$local_or_remote" == "Remote" ]; then
 	fi
 fi
 echo
-echo "${invis}--------------------------------------------------------------------------------${normal}"
-echo "${invis}--------------------------------------------------------------------------------${normal}"
+echo "--------------------------------------------------------------------------------"
+echo "--------------------------------------------------------------------------------"
 echo
 
 drawpile_script_completed_test=$( grep 'drawpile_script_completed = ' $drawpile_configuration_values_file 2>/dev/null )
 
 if [[ "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]]; then
-	echo "${invis}Script not yet completed one run successfully.${normal}"
+	echo "Script not yet completed one run successfully."
 	# Do nothing, no action required
 	:
 elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then
@@ -985,7 +992,7 @@ elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]
 	read -r -p "Are you sure you want to re-run this script? (Y)es or (N)o: " drawpile_script_completed_warning
 	echo
 	if [[ "$drawpile_script_completed_warning" = "yes" ]] || [[ "$drawpile_script_completed_warning" = "YES" ]] || [[ "$drawpile_script_completed_warning" = "Yes" ]] || [[ "$drawpile_script_completed_warning" = "y" ]] || [[ "$drawpile_script_completed_warning" = "Y" ]]; then
-		echo "${invis}Ignoring warning: drawpile_script_completed_warning${normal}"
+		echo "Ignoring warning: drawpile_script_completed_warning"
 		sudo sed -i '\!^drawpile_script_completed_warning =!{h;s!=.*!= '"ignored"'!};${x;\!^$!{s!!drawpile_script_completed_warning = '"ignored"'!;H};x}' $drawpile_configuration_values_file
 	elif [[ "$drawpile_script_completed_warning" = "no" ]] || [[ "$drawpile_script_completed_warning" = "NO" ]] || [[ "$drawpile_script_completed_warning" = "No" ]] || [[ "$drawpile_script_completed_warning" = "n" ]] || [[ "$drawpile_script_completed_warning" = "N" ]]; then
 		echo Exiting script.
@@ -997,7 +1004,7 @@ elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]
 		exit
 	fi
 else
-	echo "${invis}First time script is running. Adding value for later query.${normal}"
+	echo "First time script is running. Adding value for later query."
 	sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_script_completed = '"no"'!;H};x}' $drawpile_configuration_values_file
 fi
 echo
@@ -1607,7 +1614,6 @@ if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Availab
 		echo "This message should not be visible."
 	fi
 elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-	echo
 	script_update_check_function
 elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
 	echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
@@ -1825,7 +1831,6 @@ if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" ==
 		echo "versions of raspbian which may fail to compile otherwise."
 	fi
 fi
-echo
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 #
@@ -2375,6 +2380,8 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}***** Verifying Installation of Curl, Git, and Rust *****${normal}"
+echo
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Verify curl is installed, not available on either Debian or Ubuntu by default, I forget which... 
 package_name=curl
@@ -2476,25 +2483,53 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 echo "${bold}${cyan}***** Update Rust Installation . . . *****${normal}"
-# https://www.rust-lang.org/tools/install
 echo
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
-	# Needed for Raspbian for Desktop
-	# rustup installs incorrect version when 64 bit kernel enabled in 32bit OS
-	#     https://github.com/rust-lang/rustup/issues/3307
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+function rust_install_or_update_function () {
+	# https://www.rust-lang.org/tools/install
+	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+		# Needed for Raspbian for Desktop
+		# rustup installs incorrect version when 64 bit kernel enabled in 32bit OS
+		#     https://github.com/rust-lang/rustup/issues/3307
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+		echo
+		. ~/.cargo/env
+		rustup install --force-non-host stable-i686-unknown-linux-gnu
+		echo
+		rustup default stable-i686-unknown-linux-gnu
+	else
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+		echo
+		. ~/.cargo/env
+	fi
 	echo
-	. ~/.cargo/env
-	rustup install --force-non-host stable-i686-unknown-linux-gnu
+	rustc --version
+}
+
+# Necessary in Fedora to prevent unexpected install messsage when doing version testing.
+# unset command_not_found_handle
+
+if ! rustc --version 2> /dev/null; then
+    echo "Rust is not installed."
 	echo
-	rustup default stable-i686-unknown-linux-gnu
+	rust_install_or_update_function
 else
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-	echo
-	. ~/.cargo/env
+	current_version=$( rustc --version 2> /dev/null | awk '{ print $2 }' )
+	required_version="1.66.1"
+	if [ ! -z "$current_version" ]; then
+		echo "Rust Version: $current_version"
+		if [ "$(printf '%s\n' "$required_version" "$current_version" | sort -V | head -n1)" = "$required_version" ]; then 
+			echo "Rust is up to date or past minimum version ($required_version) required. Skipping update."
+		else
+			echo "Version installed ($current_version) is less than requirement: $required_version"
+			echo "Updating rust."
+			echo
+			rust_install_or_update_function
+		fi
+	else
+		echo "This message for Rust Version check should not be visible."
+	fi
 fi
-echo
-rustc --version
 
 <<comment_EOF
 Do not need sudo for cmake build options (server, headless, client, etc) nor 'cmake --build', as it won't read the rustup version that was just installed. Sudo changes the environment or something. 
@@ -3659,7 +3694,6 @@ function drawpile_build_and_compile_function () {
 	else
 		echo "Unable to make a determination of which version of qtbase5-dev is installed."
 	fi
-	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -4407,24 +4441,24 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${bold}${cyan}***** This stage is for setting up an easy-to-remember *****${normal}"
 	echo "${bold}${cyan}*****        way to connect to your server . . .       *****${normal}"
 	echo 
-	echo "${underline}https://freedns.afraid.org/ ${normal}"
+	echo "${underline}https://freedns.afraid.org/${normal}"
 	echo "${bold}Pros:${normal} Free registration, renew hostname every six months."
 	echo "${bold}Cons:${normal} Minor additional setup with script guided help required, guided setup."
 	echo '      If a typo is made, you must use crontab -e to update the code manually.'
 	echo 
-	echo "${underline}https://www.noip.com/ ${normal}"
+	echo "${underline}https://www.noip.com/${normal}"
 	echo "${bold}Pros:${normal} Free registration, simple setup, only slightly less complex than above"
 	echo '      option listed above.'
 	echo "${bold}Cons:${normal} Must renew the hostname via notification received in email every 30 days"
 	echo '      or lose access. Might not be able to get the same name back.'
 	echo
-	echo "${underline}https://www.duckdns.org/ ${normal}"
+	echo "${underline}https://www.duckdns.org/${normal}"
 	echo "${bold}Pros:${normal} Free registration, simple setup, lots of configuration options available."
 	echo '      can use your own domain name (read the FAQs page).'
 	echo "${bold}Cons:${normal} Cannot detect IPv6 addresses as of September 2023."
 	echo '      It must be manually specified for now.'
 	echo
-	echo "${underline}Note: ${normal}"
+	echo "${underline}Note:${normal}"
 	echo "      If you have purchased your own domain name, usually they will provide the ability to set"
 	echo "      a DNS A-record for you. In which case, this step is not needed and can be safely skipped."
 	echo "      This step is primarily intended for small servers ran from home with a dynamic IP address"
@@ -5321,6 +5355,7 @@ function generate_lets_encrypt_ssl () {
 	echo
 	pause
 	echo 
+	# sudo certbot certificates
 	sudo certbot certonly --nginx -d $hostname
 	# sudo certbot certonly --nginx -d example.hostwebsite.com
 
@@ -5828,9 +5863,101 @@ sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 echo
+drawpile_srv_crypt_key_status=no
+drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
+	echo
+	echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
+	echo " ban lists. Unless multiple servers share the same encryption key, this"
+	echo " means that only the server the session was hosted on can utilize the"
+	echo " exported data file."
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Would you like to enable this feature?${normal} " drawpile_srv_crypt_key_status
+		if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+		echo "You can choose to import an encrypt key. Selecting no will generate a"
+		echo " new key to be used by the server."
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Would you like to import a crypt key?${normal}  " drawpile_srv_import_crypt_key_status
+			if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ]; then
+			while :; do
+				read -r -p "${bold}${cyan}Enter your crypt key now (44 characters long):${normal} " drawpile_srv_crypt_key
+				drawpile_srv_crypt_key_length=${#drawpile_srv_crypt_key}
+				if [ "$drawpile_srv_crypt_key_length" == "44" ] ; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+		elif [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${cyan}Not importing drawpile-srv crypt key, will generate new key.${normal}"
+			echo
+			if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
+				# echo "Provide the password for: drawpileuser"
+				drawpile_srv_crypt_key=$( su -c 'drawpile-srv --generate-crypt-key' drawpileuser)
+			else
+				drawpile_srv_crypt_key=$( drawpile-srv --generate-crypt-key )
+			fi
+			echo "Drawpile-srv Crypt-Key Generated: $drawpile_srv_crypt_key"
+		else
+			echo "This message should not be visible, either key gets imported or created."
+		fi
+	elif [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
+		echo "Skipping setup of encrypted key."
+	else
+		echo "This message should not be visible, feature for server encryption is either enabled or disabled."
+	fi
+	sudo sed -i '\!^drawpile_srv_crypt_key =!{h;s!=.*!= '"$drawpile_srv_crypt_key"'!};${x;\!^$!{s!!drawpile_srv_crypt_key = '"$drawpile_srv_crypt_key"'!;H};x}' $drawpile_configuration_values_file
+elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
+	echo "Drawpile server is version 2.1.20 or older."
+	echo "Incompatible with setting for server encrypted ban list."
+	echo "Skipping configuration."
+else
+	echo "This message should not be visible, drawpile-srv can either do ban list encryption or it cannot."
+fi
+echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
-
+echo
 # This is for session recordings, however it is not necessary when using file backed sessions. 
 # --record "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec"
 #
@@ -6185,9 +6312,18 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		systemd_options_with_ssl_enabled_function
 		systemd_options_with_ssl_enabled_options_function
 	fi
+	
+	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+		systemd_configuration="$systemd_configuration --crypt-key \"$drawpile_srv_crypt_key\""
+	else
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	fi
+		
 	sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_selection_text =!{h;s!=.*!= '"$systemd_selection_text"'!};${x;\!^$!{s!!systemd_selection_text = '"$systemd_selection_text"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_configuration =!{h;s!=.*!= '"$systemd_configuration"'!};${x;\!^$!{s!!systemd_configuration = '"$systemd_configuration"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^drawpile_srv_crypt_key_status =!{h;s!=.*!= '"$drawpile_srv_crypt_key_status"'!};${x;\!^$!{s!!drawpile_srv_crypt_key_status = '"$drawpile_srv_crypt_key_status"'!;H};x}' $drawpile_configuration_values_file
 else
 	echo "This message should not be visible."
 fi
@@ -6283,6 +6419,389 @@ sudo chmod 770 /home/drawpileuser/server.db
 sudo chown drawpileuser /home/drawpileuser/server.db
 sudo systemctl stop --now drawpile-srv.service
 wait $!
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+# This function is no longer used but was a lot of work, so keeping for notes
+function allowed_and_disallowed_characters_function () {
+	echo
+	echo "${bold}${green}You can use the following special characters: ${normal}"
+	echo "${bold}${green} ~ \` ! @ # $ % ^ & * ( ) - _ = + { } [ ] | \ ; : ' \" , . < > ? ${normal}"
+	echo
+	echo "${bold}${red}You CANNOT use the ! character. ${normal}"
+	# Old Notes
+	# Technically the symbols: ! @ : '
+	# work, however they are disallowed because of List Server and possibly confusing the script
+	# Expression vs 2.1
+	# [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]
+	# Original Expression
+	# [[ $nginx_username_1 =~ ^[a-zA-Z0-9@*_=:\'\&\(\)\+\;\,\.\$-]*$ ]]
+	echo
+}
+# ----------------------------------------------------------------------------------
+# This function is no longer used but was a lot of work, so keeping for notes
+function nginx_username_function () {
+	read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+	while :; do
+		if [[ $nginx_username_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
+		fi
+	done
+
+	read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+	while :; do
+		if [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
+		fi
+	done
+}
+# ----------------------------------------------------------------------------------
+# This function is no longer used but was a lot of work, so keeping for notes
+function nginx_password_function () {
+	read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+	while :; do
+		if [[ $nginx_htpasswd_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
+		fi
+	done
+
+	read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+	while :; do
+		if [[ $nginx_htpasswd_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
+			break
+		else
+			allowed_and_disallowed_characters_function
+			read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
+		fi
+	done
+}
+# ----------------------------------------------------------------------------------
+echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
+echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
+echo
+echo 'Please type in a username you wish to use for making changes to your drawpile'
+echo 'server. If you make a mistake or need to update the server login, open a new'
+echo 'terminal window and type in the following:'
+echo
+echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
+echo
+echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+echo "     Certain portions of the script require storing your username and password"
+echo "     in plain text format on the server."
+echo
+echo "     The purpose is so the list server gains access to the admin interface"
+echo "     to automatically list sessions that are hosted on the server and have"
+echo "     a default username and login for the new web admin interface page."
+echo
+echo "     Drawpile-Monitor uses this to gain access to the admin API to auto"
+echo "     moderate sessions, usernames, and session aliases. This will only"
+echo "     be stored for this one should you choose to utilize this feature."
+echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+echo
+echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
+echo
+read -r -p "Enter username                    : " nginx_username_1
+read -r -p "Enter username again              : " nginx_username_2
+
+while [ $nginx_username_1 != $nginx_username_2 ]
+do
+	echo
+		echo "Usernames entered do not match!"
+	echo
+		read -r -p "Enter username                    : " nginx_username_1
+		read -r -p "Enter username again              : " nginx_username_2
+done
+echo
+echo "Server Administration username is : $nginx_username_1"
+echo
+echo
+read -r -p "Enter password                    : " nginx_htpasswd_1
+read -r -p "Enter password again              : " nginx_htpasswd_2
+while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
+do
+	echo
+		echo "Passwords entered do not match!"
+	echo
+		read -r -p "Enter password                    : " nginx_htpasswd_1
+		read -r -p "Enter password again              : " nginx_htpasswd_2
+done
+echo
+echo "Server Administration password is : $nginx_htpasswd_1"
+echo
+sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"
+echo
+echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
+echo
+echo
+
+# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
+nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+# echo "Value Encoded $nginx_username_encoded_1"
+
+# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
+nginx_htpasswd_encoded_1="$(echo "$nginx_htpasswd_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+# echo "Value Encoded $nginx_htpasswd_encoded_1"
+
+# To be used later with server management scripts, to decode URL encoded usernames/passwords
+# raw_password="$(echo "$encoded_password" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+
+# Refer to help with this command.
+# https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
+#
+
+<<comment_server_management_script_later
+nginx_username_1=ADMIN
+nginx_username_2=ADMIN2
+nginx_htpasswd_1=Password0123456789012
+
+echo "${cyan}${bold}Contents of /etc/nginx/passwords${normal}"
+cat /etc/nginx/passwords 
+echo
+echo
+if cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" > /dev/null 2>&1; then
+
+	echo Found Username $nginx_username_1
+	echo
+	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered${normal}"
+	passwords_filtered=$( cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" )
+	echo $passwords_filtered
+	echo
+	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered, inverted${normal}"
+	grep -v "$passwords_filtered" /etc/nginx/passwords
+	echo
+	pause
+	echo
+	echo Removing $nginx_username_1
+	grep -v "$passwords_filtered" /etc/nginx/passwords | sudo tee /etc/nginx/passwords > /dev/null 2>&1
+	echo
+	sudo htpasswd -b /etc/nginx/passwords $nginx_username_2 $nginx_htpasswd_1
+	echo
+	cat /etc/nginx/passwords 
+fi
+comment_server_management_script_later
+
+sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
+
+sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
+sudo nginx -s reload
+
+echo
+sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+
+variable_to_read_1="drawpile_monitor_installation_status"
+variable_to_read_2=""
+variable_to_read_3=""
+
+value_description_1="Drawpile-Monitor: Used for SFW servers, monitoring"
+value_description_2="for NSFW session names, usernames, and aliases."
+value_description_3="Violations result in renames and/or kicks."
+value_description_4="Reports are sent to Discord channel via webhook."
+value_description_5=""
+
+maybe_use_config_value=n
+read_stored_config_value_query_function
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	drawpile_monitor_installation_status=$read_stored_config_value_query_1
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
+	echo
+	echo "This is a python script for monitoring for NSFW content via"
+	echo "session names, usernames, and room aliases."
+	echo
+	echo "Inappropriate sessions are automatically renamed. Inappropriate"
+	echo "usernames or room alias results in disconnect. A notification"
+	echo "will be sent via Discord webhook to report the incident."
+	echo
+	echo "${bold}${cyan}Note: this should be used on SFW ONLY servers only.${normal}"
+	echo
+	echo "${bold}For more information, check it out on GitHub:${normal}"
+	echo "     https://github.com/drawpile/drawpile-monitor"
+	echo
+	echo "${bold}For additional info on banned words, check out the following:${normal}"
+	echo "     https://github.com/dimitrismistriotis/alt-profanity-check"
+	echo "     https://github.com/snguyenthanh/better_profanity"
+	echo "       https://github.com/snguyenthanh/better_profanity/blob/master/better_profanity/profanity_wordlist.txt"
+	echo
+	echo "${bold}Custom words or phrases can be added by editing the following file${normal}"
+	echo "${bold}and then restart the systemd service used to run the script.${normal}"
+	echo "     nano /home/drawpileuser/drawpile-monitor-custom-list.txt"
+	echo "     sudo systemctl restart drawpile_monitor.service"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Would you like to enable the drawpile-monitor service:${normal} " drawpile_monitor_installation_status
+		if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ] || [ "$drawpile_monitor_installation_status" == "n" ] || [ "$drawpile_monitor_installation_status" == "N" ] || [ "$drawpile_monitor_installation_status" == "no" ] || [ "$drawpile_monitor_installation_status" == "NO" ] || [ "$drawpile_monitor_installation_status" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		cd "/home/drawpileuser"
+		if [[ -d  "/home/drawpileuser/drawpile-monitor" ]]; then
+			echo Download detected of drawpile-monitor files, removing content before downloading.
+			rm -f -R "/home/drawpileuser/drawpile-monitor"
+		else
+			echo Did not find drawpile-monitor folder, continuing.
+		fi
+		echo
+		git clone https://github.com/drawpile/drawpile-monitor
+		echo
+		echo Download done...
+		cd "/home/drawpileuser/drawpile-monitor"
+		echo
+		if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) || "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+			echo '--------------------------------------------------------------------------------'
+			echo "Need to install gfortran and libopenblas-dev for Raspbian"
+			echo '--------------------------------------------------------------------------------'
+			echo
+			sudo $package_install_program gfortran libopenblas-dev
+			echo
+		fi
+		echo '--------------------------------------------------------------------------------'
+		echo "Running command: python -m venv env"
+		echo '--------------------------------------------------------------------------------'
+		python -m venv env
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo "Running command: . env/bin/activate"
+		echo '--------------------------------------------------------------------------------'
+		. env/bin/activate
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo "Running command: pip install -r requirements.txt"
+		echo '--------------------------------------------------------------------------------'
+		pip install -r requirements.txt
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}***** Preparing Drawpile-Monitor for Automatic Startup *****${normal}"
+
+		# Used to exit virtual environment that is started with this command: . env/bin/activate
+		deactivate
+
+		# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
+		# sudo cp -R "$dp_install_loc/Programs/drawpile-monitor" "/usr/local/bin/drawpile-monitor"
+
+		touch /home/drawpileuser/drawpile-monitor-custom-list.txt
+		# ----------------------------------------------------------------------------------
+		cat <<EOF | sudo tee /home/drawpileuser/drawpile-monitor/config.ini >/dev/null
+# This is a template configuration file. Copy it to config.ini and fill it in.
+
+[config]
+# URL to your drawpile-srv web admin. Required.
+# This is just the base URL, something like http://localhost:8080
+# Do NOT append / or /api or anything.
+base_url=http://127.0.0.1:27780
+
+# Discord webhook URL to report actions to. Optional.
+# See here to find out how to get this URL:
+# https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
+discord_webhook_url=$discord_webhook_URL
+
+# Where to store the script's database. If left empty, this will use
+# "drawpile-monitor.db" in the scripts directory.
+database_path=/home/drawpileuser/drawpile-monitor.db
+
+# Path to a file that contains additional banned words, one per line
+wordlist_path=/home/drawpileuser/drawpile-monitor-custom-list.txt
+
+# How many runs in a row can have errors before sending a report to the Discord
+# webhook. So, for example, if you set it to 3, it will be quiet the first 3
+# errors, but on the 4th it will report that something is fishy. When it gets a
+# good run again afterwards, it will report that everything is well again.
+max_error_streak_before_report=4
+
+[messages]
+# Messages that will be sent into the chat. Personalize them and maybe replace
+# the link. As of Drawpile 2.1, the client doesn't actually make links in server
+# messages clickable, which is a annoying, but I can't change the past (yet.)
+session_name_first_warning=Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+session_name_second_warning=Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+session_name_terminate=Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+session_alias_terminate=Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+user_kick=Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+EOF
+		sudo chown drawpileuser:drawpileread "/home/drawpileuser/drawpile-monitor/config.ini"
+		sudo chmod 775 "/home/drawpileuser/drawpile-monitor/config.ini"
+		# ----------------------------------------------------------------------------------
+		cat <<EOF | sudo tee /usr/local/bin/drawpile_monitor_report >/dev/null
+#!/bin/sh
+cd /home/drawpileuser/drawpile-monitor
+. env/bin/activate
+export DRAWPILE_MONITOR_USER='$nginx_username_1'
+export DRAWPILE_MONITOR_PASS='$nginx_htpasswd_1'
+
+# Script Variables for web admin username and password.
+# nginx_username_1
+# nginx_htpasswd_1
+# nginx_username_encoded_1
+# nginx_htpasswd_encoded_1
+
+# To do a dry-run (makes checks and reports to Discord, but does not act):
+# ./drawpile-monitor.py --dryrun
+
+# To run it once:
+# ./drawpile-monitor.py
+
+# To check every 10 seconds:
+# ./drawpile-monitor.py --interval=10
+
+# To check randomly between 20 and 60 seconds (to avoid counter-scripting)
+./drawpile-monitor.py --interval=20 --jitter=40
+EOF
+		# ----------------------------------------------------------------------------------
+		sudo chown drawpileuser "/usr/local/bin/./drawpile_monitor_report"
+		sudo chmod 775 "/usr/local/bin/./drawpile_monitor_report"
+
+		cat <<EOF | sudo tee /etc/systemd/system/drawpile_monitor.service >/dev/null
+[Unit]
+Description=Drawpile Monitor Language Report tool
+
+[Service]
+ExecStart=/usr/local/bin/drawpile_monitor_report
+User=drawpileuser
+# ExecStart=/home/drawpile-monitor/start.sh
+# Group=drawpile-monitor
+
+[Install]
+WantedBy=multi-user.target
+EOF
+		sudo chmod 655 /etc/systemd/system/drawpile_monitor.service 
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		# Systemd service to be started later in the script after server is started up.
+	elif [ "$drawpile_monitor_installation_status" == "n" ] || [ "$drawpile_monitor_installation_status" == "N" ] || [ "$drawpile_monitor_installation_status" == "no" ] || [ "$drawpile_monitor_installation_status" == "NO" ] || [ "$drawpile_monitor_installation_status" == "No" ]; then
+		echo "Skipping installation of Drawpile-Monitor."
+	else
+		echo "This message for Drawpile-monitor should not be visible."
+	fi
+	sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"$drawpile_monitor_installation_status"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"$drawpile_monitor_installation_status"'!;H};x}' $drawpile_configuration_values_file
+else
+	echo "This message should not be visible."
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -6802,238 +7321,6 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-# This function is no longer used but was a lot of work, so keeping for notes
-function allowed_and_disallowed_characters_function () {
-	echo
-	echo "${bold}${green}You can use the following special characters: ${normal}"
-	echo "${bold}${green} ~ \` ! @ # $ % ^ & * ( ) - _ = + { } [ ] | \ ; : ' \" , . < > ? ${normal}"
-	echo
-	echo "${bold}${red}You CANNOT use the ! character. ${normal}"
-	# Old Notes
-	# Technically the symbols: ! @ : '
-	# work, however they are disallowed because of List Server and possibly confusing the script
-	# Expression vs 2.1
-	# [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]
-	# Original Expression
-	# [[ $nginx_username_1 =~ ^[a-zA-Z0-9@*_=:\'\&\(\)\+\;\,\.\$-]*$ ]]
-	echo
-}
-# ----------------------------------------------------------------------------------
-# This function is no longer used but was a lot of work, so keeping for notes
-function nginx_username_function () {
-	read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
-	while :; do
-		if [[ $nginx_username_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "01 - Enter username ONLY (without restricted characters): " nginx_username_1
-		fi
-	done
-
-	read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
-	while :; do
-		if [[ $nginx_username_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "02 - Enter username again (without restricted characters): " nginx_username_2
-		fi
-	done
-}
-# ----------------------------------------------------------------------------------
-# This function is no longer used but was a lot of work, so keeping for notes
-function nginx_password_function () {
-	read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
-	while :; do
-		if [[ $nginx_htpasswd_1 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "01 - Enter password ONLY (without restricted characters): " nginx_htpasswd_1
-		fi
-	done
-
-	read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
-	while :; do
-		if [[ $nginx_htpasswd_2 =~ ^[a-zA-Z0-9*_=~\&\(\)\+\;\,\.\$-]*$ ]]; then
-			break
-		else
-			allowed_and_disallowed_characters_function
-			read -r -p "02 - Enter password (without restricted characters) again: " nginx_htpasswd_2
-		fi
-	done
-}
-# ----------------------------------------------------------------------------------
-echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
-echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
-echo
-echo 'Please type in a username you wish to use for making changes to your drawpile'
-echo 'server. If you make a mistake or need to update the server login, open a new'
-echo 'terminal window and type in the following:'
-echo
-echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
-echo
-echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
-echo "     The list server, in the configuration file, stores your username and"
-echo "     password for admin in plain text format. The purpose is so the list"
-echo "     server gains access to the admin interface to automatically list"
-echo "     sessions that are hosted on the server."
-echo "     "
-echo "     Because of this, it would be helpful to store this information in "
-echo "     the file where other server configuration settings are kept."
-echo "           $drawpile_configuration_values_file"
-echo "     "
-echo "     You will be given a chance to decide if you want to save this info"
-echo "     in plain text format. If you wish to have the list server in"
-echo "     read-only mode so other servers cannot list on your list server,"
-echo "     you MUST consent to this option to use it."
-echo "     "
-echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!)${normal}"
-echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
-echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
-echo
-echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
-echo
-read -r -p "Enter username                    : " nginx_username_1
-read -r -p "Enter username again              : " nginx_username_2
-
-while [ $nginx_username_1 != $nginx_username_2 ]
-do
-	echo
-		echo "Usernames entered do not match!"
-	echo
-		read -r -p "Enter username                    : " nginx_username_1
-		read -r -p "Enter username again              : " nginx_username_2
-done
-echo
-echo "Server Administration username is : $nginx_username_1"
-echo
-echo
-read -r -p "Enter password                    : " nginx_htpasswd_1
-read -r -p "Enter password again              : " nginx_htpasswd_2
-while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
-do
-	echo
-		echo "Passwords entered do not match!"
-	echo
-		read -r -p "Enter password                    : " nginx_htpasswd_1
-		read -r -p "Enter password again              : " nginx_htpasswd_2
-done
-echo
-echo "Server Administration password is : $nginx_htpasswd_1"
-echo
-sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"
-echo
-echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
-echo
-echo
-
-# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
-nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
-# echo "Value Encoded $nginx_username_encoded_1"
-
-# Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
-nginx_htpasswd_encoded_1="$(echo "$nginx_htpasswd_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
-# echo "Value Encoded $nginx_htpasswd_encoded_1"
-
-# To be used later with server management scripts, to decode URL encoded usernames/passwords
-# raw_password="$(echo "$encoded_password" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
-
-# Refer to help with this command.
-# https://superuser.com/questions/1254358/replace-single-line-with-multline-content-within-the-file-nginx-conf/1254366?noredirect=1#comment1842983_1254366
-#
-
-<<comment_server_management_script_later
-nginx_username_1=ADMIN
-nginx_username_2=ADMIN2
-nginx_htpasswd_1=Password0123456789012
-
-echo "${cyan}${bold}Contents of /etc/nginx/passwords${normal}"
-cat /etc/nginx/passwords 
-echo
-echo
-if cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" > /dev/null 2>&1; then
-
-	echo Found Username $nginx_username_1
-	echo
-	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered${normal}"
-	passwords_filtered=$( cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" )
-	echo $passwords_filtered
-	echo
-	echo "${cyan}${bold}Contents of /etc/nginx/passwords with user filtered, inverted${normal}"
-	grep -v "$passwords_filtered" /etc/nginx/passwords
-	echo
-	pause
-	echo
-	echo Removing $nginx_username_1
-	grep -v "$passwords_filtered" /etc/nginx/passwords | sudo tee /etc/nginx/passwords > /dev/null 2>&1
-	echo
-	sudo htpasswd -b /etc/nginx/passwords $nginx_username_2 $nginx_htpasswd_1
-	echo
-	cat /etc/nginx/passwords 
-fi
-comment_server_management_script_later
-
-sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
-
-sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
-sudo nginx -s reload
-
-echo
-echo ----------------------------------------------------------------------------------
-echo
-echo "${bold}${red}************************** REPEAT IMPORTANT NOTE: *************************${normal}"
-echo "     The list server, in the configuration file, stores your username and"
-echo "     password for admin in plain text format. The purpose is so the list"
-echo "     server gains access to the admin interface to automatically list"
-echo "     sessions that are hosted on the server."
-echo "     "
-echo "     Because of this, it would be helpful to store this information in "
-echo "     the file where other server configuration settings are kept."
-echo "           $drawpile_configuration_values_file"
-echo "     "
-echo "     This information would be used to potentially update the list server"
-echo "     configuration file in the event of a admin username and/or password"
-echo "     change. If you decide to not use this configuration, the list server"
-echo "     will NOT automatically list sessions to make it easier for users to"
-echo "     find sessions. You also cannot use the list server in read-only mode"
-echo "     so other servers cannot use your list server."
-echo "     "
-echo "     It is recommended to enable this setting."
-echo "     "
-echo "     ${bold}${red}If you plan on doing so, do not use exclamation marks (!)${normal}"
-echo "     ${bold}${red}in your password. It will not be able to store the password.${normal}"
-echo "${bold}${red}************************** REPEAT IMPORTANT NOTE: *************************${normal}"
-echo
-echo "${bold}${red}Do you consent to store this information in plain text format on the server?${normal}"
-while :; do
-	read -r -p "${bold}${red} (Y)es or (N)o:${normal} " nginx_username_password_consent_query
-	if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ] || [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-		break
-	else
-		echo
-		echo "${bold}${red}Invalid input selection, try again.${normal}"
-		echo
-		echo ----------------------------------------------------------------------------------
-		echo
-	fi
-done
-
-sudo sed -i '\!^nginx_username_password_consent_query =!{h;s!=.*!= '"$nginx_username_password_consent_query"'!};${x;\!^$!{s!!nginx_username_password_consent_query = '"$nginx_username_password_consent_query"'!;H};x}' $drawpile_configuration_values_file
-
-if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-	sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
-	sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
-elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-	# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-	:
-else
-	echo "This message should not be visible."
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo
 
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	is_apache_2_installed=$( apt-cache policy apache2 | grep "Installed:" | cut -c 14-40 )
@@ -7177,6 +7464,8 @@ else
 fi
 echo
 echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}*****Drawpile Server Database Prep . . . *****${normal}"
 echo
 # sudo /etc/init.d/nginx restart
 # sudo nginx -s reload
@@ -7369,16 +7658,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 1 of 11${normal}"
 		echo
 		echo Possible values:
-		if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-			echo "1 - none      - listserver will be in read-only mode"
-		elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-			echo "${bold}${red}1 - none      - listserver will be in read-only mode (includeservers must be set, invalid option)${normal}"
-			echo "     The earlier prompt asking to store the password was not consented to store in plain"
-			echo "     text format. Therefore this option is not available."
-		else
-			echo "  -           - ${bold}${red}This message for list server in read-only mode should not be visible.${normal}"
-		fi
-		# echo "1 - none      - listserver will be in read-only mode (includeservers must be set)"
+		echo "1 - none      - listserver will be in read-only mode (includeservers must be set by script)"
 		echo "2 - memory    - sessions will be lost if server is restarted, but no database needed"
 		echo "3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
 		echo
@@ -7387,66 +7667,32 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " list_server_database_connection_string_num
 			[[ $list_server_database_connection_string_num =~ ^[1-3]+$ ]] || { invalid_list_server_database_connection_string; continue; }
 			if (( "$list_server_database_connection_string_num" >= "1" && "$list_server_database_connection_string_num" <= "3" )) ; then
-				if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-					if [ "$list_server_database_connection_string_num" == "1" ]; then
-						listserver_database_connection_string="none"
-						break
-					elif [ "$list_server_database_connection_string_num" == "2" ]; then
-						listserver_database_connection_string="memory"
-						break
-					elif [ "$list_server_database_connection_string_num" == "3" ]; then
-						echo
-						echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
-						echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
-						echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
-						echo
-						read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
-						echo
-						if [ "$list_server_database_connection_string_name" = "" ]; then
-							listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
-							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
-						else
-							listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
-							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
-						fi
-						break
+				if [ "$list_server_database_connection_string_num" == "1" ]; then
+					listserver_database_connection_string="none"
+				elif [ "$list_server_database_connection_string_num" == "2" ]; then
+					listserver_database_connection_string="memory"
+				elif [ "$list_server_database_connection_string_num" == "3" ]; then
+					echo
+					echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
+					echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
+					echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
+					echo
+					read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
+					echo
+					if [ "$list_server_database_connection_string_name" = "" ]; then
+						listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
+						echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
 					else
-						echo
-						echo "This message should not be visible as an invalid option was provided."
-						echo
-						invalid_list_server_database_connection_string
-					fi
-				elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-					if [ "$list_server_database_connection_string_num" == "1" ]; then
-						echo "${bold}${red}This option is invalid. You did not consent to store the password in plain text format.${normal}"
-					elif [ "$list_server_database_connection_string_num" == "2" ]; then
-						listserver_database_connection_string="memory"
-						break
-					elif [ "$list_server_database_connection_string_num" == "3" ]; then
-						echo
-						echo "${bold}${cyan} Please select an appropriate database name. ${normal}"
-						echo "${bold}${cyan} Do not use spaces or include file extension.  ${normal}"
-						echo "${bold}${cyan} Leaving blank will default database to this: ListServerDB  ${normal}"
-						echo
-						read -r -p "${bold}${cyan}Enter database name now ${normal}: " list_server_database_connection_string_name
-						echo
-						if [ "$list_server_database_connection_string_name" = "" ]; then
-							listserver_database_connection_string="/home/drawpileuser/ListServerDB.db"
-							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
-						else
-							listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
-							echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
-						fi
-						break
-					else
-						echo
-						echo "This message should not be visible as an invalid option was provided."
-						echo
-						invalid_list_server_database_connection_string
+						listserver_database_connection_string=/home/drawpileuser/$list_server_database_connection_string_name.db
+						echo "${bold}${cyan}Selected:${normal} $listserver_database_connection_string"
 					fi
 				else
-					echo "${bold}${red}This message for list server in read-only mode should not be visible.${normal}"
+					echo
+					echo "This message should not be visible as an invalid option was provided."
+					echo
+					invalid_list_server_database_connection_string
 				fi
+				break
 			else
 				invalid_list_server_database_connection_string
 			fi
@@ -7756,15 +8002,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo "No messages should show up in this section."
 		echo
-		if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-			list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_encoded_1:$nginx_htpasswd_encoded_1@localhost:27780/api/\"]"
-			# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
-		elif [ "$nginx_username_password_consent_query" == "n" ] || [ "$nginx_username_password_consent_query" == "N" ] || [ "$nginx_username_password_consent_query" == "no" ] || [ "$nginx_username_password_consent_query" == "NO" ] || [ "$nginx_username_password_consent_query" == "No" ]; then
-			list_server_include_servers_username_and_pass="# includeservers="
-			# list_server_include_servers_username_and_pass=""
-		else
-			echo "This message should not be visible."
-		fi
+		list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_encoded_1:$nginx_htpasswd_encoded_1@localhost:27780/api/\"]"
+		# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
+
 		# Example configuration file
 		# https://github.com/drawpile/listserver/blob/master/example.cfg
 		cat <<EOF | sudo tee "$script_directory/$list_server_config_filename" >/dev/null
@@ -7803,7 +8043,7 @@ name="$list_server_short_name"
 description="$list_server_description"
 
 # Set this if you're using a reverse proxy like nginx or apache
-# proxyheaders = true
+proxyheaders = true
 remoteAddressHeader = "X-Real-Ip"
 
 ##### Optional settings #####
@@ -7883,7 +8123,7 @@ logRequests = false
 # DRAWPILE_LISTSERVER_PASS to the password to allow connecting as an admin user.
 # You can create additional accounts from there.
 # Not available in read-only mode, there's nothing to administer in it.
-# enableAdminApi = true
+enableAdminApi = true
 EOF
 
 		sudo mv "$script_directory/$list_server_config_filename" "$list_server_config_file_location"
@@ -7952,6 +8192,8 @@ Description=Drawpile statistics proxy
 After=network.target
 
 [Service]
+Environment="DRAWPILE_LISTSERVER_USER=$nginx_username_1"
+Environment="DRAWPILE_LISTSERVER_PASS=$nginx_htpasswd_1"
 ExecStart=/usr/local/bin/listserver -c $list_server_config_file_location
 # ExecStart=$go_path_manual/bin/listserver -c $list_server_config_file_location
 User=drawpileuser
@@ -8108,7 +8350,7 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "${bold}${cyan}*****Editing index.html file for list server . . .${normal}*****"
+		echo "${bold}${cyan}*****Editing index.html file for list server . . . *****${normal}"
 		echo
 		# --------------------------------------------------------------------------------
 		# This section below set to modify List server page with server specific information.
@@ -8156,7 +8398,7 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "*****${bold}${cyan}Preparing Favicon Setup . . .${normal}*****"
+		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
 		if [ "$list_server_favicon_location_entry" = "" ]; then
 			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
@@ -8215,6 +8457,10 @@ server {
 	location /admin/ {
 		return 301 https://\$server_name\$request_uri;
 	}
+	
+	location /admin_ui/ {
+		return 301 https://\$server_name\$request_uri;
+	}
 }
 
 server {
@@ -8241,8 +8487,18 @@ server {
 			proxy_redirect default;
 		}
 	}
+	
+	location /admin_ui/ {
+		try_files \$uri /admin_ui/index.html =404;
+	}
+
 	location /listing/ {
 		return 301 http://\$server_name\$request_uri;
+	}
+	
+	location /listing/admin/ {
+		proxy_pass http://127.0.0.1:8080/admin/;
+		proxy_redirect default;
 	}
 
 	location /listing/sessions/ {
@@ -8331,7 +8587,7 @@ server {
         location / {
                 return 307 https://\$host:443\$request_uri;
                 # return 307 https://$request_uri;
-                # try_files $uri $uri/ =404;
+                # try_files \$uri \$uri/ =404;
         }
 
         location /.well-known/acme-challenge/ {
@@ -8366,10 +8622,19 @@ server {
 			}
 	}
 	
+	location /admin_ui/ {
+		try_files \$uri /admin_ui/index.html =404;
+	}
+	
 	location /listing/ {
 			proxy_pass http://127.0.0.1:8080/;
 			proxy_redirect default;
 			proxy_set_header X-Real-IP \$remote_addr;
+	}
+	
+	location /listing/admin/ {
+		proxy_pass http://127.0.0.1:8080/admin/;
+		proxy_redirect default;
 	}
 }
 EOF
@@ -8589,6 +8854,7 @@ EOF
 			fi
 comment_EOF_delete
 			elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && ( "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+				# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
 				# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop
 				# https://github.com/nodesource/distributions
 				# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
@@ -8885,6 +9151,79 @@ EOF
 		echo
 	fi
 comment_EOF_delete
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Downloading New Web Admin interface . . . (Step 1 of 4) *****${normal}"
+	echo
+	if [[ -d  "$dp_install_loc/Programs/drawpile-admin-webui" ]]; then
+		# echo "Drawpile Web Admin already pulled, changing directory..."
+		echo Download detected of new drawpile-admin-webui, removing content before downloading.
+		rm -f -R "$dp_install_loc/Programs/drawpile-admin-webui"
+	fi
+	echo Downloading new drawpile-admin-webui from github.
+	echo
+	cd "$dp_install_loc/Programs"
+	git clone https://github.com/drawpile/drawpile-admin-webui
+	cd "$dp_install_loc/Programs/drawpile-admin-webui"
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
+	echo
+	# if [ "$no_swap_available" == "true" ]; then
+	if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
+		echo This step may take about an hour to complete. Please be patient.
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+		echo '--------------------------------------------------------------------------------'
+		if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		fi
+	else
+		# elif [ "$no_swap_available" == "false" ]; then
+		echo This step may take a while to complete. Please be patient.
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo "Running Command: npm install"
+		echo '--------------------------------------------------------------------------------'
+		if ! npm install; then
+			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		fi
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
+	echo '--------------------------------------------------------------------------------'
+	if ! npm run build -- "https://$hostname/listing/admin/"; then
+		command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Moving to root web directory . . . (Step 3 of 4)*****${normal}"
+	echo
+	sudo mv dist /var/www/html/drawpile/admin_ui
+	sudo restorecon -R /var/www/html/drawpile/
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
+	echo
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		sudo systemctl enable nginx.service
+	fi
+	# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+	sudo systemctl daemon-reload
+	sudo systemctl restart systemd-modules-load
+	sudo nginx -s reload
+	sudo systemctl restart nginx.service
+	systemctl status nginx.service --no-pager
+	wait $!
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
 elif [ "$ssl_encryption_config" == "3" ]; then
 	echo "${bold}${red}List server needs HTTPS in order to work.${normal}"
 	echo "${bold}${red}Skipping List Server setup.${normal}"
@@ -8900,7 +9239,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 	variable_to_read_1="Pi_Hole_Status"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -9000,6 +9339,10 @@ EOF
 				echo Detected Raspbian Stretch, kernel 4.14. Setting appropriate packages for pi-hole.
 				echo
 				pihole_packages="nginx php7.3-fpm php7.3-cgi php7.3-xml php7.3-sqlite3 php7.3-intl apache2-utils"
+			elif [[ "$using_what_linux_kernel" == "5.1" ]] && [[ "$using_what_rasp_codename" == "bullseye" ]] ; then
+				echo Detected Raspbian Bullseye, kernel 5.1. Setting appropriate packages for pi-hole.
+				echo
+				pihole_packages="nginx php7.4-fpm php7.4-cgi php7.4-xml php7.4-sqlite3 php7.4-intl apache2-utils"
 			elif [[ "$using_what_linux_kernel" == "6.1" ]] && [[ "$using_what_rasp_codename" == "bullseye" ]] ; then
 				echo Detected Raspbian Bullseye, kernel 6.1. Setting appropriate packages for pi-hole.
 				echo
@@ -9086,34 +9429,34 @@ EOF
 			echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
 			echo 'can be any password you like to use without spaces.'
 			echo
-			read -r -p "Enter username: " nginx_username_pihole_1
-			read -r -p "Enter username again: " nginx_username_pihole_2
+			read -r -p "Enter username                         : " nginx_username_pihole_1
+			read -r -p "Enter username again                   : " nginx_username_pihole_2
 			while [ $nginx_username_pihole_1 != $nginx_username_pihole_2 ]
 			do
 				echo
 					echo "Usernames entered do not match!"
 				echo
-					read -r -p "Enter username: " nginx_username_pihole_1
-					read -r -p "Enter username again: " nginx_username_pihole_2
+					read -r -p "Enter username                         : " nginx_username_pihole_1
+					read -r -p "Enter username again                   : " nginx_username_pihole_2
 			done
 			echo
-			echo "Your Server Administration username is: $nginx_username_pihole_1"
+			echo "Your Pi-Hole Administration username is: $nginx_username_pihole_1"
 			echo
 			echo
-			read -r -p "Enter password without spaces: " nginx_htpasswd_pihole_1
-			read -r -p "Enter password without spaces again: " nginx_htpasswd_pihole_2
+			read -r -p "Enter password                         : " nginx_htpasswd_pihole_1
+			read -r -p "Enter password without spaces again    : " nginx_htpasswd_pihole_2
 			while [ $nginx_htpasswd_pihole_1 != $nginx_htpasswd_pihole_2 ]
 			do
 				echo
 					echo "Passwords entered do not match!"
 				echo
-					read -r -p "Enter password without spaces: " nginx_htpasswd_pihole_1
-					read -r -p "Enter password without spaces again: " nginx_htpasswd_pihole_2
+					read -r -p "Enter password                         : " nginx_htpasswd_pihole_1
+					read -r -p "Enter password again                   : " nginx_htpasswd_pihole_2
 			done
 			echo
 			echo "Your Pi-Hole Administration password is: $nginx_htpasswd_pihole_1"
 			echo
-			sudo htpasswd -bc /etc/nginx/passwords_pihole $nginx_username_pihole_1 $nginx_htpasswd_pihole_1
+			sudo htpasswd -bc /etc/nginx/passwords_pihole "$nginx_username_pihole_1" "$nginx_htpasswd_pihole_1"
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
@@ -9126,7 +9469,18 @@ EOF
 			echo '--------------------------------------------------------------------------------'
 			echo
 			if [[ -d "$option_loc_2" ]]; then
-				if [[ ! -e "$option_loc_2/Pi-Hole Local.desktop" ]]; then
+				if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [[ ! -e "$option_loc_2/Pi-Hole Local.desktop" ]]; then
+					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole Local.desktop" >/dev/null
+[Desktop Entry]
+Name=Pi-Hole Local
+Comment=Pi-Hole Localhost Web Page
+Terminal=false
+Exec=/usr/bin/chromium %U http://localhost/admin
+Type=Application
+Icon=/var/www/html/admin/img/favicons/android-chrome-192x192.png
+Name[en_GB]=Pi-Hole Local
+EOF
+				elif [[ ! -e "$option_loc_2/Pi-Hole Local.desktop" ]]; then
 					echo Creating shortcut for Pi-Hole Local on Desktop.
 					echo
 					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole Local.desktop" >/dev/null
@@ -9145,7 +9499,18 @@ EOF
 					echo Shortcut for Pi-Hole Local already exists on Desktop.
 				fi
 				
-				if [[ ! -e "$option_loc_2/Pi-Hole.desktop" ]]; then
+				if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [[ ! -e "$option_loc_2/Pi-Hole.desktop" ]]; then
+					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole.desktop" >/dev/null
+[Desktop Entry]
+Name=Pi-Hole
+Comment=Pi-Hole Web Page
+Terminal=false
+Exec=/usr/bin/chromium %U http://pi.hole/admin
+Type=Application
+Icon=/var/www/html/admin/img/favicons/android-chrome-192x192.png
+Name[en_GB]=Pi-Hole
+EOF
+				elif [[ ! -e "$option_loc_2/Pi-Hole.desktop" ]]; then
 					echo Creating shortcut for Pi-Hole on Desktop.
 					cat <<EOF | sudo tee "$option_loc_2/Pi-Hole.desktop" >/dev/null
 [Desktop Entry]
@@ -9189,7 +9554,7 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 	variable_to_read_1="RPi_Monitor_Status"
 	variable_to_read_2="RPi_Monitor_Dark_Mode"
 	variable_to_read_3=""
@@ -9253,9 +9618,9 @@ if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" ==
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
-			echo Enable dark mode for RPi-Monitor web page?
+			echo "${bold}${cyan}Enable dark mode for RPi-Monitor web page?${normal}"
 			# echo 1 for yes, 2 for no, 3 to revert.
-			read -r -p "1 for yes, 2 for no, 3 to revert: " RPi_Monitor_Dark_Mode
+			read -r -p "${bold}${cyan}1 for yes, 2 for no, 3 to revert:${normal} " RPi_Monitor_Dark_Mode
 			echo
 			if [ "$RPi_Monitor_Dark_Mode" == "2" ] || [ "$RPi_Monitor_Dark_Mode" = "3" ] || [ "$RPi_Monitor_Dark_Mode" != "1" ]; then
 				# Light Mode - https://xavierberger.github.io/RPi-Monitor-docs/31_configuration_examples.html
@@ -9495,27 +9860,75 @@ EOF
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
 			
-			# For invalid options, 4 is assumed (no Samba).
+			# Drawpile-Monitor 
+			
+			DYN_DP_M_01=19
+			DYN_DP_M_02=20
+			DYN_DP_M_03=21
+				
+			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+				services_conf_contents_drawpile_monitor_01=$(cat << EOF
+
+dynamic.$DYN_DP_M_01.name=drawpile_monitor_desc
+dynamic.$DYN_DP_M_01.source=systemctl status drawpile_monitor.service | grep "drawpile_monitor.service - "
+dynamic.$DYN_DP_M_01.regexp=- (.*)
+dynamic.$DYN_DP_M_02.name=drawpile_monitor_act
+dynamic.$DYN_DP_M_02.source=systemctl status drawpile_monitor.service | grep "Active: "
+dynamic.$DYN_DP_M_02.regexp=(\(.*\))
+dynamic.$DYN_DP_M_03.name=drawpile_monitor_runtime
+dynamic.$DYN_DP_M_03.source=systemctl status drawpile_monitor.service | grep "Active: "
+dynamic.$DYN_DP_M_03.regexp=; (.*)
+EOF
+)
+			else
+				services_conf_contents_drawpile_monitor_01=""
+			fi
+			#---------------------------------------------------------------------------------------------------------------------------------
+			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+				services_conf_contents_drawpile_monitor_02=$(cat << EOF
+<tr><td>"+Label(data.drawpile_monitor_act,"=='(running)'","OK","success")+Label(data.drawpile_monitor_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_monitor</b></td><td>" + data.drawpile_monitor_desc + "</td><td>"+Label(data.drawpile_monitor_act,"=='(running)'",data.drawpile_monitor_runtime,"default")+Label(data.drawpile_monitor_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+			else
+				services_conf_contents_drawpile_monitor_02=""
+			fi
+			#---------------------------------------------------------------------------------------------------------------------------------
+			#---------------------------------------------------------------------------------------------------------------------------------
+			
+			# Samba
+			#      For invalid options, 4 is assumed (no Samba).
+			
+			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+				# Drawpile-Monitor 	Yes
+				DYN_SMBD_01=22
+				DYN_SMBD_02=23
+				DYN_SMBD_03=24
+			else
+				# Drawpile-Monitor 	No
+				DYN_SMBD_01=19
+				DYN_SMBD_02=20
+				DYN_SMBD_03=21
+			fi
 			
 			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
 				services_conf_contents_samba_choice_01=$(cat << EOF
 
-dynamic.19.name=smbd_desc
-dynamic.19.source=service smbd status | grep "smbd.service - "
-dynamic.19.regexp=- (.*)
-dynamic.20.name=smbd_act
-dynamic.20.source=service smbd status | grep "Active: "
-dynamic.20.regexp=(\(.*\))
-dynamic.21.name=smbd_runtime
-dynamic.21.source=service smbd status | grep "Active: "
-dynamic.21.regexp=; (.*)
+dynamic.$DYN_SMBD_01.name=smbd_desc
+dynamic.$DYN_SMBD_01.source=service smbd status | grep "smbd.service - "
+dynamic.$DYN_SMBD_01.regexp=- (.*)
+dynamic.$DYN_SMBD_02.name=smbd_act
+dynamic.$DYN_SMBD_02.source=service smbd status | grep "Active: "
+dynamic.$DYN_SMBD_02.regexp=(\(.*\))
+dynamic.$DYN_SMBD_03.name=smbd_runtime
+dynamic.$DYN_SMBD_03.source=service smbd status | grep "Active: "
+dynamic.$DYN_SMBD_03.regexp=; (.*)
 EOF
 )
 			else
 				services_conf_contents_samba_choice_01=""
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
-				if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
 				services_conf_contents_samba_choice_02=$(cat << EOF
 <tr><td>"+Label(data.smbd_act,"=='(running)'","OK","success")+Label(data.smbd_act,"!='(running)'","KO","danger")+"</td><td><b>smbd</b></td><td>" + data.smbd_desc + "</td><td>"+Label(data.smbd_act,"=='(running)'",data.smbd_runtime,"default")+Label(data.smbd_act,"!='(running)'","-","default")+"</td></tr>
 EOF
@@ -9526,22 +9939,45 @@ EOF
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
 			
-			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-				# Samba is actively being used
-				DYN01=22
-				DYN02=23
-				DYN03=24
-				DYN04=25
-				DYN05=26
-				DYN06=27
+			# Let's Encrypt - certbot
+			
+			if [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [[ "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ]]; then
+				# Samba 			Yes
+				# Drawpile-Monitor 	Yes
+				# LETE = Let's Encrypt
+				DYN_LETE_01=25
+				DYN_LETE_02=26
+				DYN_LETE_03=27
+				DYN_LETE_04=28
+				DYN_LETE_05=29
+				DYN_LETE_06=30
+			elif [[ "$samba_choice" == "4" ]] && [[ "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ]]; then
+				# Samba 			No
+				# Drawpile-Monitor 	Yes
+				DYN_LETE_01=22
+				DYN_LETE_02=23
+				DYN_LETE_03=24
+				DYN_LETE_04=25
+				DYN_LETE_05=26
+				DYN_LETE_06=27
+			elif [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [[ "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ]]; then
+				# Samba 			Yes
+				# Drawpile-Monitor 	No
+				DYN_LETE_01=22
+				DYN_LETE_02=23
+				DYN_LETE_03=24
+				DYN_LETE_04=25
+				DYN_LETE_05=26
+				DYN_LETE_06=27
 			else
-				# Samba is not actively being used
-				DYN01=19
-				DYN02=20
-				DYN03=21
-				DYN04=22
-				DYN05=23
-				DYN06=24
+				# Samba 			No
+				# Drawpile-Monitor 	No
+				DYN_LETE_01=19
+				DYN_LETE_02=20
+				DYN_LETE_03=21
+				DYN_LETE_04=22
+				DYN_LETE_05=23
+				DYN_LETE_06=24
 			fi
 			
 			# echo 'Press 1 for Self Signed Certificates'
@@ -9552,25 +9988,25 @@ EOF
 			if [ "$ssl_encryption_config" == "2" ]; then
 				services_conf_contents_Lets_Encrypt_01=$(cat << EOF
 
-dynamic.$DYN01.name=certbot_service_desc
-dynamic.$DYN01.source=systemctl status certbot.service | grep "certbot.service -"
-dynamic.$DYN01.regexp=- (.*)
-dynamic.$DYN02.name=certbot_service_act
-dynamic.$DYN02.source=systemctl status certbot.service | grep "Active: "
-dynamic.$DYN02.regexp=(\(.*\))
-dynamic.$DYN03.name=certbot_service_runtime
-dynamic.$DYN03.source=systemctl status certbot.service | grep "Active: "
-dynamic.$DYN03.regexp=; (.*)
+dynamic.$DYN_LETE_01.name=certbot_service_desc
+dynamic.$DYN_LETE_01.source=systemctl status certbot.service | grep "certbot.service -"
+dynamic.$DYN_LETE_01.regexp=- (.*)
+dynamic.$DYN_LETE_02.name=certbot_service_act
+dynamic.$DYN_LETE_02.source=systemctl status certbot.service | grep "Active: "
+dynamic.$DYN_LETE_02.regexp=(\(.*\))
+dynamic.$DYN_LETE_03.name=certbot_service_runtime
+dynamic.$DYN_LETE_03.source=systemctl status certbot.service | grep "Active: "
+dynamic.$DYN_LETE_03.regexp=; (.*)
 
-dynamic.$DYN04.name=certbot_timer_desc
-dynamic.$DYN04.source=systemctl status certbot.timer | grep "certbot.timer -"
-dynamic.$DYN04.regexp=- (.*)
-dynamic.$DYN05.name=certbot_timer_act
-dynamic.$DYN05.source=systemctl status certbot.timer | grep "Active: "
-dynamic.$DYN05.regexp=(\(.*\))
-dynamic.$DYN06.name=certbot_timer_runtime
-dynamic.$DYN06.source=systemctl status certbot.timer | grep "Active: "
-dynamic.$DYN06.regexp=; (.*)
+dynamic.$DYN_LETE_04.name=certbot_timer_desc
+dynamic.$DYN_LETE_04.source=systemctl status certbot.timer | grep "certbot.timer -"
+dynamic.$DYN_LETE_04.regexp=- (.*)
+dynamic.$DYN_LETE_05.name=certbot_timer_act
+dynamic.$DYN_LETE_05.source=systemctl status certbot.timer | grep "Active: "
+dynamic.$DYN_LETE_05.regexp=(\(.*\))
+dynamic.$DYN_LETE_06.name=certbot_timer_runtime
+dynamic.$DYN_LETE_06.source=systemctl status certbot.timer | grep "Active: "
+dynamic.$DYN_LETE_06.regexp=; (.*)
 EOF
 )
 			else
@@ -9587,43 +10023,63 @@ EOF
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
-			if [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [ "$ssl_encryption_config" == "2" ] && [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
-				# echo 1 Samba yes, LE Yes, Pi-Hole yes
-				DYN07=28
-				DYN08=29
-				DYN09=30
-			elif [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [ "$ssl_encryption_config" != "2" ] && [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
-				# echo 2 Samba yes, LE no, Pi-Hole yes
-				DYN07=22
-				DYN08=23
-				DYN09=24
-			elif [ "$samba_choice" == "4" ] && [ "$ssl_encryption_config" == "2" ] && [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
-				# echo 3 Samba no, LE yes, Pi-Hole yes
-				DYN07=25
-				DYN08=26
-				DYN09=27
-			elif [ "$samba_choice" == "4" ] && [ "$ssl_encryption_config" != "2" ] && [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
-				# echo 4 Samba no, LE no, Pi-Hole yes
-				DYN07=19
-				DYN08=20
-				DYN09=21
+			
+			# Pi-hole
+			# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
+
+			if [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" == "2" ]]; then
+				# 					Installed	Installed	Numbers Taken (12)
+				# Drawpile-Monitor 	yes						3
+				# Samba 			yes						3
+				# Let's encrypt		yes						6
+				DYN_PI_H_01=31
+				DYN_PI_H_02=32
+				DYN_PI_H_03=33
+			elif [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" == "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && "$samba_choice" == "4" && "$ssl_encryption_config" == "2" ]]; then
+				# 					Installed	Installed	Numbers Taken (9)
+				# Drawpile-Monitor 	No			Yes			3
+				# Samba 			Yes			No			3
+				# Let's encrypt		Yes			Yes			6
+				DYN_PI_H_01=28
+				DYN_PI_H_02=29
+				DYN_PI_H_03=30
+			elif [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" != "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && "$samba_choice" == "4" && "$ssl_encryption_config" == "2" ]]; then
+				# 					Installed	Installed	Numbers Taken (6)
+				# Drawpile-Monitor 	Yes			No			3
+				# Samba 			Yes			No			3
+				# Let's encrypt		No			Yes			6
+				DYN_PI_H_01=25
+				DYN_PI_H_02=26
+				DYN_PI_H_03=27
+			elif [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" != "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && "$samba_choice" == "4" && "$ssl_encryption_config" != "2" ]]; then
+				# 					Installed	Installed	Numbers Taken (3)
+				# Drawpile-Monitor 	No			Yes			3
+				# Samba 			Yes			No			3
+				# Let's encrypt		No			No			6
+				DYN_PI_H_01=22
+				DYN_PI_H_02=23
+				DYN_PI_H_03=24
 			else
-				# echo No PiHole Config Required.
-				:
+				# Drawpile-Monitor 	No
+				# Samba 			No
+				# Let's encrypt		No
+				DYN_PI_H_01=19
+				DYN_PI_H_02=20
+				DYN_PI_H_03=21
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
 			if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
 				services_conf_contents_PiHole_01=$(cat << EOF
 
-dynamic.$DYN07.name=pihole_desc
-dynamic.$DYN07.source=systemctl status pihole-FTL.service | grep "pihole-FTL.service -"
-dynamic.$DYN07.regexp=- (.*)
-dynamic.$DYN08.name=pihole_act
-dynamic.$DYN08.source=systemctl status pihole-FTL.service | grep "Active: "
-dynamic.$DYN08.regexp=(\(.*\))
-dynamic.$DYN09.name=pihole_runtime
-dynamic.$DYN09.source=systemctl status pihole-FTL.service | grep "Active: "
-dynamic.$DYN09.regexp=; (.*)
+dynamic.$DYN_PI_H_01.name=pihole_desc
+dynamic.$DYN_PI_H_01.source=systemctl status pihole-FTL.service | grep "pihole-FTL.service -"
+dynamic.$DYN_PI_H_01.regexp=- (.*)
+dynamic.$DYN_PI_H_02.name=pihole_act
+dynamic.$DYN_PI_H_02.source=systemctl status pihole-FTL.service | grep "Active: "
+dynamic.$DYN_PI_H_02.regexp=(\(.*\))
+dynamic.$DYN_PI_H_03.name=pihole_runtime
+dynamic.$DYN_PI_H_03.source=systemctl status pihole-FTL.service | grep "Active: "
+dynamic.$DYN_PI_H_03.regexp=; (.*)
 EOF
 )
 			else
@@ -9710,13 +10166,14 @@ dynamic.17.regexp=(\(.*\))
 dynamic.18.name=abuse_report_runtime
 dynamic.18.source=systemctl status drawpile_abuse_report.service | grep "Active: "
 dynamic.18.regexp=; (.*)
+$services_conf_contents_drawpile_monitor_01
 $services_conf_contents_samba_choice_01
 $services_conf_contents_Lets_Encrypt_01
 $services_conf_contents_PiHole_01
 
 web.status.1.content.11.name=Services
 web.status.1.content.11.icon=daemons.png
-web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr><tr><td>"+Label(data.rpimonitor_act,"=='(running)'","OK","success")+Label(data.rpimonitor_act,"!='(running)'","KO","danger")+"</td><td><b>rpimonitor</b></td><td>" + data.rpimonitor_desc + "</td><td>"+Label(data.rpimonitor_act,"=='(running)'",data.rpimonitor_runtime,"default")+Label(data.rpimonitor_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.nginx_act,"=='(running)'","OK","success")+Label(data.nginx_act,"!='(running)'","KO","danger")+"</td><td><b>nginx.service</b></td><td>" + data.nginx_desc + "</td><td>"+Label(data.nginx_act,"=='(running)'",data.nginx_runtime,"default")+Label(data.nginx_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_listserver_act,"=='(running)'","OK","success")+Label(data.drawpile_listserver_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-listserver.service</b></td><td>" + data.drawpile_listserver_desc + "</td><td>"+Label(data.drawpile_listserver_act,"=='(running)'",data.drawpile_listserver_runtime,"default")+Label(data.drawpile_listserver_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_abuse_report.service</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>$services_conf_contents_samba_choice_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_PiHole_02</table>"
+web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr><tr><td>"+Label(data.rpimonitor_act,"=='(running)'","OK","success")+Label(data.rpimonitor_act,"!='(running)'","KO","danger")+"</td><td><b>rpimonitor</b></td><td>" + data.rpimonitor_desc + "</td><td>"+Label(data.rpimonitor_act,"=='(running)'",data.rpimonitor_runtime,"default")+Label(data.rpimonitor_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.nginx_act,"=='(running)'","OK","success")+Label(data.nginx_act,"!='(running)'","KO","danger")+"</td><td><b>nginx.service</b></td><td>" + data.nginx_desc + "</td><td>"+Label(data.nginx_act,"=='(running)'",data.nginx_runtime,"default")+Label(data.nginx_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_listserver_act,"=='(running)'","OK","success")+Label(data.drawpile_listserver_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-listserver.service</b></td><td>" + data.drawpile_listserver_desc + "</td><td>"+Label(data.drawpile_listserver_act,"=='(running)'",data.drawpile_listserver_runtime,"default")+Label(data.drawpile_listserver_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_abuse_report.service</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>$services_conf_contents_drawpile_monitor_02$services_conf_contents_samba_choice_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_PiHole_02</table>"
 EOF
 )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -9822,7 +10279,21 @@ comment_EOF
 			fi
 			echo
 			if [[ -d "$option_loc_2" ]]; then
-				if [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
+			
+			
+				if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
+					cat <<EOF | sudo tee $option_loc_2/RPi-Monitor.desktop >/dev/null
+[Desktop Entry]
+Name=RPi-Monitor
+Comment=RPi-Monitor Web Page
+Terminal=false
+Exec=/usr/bin/chromium %U http://$pihostname.local:8888
+Type=Application
+#Icon=/usr/share/rpimonitor/web/img/logo.png
+Icon=$option_loc_4/drawpile_icons/rpi-logo-img.png
+Name[en_GB]=RPi-Monitor
+EOF
+				elif [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
 					echo Creating shortcut for RPi-Monitor on Desktop.
 					echo
 					cat <<EOF | sudo tee $option_loc_2/RPi-Monitor.desktop >/dev/null
@@ -9885,13 +10356,15 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
 	echo
-	echo 'Enable socket activation or start server when the Raspberry Pi powers on?'
+	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
+	echo 'server powers on?'
 	echo
-	echo "${bold}${cyan}1 - Socket Activation - Recommended${normal}"
+	echo "${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
 	echo '    This setting is less resource intensive on the server or Raspberry Pi,'
-	echo '     as the drawpile server is only running when a user is connected.'
-	echo "${bold}${cyan}2 - Server starts on Server or Raspberry Pi power up${normal}"
-	echo '    Runs all the time in the background.'
+	echo '     as the drawpile server is only running when a user is connected.' 
+	echo "${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
+	echo '    The drawpile-srv starts on Server or Raspberry Pi power up, runs all'
+	echo '    the time in the background.'
 	echo
 	while :; do
 	read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " dp_srv_startup
@@ -9933,7 +10406,22 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo "This message should not be visible."
 	fi
 	sudo sed -i '\!^dp_srv_startup =!{h;s!=.*!= '"$dp_srv_startup"'!};${x;\!^$!{s!!dp_srv_startup = '"$dp_srv_startup"'!;H};x}' $drawpile_configuration_values_file
-	echo
+	sleep 2
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}***** Enabling Drawpile-Monitor for Automatic Startup *****${normal}"
+		echo
+		echo "Startup was delayed to prevent the script from reporting server errors to"
+		echo " Discord server."
+		echo
+		sudo systemctl enable drawpile_monitor.service
+		sudo systemctl start --now drawpile_monitor.service 
+		wait $!
+		sudo systemctl status drawpile_monitor.service  --no-pager
+		wait $!
+	fi
 else
 	echo "This message should not be visible."
 fi
@@ -10020,11 +10508,17 @@ function testing_config_for_certbot_function () {
 }
 
 if [ "$ssl_encryption_config" == "1" ] || [ "$ssl_encryption_config" == "3" ]; then
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
 	# echo 'Press 1 for Self Signed Certificates' / # echo 'Press 3 for no SSL security.'
 	echo "${invis}SSL Encryption Config set to 1 or 3, skipping certbot testing and timer.${normal}"
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 elif [ "$ssl_encryption_config" == "2" ] || [[ "$ssl_encryption_config" != "1" && "$ssl_encryption_config" != "3" ]]; then
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
 	# echo 'Press 2 for Lets Encrypt'
 	# echo Invalid option selected. Assuming option 2 intended.
 	echo "${invis}SSL Encryption Config set to 2 or invalid option, certbot testing required.${normal}"
@@ -10104,7 +10598,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		fi
 	done
 	if [ "$drawpile_external_authentication" == "1" ]; then
-		echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile');" | sudo sqlite3 /home/drawpileuser/server.db
+		# Old value below
+		# echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile');" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
 		echo
 		echo "Inserted setting for external authentication to server"
 		echo "database."
@@ -10502,10 +10998,11 @@ if [[ -d "$option_loc_2" ]]; then
 	echo "       $dp_install_loc/drawpile_list_server.png"
 	echo "       $dp_install_loc/drawpile_web_admin.png"
 	echo
-	echo "     If using favicon (2) , will accept these icons, preferring largest first"
-	[[ -e "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)" || [[ -e "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)"
-	[[ -e "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)" || [[ -e "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)"
-	[[ -e "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png" || [[ -e "$script_directory/64.png" ]] && echo "       $script_directory/64.png"
+	echo "     If using favicon (2), will accept these icons, preferring largest first."
+	echo "     These icons will be used multiple times for different shortcuts."
+	( [[ -e "$dp_install_loc/256.png" ]] && echo "       $dp_install_loc/256.png (In case you want a really high quality icon)" ) || ( [[ -e "$script_directory/256.png" ]] && echo "       $script_directory/256.png (In case you want a really high quality icon)" )
+	( [[ -e "$dp_install_loc/128.png" ]] && echo "       $dp_install_loc/128.png (maximum size used by DP client)" ) || ( [[ -e "$script_directory/128.png" ]] && echo "       $script_directory/128.png (maximum size used by DP client)" )
+	( [[ -e "$dp_install_loc/64.png" ]] && echo "       $dp_install_loc/64.png" ) || ( [[ -e "$script_directory/64.png" ]] && echo "       $script_directory/64.png" )
 	echo
 	echo "Press 1 for custom icons, or 2 to use favicons."
 	echo
@@ -10537,7 +11034,6 @@ if [[ -d "$option_loc_2" ]]; then
 		else
 			:
 		fi
-		
 		if [[ -e "$script_directory/256.png" ]]; then
 			echo Copying 256x256 favicon image to use for Drawpile Shortcuts.
 			echo "$option_loc_4/drawpile_icons/server-shortcut-256.png"
@@ -10610,12 +11106,12 @@ Icon=$list_server_shortcut_png
 Name[en_GB]=Drawpile ListServer
 EOF
 		fi
-	sudo chown $current_username "$option_loc_2/Drawpile ListServer.desktop"
-	sudo chmod 754 "$option_loc_2/Drawpile ListServer.desktop"
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
-		# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-		gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
-	fi
+		sudo chown $current_username "$option_loc_2/Drawpile ListServer.desktop"
+		sudo chmod 754 "$option_loc_2/Drawpile ListServer.desktop"
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
+		fi
 	else
 		echo Shortcut for Drawpile ListServer already exists on Desktop.
 	fi
@@ -10658,15 +11154,64 @@ Icon=$server_web_admin_shortcut_png
 Name[en_GB]=Drawpile Admin
 EOF
 		fi
-	sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
-	sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
-		# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
-		gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
-		echo
-	fi
+		sudo chown $current_username "$option_loc_2/Drawpile Admin.desktop"
+		sudo chmod 754 "$option_loc_2/Drawpile Admin.desktop"
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+			echo
+		fi
 	else
 		echo Shortcut for Drawpile Admin already exists on Desktop.
+	fi
+	# --------------------------------------------------------------------------------
+	if [[ ! -e "$option_loc_2/Drawpile Admin UI.desktop" ]]; then
+		echo Creating shortcut for Drawpile Admin UI on Desktop.
+		echo
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin UI.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin UI
+Comment=Drawpile Admin UI
+Terminal=false
+Exec=/usr/bin/firefox https://$hostname/admin_ui
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin UI
+EOF
+		elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ]; then
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin UI.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin UI
+Comment=Drawpile Admin UI
+Terminal=false
+Exec=/usr/bin/chromium %U https://$hostname/admin_ui
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin UI
+EOF
+		else
+			# Raspbian for Pi
+			cat <<EOF | sudo tee "$option_loc_2/Drawpile Admin UI.desktop" >/dev/null
+[Desktop Entry]
+Name=Drawpile Admin UI
+Comment=Drawpile Admin UI
+Terminal=false
+Exec=chromium-browser https://$hostname/admin_ui/
+Type=Application
+Icon=$server_web_admin_shortcut_png
+Name[en_GB]=Drawpile Admin UI
+EOF
+		fi
+		sudo chown $current_username "$option_loc_2/Drawpile Admin UI.desktop"
+		sudo chmod 754 "$option_loc_2/Drawpile Admin UI.desktop"
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
+			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
+			gio set "$option_loc_2/Drawpile Admin UI.desktop" metadata::trusted true
+			echo
+		fi
+	else
+		echo Shortcut for Drawpile Admin UI already exists on Desktop.
 	fi
 	# --------------------------------------------------------------------------------
 	if [[ ! -e "$option_loc_2/Drawpile Admin GUI.desktop" ]]; then
@@ -10710,7 +11255,8 @@ elif [[ ! -d "$option_loc_2" ]]; then
 	if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
 	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
 	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
-	
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 ***********************************************************************
 ************************ My Server Information ************************
@@ -10718,6 +11264,29 @@ elif [[ ! -d "$option_loc_2" ]]; then
 
 **** Drawpile Server Files ****
 $dp_install_loc/Programs/Drawpile-Srv-Files
+/home/drawpileuser/Drawpile_Configuration_Values.txt
+EOF
+	wait $!
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+/home/drawpileuser/drawpile-monitor.db
+/home/drawpileuser/drawpile-monitor-custom-list.txt
+EOF
+		wait $!
+	fi
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+/home/drawpileuser/listserverconfig.cfg
+EOF
+	wait $!
+	if [ "$list_server_database_connection_string_num" == "3" ]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+/home/drawpileuser/ListServerDB.db
+EOF
+		wait $!
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+/home/drawpileuser/server.db
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -10750,17 +11319,29 @@ EOF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 EOF
-	if [ "$nginx_username_password_consent_query" == "y" ] || [ "$nginx_username_password_consent_query" == "Y" ] || [ "$nginx_username_password_consent_query" == "yes" ] || [ "$nginx_username_password_consent_query" == "YES" ] || [ "$nginx_username_password_consent_query" == "Yes" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+	wait $!
+	#---------------------------------------------------------------------------------------------------------------------------------
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 **** Drawpile Admin Web Page Login Information ****
-nginx_username_1=$nginx_username_1
-nginx_htpasswd_1=$nginx_htpasswd_1
+Web Admin Username = $nginx_username_1
+Web Admin Password = $nginx_htpasswd_1
 
 EOF
+	wait $!
+	#---------------------------------------------------------------------------------------------------------------------------------
+	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+**** Drawpile Server Crypt Key ****
+$drawpile_srv_crypt_key
+
+EOF
+		wait $!
 	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 **** Drawpile Admin Web Page ****
 EOF
+	wait $!
 	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
 		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 https://$hostname/admin/
@@ -10773,14 +11354,36 @@ Not Available without SSL enabled
 EOF
 		wait $!
 	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+
+**** Drawpile New Admin Web Page ****
+EOF
+	wait $!
+	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+https://$hostname/admin_ui/
+EOF
+		wait $!
+	fi
+	if [[ "$ssl_encryption_config" = "3" ]]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+Not Available without SSL enabled
+EOF
+		wait $!
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+
 ***** Drawpile Admin GUI Desktop on another machine *****
 **** (For Emergency Use Only, messes with web admin) ****
 drawpile-srv --gui --remote http://$hostname:8081/
 
 EOF
-if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
+	wait $!
+	#---------------------------------------------------------------------------------------------------------------------------------
+	if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
 **** Samba Network Configuration ****
@@ -10788,7 +11391,10 @@ Type this into address bar of file explorer to check contents of local server.
 \\$HOSTNAME"
 
 EOF
-fi
+		wait $!
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------------------------------------
 else
 	echo "This message for Desktop Icon should not be visible. (Drawpile Admin and Drawpile Admin GUI)"
 fi
@@ -10824,6 +11430,7 @@ if [[ -d "$option_loc_2" ]] && [[ "$USER" = "root" || "$USER" = "Root" || "$USER
 gio set "$option_loc_2/Drawpile Client.desktop" metadata::trusted true
 gio set "$option_loc_2/Drawpile ListServer.desktop" metadata::trusted true
 gio set "$option_loc_2/Drawpile Admin.desktop" metadata::trusted true
+gio set "$option_loc_2/Drawpile Admin UI.desktop" metadata::trusted true
 gio set "$option_loc_2/Drawpile Admin GUI.desktop" metadata::trusted true
 EOF
 		wait $!
@@ -10906,8 +11513,18 @@ echo "${bold}${cyan}************************************************************
 echo "${bold}${cyan}************************ My Server Information ************************${normal}"
 echo "${bold}${cyan}***********************************************************************${normal}"
 echo
-echo "${bold}${cyan}**** Drawpile Server Files ****${normal}"
+echo "${bold}${cyan}**** Important Drawpile Server Files ****${normal}"
 echo "$dp_install_loc/Programs/Drawpile-Srv-Files"
+echo "/home/drawpileuser/Drawpile_Configuration_Values.txt"
+if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+	echo "/home/drawpileuser/drawpile-monitor.db"
+	echo "/home/drawpileuser/drawpile-monitor-custom-list.txt"
+fi
+echo "/home/drawpileuser/listserverconfig.cfg"
+if [ "$list_server_database_connection_string_num" == "3" ]; then
+	echo "/home/drawpileuser/ListServerDB.db"
+fi
+echo "/home/drawpileuser/server.db"
 echo
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
@@ -10925,9 +11542,26 @@ echo "${bold}${cyan}**** Drawpile Admin Web Page Login Information ****${normal}
 echo "Web Admin Username = $nginx_username_1"
 echo "Web Admin Password = $nginx_htpasswd_1"
 echo
+if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+	echo "${bold}${cyan}**** Drawpile Server Crypt Key ****${normal}"
+	echo "$drawpile_srv_crypt_key"
+	echo
+fi
 echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
 if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
 if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
+if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+echo
+echo "${bold}${cyan}**** Drawpile New Admin Web URLs ****${normal}"
+if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
+	echo "https://$hostname/listing/admin/"
+fi
+if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+echo
+echo "${bold}${cyan}**** Drawpile New Admin Web Page ****${normal}"
+if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
+	echo "https://$hostname/admin_ui/"
+fi
 if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
 echo
 echo "${bold}${cyan}***** Drawpile Admin GUI Desktop on another machine *****${normal}"
