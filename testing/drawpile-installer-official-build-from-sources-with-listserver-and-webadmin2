@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9909
+drawpilescriptversion=2.9910
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1304,6 +1304,163 @@ else
 	option_loc_11="/home/$current_username/Videos"
 	option_loc_12="/home/$current_username/Downloads"
 fi
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+
+# Graphics system in use detection
+
+if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
+	echo "${bold}${yellow}Notice to the user: an FYI${normal}"
+	echo "${bold}${yellow}Using Wayland for graphics generated on this system.${normal}"
+	echo
+	echo "Unfortunately, this does not support API for screen capture. So in the"
+	echo "situation where additional technical support is required or wishing to"
+	echo "use remote connection software such as realVNC, it is not currently"
+	echo "possible under wayland. However, it generally performs much better than "
+	echo "the old X11 system for generating graphics. Using SSH to connect remotely"
+	echo "will still work if properly configured if tech support is required and"
+	echo "does not require seeing the desktop interface."
+	echo
+	echo
+	echo "${bold}${underline}General Resources:${normal}"
+	echo " - Wayland vs Xorg"
+	echo "     https://www.secjuice.com/wayland-vs-xorg/"
+	echo
+	echo
+	echo "${bold}${underline}Additional Resources if wanting to switch to X11:${normal}"
+	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+		# ----- Raspbian Debian ---------------------------------------------------------------------------------------------
+		echo " - Raspberry Pi 5, Bookworm and RealVNC Connect"
+		echo "     https://help.realvnc.com/hc/en-us/articles/14110635000221-Raspberry-Pi-5-Bookworm-and-RealVNC-Connect"
+		echo " - Raspberry Pi 4 Kiosk Mode doesn´t work"
+		echo "     https://forums.raspberrypi.com/viewtopic.php?t=358317"
+		echo " - Getting the Raspbery PI Official Touchscreen to work with RaspiOS Bookworm"
+		echo "     https://area-51.blog/2023/10/12/getting-the-raspbery-pi-official-touchscreen-to-work-with-raspios-bookworm/"
+	elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
+		# ----- Debian ------------------------------------------------------------------------------------------------------
+		echo " - How to Enable X11 and Disable Wayland Window System"
+		echo "     https://trendoceans.com/how-to-enable-x11-and-disable-wayland-window-system/"
+	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+		# ----- Ubuntu ------------------------------------------------------------------------------------------------------
+		echo " - How to Enable X11 and Disable Wayland Window System"
+		echo "     https://trendoceans.com/how-to-enable-x11-and-disable-wayland-window-system/"
+		echo " - How to perform the switch from the “Wayland” display server to Xorg (X11) on Linux Ubuntu 22.04 LTS"
+		echo "     https://helpdesk.psionline.com/hc/en-gb/articles/13470827149332-How-to-perform-the-switch-from-the-Wayland-display-server-to-Xorg-X11-on-Linux-Ubuntu-22-04-LTS"
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		# ----- Fedora ------------------------------------------------------------------------------------------------------
+		echo " - Configuring Xorg as the default GNOME session"
+		echo "     https://docs.fedoraproject.org/en-US/quick-docs/configuring-xorg-as-default-gnome-session/"
+	else
+		# ----- Generic Resources -------------------------------------------------------------------------------------------
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	fi
+	echo
+	pause
+	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+		echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+		echo
+		echo "Please note that this is ONLY necessary if you wish to use RealVNC"
+		echo "as of November 2023. Eventually RealVNC is expected to support Wayland"
+		echo "before the first half of 2024, presumably before 06/30/2024. Once"
+		echo "support becomes available for RealVNC on Wayland, this will no longer"
+		echo "be necessary."
+		echo
+		echo "Changes can be reverted manually by using the following"
+		echo "command in the Terminal application: sudo raspi-config"
+		echo
+		echo "Use the arrow keys on your keyboard to move selection (or tab key) and"
+		echo "Enter to make your selection."
+		echo ""
+		echo "Go to --> 6 - Advanced Options	- Configure advanced settings"
+		echo "      --> A6 wayland              Switch between X and Wayland backends"
+		echo "      --> W1 X11					Openbox window manager with X11 backend"
+		echo "      --> Select 'Ok' when prompted 'Openbox on X11 is active'"
+		echo "      --> Select the <Finish> option now that you're back at the main menu."
+		echo "      --> Select <Yes> when prompted 'Would you like to reboot now?'"
+		echo ""
+		echo "Once rebooted, re-run the script and you should no longer be running"
+		echo "wayland, which will allow RealVNC to work.Go to the Start menu, Raspberry"
+		echo "Pi Configuration, the 'Interfaces' tab, and enable 'VNC'. Click Ok. This"
+		echo "will enable you to work on the Raspberry Pi remotely."
+		echo
+		echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+		echo
+		echo "Since this is Raspbian for Desktop or Raspberry Pi, the script can"
+		echo "disable Wayland for you which will require a reboot to take effect."
+		echo
+		echo "To proceed, you must type out 'yes' or 'no' fully spelled out."
+		echo
+		while :; do
+			read -r -p "${bold}${red}Would you like to disable wayland and switch to X11?:${normal} " wayland_to_x11_query
+
+			echo
+			if [ "$wayland_to_x11_query" == "yes" ] || [ "$wayland_to_x11_query" == "YES" ] || [ "$wayland_to_x11_query" == "Yes" ] || [ "$wayland_to_x11_query" == "no" ] || [ "$wayland_to_x11_query" == "NO" ] || [ "$wayland_to_x11_query" == "No" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		
+		if [ "$wayland_to_x11_query" == "yes" ] || [ "$wayland_to_x11_query" == "YES" ] || [ "$wayland_to_x11_query" == "Yes" ]; then
+			echo "Reverting to X11 display server."
+			echo "Using commands found in: /usr/bin/raspi-config"
+			# 'which raspi-config' can be used 		--> https://raspberrypi.stackexchange.com/questions/1322/where-is-the-script-for-raspi-config-stored-in-the-fs-on-raspbian
+			echo
+			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-x/"
+			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-x/"
+			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter/"
+			if [ -e "/var/lib/AccountsService/users/$USER" ] ; then
+				sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-x/"
+			fi
+			echo
+			echo "Status: Openbox on X11. System must reboot to take effect."
+			echo "Press any key to initiate the reboot."
+			echo
+			pause
+			echo
+			sudo reboot
+		elif [ "$wayland_to_x11_query" == "no" ] || [ "$wayland_to_x11_query" == "NO" ] || [ "$wayland_to_x11_query" == "No" ]; then
+			echo "Not reverting to X11 display server."
+			
+			<<comment_EOF
+# Commands to revert to Wayfire on Wayland
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-wayfire/"
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-wayfire/"
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter-wayfire/"
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-test.*/fallback-test=\/usr\/bin\/xfallback.sh/"
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-session.*/fallback-session=LXDE-pi-x/"
+sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-greeter.*/fallback-greeter=pi-greeter/"
+if [ -e "/var/lib/AccountsService/users/$USER" ] ; then
+	sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-wayfire/"
+fi
+STATUS="Wayfire on Wayland"
+comment_EOF
+
+		else
+			echo "This message should not be visible regarding: wayland_to_x11_query"
+		fi
+	fi
+elif [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "x11" ]]; then
+	echo "${bold}${green}Notice to the user: an FYI${normal}"
+	echo "${bold}${green}Using x11 for graphics generated on this system.${normal}"
+	echo
+	echo "This supports API for screen capture and is useful in the event that"
+	echo "additional technical support is required, or if wishing to use remote"
+	echo "connection software such as realVNC. However, it does not offer the"
+	echo "performance enhancement if using this as a primary desktop computer"
+	echo "device. Script will automatically continue momentarily..."
+	echo
+	sleep 5
+else
+	# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+	:
+fi
+
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
