@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9911
+drawpilescriptversion=2.9912
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -92,7 +92,7 @@ drawpile_configuration_values_file_bak=/home/drawpileuser/Drawpile_Configuration
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 <<comment_VNC_EOF
-sudo apt-get install -y -q realvnc-vnc-server
+sudo apt-get -q -y install realvnc-vnc-server
 apt-cache policy realvnc-vnc-server
 comment_VNC_EOF
 # ----------------------------------------------------------------------------------
@@ -100,8 +100,8 @@ comment_VNC_EOF
 If running a VM with VMWare ... 
      https://docs.vmware.com/en/VMware-Tools/12.2.0/com.vmware.vsphere.vmwaretools.doc/GUID-C48E1F14-240D-4DD1-8D4C-25B6EBE4BB0F.html
 sudo apt-get update
-sudo apt-get install open-vm-tools-desktop
-sudo apt-get install open-vm-tools
+sudo apt-get -q -y install open-vm-tools-desktop
+sudo apt-get -q -y install open-vm-tools
 comment_VMware_EOF
 # ----------------------------------------------------------------------------------
 <<comment_DarkMode_EOF
@@ -652,7 +652,7 @@ if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	echo
 	echo "Sample Problem this attempts to address:"
 	echo '--------------------------------------------------------------------------------'
-	echo "apt-get install -y -q golang"
+	echo "apt-get -q -y install golang"
 	echo "go install 'github.com/drawpile/listserver@latest'"
 	echo "crawshaw.io/sqlite"
 	echo "gcc: fatal error: Killed signal terminated program cc1"
@@ -1372,6 +1372,7 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 	echo
 	pause
 	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+		echo
 		echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
 		echo
 		echo "Please note that this is ONLY necessary if you wish to use RealVNC"
@@ -1433,8 +1434,10 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 			fi
 			wait $!
 			echo
-			echo "Status: Openbox on X11. System must reboot to take effect."
-			echo "Press any key to initiate the reboot."
+			echo "Status: Openbox on X11."
+			echo "${bold}${red}System must reboot to take effect.${normal}"
+			echo
+			echo "${bold}${red}Press any key to initiate the reboot.${normal}"
 			echo
 			pause
 			echo
@@ -1464,6 +1467,10 @@ comment_EOF
 		else
 			echo "This message should not be visible regarding: wayland_to_x11_query"
 		fi
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
 	fi
 elif [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "x11" ]]; then
 	echo "${bold}${green}Notice to the user: an FYI${normal}"
@@ -1473,9 +1480,13 @@ elif [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "x11" ]]; then
 	echo "additional technical support is required, or if wishing to use remote"
 	echo "connection software such as realVNC. However, it does not offer the"
 	echo "performance enhancement if using this as a primary desktop computer"
-	echo "device. Script will automatically continue momentarily..."
+	echo "device (when compared to Wayfire on Wayland on Raspbian Bookworm)."
 	echo
-	sleep 5
+	pause
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
 else
 	# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	:
@@ -2444,12 +2455,19 @@ echo
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# If Ubuntu or Debian (excluding Raspbian for Desktop and Raspbian for Pi on ARM)
 	port_80_listening=$( ss -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
-	port_443_listening=$( ss -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
+	port_443_listening=$( ss -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )	
+	port_80_listening_app=idk_lmao_pending_further_testing
+	port_443_listening_app=idk_lmao_pending_further_testing
 fi
 if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" != "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" != "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" != "" ]; then
 	# If NOT Ubuntu or NOT Debian (but would include Raspbian for Desktop and Raspbian for Pi on ARM)
 	port_80_listening=$( netstat -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
 	port_443_listening=$( netstat -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
+	port_80_listening_app=$( sudo netstat -nap | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*/\(.*\):!\1!p' )
+	port_443_listening_app=$( sudo netstat -nap | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*/\(.*\):!\1!p' )
+	#																										Sed example text --> 1618/nginx:
+	#																										Sed looks for any characters leading up to /, captures everything up to :
+	#																										then replaces with captured group. Used ! instead of / to avoid escaping.
 fi
 
 # cargo clang
@@ -4961,6 +4979,12 @@ function dns_ip_check () {
 		# Do nothing as no error was detected, hostname was left blank.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	elif [[ $hostname_1 = $hostname_2 ]]; then
+		if ! host -V > /dev/null 2>&1; then
+			echo "Package bind9-host used with hostname verification."
+			echo "Not installed, so installing package now ..."
+			echo
+			sudo $package_install_program bind9-host
+		fi
 		dns_verification_4=$(host -4 $hostname_1)
 		# dns_verification_6=$(host -6 $hostname_1)
 
@@ -7514,7 +7538,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 fi
 
 # Apache check
-if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_80_listening" == "LISTEN" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_443_listening" == "LISTEN" ]] || [[ "$port_80_listening" == "LISTEN" ]] || [[ "$port_443_listening" == "LISTEN" ]]; then
+if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]]; then
 	# Checks if apache is installed and active in non-Fedora with apt-cache, installed and active in Fedora with dnf, or if some generic service using port 80 or port 443.
 	if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" ]]; then
 		# Checks if apache is installed and active in non-Fedora with apt-cache
@@ -9036,14 +9060,14 @@ comment_EOF_delete
 				# https://github.com/nodesource/distributions
 				# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
 				sudo apt-get update
-				sudo apt-get install -y ca-certificates curl gnupg
+				sudo apt-get  -q -y install ca-certificates curl gnupg
 				sudo mkdir -p /etc/apt/keyrings
 				curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 				NODE_MAJOR=18
 				# NODE_MAJOR=20
 				echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 				sudo apt-get update
-				sudo apt-get install nodejs -y
+				sudo apt-get -q -y install nodejs
 				version_test_by_distro_function
 			elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 				# https://github.com/nodesource/distributions
