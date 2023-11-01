@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9910
+drawpilescriptversion=2.9911
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -7,6 +7,20 @@ if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	# https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh
 else
     local_or_remote="Local"
+fi
+if lxterminal -v > /dev/null 2>&1; then
+	terminal_in_use=lxterminal
+	# Can run scripts in the background which doesn't make sense/work, so this should exit and reload into an interactive shell. 
+	# echo "Using: lxterminal"
+	tty -s; if [ $? -ne 0 ]; then lxterminal -e "$0"; exit; fi
+elif gnome-terminal -h > /dev/null 2>&1; then
+	terminal_in_use=gnome-terminal
+	# Runs terminal in the forefront, so not necessary to run.
+	# echo "Using: gnome-terminal"
+	# tty -s; if [ $? -ne 0 ]; then gnome-terminal -e "$0"; exit; fi
+else
+	terminal_in_use=unknown-terminal
+	# echo "Using: Unknown terminal"
 fi
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
@@ -1411,12 +1425,13 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 			echo "Using commands found in: /usr/bin/raspi-config"
 			# 'which raspi-config' can be used 		--> https://raspberrypi.stackexchange.com/questions/1322/where-is-the-script-for-raspi-config-stored-in-the-fs-on-raspbian
 			echo
-			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-x/"
-			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-x/"
-			sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter/"
+			sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-x/"
+			sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-x/"
+			sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter/"
 			if [ -e "/var/lib/AccountsService/users/$USER" ] ; then
-				sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-x/"
+				sudo sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-x/"
 			fi
+			wait $!
 			echo
 			echo "Status: Openbox on X11. System must reboot to take effect."
 			echo "Press any key to initiate the reboot."
@@ -1428,17 +1443,22 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 			echo "Not reverting to X11 display server."
 			
 			<<comment_EOF
+echo "Reverting to Wayfire on Wayland display server."
+echo "Using commands found in: /usr/bin/raspi-config"
 # Commands to revert to Wayfire on Wayland
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-wayfire/"
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-wayfire/"
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter-wayfire/"
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-test.*/fallback-test=\/usr\/bin\/xfallback.sh/"
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-session.*/fallback-session=LXDE-pi-x/"
-sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-greeter.*/fallback-greeter=pi-greeter/"
+echo
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?user-session.*/user-session=LXDE-pi-wayfire/"
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?autologin-session.*/autologin-session=LXDE-pi-wayfire/"
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?greeter-session.*/greeter-session=pi-greeter-wayfire/"
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-test.*/fallback-test=\/usr\/bin\/xfallback.sh/"
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-session.*/fallback-session=LXDE-pi-x/"
+sudo sed /etc/lightdm/lightdm.conf -i -e "s/^#\\?fallback-greeter.*/fallback-greeter=pi-greeter/"
 if [ -e "/var/lib/AccountsService/users/$USER" ] ; then
-	sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-wayfire/"
+	sudo sed "/var/lib/AccountsService/users/$USER" -i -e "s/XSession=.*/XSession=LXDE-pi-wayfire/"
 fi
-STATUS="Wayfire on Wayland"
+wait $!
+echo
+echo "Status: Wayfire on Wayland. System must reboot to take effect."
 comment_EOF
 
 		else
