@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9912
+drawpilescriptversion=2.9913
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1370,6 +1370,9 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 		:
 	fi
 	echo
+	echo "${bold}${yellow}You do not need to change this setting unless you want to use RealVNC${normal}"
+	echo "${bold}${yellow}or some other remote connection software.${normal}"
+	echo
 	pause
 	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 		echo
@@ -2454,15 +2457,22 @@ echo
 # https://linuxconfig.org/using-ss-command-on-linux
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# If Ubuntu or Debian (excluding Raspbian for Desktop and Raspbian for Pi on ARM)
-	port_80_listening=$( ss -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
-	port_443_listening=$( ss -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )	
-	port_80_listening_app=idk_lmao_pending_further_testing
-	port_443_listening_app=idk_lmao_pending_further_testing
+	port_80_listening=$( ss -na | grep "0.0.0.0:80 " | grep "LISTEN" | awk '{ print $2 }' )
+	port_443_listening=$( ss -na | grep "0.0.0.0:443 " | grep "LISTEN" | awk '{ print $2 }' )	
+	# Old
+	# port_80_listening=$( ss -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
+	# port_443_listening=$( ss -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
+	port_80_listening_app=$( sudo ss -nap | grep "0.0.0.0:80 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*"\(.*\)",.*!\1!p' )
+	port_443_listening_app=$( sudo ss -nap | grep "0.0.0.0:443 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*"\(.*\)",.*!\1!p' )
+	# tcp   LISTEN    0      511                                          0.0.0.0:80                0.0.0.0:*      users:(("nginx",pid=23074,fd=7),("nginx",pid=23073,fd=7),("nginx",pid=23072,fd=7)) 
 fi
 if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" != "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" != "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" != "" ]; then
 	# If NOT Ubuntu or NOT Debian (but would include Raspbian for Desktop and Raspbian for Pi on ARM)
-	port_80_listening=$( netstat -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
-	port_443_listening=$( netstat -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
+	port_80_listening=$( netstat -na | grep "0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
+	port_443_listening=$( netstat -na | grep "0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
+	# Old
+	# port_80_listening=$( netstat -na | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $6 }' )
+	# port_443_listening=$( netstat -na | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $6 }' )
 	port_80_listening_app=$( sudo netstat -nap | grep "0 0.0.0.0:80 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*/\(.*\):!\1!p' )
 	port_443_listening_app=$( sudo netstat -nap | grep "0 0.0.0.0:443 " | grep "LISTEN" | awk '{ print $7 }' | sed -n 's!.*/\(.*\):!\1!p' )
 	#																										Sed example text --> 1618/nginx:
@@ -9548,13 +9558,17 @@ EOF
 				echo Detected Raspbian Bullseye, kernel 6.1. Setting appropriate packages for pi-hole.
 				echo
 				pihole_packages="nginx php7.4-fpm php7.4-cgi php7.4-xml php7.4-sqlite3 php7.4-intl apache2-utils"
+			elif [[ "$using_what_linux_kernel" == "6.1" ]] && [[ "$using_what_rasp_codename" == "bookworm" ]] ; then
+				echo Detected Raspbian Bookworm, kernel 6.1. Setting appropriate packages for pi-hole.
+				echo
+				pihole_packages="nginx php8.2-fpm php8.2-cgi php8.2-xml php8.2-sqlite3 php8.2-intl apache2-utils"
 			else
 				echo "${bold}${red}Unable to determine appropriate packages required for Pi-Hole${normal}"
 				echo "${bold}${red}Here goes nothing... hoping for the best!${normal}"
 				echo
 				sleep 10
 				
-				pihole_packages="nginx php7.4-fpm php7.4-cgi php7.4-xml php7.4-sqlite3 php7.4-intl apache2-utils"
+				pihole_packages="nginx php8.*-fpm php8.*-cgi php8.*-xml php8.*-sqlite3 php8.*-intl apache2-utils"
 			fi
 			echo
 			app_does_not_exist=0
