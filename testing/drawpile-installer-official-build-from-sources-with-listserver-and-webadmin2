@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9914
+drawpilescriptversion=2.9915
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -6071,9 +6071,11 @@ sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
 cd "$dp_install_loc"
 sudo chmod 777 "$dp_install_loc" -R
 cd "$dp_install_loc/Programs"
+sudo chown drawpileuser "$dp_install_loc/Programs/" -R
 sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
+sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 echo
 drawpile_srv_crypt_key_status=no
 drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
@@ -6082,35 +6084,32 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
-	echo
-	echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
-	echo " ban lists. Unless multiple servers share the same encryption key, this"
-	echo " means that only the server the session was hosted on can utilize the"
-	echo " exported data file."
-	echo
-	while :; do
-		read -r -p "${bold}${cyan}Would you like to enable this feature?${normal} " drawpile_srv_crypt_key_status
-		if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
-			echo
-			echo ----------------------------------------------------------------------------------
-			echo
-			break
-		else
-			echo
-			echo "${bold}${red}Invalid input selection, try again.${normal}"
-			echo
-			echo ----------------------------------------------------------------------------------
-			echo
-		fi
-	done
-	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
-		echo "You can choose to import an encrypt key. Selecting no will generate a"
-		echo " new key to be used by the server."
+	variable_to_read_1="drawpile_srv_crypt_key"
+	variable_to_read_2=""
+	variable_to_read_3=""
+
+	value_description_1="Drawpile Encrypted Ban Export Private Key."
+	value_description_2="Used to encrypt ban lists so users can export"
+	value_description_3="the data and reuse when hosting a session."
+	value_description_4=""
+	value_description_5=""
+
+	read_stored_config_value_query_function
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Storing value and moving on."
+		drawpile_srv_crypt_key=$read_stored_config_value_query_1
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+		echo
+		echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
+		echo
+		echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
+		echo " ban lists. Unless multiple servers share the same encryption key, this"
+		echo " means that only the server the session was hosted on can utilize the"
+		echo " exported data file."
 		echo
 		while :; do
-			read -r -p "${bold}${cyan}Would you like to import a crypt key?${normal}  " drawpile_srv_import_crypt_key_status
-			if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
+			read -r -p "${bold}${cyan}Would you like to enable this feature?${normal} " drawpile_srv_crypt_key_status
+			if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
@@ -6123,42 +6122,64 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 				echo
 			fi
 		done
-		if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ]; then
+		if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+			echo "You can choose to import an encrypt key. Selecting no will generate a"
+			echo " new key to be used by the server."
+			echo
 			while :; do
-				read -r -p "${bold}${cyan}Enter your crypt key now (44 characters long):${normal} " drawpile_srv_crypt_key
-				drawpile_srv_crypt_key_length=${#drawpile_srv_crypt_key}
-				if [ "$drawpile_srv_crypt_key_length" == "44" ] ; then
+				read -r -p "${bold}${cyan}Would you like to import a crypt key?${normal}  " drawpile_srv_import_crypt_key_status
+				if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
 					break
 				else
 					echo
-					echo "${bold}${red}Invalid input, try again.${normal}"
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
 					echo
 					echo ----------------------------------------------------------------------------------
 					echo
 				fi
 			done
-		elif [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
-			echo
-			echo ----------------------------------------------------------------------------------
-			echo
-			echo "${bold}${cyan}Not importing drawpile-srv crypt key, will generate new key.${normal}"
-			echo
-			if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
-				# echo "Provide the password for: drawpileuser"
-				drawpile_srv_crypt_key=$( su -c 'drawpile-srv --generate-crypt-key' drawpileuser)
+			if [ "$drawpile_srv_import_crypt_key_status" == "y" ] || [ "$drawpile_srv_import_crypt_key_status" == "Y" ] || [ "$drawpile_srv_import_crypt_key_status" == "yes" ] || [ "$drawpile_srv_import_crypt_key_status" == "YES" ] || [ "$drawpile_srv_import_crypt_key_status" == "Yes" ]; then
+				while :; do
+					read -r -p "${bold}${cyan}Enter your crypt key now (44 characters long):${normal} " drawpile_srv_crypt_key
+					drawpile_srv_crypt_key_length=${#drawpile_srv_crypt_key}
+					if [ "$drawpile_srv_crypt_key_length" == "44" ] ; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+			elif [ "$drawpile_srv_import_crypt_key_status" == "n" ] || [ "$drawpile_srv_import_crypt_key_status" == "N" ] || [ "$drawpile_srv_import_crypt_key_status" == "no" ] || [ "$drawpile_srv_import_crypt_key_status" == "NO" ] || [ "$drawpile_srv_import_crypt_key_status" == "No" ]; then
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Not importing drawpile-srv crypt key, will generate new key.${normal}"
+				echo
+				if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
+					# echo "Provide the password for: drawpileuser"
+					drawpile_srv_crypt_key=$( su -c 'drawpile-srv --generate-crypt-key' drawpileuser)
+				else
+					drawpile_srv_crypt_key=$( drawpile-srv --generate-crypt-key )
+				fi
+				echo "Drawpile-srv Crypt-Key Generated: $drawpile_srv_crypt_key"
 			else
-				drawpile_srv_crypt_key=$( drawpile-srv --generate-crypt-key )
+				echo "This message should not be visible, either key gets imported or created."
 			fi
-			echo "Drawpile-srv Crypt-Key Generated: $drawpile_srv_crypt_key"
+		elif [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
+			echo "Skipping setup of encrypted key."
 		else
-			echo "This message should not be visible, either key gets imported or created."
+			echo "This message should not be visible, feature for server encryption is either enabled or disabled."
 		fi
-	elif [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
-		echo "Skipping setup of encrypted key."
+		sudo sed -i '\!^drawpile_srv_crypt_key =!{h;s!=.*!= '"$drawpile_srv_crypt_key"'!};${x;\!^$!{s!!drawpile_srv_crypt_key = '"$drawpile_srv_crypt_key"'!;H};x}' $drawpile_configuration_values_file
 	else
-		echo "This message should not be visible, feature for server encryption is either enabled or disabled."
+		echo "This message should not be visible."
 	fi
-	sudo sed -i '\!^drawpile_srv_crypt_key =!{h;s!=.*!= '"$drawpile_srv_crypt_key"'!};${x;\!^$!{s!!drawpile_srv_crypt_key = '"$drawpile_srv_crypt_key"'!;H};x}' $drawpile_configuration_values_file
 elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
 	echo "Drawpile server is version 2.1.20 or older."
 	echo "Incompatible with setting for server encrypted ban list."
@@ -6619,11 +6640,11 @@ wait $!
 # so drawpileuser can access it.
 sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
 wait $!
-# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load
+# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
 wait $!
-# sudo systemctl start --now drawpile-srv.service & sleep 1
+# sudo systemctl start --now drawpile-srv.service && sleep 1
 sudo systemctl start --now drawpile-srv.service
 wait $!
 sleep 5
@@ -7693,7 +7714,7 @@ echo
 # so drawpileuser can access it.
 echo
 sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
-# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load
+# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
 wait $!
@@ -8347,8 +8368,7 @@ EOF
 		echo "${bold}${cyan}*****List server configuration file exists . . . *****${normal}"
 		echo
 		echo 'You should regenerate the configuration if you set up a'
-		echo 'different username or password for web admin and elected'
-		echo 'to store the password in plain text on the server.'
+		echo 'different username or password for web admin.'
 		echo
 		echo 'Press 1 to use this existing configuration'
 		echo 'Press 2 to re-generate configuration for List Server'
@@ -8866,14 +8886,14 @@ EOF
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	# sudo systemctl restart drawpile-listserver.service & systemctl status drawpile-listserver.service --no-pager
+	# sudo systemctl restart drawpile-listserver.service && systemctl status drawpile-listserver.service --no-pager
 	sudo systemctl restart drawpile-listserver.service
 	systemctl status drawpile-listserver.service --no-pager
 	wait $!
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 	sudo systemctl daemon-reload
 	sudo systemctl restart systemd-modules-load
 	sudo nginx -s reload
@@ -9328,7 +9348,7 @@ EOF
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		sudo systemctl enable nginx.service
 	fi
-	# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 	sudo systemctl daemon-reload
 	sudo systemctl restart systemd-modules-load
 	sudo nginx -s reload
@@ -9342,7 +9362,7 @@ EOF
 	# cd "$dp_install_loc/Programs/dpwebadmin/dpwebadmin"
 	# npm start
 <<comment_EOF_delete
-	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] & [ "$nodejs_or_red" == "1" ]; then
+	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$nodejs_or_red" == "1" ]; then
 		# https://nodered.org/docs/user-guide/runtime/securing-node-red
 		# http://stevesnoderedguide.com/securing-node-red-ssl
 		# https://flowforge.com/blog/2023/04/securing-node-red-in-production/
@@ -9426,7 +9446,7 @@ comment_EOF_delete
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		sudo systemctl enable nginx.service
 	fi
-	# sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 	sudo systemctl daemon-reload
 	sudo systemctl restart systemd-modules-load
 	sudo nginx -s reload
@@ -9690,7 +9710,11 @@ EOF
 			else
 				sudo service php8.2-fpm start
 			fi
-			sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
+			sudo systemctl daemon-reload
+			sudo systemctl restart systemd-modules-load
+			sudo nginx -s reload
+			sudo systemctl restart nginx.service
+			systemctl status nginx.service --no-pager
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
@@ -10490,7 +10514,7 @@ comment_EOF
 			sudo service rpimonitor restart
 			# sudo /etc/init.d/rpimonitor restart
 			# Restore config lines and restart service
-			# sudo wget -q  --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/develop/src/etc/rpimonitor/template/wlan.conf -O /etc/rpimonitor/template/wlan.conf & sudo wget -q --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/develop/src/etc/rpimonitor/template/wlan.conf -O /etc/rpimonitor/template/wlan.conf & sudo /etc/init.d/rpimonitor restart
+			# sudo wget -q  --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/develop/src/etc/rpimonitor/template/wlan.conf -O /etc/rpimonitor/template/wlan.conf && sudo wget -q --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/develop/src/etc/rpimonitor/template/wlan.conf -O /etc/rpimonitor/template/wlan.conf && sudo /etc/init.d/rpimonitor restart
 			#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 			#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 			
