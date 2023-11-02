@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9913
+drawpilescriptversion=2.9914
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -4989,12 +4989,6 @@ function dns_ip_check () {
 		# Do nothing as no error was detected, hostname was left blank.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	elif [[ $hostname_1 = $hostname_2 ]]; then
-		if ! host -V > /dev/null 2>&1; then
-			echo "Package bind9-host used with hostname verification."
-			echo "Not installed, so installing package now ..."
-			echo
-			sudo $package_install_program bind9-host
-		fi
 		dns_verification_4=$(host -4 $hostname_1)
 		# dns_verification_6=$(host -6 $hostname_1)
 
@@ -5032,6 +5026,13 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	hostname=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	if ! host -V > /dev/null 2>&1; then
+		echo "Package bind9-host used with hostname verification."
+		echo "Not installed, so installing package now ..."
+		echo
+		sudo $package_install_program bind9-host
+		echo
+	fi	
 	echo 'This script assumes you have a hostname, and it is required for'
 	echo 'encrypted server connections to protect private conversations'
 	echo 'and also to mask your Public IP address when connecting to the'
@@ -9678,7 +9679,17 @@ EOF
 			sudo chown -R www-data:www-data /var/www/html
 			sudo chmod -R 755 /var/www/html
 			sudo usermod -aG pihole www-data
-			sudo service php7.4-fpm start
+			if [[ "$using_what_linux_kernel" == "4.14" ]] && [[ "$using_what_rasp_codename" == "stretch" ]] ; then
+				sudo service php7.3-fpm start
+			elif [[ "$using_what_linux_kernel" == "5.1" ]] && [[ "$using_what_rasp_codename" == "bullseye" ]] ; then
+				sudo service php7.4-fpm start
+			elif [[ "$using_what_linux_kernel" == "6.1" ]] && [[ "$using_what_rasp_codename" == "bullseye" ]] ; then
+				sudo service php7.4-fpm start
+			elif [[ "$using_what_linux_kernel" == "6.1" ]] && [[ "$using_what_rasp_codename" == "bookworm" ]] ; then
+				sudo service php8.2-fpm start
+			else
+				sudo service php8.2-fpm start
+			fi
 			sudo systemctl daemon-reload & sudo systemctl restart systemd-modules-load & sudo nginx -s reload & sudo systemctl restart nginx.service & systemctl status nginx.service --no-pager
 			echo
 			echo '--------------------------------------------------------------------------------'
