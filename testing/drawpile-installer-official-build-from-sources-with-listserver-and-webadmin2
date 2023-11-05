@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9917
+drawpilescriptversion=2.9918
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5939,7 +5939,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		# sudo systemctl stop --now drawpile_abuse_report.service
 		# sudo systemctl disable drawpile_abuse_report.service
 		# discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
-
+		echo
 		echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
 		abuse_report_port=8200
 		# --------------------------------------------------------------------------------
@@ -6018,7 +6018,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# echo Download detected of abusereport files, removing content before downloading.
 			# rm -f -R "/home/drawpileuser/abusereport"
 			# ---------------------------------------------------------------------------------
-			cd Drawpile
+			cd abusereport
 			
 			# Updates local repo
 			git fetch
