@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9921
+drawpilescriptversion=2.9922
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5892,20 +5892,23 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 variable_to_read_1="drawpile_abuse_report_installation_status"
-variable_to_read_2=""
-variable_to_read_3=""
+variable_to_read_2="abuse_report_auth_token"
+variable_to_read_3="discord_webhook_URL"
 
 value_description_1="Abuse-Report: Used for reporting session content"
 value_description_2="or inappropriate session names by users, where a"
 value_description_3="message is sent to Discord channel of your choosing."
 value_description_4=""
-value_description_5=""
+value_description_5="Auth token is 2nd value, webhook is 3rd."
 
 maybe_use_config_value=n
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	drawpile_abuse_report_installation_status=$read_stored_config_value_query_1
+	abuse_report_port=8200
+	abuse_report_auth_token=$read_stored_config_value_query_2
+	discord_webhook_URL=$read_stored_config_value_query_3
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
 	echo
