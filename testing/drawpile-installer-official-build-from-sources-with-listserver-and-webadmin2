@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9920
+drawpilescriptversion=2.9921
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -8120,6 +8120,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			list_server_favicon_location="\"$list_server_favicon_location_entry\""
 			echo "${bold}${cyan}Selected:${normal} $list_server_favicon_location"
 		fi
+		sudo sed -i '\!^list_server_favicon_location_entry =!{h;s!=.*!= '"$list_server_favicon_location_entry"'!};${x;\!^$!{s!!list_server_favicon_location_entry = '"$list_server_favicon_location_entry"'!;H};x}' $drawpile_configuration_values_file
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
@@ -8756,40 +8757,57 @@ EOF
 		echo
 		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
-		if [ "$list_server_favicon_location_entry" = "" ]; then
-			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
-			# Do nothing as no error was detected.
-			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-			:
-		elif [ "$list_server_favicon_location_entry" = "1" ]; then
-			echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
-			echo
-			favicon_copy_function
-			sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
-			sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
-			sudo sed -i '\!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!;H};x}' /var/www/html/drawpile/index.html
-			sudo sed -i '\!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!;H};x}' /var/www/html/drawpile/index.html
-			sudo sed -i '\!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/128.png" sizes="128x128">!;H};x}' /var/www/html/drawpile/index.html
-			sleep 5
-		else
-			echo "${bold}${cyan}Selected Custom location:${normal} $list_server_favicon_location"
-			echo
-			echo Edit the index.html file located: /var/www/html/drawpile
-			echo You can do so with this command : sudo nano /var/www/html/drawpile/index.html
-			echo
-			echo Edit the values noted below, editing the filename for "href=" to 
-			echo match the filenames and path you decided to use earlier that
-			echo is noted above. 
-			echo
-			echo '<link rel="icon" type="image/png" href="/16.png" sizes="16x16">'
-			echo '<link rel="icon" type="image/png" href="/32.png" sizes="32x32">'
-			echo '<link rel="icon" type="image/png" href="/48.png" sizes="48x48">'
-			echo '<link rel="icon" type="image/png" href="/64.png" sizes="64x64">'
-			echo '<link rel="icon" type="image/png" href="/128.png" sizes="128x128">'
-			echo
-			echo No further guidance will be provided. When you are ready to continue...
-		fi
+		variable_to_read_1="list_server_favicon_location_entry"
+		variable_to_read_2=""
+		variable_to_read_3=""
 
+		value_description_1="Are favicons enabled - just say yes to this one to load prior configuration."
+		value_description_2=" -   Blank or left empty - disabled"
+		value_description_3=" 1 - Use DP installation directory or script directory for favicons"
+		value_description_4=" -   Location entered: advanced users only specified location for"
+		value_description_5="     favicons to be used."
+
+		read_stored_config_value_query_function
+		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+			echo "Storing value and moving on."
+			list_server_favicon_location_entry=$read_stored_config_value_query_1
+		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+			if [ "$list_server_favicon_location_entry" = "" ]; then
+				echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
+				# Do nothing as no error was detected.
+				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			elif [ "$list_server_favicon_location_entry" = "1" ]; then
+				echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
+				echo
+				favicon_copy_function
+				sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
+				sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
+				sudo sed -i '\!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!;H};x}' /var/www/html/drawpile/index.html
+				sudo sed -i '\!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!;H};x}' /var/www/html/drawpile/index.html
+				sudo sed -i '\!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/128.png" sizes="128x128">!;H};x}' /var/www/html/drawpile/index.html
+				sleep 5
+			else
+				echo "${bold}${cyan}Selected Custom location:${normal} $list_server_favicon_location"
+				echo
+				echo Edit the index.html file located: /var/www/html/drawpile
+				echo You can do so with this command : sudo nano /var/www/html/drawpile/index.html
+				echo
+				echo Edit the values noted below, editing the filename for "href=" to 
+				echo match the filenames and path you decided to use earlier that
+				echo is noted above. 
+				echo
+				echo '<link rel="icon" type="image/png" href="/16.png" sizes="16x16">'
+				echo '<link rel="icon" type="image/png" href="/32.png" sizes="32x32">'
+				echo '<link rel="icon" type="image/png" href="/48.png" sizes="48x48">'
+				echo '<link rel="icon" type="image/png" href="/64.png" sizes="64x64">'
+				echo '<link rel="icon" type="image/png" href="/128.png" sizes="128x128">'
+				echo
+				echo No further guidance will be provided. When you are ready to continue...
+			fi
+		else
+			echo "This message should not be visible."
+		fi
 		cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
 server {
 	listen *:80;
@@ -9656,7 +9674,7 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1=""
+	value_description_1="Whole network ad blocking service."
 	value_description_2=""
 	value_description_3=""
 	value_description_4=""
@@ -10773,11 +10791,11 @@ variable_to_read_1="dp_srv_startup"
 variable_to_read_2=""
 variable_to_read_3=""
 
-value_description_1=""
-value_description_2=""
-value_description_3=""
-value_description_4=""
-value_description_5=""
+value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
+value_description_2="server powers on?"
+value_description_3=" "
+value_description_4="${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
+value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -10981,10 +10999,10 @@ variable_to_read_1="drawpile_external_authentication"
 variable_to_read_2=""
 variable_to_read_3=""
 
-value_description_1=""
-value_description_2=""
-value_description_3=""
-value_description_4=""
+value_description_1="Enable Drawpile External Authentication"
+value_description_2=" "
+value_description_3="1 - Enable External Authentication."
+value_description_4="2 - Do not Enable External Authentication."
 value_description_5=""
 
 read_stored_config_value_query_function
@@ -11116,11 +11134,11 @@ variable_to_read_1="journalctl_log_limit"
 variable_to_read_2=""
 variable_to_read_3=""
 
-value_description_1=""
-value_description_2=""
-value_description_3=""
-value_description_4=""
-value_description_5=""
+value_description_1="Configure Journalctl Logging Limits"
+value_description_2="1 - By file size"
+value_description_3="2 - By file size and by length of time"
+value_description_4="3 - By length of time"
+value_description_5="9 - Do not limit size of journalctl logs"
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
