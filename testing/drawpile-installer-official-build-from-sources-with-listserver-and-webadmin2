@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9922
+drawpilescriptversion=2.9923
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3243,6 +3243,7 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 		git_repo_status=out_of_date
 	fi
 else
+	git_repo_status=out_of_date
 	# Use the git hub link to access more information about drawpile on a web browser.
 	git clone https://github.com/drawpile/Drawpile.git
 	cd Drawpile
@@ -6041,6 +6042,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				git_repo_status=out_of_date
 			fi
 		else
+			git_repo_status=out_of_date
 			echo Downloading Drawpile Abuse Report from github.
 			echo
 			git clone https://github.com/drawpile/abusereport
@@ -7012,6 +7014,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					git_repo_status=out_of_date
 				fi
 			else
+				git_repo_status=out_of_date
 				echo Downloading Drawpile-Monitor from github.
 				echo
 				git clone https://github.com/drawpile/drawpile-monitor
@@ -9424,6 +9427,7 @@ comment_EOF_delete
 			git_repo_status=out_of_date
 		fi
 	else
+		git_repo_status=out_of_date
 		echo Downloading dp web admin from github.
 		echo
 		git clone https://github.com/drawpile/dpwebadmin.git
@@ -9588,6 +9592,7 @@ comment_EOF_delete
 			git_repo_status=out_of_date
 		fi
 	else
+		git_repo_status=out_of_date
 		echo Downloading new drawpile-admin-webui from github.
 		echo
 		git clone https://github.com/drawpile/drawpile-admin-webui
