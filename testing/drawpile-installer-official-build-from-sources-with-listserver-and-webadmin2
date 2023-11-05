@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9918
+drawpilescriptversion=2.9919
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1713,13 +1713,13 @@ function script_update_check_function () {
 		echo "Newer version of script available, the old script has been copied over"
 		echo "the old script. Please re-run this script to use newest version."
 		echo
-		echo "Terminating script in 30 seconds."
-		echo
 		cd "$dp_install_loc" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo rm -rf "$script_directory/$current_script_name"
 		sudo cp "$dp_install_loc/Programs/$script_name" "$script_directory/$current_script_name"
 		sudo chmod 777 "$script_directory/$current_script_name"
 		sudo rm -rf "$dp_install_loc/Programs/$script_name"
+		echo
+		echo "Terminating script in 30 seconds."
 		echo
 		sleep 30
 		exit
@@ -1733,10 +1733,10 @@ function script_update_check_function () {
 		echo
 		echo "Script in use: $drawpile_script_version"
 		echo "Github Script: $dp_check_version"
+		sudo rm -rf "$dp_install_loc/Programs/$script_name"
 		echo
 		echo "Pausing script for 5 seconds before continuing."
 		echo
-		sudo rm -rf "$dp_install_loc/Programs/$script_name"
 		sleep 5s
 	else
 		echo "${bold}${red}Unable to determine script version, proceeding with script.${normal}"
