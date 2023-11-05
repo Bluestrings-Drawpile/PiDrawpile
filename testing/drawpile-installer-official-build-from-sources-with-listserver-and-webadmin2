@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9916
+drawpilescriptversion=2.9917
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3237,7 +3237,8 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 		git_repo_status=currently_up_to_date
 	else
 		# Resets any changes made to the local code so it matches the remote code. 
-		git reset --hard origin/master
+		# git reset --hard origin/master
+		git reset --hard origin/main
 		git_repo_status=out_of_date
 	fi
 else
@@ -7001,7 +7002,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					git_repo_status=currently_up_to_date
 				else
 					# Resets any changes made to the local code so it matches the remote code. 
-					git reset --hard origin/master
+					git reset --hard origin/main
 					git_repo_status=out_of_date
 				fi
 			else
@@ -9557,7 +9558,7 @@ comment_EOF_delete
 			git_repo_status=currently_up_to_date
 		else
 			# Resets any changes made to the local code so it matches the remote code. 
-			git reset --hard origin/master
+			git reset --hard origin/main
 			git_repo_status=out_of_date
 		fi
 	else
