@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9919
+drawpilescriptversion=2.9920
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3225,6 +3225,7 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 	# ---------------------------------------------------------------------------------
 	cd Drawpile
 	
+	git config --global --add safe.directory "$dp_install_loc/Programs/Drawpile"
 	# Updates local repo
 	git fetch
 	
@@ -6020,6 +6021,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# ---------------------------------------------------------------------------------
 			cd abusereport
 			
+			git config --global --add safe.directory /home/drawpileuser/abusereport
 			# Updates local repo
 			git fetch
 			
@@ -6990,6 +6992,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				# ---------------------------------------------------------------------------------
 				cd drawpile-monitor
 				
+				git config --global --add safe.directory /home/drawpileuser/drawpile-monitor
 				# Updates local repo
 				git fetch
 				
@@ -9383,6 +9386,7 @@ comment_EOF_delete
 		# ---------------------------------------------------------------------------------
 		cd dpwebadmin
 		
+		git config --global --add safe.directory "$dp_install_loc/Programs/dpwebadmin"
 		# Updates local repo
 		git fetch
 		
@@ -9546,6 +9550,7 @@ comment_EOF_delete
 		# ---------------------------------------------------------------------------------
 		cd drawpile-admin-webui
 		
+		git config --global --add safe.directory "$dp_install_loc/Programs/drawpile-admin-webui"
 		# Updates local repo
 		git fetch
 		
