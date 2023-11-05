@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9915
+drawpilescriptversion=2.9916
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3217,13 +3217,34 @@ cd "$dp_install_loc"
 sudo chmod 777 "$dp_install_loc" -R
 cd "$dp_install_loc/Programs"
 if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
-	echo Download detected of Drawpile files, removing content before downloading.
-	rm -f -R "$dp_install_loc/Programs/Drawpile"
-	echo
+	# ---------------------------------------------------------------------------------
+	# Testing new concept - commented out temporarily
+	# echo Download detected of Drawpile files, removing content before downloading.
+	# rm -f -R "$dp_install_loc/Programs/Drawpile"
+	# echo
+	# ---------------------------------------------------------------------------------
+	cd Drawpile
+	
+	# Updates local repo
+	git fetch
+	
+	# Checks local commit info
+	git_local_commit=$( git rev-parse HEAD )
+	# Checks remote commit info
+	git_remote_commit=$( git rev-parse '@{u}' )
+	
+	if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+		git_repo_status=currently_up_to_date
+	else
+		# Resets any changes made to the local code so it matches the remote code. 
+		git reset --hard origin/master
+		git_repo_status=out_of_date
+	fi
+else
+	# Use the git hub link to access more information about drawpile on a web browser.
+	git clone https://github.com/drawpile/Drawpile.git
+	cd Drawpile
 fi
-# Use the git hub link to access more information about drawpile on a web browser.
-git clone https://github.com/drawpile/Drawpile.git
-cd Drawpile
 drawpile_version_manual_type_for_script=2.1.20
 drawpile_program_version_with_git=$( git describe )
 echo
@@ -5868,134 +5889,195 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-
-# dp_install_loc=/home/pi/Public
-# hostname=drawpile-test.duckdns.org
-# sudo systemctl stop --now drawpile_abuse_report.service
-# sudo systemctl disable drawpile_abuse_report.service
-# discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
-
-echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
-abuse_report_port=8200
-# --------------------------------------------------------------------------------
-variable_to_read_1="abuse_report_auth_token"
+variable_to_read_1="drawpile_abuse_report_installation_status"
 variable_to_read_2=""
 variable_to_read_3=""
 
-value_description_1="You should not change this token unless someone else"
-value_description_2="managed to get a hold of the auth token."
-value_description_3=""
+value_description_1="Abuse-Report: Used for reporting session content"
+value_description_2="or inappropriate session names by users, where a"
+value_description_3="message is sent to Discord channel of your choosing."
 value_description_4=""
 value_description_5=""
 
+maybe_use_config_value=n
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
-	abuse_report_auth_token=$read_stored_config_value_query_1
-	echo
+	drawpile_abuse_report_installation_status=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	random_string=$(openssl rand -base64 32)
-	# echo "lol random $random_string"
-	abuse_report_auth_token=$random_string
-	sudo sed -i '\!^abuse_report_auth_token =!{h;s!=.*!= '"$abuse_report_auth_token"'!};${x;\!^$!{s!!abuse_report_auth_token = '"$abuse_report_auth_token"'!;H};x}' $drawpile_configuration_values_file
-	echo "This is your abuse report auth_token: $abuse_report_auth_token"
-	echo
-	echo '--------------------------------------------------------------------------------'
-else
-	echo "This message should not be visible."
-fi
-
-variable_to_read_1="discord_webhook_URL"
-variable_to_read_2=""
-variable_to_read_3=""
-
-value_description_1="You should not change this token unless someone else"
-value_description_2="managed to get a hold of the discord webhook URL."
-value_description_3=""
-value_description_4=""
-value_description_5=""
-
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	discord_webhook_URL=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}*****Create Discord Webhook for reports . . .*****${normal}"
+	echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
 	echo
 	echo "This is so when a user goes into Drawpile's 'Session' menu,"
-	echo "'Moderation', 'Report...', that a message is sent to Discord"
-	echo "to notify about rules being broken on the server."
+	echo " 'Moderation', 'Report...', that a message is sent to a Discord"
+	echo " server and channel of your choosing, in order to notify about"
+	echo " rules being broken on the server."
 	echo
-	echo "Instructions below: "
-	echo "Click on your Discord Server, open Server Settings,"
-	echo "Integrations, Create Webhooks, Set the name and Channel,"
-	echo "and copy webhook URL to paste here."
+	echo "${bold}${red}Warning: Choosing to skip installation of this tool will prevent${normal}"
+	echo " ${bold}${red}you from using Drawpile-Monitor.${normal} Which is a python script for"
+	echo " SFW only servers, monitoring for NSFW content via session names"
+	echo " usernames, and room aliases. Inappropriate sessions are"
+	echo " automatically renamed. Inappropriate usernames or a room alias"
+	echo " results in disconnect. A notification will be sent via Discord"
+	echo " webhook to report the incident."
 	echo
-	# Regedit Matching in a Bash if Statement - https://linuxhint.com/regex-matching-in-bash-if-statement/
 	while :; do
-		read -r -p "Enter the Discord webhook URL: " discord_webhook_URL
-		echo
-		if [[ "$discord_webhook_URL" =~ ^https://discord.com/api/webhooks/.* ]]; then
+		read -r -p "${bold}${cyan}Would you like to enable the Abuse Report Tool:${normal} " drawpile_abuse_report_installation_status
+		if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ] || [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abuse_report_installation_status" == "N" ] || [ "$drawpile_abuse_report_installation_status" == "no" ] || [ "$drawpile_abuse_report_installation_status" == "NO" ] || [ "$drawpile_abuse_report_installation_status" == "No" ]; then
 			break
 		else
 			echo
-			echo "${bold}${red}Invalid webhook input, try again.${normal}"
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 		fi
 	done
-	sudo sed -i '\!^discord_webhook_URL =!{h;s!=.*!= '"$discord_webhook_URL"'!};${x;\!^$!{s!!discord_webhook_URL = '"$discord_webhook_URL"'!;H};x}' $drawpile_configuration_values_file
-else
-	echo "This message should not be visible."
-fi
+	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+		# dp_install_loc=/home/pi/Public
+		# hostname=drawpile-test.duckdns.org
+		# sudo systemctl stop --now drawpile_abuse_report.service
+		# sudo systemctl disable drawpile_abuse_report.service
+		# discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
 
-cd "/home/drawpileuser"
-if [[ -d  "/home/drawpileuser/abusereport" ]]; then
-	echo Download detected of abusereport files, removing content before downloading.
-	rm -f -R "/home/drawpileuser/abusereport"
-else
-	echo Did not find abusereport folder, continuing.
-fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo
-git clone https://github.com/drawpile/abusereport
-echo
-echo Download done...
-cd "/home/drawpileuser/abusereport"
-# Doesn't work
-# drawpile_abuse_report_version_with_git=$( git describe )
-# sudo sed -i '\!^drawpile_abuse_report_version_with_git =!{h;s!=.*!= '"$drawpile_abuse_report_version_with_git"'!};${x;\!^$!{s!!drawpile_abuse_report_version_with_git = '"$drawpile_abuse_report_version_with_git"'!;H};x}' $drawpile_configuration_values_file
-# git describe - fatal: No names found, cannot describe anything.
-echo
-echo '--------------------------------------------------------------------------------'
-echo "Running command: python -m venv env"
-echo '--------------------------------------------------------------------------------'
-python -m venv env
-echo
-echo '--------------------------------------------------------------------------------'
-echo "Running command: . env/bin/activate"
-echo '--------------------------------------------------------------------------------'
-. env/bin/activate
-echo
-echo '--------------------------------------------------------------------------------'
-echo "Running command: pip install -r requirements.txt"
-echo '--------------------------------------------------------------------------------'
-pip install -r requirements.txt
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}***** Setting Abuse Report for Automatic Startup *****${normal}"
+		echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
+		abuse_report_port=8200
+		# --------------------------------------------------------------------------------
+		variable_to_read_1="abuse_report_auth_token"
+		variable_to_read_2=""
+		variable_to_read_3=""
 
-# Used to exit virtual environment that is started with this command: . env/bin/activate
-deactivate
+		value_description_1="You should not change this token unless someone else"
+		value_description_2="managed to get a hold of the auth token."
+		value_description_3=""
+		value_description_4=""
+		value_description_5=""
 
-# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
-# sudo cp -R "$dp_install_loc/Programs/abusereport" "/usr/local/bin/abusereport"
+		read_stored_config_value_query_function
+		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+			echo "Storing value and moving on."
+			abuse_report_auth_token=$read_stored_config_value_query_1
+			echo
+		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+			random_string=$(openssl rand -base64 32)
+			# echo "lol random $random_string"
+			abuse_report_auth_token=$random_string
+			sudo sed -i '\!^abuse_report_auth_token =!{h;s!=.*!= '"$abuse_report_auth_token"'!};${x;\!^$!{s!!abuse_report_auth_token = '"$abuse_report_auth_token"'!;H};x}' $drawpile_configuration_values_file
+			echo "This is your abuse report auth_token: $abuse_report_auth_token"
+			echo
+			echo '--------------------------------------------------------------------------------'
+		else
+			echo "This message should not be visible."
+		fi
 
-cat <<EOF | sudo tee /usr/local/bin/drawpile_abuse_report >/dev/null
+		variable_to_read_1="discord_webhook_URL"
+		variable_to_read_2=""
+		variable_to_read_3=""
+
+		value_description_1="You should not change this token unless someone else"
+		value_description_2="managed to get a hold of the discord webhook URL."
+		value_description_3=""
+		value_description_4=""
+		value_description_5=""
+
+		read_stored_config_value_query_function
+		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+			echo "Storing value and moving on."
+			discord_webhook_URL=$read_stored_config_value_query_1
+		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+			echo "${bold}${cyan}*****Create Discord Webhook for reports . . .*****${normal}"
+			echo
+			echo "Instructions below: "
+			echo "Click on your Discord Server, open Server Settings,"
+			echo "Integrations, Create Webhooks, Set the name and Channel,"
+			echo "and copy webhook URL to paste here."
+			echo
+			# Regedit Matching in a Bash if Statement - https://linuxhint.com/regex-matching-in-bash-if-statement/
+			while :; do
+				read -r -p "Enter the Discord webhook URL: " discord_webhook_URL
+				echo
+				if [[ "$discord_webhook_URL" =~ ^https://discord.com/api/webhooks/.* ]]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid webhook input, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			sudo sed -i '\!^discord_webhook_URL =!{h;s!=.*!= '"$discord_webhook_URL"'!};${x;\!^$!{s!!discord_webhook_URL = '"$discord_webhook_URL"'!;H};x}' $drawpile_configuration_values_file
+		else
+			echo "This message should not be visible."
+		fi
+
+		cd "/home/drawpileuser"
+		if [[ -d  "/home/drawpileuser/abusereport" ]]; then
+			# ---------------------------------------------------------------------------------
+			# Testing new concept - commented out temporarily
+			# echo Download detected of abusereport files, removing content before downloading.
+			# rm -f -R "/home/drawpileuser/abusereport"
+			# ---------------------------------------------------------------------------------
+			cd Drawpile
+			
+			# Updates local repo
+			git fetch
+			
+			# Checks local commit info
+			git_local_commit=$( git rev-parse HEAD )
+			# Checks remote commit info
+			git_remote_commit=$( git rev-parse '@{u}' )
+			
+			if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+				git_repo_status=currently_up_to_date
+			else
+				# Resets any changes made to the local code so it matches the remote code. 
+				git reset --hard origin/master
+				git_repo_status=out_of_date
+			fi
+		else
+			echo Downloading Drawpile Abuse Report from github.
+			echo
+			git clone https://github.com/drawpile/abusereport
+			cd "/home/drawpileuser/abusereport"
+			# Doesn't work
+			# drawpile_abuse_report_version_with_git=$( git describe )
+			# sudo sed -i '\!^drawpile_abuse_report_version_with_git =!{h;s!=.*!= '"$drawpile_abuse_report_version_with_git"'!};${x;\!^$!{s!!drawpile_abuse_report_version_with_git = '"$drawpile_abuse_report_version_with_git"'!;H};x}' $drawpile_configuration_values_file
+			# git describe - fatal: No names found, cannot describe anything.
+		fi
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		if [[ "$git_repo_status" == "out_of_date" ]] ; then
+			echo '--------------------------------------------------------------------------------'
+			echo "Running command: python -m venv env"
+			echo '--------------------------------------------------------------------------------'
+			python -m venv env
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running command: . env/bin/activate"
+			echo '--------------------------------------------------------------------------------'
+			. env/bin/activate
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running command: pip install -r requirements.txt"
+			echo '--------------------------------------------------------------------------------'
+			pip install -r requirements.txt
+			echo
+			# Used to exit virtual environment that is started with this command: . env/bin/activate
+			deactivate
+		else
+			echo "${bold}${green}Abuse report is up to date, skipping.${normal}"
+		fi
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}***** Setting Abuse Report for Automatic Startup *****${normal}"
+
+		# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
+		# sudo cp -R "$dp_install_loc/Programs/abusereport" "/usr/local/bin/abusereport"
+
+		cat <<EOF | sudo tee /usr/local/bin/drawpile_abuse_report >/dev/null
 #!/bin/sh
 export PORT='$abuse_report_port'
 export AUTH_TOKEN='$abuse_report_auth_token'
@@ -6005,11 +6087,9 @@ cd /home/drawpileuser/abusereport
 . env/bin/activate
 exec gunicorn report_relay.main:App --bind "localhost:\$PORT" --worker-class aiohttp.GunicornWebWorker
 EOF
-
-sudo chown drawpileuser "/usr/local/bin/./drawpile_abuse_report"
-sudo chmod 755 "/usr/local/bin/./drawpile_abuse_report"
-
-cat <<EOF | sudo tee /etc/systemd/system/drawpile_abuse_report.service >/dev/null
+		sudo chown drawpileuser "/usr/local/bin/./drawpile_abuse_report"
+		sudo chmod 755 "/usr/local/bin/./drawpile_abuse_report"
+		cat <<EOF | sudo tee /etc/systemd/system/drawpile_abuse_report.service >/dev/null
 [Unit]
 Description=Drawpile abuse report tool
 
@@ -6022,26 +6102,35 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
-echo
-echo '--------------------------------------------------------------------------------'
-echo
-sudo chmod 655 /etc/systemd/system/drawpile_abuse_report.service
-sudo systemctl daemon-reload
-sudo systemctl restart systemd-modules-load
-wait $!
-sudo systemctl enable drawpile_abuse_report.service
-sudo systemctl start --now drawpile_abuse_report.service
-wait $!
-sudo systemctl status drawpile_abuse_report.service --no-pager
-wait $!
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		sudo chmod 655 /etc/systemd/system/drawpile_abuse_report.service
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		wait $!
+		sudo systemctl enable drawpile_abuse_report.service
+		sudo systemctl start --now drawpile_abuse_report.service
+		wait $!
+		sudo systemctl status drawpile_abuse_report.service --no-pager
+		wait $!
 
-# (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
-# --report-url http://localhost:$abuse_report_port/
-#
-# Enable abuse reports in the drawpile-srv web UI and punch in what you wrote for AUTH_TOKEN.
-# Enters the AUTH_TOKEN into the Drawpile Database server so the user doesn't have to enter it themselves.
-# echo "Inserting value into server database file so report mechanism works."
-# echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
+		# (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
+		# --report-url http://localhost:$abuse_report_port/
+		#
+		# Enable abuse reports in the drawpile-srv web UI and punch in what you wrote for AUTH_TOKEN.
+		# Enters the AUTH_TOKEN into the Drawpile Database server so the user doesn't have to enter it themselves.
+		# echo "Inserting value into server database file so report mechanism works."
+		# echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
+	elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abuse_report_installation_status" == "N" ] || [ "$drawpile_abuse_report_installation_status" == "no" ] || [ "$drawpile_abuse_report_installation_status" == "NO" ] || [ "$drawpile_abuse_report_installation_status" == "No" ]; then
+		echo "Skipping installation of Abuse Report Tool."
+	else
+		echo "This message for Abuse Report Tool should not be visible."
+	fi
+	sudo sed -i '\!^drawpile_abuse_report_installation_status =!{h;s!=.*!= '"$drawpile_abuse_report_installation_status"'!};${x;\!^$!{s!!drawpile_abuse_report_installation_status = '"$drawpile_abuse_report_installation_status"'!;H};x}' $drawpile_configuration_values_file
+else
+	echo "This message should not be visible."
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -6835,112 +6924,135 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo
 
-variable_to_read_1="drawpile_monitor_installation_status"
-variable_to_read_2=""
-variable_to_read_3=""
+if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+	variable_to_read_1="drawpile_monitor_installation_status"
+	variable_to_read_2=""
+	variable_to_read_3=""
+	value_description_1="Drawpile-Monitor: Used for SFW servers, monitoring"
+	value_description_2="for NSFW session names, usernames, and aliases."
+	value_description_3="Violations result in renames and/or kicks."
+	value_description_4="Reports are sent to Discord channel via webhook."
+	value_description_5=""
 
-value_description_1="Drawpile-Monitor: Used for SFW servers, monitoring"
-value_description_2="for NSFW session names, usernames, and aliases."
-value_description_3="Violations result in renames and/or kicks."
-value_description_4="Reports are sent to Discord channel via webhook."
-value_description_5=""
-
-maybe_use_config_value=n
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	drawpile_monitor_installation_status=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
-	echo
-	echo "This is a python script for monitoring for NSFW content via"
-	echo "session names, usernames, and room aliases."
-	echo
-	echo "Inappropriate sessions are automatically renamed. Inappropriate"
-	echo "usernames or room alias results in disconnect. A notification"
-	echo "will be sent via Discord webhook to report the incident."
-	echo
-	echo "${bold}${cyan}Note: this should be used on SFW ONLY servers only.${normal}"
-	echo
-	echo "${bold}For more information, check it out on GitHub:${normal}"
-	echo "     https://github.com/drawpile/drawpile-monitor"
-	echo
-	echo "${bold}For additional info on banned words, check out the following:${normal}"
-	echo "     https://github.com/dimitrismistriotis/alt-profanity-check"
-	echo "     https://github.com/snguyenthanh/better_profanity"
-	echo "       https://github.com/snguyenthanh/better_profanity/blob/master/better_profanity/profanity_wordlist.txt"
-	echo
-	echo "${bold}Custom words or phrases can be added by editing the following file${normal}"
-	echo "${bold}and then restart the systemd service used to run the script.${normal}"
-	echo "     nano /home/drawpileuser/drawpile-monitor-custom-list.txt"
-	echo "     sudo systemctl restart drawpile_monitor.service"
-	echo
-	while :; do
-		read -r -p "${bold}${cyan}Would you like to enable the drawpile-monitor service:${normal} " drawpile_monitor_installation_status
-		if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ] || [ "$drawpile_monitor_installation_status" == "n" ] || [ "$drawpile_monitor_installation_status" == "N" ] || [ "$drawpile_monitor_installation_status" == "no" ] || [ "$drawpile_monitor_installation_status" == "NO" ] || [ "$drawpile_monitor_installation_status" == "No" ]; then
-			break
-		else
+	maybe_use_config_value=n
+	read_stored_config_value_query_function
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Storing value and moving on."
+		drawpile_monitor_installation_status=$read_stored_config_value_query_1
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+		echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
+		echo
+		echo "This is a python script for monitoring for NSFW content via"
+		echo "session names, usernames, and room aliases."
+		echo
+		echo "Inappropriate sessions are automatically renamed. Inappropriate"
+		echo "usernames or room alias results in disconnect. A notification"
+		echo "will be sent via Discord webhook to report the incident."
+		echo
+		echo "${bold}${cyan}Note: this should be used on SFW ONLY servers only.${normal}"
+		echo
+		echo "${bold}For more information, check it out on GitHub:${normal}"
+		echo "     https://github.com/drawpile/drawpile-monitor"
+		echo
+		echo "${bold}For additional info on banned words, check out the following:${normal}"
+		echo "     https://github.com/dimitrismistriotis/alt-profanity-check"
+		echo "     https://github.com/snguyenthanh/better_profanity"
+		echo "       https://github.com/snguyenthanh/better_profanity/blob/master/better_profanity/profanity_wordlist.txt"
+		echo
+		echo "${bold}Custom words or phrases can be added by editing the following file${normal}"
+		echo "${bold}and then restart the systemd service used to run the script.${normal}"
+		echo "     nano /home/drawpileuser/drawpile-monitor-custom-list.txt"
+		echo "     sudo systemctl restart drawpile_monitor.service"
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Would you like to enable the drawpile-monitor service:${normal} " drawpile_monitor_installation_status
+			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ] || [ "$drawpile_monitor_installation_status" == "n" ] || [ "$drawpile_monitor_installation_status" == "N" ] || [ "$drawpile_monitor_installation_status" == "no" ] || [ "$drawpile_monitor_installation_status" == "NO" ] || [ "$drawpile_monitor_installation_status" == "No" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done	
+		if [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) ]]; then
 			echo
-			echo "${bold}${red}Invalid input selection, try again.${normal}"
-			echo
-			echo ----------------------------------------------------------------------------------
-			echo
-		fi
-	done
-	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		cd "/home/drawpileuser"
-		if [[ -d  "/home/drawpileuser/drawpile-monitor" ]]; then
-			echo Download detected of drawpile-monitor files, removing content before downloading.
-			rm -f -R "/home/drawpileuser/drawpile-monitor"
-		else
-			echo Did not find drawpile-monitor folder, continuing.
-		fi
-		echo
-		git clone https://github.com/drawpile/drawpile-monitor
-		echo
-		echo Download done...
-		cd "/home/drawpileuser/drawpile-monitor"
-		echo
-		if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) || "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
-			echo '--------------------------------------------------------------------------------'
-			echo "Need to install gfortran and libopenblas-dev for Raspbian"
 			echo '--------------------------------------------------------------------------------'
 			echo
-			sudo $package_install_program gfortran libopenblas-dev
+			cd "/home/drawpileuser"
+			if [[ -d  "/home/drawpileuser/drawpile-monitor" ]]; then
+				# ---------------------------------------------------------------------------------
+				# Testing new concept - commented out temporarily
+				# echo Download detected of drawpile-monitor files, removing content before downloading.
+				# rm -f -R "/home/drawpileuser/drawpile-monitor"
+				# ---------------------------------------------------------------------------------
+				cd drawpile-monitor
+				
+				# Updates local repo
+				git fetch
+				
+				# Checks local commit info
+				git_local_commit=$( git rev-parse HEAD )
+				# Checks remote commit info
+				git_remote_commit=$( git rev-parse '@{u}' )
+				
+				if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+					git_repo_status=currently_up_to_date
+				else
+					# Resets any changes made to the local code so it matches the remote code. 
+					git reset --hard origin/master
+					git_repo_status=out_of_date
+				fi
+			else
+				echo Downloading Drawpile-Monitor from github.
+				echo
+				git clone https://github.com/drawpile/drawpile-monitor
+				echo
+				cd "/home/drawpileuser/drawpile-monitor"
+			fi
 			echo
-		fi
-		echo '--------------------------------------------------------------------------------'
-		echo "Running command: python -m venv env"
-		echo '--------------------------------------------------------------------------------'
-		python -m venv env
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running command: . env/bin/activate"
-		echo '--------------------------------------------------------------------------------'
-		. env/bin/activate
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running command: pip install -r requirements.txt"
-		echo '--------------------------------------------------------------------------------'
-		pip install -r requirements.txt
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}***** Preparing Drawpile-Monitor for Automatic Startup *****${normal}"
+			if [[ "$git_repo_status" == "out_of_date" ]] ; then
+				if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) || "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+					echo '--------------------------------------------------------------------------------'
+					echo "Need to install gfortran and libopenblas-dev for Raspbian"
+					echo '--------------------------------------------------------------------------------'
+					echo
+					sudo $package_install_program gfortran libopenblas-dev
+					echo
+				fi
+				echo '--------------------------------------------------------------------------------'
+				echo "Running command: python -m venv env"
+				echo '--------------------------------------------------------------------------------'
+				python -m venv env
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running command: . env/bin/activate"
+				echo '--------------------------------------------------------------------------------'
+				. env/bin/activate
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running command: pip install -r requirements.txt"
+				echo '--------------------------------------------------------------------------------'
+				pip install -r requirements.txt
+				echo
+				# Used to exit virtual environment that is started with this command: . env/bin/activate
+				deactivate
+			else
+				echo "${bold}${green}Drawpile-Monitor is up to date, skipping.${normal}"
+			fi
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${cyan}***** Preparing Drawpile-Monitor for Automatic Startup *****${normal}"
 
-		# Used to exit virtual environment that is started with this command: . env/bin/activate
-		deactivate
+			# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
+			# sudo cp -R "$dp_install_loc/Programs/drawpile-monitor" "/usr/local/bin/drawpile-monitor"
 
-		# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
-		# sudo cp -R "$dp_install_loc/Programs/drawpile-monitor" "/usr/local/bin/drawpile-monitor"
-
-		touch /home/drawpileuser/drawpile-monitor-custom-list.txt
-		# ----------------------------------------------------------------------------------
-		cat <<EOF | sudo tee /home/drawpileuser/drawpile-monitor/config.ini >/dev/null
+			touch /home/drawpileuser/drawpile-monitor-custom-list.txt
+			# ----------------------------------------------------------------------------------
+			cat <<EOF | sudo tee /home/drawpileuser/drawpile-monitor/config.ini >/dev/null
 # This is a template configuration file. Copy it to config.ini and fill it in.
 
 [config]
@@ -6977,10 +7089,10 @@ session_name_terminate=Session keeps offending, terminating it. Read the rules: 
 session_alias_terminate=Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
 user_kick=Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
 EOF
-		sudo chown drawpileuser:drawpileread "/home/drawpileuser/drawpile-monitor/config.ini"
-		sudo chmod 775 "/home/drawpileuser/drawpile-monitor/config.ini"
-		# ----------------------------------------------------------------------------------
-		cat <<EOF | sudo tee /usr/local/bin/drawpile_monitor_report >/dev/null
+			sudo chown drawpileuser:drawpileread "/home/drawpileuser/drawpile-monitor/config.ini"
+			sudo chmod 775 "/home/drawpileuser/drawpile-monitor/config.ini"
+			# ----------------------------------------------------------------------------------
+			cat <<EOF | sudo tee /usr/local/bin/drawpile_monitor_report >/dev/null
 #!/bin/sh
 cd /home/drawpileuser/drawpile-monitor
 . env/bin/activate
@@ -7005,11 +7117,11 @@ export DRAWPILE_MONITOR_PASS='$nginx_htpasswd_1'
 # To check randomly between 20 and 60 seconds (to avoid counter-scripting)
 ./drawpile-monitor.py --interval=20 --jitter=40
 EOF
-		# ----------------------------------------------------------------------------------
-		sudo chown drawpileuser "/usr/local/bin/./drawpile_monitor_report"
-		sudo chmod 775 "/usr/local/bin/./drawpile_monitor_report"
+			# ----------------------------------------------------------------------------------
+			sudo chown drawpileuser "/usr/local/bin/./drawpile_monitor_report"
+			sudo chmod 775 "/usr/local/bin/./drawpile_monitor_report"
 
-		cat <<EOF | sudo tee /etc/systemd/system/drawpile_monitor.service >/dev/null
+			cat <<EOF | sudo tee /etc/systemd/system/drawpile_monitor.service >/dev/null
 [Unit]
 Description=Drawpile Monitor Language Report tool
 
@@ -7022,18 +7134,26 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
-		sudo chmod 655 /etc/systemd/system/drawpile_monitor.service 
-		sudo systemctl daemon-reload
-		sudo systemctl restart systemd-modules-load
-		# Systemd service to be started later in the script after server is started up.
-	elif [ "$drawpile_monitor_installation_status" == "n" ] || [ "$drawpile_monitor_installation_status" == "N" ] || [ "$drawpile_monitor_installation_status" == "no" ] || [ "$drawpile_monitor_installation_status" == "NO" ] || [ "$drawpile_monitor_installation_status" == "No" ]; then
-		echo "Skipping installation of Drawpile-Monitor."
+			sudo chmod 655 /etc/systemd/system/drawpile_monitor.service 
+			sudo systemctl daemon-reload
+			sudo systemctl restart systemd-modules-load
+			# Systemd service to be started later in the script after server is started up.
+		elif [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) ]]; then
+			echo "Skipping installation of Drawpile-Monitor."
+		else
+			echo "This message for Drawpile-monitor should not be visible."
+		fi
+		sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"$drawpile_monitor_installation_status"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"$drawpile_monitor_installation_status"'!;H};x}' $drawpile_configuration_values_file
 	else
-		echo "This message for Drawpile-monitor should not be visible."
+		echo "This message should not be visible."
 	fi
+elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abuse_report_installation_status" == "N" ] || [ "$drawpile_abuse_report_installation_status" == "no" ] || [ "$drawpile_abuse_report_installation_status" == "NO" ] || [ "$drawpile_abuse_report_installation_status" == "No" ]; then
+	echo "Skipping installation of Drawpile-Monitor, because the Abuse-Report Tool"
+	echo "installation was skipped with the necessary Discord webhook URL."
+	drawpile_monitor_installation_status=skipped
 	sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"$drawpile_monitor_installation_status"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"$drawpile_monitor_installation_status"'!;H};x}' $drawpile_configuration_values_file
 else
-	echo "This message should not be visible."
+	"This message should not be visible for Drawpile Monitor."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -9251,110 +9371,137 @@ comment_EOF_delete
 	echo
 	echo "${bold}${cyan}*****Downloading Web Admin interface . . . (Step 1 of 6) *****${normal}"
 	echo
-	if [[ -d  "$dp_install_loc/Programs/dpwebadmin" ]]; then
-		# echo "Drawpile Web Admin already pulled, changing directory..."
-		# cd "$dp_install_loc/Programs/dpwebadmin/src"
-		echo Download detected of Drawpile Admin, removing content before downloading.
-		rm -f -R "$dp_install_loc/Programs/dpwebadmin"
-	fi
-	echo Downloading dp web admin from github.
-	echo
 	cd "$dp_install_loc/Programs"
-	git clone https://github.com/drawpile/dpwebadmin.git
-	cd "$dp_install_loc/Programs/dpwebadmin"
-	# Doesn't work
-	# drawpile_dp_webadmin_version_with_git=$( git describe )
-	# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
-	# git describe - fatal: No names found, cannot describe anything.
+	if [[ -d  "$dp_install_loc/Programs/dpwebadmin" ]]; then
+		# ---------------------------------------------------------------------------------
+		# Testing new concept - commented out temporarily
+			# echo "Drawpile Web Admin already pulled, changing directory..."
+			# cd "$dp_install_loc/Programs/dpwebadmin/src"
+		# echo Download detected of Drawpile Admin, removing content before downloading.
+		# rm -f -R "$dp_install_loc/Programs/dpwebadmin"
+		# ---------------------------------------------------------------------------------
+		cd dpwebadmin
+		
+		# Updates local repo
+		git fetch
+		
+		# Checks local commit info
+		git_local_commit=$( git rev-parse HEAD )
+		# Checks remote commit info
+		git_remote_commit=$( git rev-parse '@{u}' )
+		
+		if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+			git_repo_status=currently_up_to_date
+		else
+			# Resets any changes made to the local code so it matches the remote code. 
+			git reset --hard origin/master
+			git_repo_status=out_of_date
+		fi
+	else
+		echo Downloading dp web admin from github.
+		echo
+		git clone https://github.com/drawpile/dpwebadmin.git
+		cd "$dp_install_loc/Programs/dpwebadmin"
+		# Doesn't work
+		# drawpile_dp_webadmin_version_with_git=$( git describe )
+		# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
+		# git describe - fatal: No names found, cannot describe anything.
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
-	echo
+	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+		echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
+		echo
+		echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
+		echo
 cat <<EOF | tee -a .env.local >/dev/null
 REACT_APP_BASENAME=/admin
 REACT_APP_APIROOT=/admin/api
 REACT_APP_AUTHMODE=basic
 EOF
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
-	echo
-	if [[ ! -e "$dp_install_loc/Programs/dpwebadmin/package-orig.json" ]]; then
-		cp "$dp_install_loc/Programs/dpwebadmin/package.json" "$dp_install_loc/Programs/dpwebadmin/package-orig.json"
-	fi
-	sudo sed -i "s|\"proxy\": \"http://localhost:27780/\"|\"proxy\": \"http://localhost:27780/\",\n  \"homepage\": \"/admin/\"|g" "$dp_install_loc/Programs/dpwebadmin/package.json"
-	# Olde commands
-	# mv package.json package-orig.json
-	# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
-	#
-	# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Building for Web Admin interface . . . (Step 4 of 6) *****${normal}"
-	echo
-	# if [ "$no_swap_available" == "true" ]; then
-	if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
-		echo This step may take about an hour to complete. Please be patient.
 		echo
 		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
-		echo '--------------------------------------------------------------------------------'
-		if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
-			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		echo
+		echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
+		echo
+		if [[ ! -e "$dp_install_loc/Programs/dpwebadmin/package-orig.json" ]]; then
+			cp "$dp_install_loc/Programs/dpwebadmin/package.json" "$dp_install_loc/Programs/dpwebadmin/package-orig.json"
 		fi
+		sudo sed -i "s|\"proxy\": \"http://localhost:27780/\"|\"proxy\": \"http://localhost:27780/\",\n  \"homepage\": \"/admin/\"|g" "$dp_install_loc/Programs/dpwebadmin/package.json"
+		# Olde commands
+		# mv package.json package-orig.json
+		# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
+		#
+		# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Building for Web Admin interface . . . (Step 4 of 6) *****${normal}"
+		echo
+		# if [ "$no_swap_available" == "true" ]; then
+		if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
+			echo This step may take about an hour to complete. Please be patient.
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+			echo '--------------------------------------------------------------------------------'
+			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			fi
+		else
+			# elif [ "$no_swap_available" == "false" ]; then
+			echo This step may take a while to complete. Please be patient.
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running Command: npm install"
+			echo '--------------------------------------------------------------------------------'
+			if ! npm install; then
+				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			fi
+		fi
+		# node_return_status_01=$?
+		# echo
+		# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+		# echo Return status of command: $node_return_status_01
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
+		echo '--------------------------------------------------------------------------------'
+		if ! NODE_OPTIONS=--openssl-legacy-provider npm run build; then
+			command_die "${bold}${red}Command 'NODE_OPTIONS=--openssl-legacy-provider npm run build' failed${normal}"
+		fi
+		# node_return_status_02=$?
+		# echo
+		# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
+		# echo Return status of command: $node_return_status_02
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Editing and Moving to root web directory . . . (Step 5 of 6)*****${normal}"
+		echo
+		sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
+		# sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile moo.strongson.com Server Admin<\/title>/g" "/var/www/html/drawpile/admin/index.html"
+		sudo mv build /var/www/html/drawpile/admin
+		sudo restorecon -R /var/www/html/drawpile/
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
+		echo
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			sudo systemctl enable nginx.service
+		fi
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		sudo nginx -s reload
+		sudo systemctl restart nginx.service
+		systemctl status nginx.service --no-pager
+		wait $!
 	else
-		# elif [ "$no_swap_available" == "false" ]; then
-		echo This step may take a while to complete. Please be patient.
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: npm install"
-		echo '--------------------------------------------------------------------------------'
-		if ! npm install; then
-			command_die "${bold}${red}Command 'npm install' failed.${normal}"
-		fi
+		echo "${bold}${green}Web Admin interface is up to date, skipping step 2 through 6.${normal}"
 	fi
-	# node_return_status_01=$?
-	# echo
-	# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
-	# echo Return status of command: $node_return_status_01
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
-	echo '--------------------------------------------------------------------------------'
-	if ! NODE_OPTIONS=--openssl-legacy-provider npm run build; then
-		command_die "${bold}${red}Command 'NODE_OPTIONS=--openssl-legacy-provider npm run build' failed${normal}"
-	fi
-	# node_return_status_02=$?
-	# echo
-	# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
-	# echo Return status of command: $node_return_status_02
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Editing and Moving to root web directory . . . (Step 5 of 6)*****${normal}"
-	echo
-	sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
-	# sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile moo.strongson.com Server Admin<\/title>/g" "/var/www/html/drawpile/admin/index.html"
-	sudo mv build /var/www/html/drawpile/admin
-	sudo restorecon -R /var/www/html/drawpile/
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
-	echo
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		sudo systemctl enable nginx.service
-	fi
-	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
-	sudo systemctl daemon-reload
-	sudo systemctl restart systemd-modules-load
-	sudo nginx -s reload
-	sudo systemctl restart nginx.service
-	systemctl status nginx.service --no-pager
-	wait $!
 	echo
 	# https://create-react-app.dev/
 	# npx create-react-app builddpwebadmin
@@ -9385,74 +9532,101 @@ EOF
 comment_EOF_delete
 	echo
 	echo '--------------------------------------------------------------------------------'
-	echo
+	echo	
 	echo "${bold}${cyan}*****Downloading New Web Admin interface . . . (Step 1 of 4) *****${normal}"
 	echo
-	if [[ -d  "$dp_install_loc/Programs/drawpile-admin-webui" ]]; then
-		# echo "Drawpile Web Admin already pulled, changing directory..."
-		echo Download detected of new drawpile-admin-webui, removing content before downloading.
-		rm -f -R "$dp_install_loc/Programs/drawpile-admin-webui"
-	fi
-	echo Downloading new drawpile-admin-webui from github.
-	echo
 	cd "$dp_install_loc/Programs"
-	git clone https://github.com/drawpile/drawpile-admin-webui
-	cd "$dp_install_loc/Programs/drawpile-admin-webui"
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
-	echo
-	# if [ "$no_swap_available" == "true" ]; then
-	if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
-		echo This step may take about an hour to complete. Please be patient.
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
-		echo '--------------------------------------------------------------------------------'
-		if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
-			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+	if [[ -d  "$dp_install_loc/Programs/drawpile-admin-webui" ]]; then
+		# ---------------------------------------------------------------------------------
+		# Testing new concept - commented out temporarily
+		# echo "Drawpile Web Admin already pulled, changing directory..."
+		# echo Download detected of new drawpile-admin-webui, removing content before downloading.
+		# rm -f -R "$dp_install_loc/Programs/drawpile-admin-webui"
+		# ---------------------------------------------------------------------------------
+		cd drawpile-admin-webui
+		
+		# Updates local repo
+		git fetch
+		
+		# Checks local commit info
+		git_local_commit=$( git rev-parse HEAD )
+		# Checks remote commit info
+		git_remote_commit=$( git rev-parse '@{u}' )
+		
+		if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+			git_repo_status=currently_up_to_date
+		else
+			# Resets any changes made to the local code so it matches the remote code. 
+			git reset --hard origin/master
+			git_repo_status=out_of_date
 		fi
 	else
-		# elif [ "$no_swap_available" == "false" ]; then
-		echo This step may take a while to complete. Please be patient.
+		echo Downloading new drawpile-admin-webui from github.
+		echo
+		git clone https://github.com/drawpile/drawpile-admin-webui
+		cd "$dp_install_loc/Programs/drawpile-admin-webui"
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo
+	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+		echo "${bold}${yellow}New Web Admin interface is not installed yet or not up to date.${normal}"
+		echo
+		echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
+		echo
+		# if [ "$no_swap_available" == "true" ]; then
+		if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
+			echo This step may take about an hour to complete. Please be patient.
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+			echo '--------------------------------------------------------------------------------'
+			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			fi
+		else
+			# elif [ "$no_swap_available" == "false" ]; then
+			echo This step may take a while to complete. Please be patient.
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running Command: npm install"
+			echo '--------------------------------------------------------------------------------'
+			if ! npm install; then
+				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			fi
+		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: npm install"
+		echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
 		echo '--------------------------------------------------------------------------------'
-		if ! npm install; then
-			command_die "${bold}${red}Command 'npm install' failed.${normal}"
+		if ! npm run build -- "https://$hostname/listing/admin/"; then
+			command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
 		fi
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Moving to root web directory . . . (Step 3 of 4)*****${normal}"
+		echo
+		sudo mv dist /var/www/html/drawpile/admin_ui
+		sudo restorecon -R /var/www/html/drawpile/
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
+		echo
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			sudo systemctl enable nginx.service
+		fi
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		sudo nginx -s reload
+		sudo systemctl restart nginx.service
+		systemctl status nginx.service --no-pager
+		wait $!
+	else
+		echo "${bold}${green}New Web Admin interface is up to date, skipping step 2 through 4.${normal}"
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
-	echo '--------------------------------------------------------------------------------'
-	if ! npm run build -- "https://$hostname/listing/admin/"; then
-		command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
-	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Moving to root web directory . . . (Step 3 of 4)*****${normal}"
-	echo
-	sudo mv dist /var/www/html/drawpile/admin_ui
-	sudo restorecon -R /var/www/html/drawpile/
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
-	echo
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		sudo systemctl enable nginx.service
-	fi
-	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
-	sudo systemctl daemon-reload
-	sudo systemctl restart systemd-modules-load
-	sudo nginx -s reload
-	sudo systemctl restart nginx.service
-	systemctl status nginx.service --no-pager
-	wait $!
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
