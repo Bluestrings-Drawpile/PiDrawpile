@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9923
+drawpilescriptversion=2.9924
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -4051,6 +4051,50 @@ function drawpile_build_and_compile_function () {
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
+		echo
+	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
+	echo
+	service_name_to_check_01=drawpile-srv.socket
+	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
+		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
+		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Value: $drawpile_srv_socket_loaded"
+		echo "Value: $drawpile_srv_socket_status"
+	else
+		drawpile_srv_socket_loaded="not_loaded"
+		drawpile_srv_socket_status="not_loaded"
+		echo "The $service_name_to_check_01 is not yet loaded. No action required."
+	fi
+	echo
+	service_name_to_check_02=drawpile-srv.service
+	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
+		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
+		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Value: $drawpile_srv_service_loaded"
+		echo "Value: $drawpile_srv_service_status"
+	else
+		drawpile_srv_service_loaded="not_loaded"
+		drawpile_srv_service_status="not_loaded"
+		echo "The $service_name_to_check_02 is not yet loaded. No action required."
+	fi
+	
+	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			sudo systemctl stop --now $service_name_to_check_01
+			if [[ "$drawpile_srv_service_status" == "(running)" ]]; Then
+				sudo systemctl stop --now $service_name_to_check_02
+			fi
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			sudo systemctl stop --now $service_name_to_check_02
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			echo "Drawpile server startup is not yet configured. No action required."
+		else
+			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
+		fi
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
 	echo
 <<comment_EOF
 	#---------------------------------------------------------------------------------------------------------------------------------
@@ -4225,6 +4269,25 @@ comment_EOF
 	echo "${bold}${cyan}*****Verifying if Drawpile Compiled Successfully . . . *****${normal}"
 	echo
 	drawpile_compile_verification_function
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}***** If Drawpile-Srv was Running Previously, Starting Process . . . *****${normal}"
+	echo
+	service_name_to_check_01=drawpile-srv.socket
+	service_name_to_check_02=drawpile-srv.service
+	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			sudo systemctl start --now $service_name_to_check_01
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			sudo systemctl start --now $service_name_to_check_02
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			echo "Drawpile server startup is not yet configured. No action required."
+		else
+			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
+		fi
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -5945,6 +6008,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		# sudo systemctl disable drawpile_abuse_report.service
 		# discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
 		echo
+		echo ----------------------------------------------------------------------------------
+		echo
 		echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
 		abuse_report_port=8200
 		# --------------------------------------------------------------------------------
@@ -6015,7 +6080,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		else
 			echo "This message should not be visible."
 		fi
-
+		echo
+		echo ----------------------------------------------------------------------------------
+		echo
 		cd "/home/drawpileuser"
 		if [[ -d  "/home/drawpileuser/abusereport" ]]; then
 			# ---------------------------------------------------------------------------------
@@ -8079,11 +8146,18 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "Think of this as a logo to represent your server community and show up in the"
 			echo "Session, Browse menu (for the beta client)."
 			echo
-			[[ "$dp_install_loc" == "$script_directory" ]] && echo "Once prepared, please place them here: "
-			[[ "$dp_install_loc" == "$script_directory" ]] && echo "     $dp_install_loc"
-			[[ "$dp_install_loc" != "$script_directory" ]] && echo "Once prepared, please place in one of these two locations below: "
-			[[ "$dp_install_loc" != "$script_directory" ]] && echo "     $script_directory"
-			[[ "$dp_install_loc" != "$script_directory" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place them here: "
+			[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
+			[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
+			[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
+			[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
+			[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these three locations below: "
+			[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
+			[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+			[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
 			echo
 			echo "The script will handle the rest of the required configuration."
 			echo "Using other configurations is not recommended except for advanced users."
@@ -8099,6 +8173,50 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo "Leaving the field blank will assume there is no icon to be used."
 		echo
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		while :; do
+			read -r -p "${bold}${cyan}Enter a location for the favicon${normal}: " list_server_favicon_location_entry
+			echo
+			if [ "$list_server_favicon_location_entry" = "" ]; then
+				list_server_favicon_toggle="# favicon"
+				list_server_favicon_location="\"\""
+				echo "${bold}${cyan}Left blank, favicon will not be used.${normal}"
+				break
+			elif [ "$list_server_favicon_location_entry" = "1" ]; then
+				if [ "$ssl_encryption_config" == "1" ]; then
+					# echo 'Press 1 for Self Signed Certificates'
+					list_server_favicon_toggle="favicon"
+					list_server_favicon_location="\"http://$hostname/128.png\""
+					break
+				elif [ "$ssl_encryption_config" == "2" ] || [ "$ssl_encryption_config" != "1" || "$ssl_encryption_config" != "3" ]; then
+					# echo 'Press 2 for Lets Encrypt'
+					# echo Invalid option selected. Assuming option 2 intended.
+					list_server_favicon_toggle="favicon"
+					list_server_favicon_location="\"https://$hostname/128.png\""
+					break
+				else
+					# echo 'Press 3 for no SSL security.' This option should not be available for list server so continue
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					continue
+				fi
+				echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
+			elif [[ -d "$list_server_favicon_location_entry" ]]; then
+				list_server_favicon_toggle="favicon"
+				list_server_favicon_location="\"$list_server_favicon_location_entry\""
+				echo "${bold}${cyan}Selected:${normal} $list_server_favicon_location"
+				break
+			else
+				echo
+				echo "Invalid input selection, try again."
+				echo
+				continue
+			fi
+		done
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		read -r -p "${bold}${cyan}Enter a location for the favicon${normal}: " list_server_favicon_location_entry
 		echo
 		if [ "$list_server_favicon_location_entry" = "" ]; then
@@ -8126,6 +8244,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			list_server_favicon_location="\"$list_server_favicon_location_entry\""
 			echo "${bold}${cyan}Selected:${normal} $list_server_favicon_location"
 		fi
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		sudo sed -i '\!^list_server_favicon_location_entry =!{h;s!=.*!= '"$list_server_favicon_location_entry"'!};${x;\!^$!{s!!list_server_favicon_location_entry = '"$list_server_favicon_location_entry"'!;H};x}' $drawpile_configuration_values_file
 		echo
 		echo '--------------------------------------------------------------------------------'
@@ -8510,6 +8630,11 @@ EOF
 		echo
 		if [ "$list_server_config" == "1" ]; then
 			echo "List server configuration file exists, skipping . . ."
+			
+			list_server_favicon_location_entry=$( grep -m 1 "$list_server_favicon_location_entry = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			if [ -z "$list_server_favicon_location_entry" ] || [ "$list_server_favicon_location_entry" = "=" ]; then
+				list_server_favicon_location_entry=""
+			fi
 		elif [ "$list_server_config" == "2" ]; then
 			echo
 			echo 'Before removing the configuration file, would you like to view'
@@ -8584,6 +8709,8 @@ EOF
 			sudo cp $dp_install_loc/16.png /var/www/html/drawpile/16.png
 		elif [[ -e  "$script_directory/16.png" ]]; then
 			sudo cp $script_directory/16.png /var/www/html/drawpile/16.png
+		elif [[ -d "$list_server_favicon_location_entry/16.png" ]]; then
+			sudo cp $list_server_favicon_location_entry/16.png /var/www/html/drawpile/16.png
 		else
 			favicon_instructions_function
 			echo
@@ -8595,6 +8722,8 @@ EOF
 				sudo cp $dp_install_loc/16.png /var/www/html/drawpile/16.png
 			elif [[ -e  "$script_directory/16.png" ]]; then
 				sudo cp $script_directory/16.png /var/www/html/drawpile/16.png
+			elif [[ -d "$list_server_favicon_location_entry/16.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/16.png" /var/www/html/drawpile/16.png
 			else
 				echo "Ok, fine, find out what happens when you don't read instructions."
 				echo "Exiting script."
@@ -8606,6 +8735,8 @@ EOF
 			sudo cp $dp_install_loc/32.png /var/www/html/drawpile/32.png
 		elif [[ -e  "$script_directory/32.png" ]]; then
 			sudo cp $script_directory/32.png /var/www/html/drawpile/32.png
+		elif [[ -d "$list_server_favicon_location_entry/32.png" ]]; then
+			sudo cp "$list_server_favicon_location_entry/32.png" /var/www/html/drawpile/32.png
 		else
 			favicon_instructions_function
 			echo
@@ -8617,6 +8748,8 @@ EOF
 				sudo cp $dp_install_loc/32.png /var/www/html/drawpile/32.png
 			elif [[ -e  "$script_directory/32.png" ]]; then
 				sudo cp $script_directory/32.png /var/www/html/drawpile/32.png
+			elif [[ -d "$list_server_favicon_location_entry/32.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/32.png" /var/www/html/drawpile/32.png
 			else
 				echo "Ok, fine, find out what happens when you don't read instructions."
 				echo "Exiting script."
@@ -8628,6 +8761,8 @@ EOF
 			sudo cp $dp_install_loc/48.png /var/www/html/drawpile/48.png
 		elif [[ -e  "$script_directory/48.png" ]]; then
 			sudo cp $script_directory/48.png /var/www/html/drawpile/48.png
+		elif [[ -d "$list_server_favicon_location_entry/48.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/48.png" /var/www/html/drawpile/48.png
 		else
 			favicon_instructions_function
 			echo
@@ -8639,6 +8774,8 @@ EOF
 				sudo cp $dp_install_loc/48.png /var/www/html/drawpile/48.png
 			elif [[ -e  "$script_directory/48.png" ]]; then
 				sudo cp $script_directory/48.png /var/www/html/drawpile/48.png
+			elif [[ -d "$list_server_favicon_location_entry/48.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/48.png" /var/www/html/drawpile/48.png
 			else
 				echo "Ok, fine, find out what happens when you don't read instructions."
 				echo "Exiting script."
@@ -8650,6 +8787,8 @@ EOF
 			sudo cp $dp_install_loc/64.png /var/www/html/drawpile/64.png
 		elif [[ -e  "$script_directory/64.png" ]]; then
 			sudo cp $script_directory/64.png /var/www/html/drawpile/64.png
+		elif [[ -d "$list_server_favicon_location_entry/64.png" ]]; then
+			sudo cp "$list_server_favicon_location_entry/64.png" /var/www/html/drawpile/64.png
 		else
 			favicon_instructions_function
 			echo
@@ -8661,6 +8800,8 @@ EOF
 				sudo cp $dp_install_loc/64.png /var/www/html/drawpile/64.png
 			elif [[ -e  "$script_directory/64.png" ]]; then
 				sudo cp $script_directory/64.png /var/www/html/drawpile/64.png
+			elif [[ -d "$list_server_favicon_location_entry/64.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/64.png" /var/www/html/drawpile/64.png
 			else
 				echo "Ok, fine, find out what happens when you don't read instructions."
 				echo "Exiting script."
@@ -8672,6 +8813,8 @@ EOF
 			sudo cp $dp_install_loc/128.png /var/www/html/drawpile/128.png
 		elif [[ -e  "$script_directory/128.png" ]]; then
 			sudo cp $script_directory/128.png /var/www/html/drawpile/128.png
+		elif [[ -d "$list_server_favicon_location_entry/128.png" ]]; then
+			sudo cp "$list_server_favicon_location_entry/128.png" /var/www/html/drawpile/128.png
 		else
 			favicon_instructions_function
 			echo
@@ -8683,6 +8826,8 @@ EOF
 				sudo cp $dp_install_loc/128.png /var/www/html/drawpile/128.png
 			elif [[ -e  "$script_directory/128.png" ]]; then
 				sudo cp $script_directory/128.png /var/www/html/drawpile/128.png
+			elif [[ -d "$list_server_favicon_location_entry/128.png" ]]; then
+				sudo cp "$list_server_favicon_location_entry/128.png" /var/www/html/drawpile/128.png
 			else
 				echo "Ok, fine, find out what happens when you don't read instructions."
 				echo "Exiting script."
@@ -8763,56 +8908,45 @@ EOF
 		echo
 		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
-		variable_to_read_1="list_server_favicon_location_entry"
-		variable_to_read_2=""
-		variable_to_read_3=""
-
-		value_description_1="Are favicons enabled - just say yes to this one to load prior configuration."
-		value_description_2=" -   Blank or left empty - disabled"
-		value_description_3=" 1 - Use DP installation directory or script directory for favicons"
-		value_description_4=" -   Location entered: advanced users only specified location for"
-		value_description_5="     favicons to be used."
-
-		read_stored_config_value_query_function
-		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-			echo "Storing value and moving on."
-			list_server_favicon_location_entry=$read_stored_config_value_query_1
-		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			if [ "$list_server_favicon_location_entry" = "" ]; then
-				echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
-				# Do nothing as no error was detected.
-				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				:
-			elif [ "$list_server_favicon_location_entry" = "1" ]; then
+		if [ "$list_server_favicon_location_entry" = "" ]; then
+			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		elif [ "$list_server_favicon_location_entry" = "1" ] || [[ -d "$list_server_favicon_location_entry" ]]; then
+			if [ "$list_server_favicon_location_entry" = "1" ]; then
 				echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
-				echo
-				favicon_copy_function
-				sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
-				sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
-				sudo sed -i '\!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!;H};x}' /var/www/html/drawpile/index.html
-				sudo sed -i '\!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!;H};x}' /var/www/html/drawpile/index.html
-				sudo sed -i '\!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/128.png" sizes="128x128">!;H};x}' /var/www/html/drawpile/index.html
-				sleep 5
+			elif [[ -d "$list_server_favicon_location_entry" ]]; then
+				echo "${bold}${cyan}Selected custom location which passed verification.${normal}"
+				echo "${bold}${cyan}Will copy from designated location.${normal}"
 			else
-				echo "${bold}${cyan}Selected Custom location:${normal} $list_server_favicon_location"
-				echo
-				echo Edit the index.html file located: /var/www/html/drawpile
-				echo You can do so with this command : sudo nano /var/www/html/drawpile/index.html
-				echo
-				echo Edit the values noted below, editing the filename for "href=" to 
-				echo match the filenames and path you decided to use earlier that
-				echo is noted above. 
-				echo
-				echo '<link rel="icon" type="image/png" href="/16.png" sizes="16x16">'
-				echo '<link rel="icon" type="image/png" href="/32.png" sizes="32x32">'
-				echo '<link rel="icon" type="image/png" href="/48.png" sizes="48x48">'
-				echo '<link rel="icon" type="image/png" href="/64.png" sizes="64x64">'
-				echo '<link rel="icon" type="image/png" href="/128.png" sizes="128x128">'
-				echo
-				echo No further guidance will be provided. When you are ready to continue...
+				echo "This message should not be visible for: Preparing Favicon Setup"
 			fi
+			echo
+			favicon_copy_function
+			sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
+			sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
+			sudo sed -i '\!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!;H};x}' /var/www/html/drawpile/index.html
+			sudo sed -i '\!	<link rel="icon" type="image/png" href="/48.png" sizes="48x48">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!;H};x}' /var/www/html/drawpile/index.html
+			sudo sed -i '\!	<link rel="icon" type="image/png" href="/64.png" sizes="64x64">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/128.png" sizes="128x128">!;H};x}' /var/www/html/drawpile/index.html
+			sleep 5
 		else
-			echo "This message should not be visible."
+			echo "${bold}${cyan}Selected Custom location:${normal} $list_server_favicon_location"
+			echo
+			echo Edit the index.html file located: /var/www/html/drawpile
+			echo You can do so with this command : sudo nano /var/www/html/drawpile/index.html
+			echo
+			echo Edit the values noted below, editing the filename for "href=" to 
+			echo match the filenames and path you decided to use earlier that
+			echo is noted above. 
+			echo
+			echo '<link rel="icon" type="image/png" href="/16.png" sizes="16x16">'
+			echo '<link rel="icon" type="image/png" href="/32.png" sizes="32x32">'
+			echo '<link rel="icon" type="image/png" href="/48.png" sizes="48x48">'
+			echo '<link rel="icon" type="image/png" href="/64.png" sizes="64x64">'
+			echo '<link rel="icon" type="image/png" href="/128.png" sizes="128x128">'
+			echo
+			echo No further guidance will be provided. When you are ready to continue...
 		fi
 		cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
 server {
