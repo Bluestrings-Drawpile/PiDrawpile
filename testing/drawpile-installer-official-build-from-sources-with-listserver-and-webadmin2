@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9926
+drawpilescriptversion=2.9927
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -4311,7 +4311,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
 					if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 						sudo systemctl stop --now $service_name_to_check_01
-						if [[ "$drawpile_srv_service_status" == "(running)" ]]; Then
+						if [[ "$drawpile_srv_service_status" == "(running)" ]]; then
 							sudo systemctl stop --now $service_name_to_check_02
 						fi
 					elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
