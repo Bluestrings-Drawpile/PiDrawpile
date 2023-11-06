@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9924
+drawpilescriptversion=2.9925
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -4054,6 +4054,7 @@ function drawpile_build_and_compile_function () {
 		echo
 	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
 	echo
+	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
 	service_name_to_check_01=drawpile-srv.socket
 	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
 		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
@@ -6123,6 +6124,25 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo '--------------------------------------------------------------------------------'
 		echo
 		if [[ "$git_repo_status" == "out_of_date" ]] ; then
+			if [[ -e "/etc/systemd/system/drawpile_abuse_report.service" ]]; then
+				echo "${bold}${cyan}***** If Drawpile_Abuse_Report.service Running, Stopping Process . . . *****${normal}"
+				echo
+			fi
+			# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+			service_name_to_check_04=drawpile_abuse_report.service
+			if [ -e "/etc/systemd/system/drawpile_abuse_report.service" ]; then
+				drawpile_abuse_report_loaded=$( systemctl status $service_name_to_check_04 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_04; (.*); vendor.*/\1/p" )
+				drawpile_abuse_report_status=$( systemctl status $service_name_to_check_04 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+				echo "Service: $service_name_to_check_04"
+				echo "Value: $drawpile_abuse_report_loaded"
+				echo "Value: $drawpile_abuse_report_status"
+				sudo systemctl stop --now $service_name_to_check_04
+			else
+				drawpile_abuse_report_loaded="not_loaded"
+				drawpile_abuse_report_status="not_loaded"
+				echo "The $service_name_to_check_04 is not yet loaded. No action required."
+			fi
+			echo
 			echo '--------------------------------------------------------------------------------'
 			echo "Running command: python -m venv env"
 			echo '--------------------------------------------------------------------------------'
@@ -7098,6 +7118,27 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					sudo $package_install_program gfortran libopenblas-dev
 					echo
 				fi
+				if [[ -e "/etc/systemd/system/drawpile_monitor.service" ]]; then
+					echo "${bold}${cyan}***** If Drawpile_Monitor Running, Stopping Process . . . *****${normal}"
+					echo
+				fi
+				# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+				service_name_to_check_05=drawpile_monitor.service
+				if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
+					drawpile_monitor_loaded=$( systemctl status $service_name_to_check_05 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_05; (.*); vendor.*/\1/p" )
+					drawpile_monitor_status=$( systemctl status $service_name_to_check_05 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+					echo "Service: $service_name_to_check_05"
+					echo "Value: $drawpile_monitor_loaded"
+					echo "Value: $drawpile_monitor_status"
+					sudo systemctl stop --now $service_name_to_check_05
+					echo
+				else
+					drawpile_monitor_loaded="not_loaded"
+					drawpile_monitor_status="not_loaded"
+					echo "The $service_name_to_check_05 is not yet loaded. No action required."
+					echo
+				fi
+				
 				echo '--------------------------------------------------------------------------------'
 				echo "Running command: python -m venv env"
 				echo '--------------------------------------------------------------------------------'
@@ -7993,6 +8034,26 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	else
 		echo "${bold}${cyan}***** Installing Drawpile List Server . . . *****${normal}"
 		echo
+		if [[ -e "/etc/systemd/system/drawpile-listserver.service" ]]; then
+			echo "${bold}${cyan}***** If Drawpile Listserver Running, Stopping Process . . . *****${normal}"
+			echo
+		fi
+		# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+		service_name_to_check_03=drawpile-listserver.service
+		if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
+			drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
+			drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+			echo "Service: $service_name_to_check_03"
+			echo "Value: $drawpile_listserver_loaded"
+			echo "Value: $drawpile_listserver_status"
+			sudo systemctl stop --now $service_name_to_check_03
+			echo
+		else
+			drawpile_listserver_loaded="not_loaded"
+			drawpile_listserver_status="not_loaded"
+			echo "The $service_name_to_check_03 is not yet loaded. No action required."
+			echo
+		fi
 		echo "This step may take a while, please be patient."
 		echo
 		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
