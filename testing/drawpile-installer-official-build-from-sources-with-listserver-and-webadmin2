@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9927
+drawpilescriptversion=2.9928
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1711,12 +1711,14 @@ function script_update_check_function () {
 		fi
 		echo "${bold}${yellow}Newest Script is using version $dp_check_version.${normal}"
 		echo "Newer version of script available, the old script has been copied over"
-		echo "the old script. Please re-run this script to use newest version."
+		echo "the old script. Please re-run this script to use the newest version."
 		echo
 		cd "$dp_install_loc" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo rm -rf "$script_directory/$current_script_name"
 		sudo cp "$dp_install_loc/Programs/$script_name" "$script_directory/$current_script_name"
+		wait $!
 		sudo chmod 777 "$script_directory/$current_script_name"
+		wait $!
 		sudo rm -rf "$dp_install_loc/Programs/$script_name"
 		echo
 		echo "Terminating script in 30 seconds."
@@ -3335,6 +3337,80 @@ if [[ "$git_clone_dp_checkout" = "1" ]]; then drawpile_version_script_check=$dra
 if [[ "$git_clone_dp_checkout" = "2" ]]; then drawpile_version_script_check=$drawpile_program_version_release_on_website; fi
 if [[ "$git_clone_dp_checkout" = "3" ]]; then drawpile_version_script_check=$drawpile_version_manual_type_for_script; fi
 
+function stop_drawpile_srv_if_running_function () {
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
+	echo
+	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+	service_name_to_check_01=drawpile-srv.socket
+	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
+		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
+		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Value: $drawpile_srv_socket_loaded"
+		echo "Value: $drawpile_srv_socket_status"
+	else
+		drawpile_srv_socket_loaded="not_loaded"
+		drawpile_srv_socket_status="not_loaded"
+		echo "The $service_name_to_check_01 is not yet loaded. No action required."
+	fi
+	echo
+	service_name_to_check_02=drawpile-srv.service
+	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
+		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
+		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Value: $drawpile_srv_service_loaded"
+		echo "Value: $drawpile_srv_service_status"
+	else
+		drawpile_srv_service_loaded="not_loaded"
+		drawpile_srv_service_status="not_loaded"
+		echo "The $service_name_to_check_02 is not yet loaded. No action required."
+	fi
+	
+	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			sudo systemctl stop --now $service_name_to_check_01
+			if [[ "$drawpile_srv_service_status" == "(running)" ]]; then
+				sudo systemctl stop --now $service_name_to_check_02
+			fi
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			sudo systemctl stop --now $service_name_to_check_02
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			echo "Drawpile server startup is not yet configured. No action required."
+		else
+			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
+		fi
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+}
+
+function start_drawpile_srv_if_updated_function () {
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${cyan}***** If Drawpile-Srv was Running Previously, Starting Process . . . *****${normal}"
+	echo
+	service_name_to_check_01=drawpile-srv.socket
+	service_name_to_check_02=drawpile-srv.service
+	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			sudo systemctl start --now $service_name_to_check_01
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			sudo systemctl start --now $service_name_to_check_02
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			echo "Drawpile server startup is not yet configured. No action required."
+		else
+			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
+		fi
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+}
+
 function wacom_explanation_function () {
 	echo
 	xsetwacom --list devices
@@ -3692,8 +3768,6 @@ function drawpile_tools_compile_verification_function () {
 		else
 			echo "${red}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version have been detected but${normal}"
 			echo "${red}aren't the correct version of $drawpile_version_script_check.${normal}"
-			echo
-			echo "Please copy output from terminal for diagnostic purposes."
 		fi
 	elif [[ ! -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ ! -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
 		echo "${red}Drawpile-cmd failed to compile.${normal}"
@@ -3709,17 +3783,6 @@ function drawpile_tools_compile_verification_function () {
 		echo
 		echo "${red}Drawpile failed to compile drawpile-cmd and dprectool.${normal}"
 		echo "git_clone_dp_checkout=$git_clone_dp_checkout"
-		echo 
-		if [ "$git_clone_dp_checkout" == "1" ]; then
-			echo "This behavior is expected if you selected 1 for latest Drawpile build"
-			echo "when cloning the Drawpile repository. This will not be corrected"
-			echo "until the beta version is done with fixes."
-		elif [ "$git_clone_dp_checkout" == "2" ] || [ "$git_clone_dp_checkout" == "3" ]; then
-			echo "If you selected 2 or 3 when cloning the Drawpile repository,"
-			echo "please copy output from terminal for diagnostic purposes."
-		else
-			echo "This message for git_clone_dp_checkout, drawpile-cmd, and dprectool should not be visible."
-		fi
 	else
 		echo "Unable to tell if Drawpile tools compiled successfully."
 		echo "This message should not be visible."
@@ -3743,17 +3806,6 @@ function drawpile_dprectool_compile_verification_function () {
 		echo
 		echo "${red}Drawpile failed to compile dprectool.${normal}"
 		echo "git_clone_dp_checkout=$git_clone_dp_checkout"
-		echo 
-		if [ "$git_clone_dp_checkout" == "1" ]; then
-			echo "This behavior is expected if you selected 1 for latest Drawpile build"
-			echo "when cloning the Drawpile repository. This will not be corrected"
-			echo "until the beta version is done with fixes."
-		elif [ "$git_clone_dp_checkout" == "2" ] || [ "$git_clone_dp_checkout" == "3" ]; then
-			echo "If you selected 2 or 3 when cloning the Drawpile repository,"
-			echo "please copy output from terminal for diagnostic purposes."
-		else
-			echo "This message for git_clone_dp_checkout and dprectool should not be visible."
-		fi
 	else
 		echo "Unable to tell if Drawpile tools compiled successfully."
 		echo "This message should not be visible."
@@ -4278,77 +4330,11 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
 				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
-				echo
-				echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
-				echo
-				# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-				service_name_to_check_01=drawpile-srv.socket
-				if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
-					drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
-					drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-					echo "Value: $drawpile_srv_socket_loaded"
-					echo "Value: $drawpile_srv_socket_status"
-				else
-					drawpile_srv_socket_loaded="not_loaded"
-					drawpile_srv_socket_status="not_loaded"
-					echo "The $service_name_to_check_01 is not yet loaded. No action required."
-				fi
-				echo
-				service_name_to_check_02=drawpile-srv.service
-				if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
-					drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
-					drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-					echo "Value: $drawpile_srv_service_loaded"
-					echo "Value: $drawpile_srv_service_status"
-				else
-					drawpile_srv_service_loaded="not_loaded"
-					drawpile_srv_service_status="not_loaded"
-					echo "The $service_name_to_check_02 is not yet loaded. No action required."
-				fi
-				
-				if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
-					if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
-						sudo systemctl stop --now $service_name_to_check_01
-						if [[ "$drawpile_srv_service_status" == "(running)" ]]; then
-							sudo systemctl stop --now $service_name_to_check_02
-						fi
-					elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
-						sudo systemctl stop --now $service_name_to_check_02
-					elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
-						echo "Drawpile server startup is not yet configured. No action required."
-					else
-						echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
-					fi
-				fi
-				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
+				stop_drawpile_srv_if_running_function
 				echo
 				drawpile_build_and_compile_function
 				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
-				echo
-				echo "${bold}${cyan}***** If Drawpile-Srv was Running Previously, Starting Process . . . *****${normal}"
-				echo
-				service_name_to_check_01=drawpile-srv.socket
-				service_name_to_check_02=drawpile-srv.service
-				if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
-					if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
-						sudo systemctl start --now $service_name_to_check_01
-					elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
-						sudo systemctl start --now $service_name_to_check_02
-					elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
-						echo "Drawpile server startup is not yet configured. No action required."
-					else
-						echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
-					fi
-				fi
-				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
+				start_drawpile_srv_if_updated_function
 				echo
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
@@ -4374,7 +4360,12 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
 				echo
+				stop_drawpile_srv_if_running_function
+				echo
 				drawpile_build_and_compile_function
+				echo
+				start_drawpile_srv_if_updated_function
+				echo
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
 			fi
