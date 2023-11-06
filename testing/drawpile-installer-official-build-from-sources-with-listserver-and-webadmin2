@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9928
+drawpilescriptversion=2.9929
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3348,6 +3348,7 @@ function stop_drawpile_srv_if_running_function () {
 	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
 		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
 		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Service: $service_name_to_check_01"
 		echo "Value: $drawpile_srv_socket_loaded"
 		echo "Value: $drawpile_srv_socket_status"
 	else
@@ -3360,6 +3361,7 @@ function stop_drawpile_srv_if_running_function () {
 	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
 		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
 		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Service: $service_name_to_check_02"
 		echo "Value: $drawpile_srv_service_loaded"
 		echo "Value: $drawpile_srv_service_status"
 	else
@@ -3382,9 +3384,6 @@ function stop_drawpile_srv_if_running_function () {
 			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
 		fi
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo '--------------------------------------------------------------------------------'
 }
 
 function start_drawpile_srv_if_updated_function () {
@@ -3406,9 +3405,6 @@ function start_drawpile_srv_if_updated_function () {
 			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
 		fi
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo '--------------------------------------------------------------------------------'
 }
 
 function wacom_explanation_function () {
