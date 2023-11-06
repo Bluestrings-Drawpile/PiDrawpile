@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9929
+drawpilescriptversion=2.9930
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3396,8 +3396,10 @@ function start_drawpile_srv_if_updated_function () {
 	service_name_to_check_02=drawpile-srv.service
 	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			echo "sudo systemctl start --now $service_name_to_check_01"
 			sudo systemctl start --now $service_name_to_check_01
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			echo "sudo systemctl start --now $service_name_to_check_02"
 			sudo systemctl start --now $service_name_to_check_02
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
@@ -3405,6 +3407,9 @@ function start_drawpile_srv_if_updated_function () {
 			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
 		fi
 	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
 }
 
 function wacom_explanation_function () {
@@ -6707,8 +6712,8 @@ variable_to_read_3="systemd_configuration"
 
 value_description_1="This value corresponds to server related startup settings: "
 value_description_2=" "
-value_description_3=" "
-value_description_4=systemd_options_definitions_function
+value_description_3="If you changed the encrypted ban export key, say no to this question."
+value_description_4=""
 value_description_5=""
 
 read_stored_config_value_query_function
@@ -8039,64 +8044,60 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	echo
 	# Type the following to get a list of Go variables/info: go env
 	go_path=$( go env GOPATH )
-	if [[ -e  "/home/$current_username/go/bin/listserver" ]] || [[ -e  "/home/pi/go/bin/listserver" ]] || [[ -e  "$go_path/bin/listserver" ]]; then
-		echo "Drawpile List Server already pulled."
-	else
-		echo "${bold}${cyan}***** Installing Drawpile List Server . . . *****${normal}"
+	echo "${bold}${cyan}***** Installing Drawpile List Server . . . *****${normal}"
+	echo
+	if [[ -e "/etc/systemd/system/drawpile-listserver.service" ]]; then
+		echo "${bold}${cyan}***** If Drawpile Listserver Running, Stopping Process . . . *****${normal}"
 		echo
-		if [[ -e "/etc/systemd/system/drawpile-listserver.service" ]]; then
-			echo "${bold}${cyan}***** If Drawpile Listserver Running, Stopping Process . . . *****${normal}"
-			echo
-		fi
-		# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-		service_name_to_check_03=drawpile-listserver.service
-		if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
-			drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
-			drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-			echo "Service: $service_name_to_check_03"
-			echo "Value: $drawpile_listserver_loaded"
-			echo "Value: $drawpile_listserver_status"
-			sudo systemctl stop --now $service_name_to_check_03
-			echo
-		else
-			drawpile_listserver_loaded="not_loaded"
-			drawpile_listserver_status="not_loaded"
-			echo "The $service_name_to_check_03 is not yet loaded. No action required."
-			echo
-		fi
-		echo "This step may take a while, please be patient."
-		echo
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-			# Version check provided by askmeaboutloom
-			if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
-				go install 'github.com/drawpile/listserver@latest'
-			else
-				# go get github.com/drawpile/listserver
-				GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
-			fi
-		fi
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			package_name=golang
-			version_test_by_distro_function
-			echo "Go Version: $test_version_simple"
-			if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
-				go install 'github.com/drawpile/listserver@latest'
-			elif [[ "$test_version_simple" < "1.16" ]]; then
-				GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
-			else
-				echo "This message for golang's version ($test_version_simple) should not be visible."
-			fi
-		fi
-		# package_name=golang
-		# version_test_by_distro_function
-		# if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
-		# 	go install 'github.com/drawpile/listserver@latest'
-		# elif [ "$test_version_simple" < "1.16" ]; then
-		# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
-		# else
-		# 	echo "This message for golang's version ($test_version_simple) should not be visible."
-		# fi
 	fi
+	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+	service_name_to_check_03=drawpile-listserver.service
+	if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
+		drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
+		drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Service: $service_name_to_check_03"
+		echo "Value: $drawpile_listserver_loaded"
+		echo "Value: $drawpile_listserver_status"
+		sudo systemctl stop --now $service_name_to_check_03
+		echo
+	else
+		drawpile_listserver_loaded="not_loaded"
+		drawpile_listserver_status="not_loaded"
+		echo "The $service_name_to_check_03 is not yet loaded. No action required."
+		echo
+	fi
+	echo "This step may take a while, please be patient."
+	echo
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+		# Version check provided by askmeaboutloom
+		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
+			go install 'github.com/drawpile/listserver@latest'
+		else
+			# go get github.com/drawpile/listserver
+			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+		fi
+	fi
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		package_name=golang
+		version_test_by_distro_function
+		echo "Go Version: $test_version_simple"
+		if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
+			go install 'github.com/drawpile/listserver@latest'
+		elif [[ "$test_version_simple" < "1.16" ]]; then
+			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+		else
+			echo "This message for golang's version ($test_version_simple) should not be visible."
+		fi
+	fi
+	# package_name=golang
+	# version_test_by_distro_function
+	# if [ "$test_version_simple" = "1.16" ] || [ "$test_version_simple" > "1.16" ]; then
+	# 	go install 'github.com/drawpile/listserver@latest'
+	# elif [ "$test_version_simple" < "1.16" ]; then
+	# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+	# else
+	# 	echo "This message for golang's version ($test_version_simple) should not be visible."
+	# fi
 	
 	if [[ ! -e  "/usr/local/bin/listserver" ]]; then
 		sudo cp $go_path/bin/listserver /usr/local/bin
@@ -8702,7 +8703,7 @@ EOF
 		if [ "$list_server_config" == "1" ]; then
 			echo "List server configuration file exists, skipping . . ."
 			
-			list_server_favicon_location_entry=$( grep -m 1 "$list_server_favicon_location_entry = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			list_server_favicon_location_entry=$( grep -m 1 "list_server_favicon_location_entry = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 			if [ -z "$list_server_favicon_location_entry" ] || [ "$list_server_favicon_location_entry" = "=" ]; then
 				list_server_favicon_location_entry=""
 			fi
@@ -8979,7 +8980,7 @@ EOF
 		echo
 		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
-		if [ "$list_server_favicon_location_entry" = "" ]; then
+		if [ -z "$list_server_favicon_location_entry" ] || [ "$list_server_favicon_location_entry" = "" ]; then
 			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
 			# Do nothing as no error was detected.
 			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
