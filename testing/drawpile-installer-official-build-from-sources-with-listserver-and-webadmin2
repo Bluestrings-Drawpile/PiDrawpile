@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9932
+drawpilescriptversion=2.9933
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1003,8 +1003,19 @@ elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]
 	echo
 	echo "You should run the update script or server management scripts."
 	echo
-	read -r -p "Are you sure you want to re-run this script? (Y)es or (N)o: " drawpile_script_completed_warning
-	echo
+	while :; do
+		read -r -p "${bold}${red}Are you sure you want to re-run this script? (Y)es or (N)o:${normal} " drawpile_script_completed_warning
+		echo
+		if [[ "$drawpile_script_completed_warning" = "yes" ]] || [[ "$drawpile_script_completed_warning" = "YES" ]] || [[ "$drawpile_script_completed_warning" = "Yes" ]] || [[ "$drawpile_script_completed_warning" = "y" ]] || [[ "$drawpile_script_completed_warning" = "Y" ]] || [[ "$drawpile_script_completed_warning" = "no" ]] || [[ "$drawpile_script_completed_warning" = "NO" ]] || [[ "$drawpile_script_completed_warning" = "No" ]] || [[ "$drawpile_script_completed_warning" = "n" ]] || [[ "$drawpile_script_completed_warning" = "N" ]]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
 	if [[ "$drawpile_script_completed_warning" = "yes" ]] || [[ "$drawpile_script_completed_warning" = "YES" ]] || [[ "$drawpile_script_completed_warning" = "Yes" ]] || [[ "$drawpile_script_completed_warning" = "y" ]] || [[ "$drawpile_script_completed_warning" = "Y" ]]; then
 		echo "Ignoring warning: drawpile_script_completed_warning"
 		sudo sed -i '\!^drawpile_script_completed_warning =!{h;s!=.*!= '"ignored"'!};${x;\!^$!{s!!drawpile_script_completed_warning = '"ignored"'!;H};x}' $drawpile_configuration_values_file
@@ -3361,7 +3372,7 @@ function stop_drawpile_srv_if_running_function () {
 	else
 	 	echo Drawpile monitor is not available, no need to stop process.
 	fi
-	
+	echo
 	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
 	service_name_to_check_01=drawpile-srv.socket
 	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
@@ -6876,14 +6887,27 @@ wait $!
 sudo systemctl daemon-reload
 sudo systemctl restart systemd-modules-load
 wait $!
-# sudo systemctl start --now drawpile-srv.service && sleep 1
-sudo systemctl start --now drawpile-srv.service
-wait $!
-sleep 5
-sudo chmod 770 /home/drawpileuser/server.db
-sudo chown drawpileuser /home/drawpileuser/server.db
-sudo systemctl stop --now drawpile-srv.service
-wait $!
+if [ "`systemctl is-enabled drawpile-srv.service`" = "disabled" ]; then
+	# sudo systemctl start --now drawpile-srv.service && sleep 1
+	sudo systemctl start --now drawpile-srv.service
+	wait $!
+	sleep 5
+	sudo chmod 770 /home/drawpileuser/server.db
+	sudo chown drawpileuser /home/drawpileuser/server.db
+	sudo systemctl stop --now drawpile-srv.service
+	wait $!
+elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile_monitor.service`" = "active" ]]; then
+	sudo systemctl stop --now drawpile_monitor.service
+	sudo systemctl restart --now drawpile-srv.service
+	sudo systemctl start --now drawpile_monitor.service
+elif [ "`systemctl is-active drawpile-srv.service`" = "active" ]; then
+	# This should account for using sockets or service file to start it. Other status result is "inactive"
+	sudo systemctl restart --now drawpile-srv.service
+else
+	:
+	# Do nothing as no error was detected.
+	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.	
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -7990,28 +8014,11 @@ echo
 # sudo nginx -s reload
 # sudo /etc/init.d/nginx restart
 
-sudo systemctl restart nginx
-wait $!
 sudo nginx -s reload
 sudo systemctl restart nginx
 wait $!
-# This specific step ensures a database file is generated and permissions assigned to it
-# so drawpileuser can access it.
-sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
-# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
-sudo systemctl daemon-reload
-sudo systemctl restart systemd-modules-load
-wait $!
-sudo systemctl start --now drawpile-srv.service
-wait $!
-sudo chmod 770 /home/drawpileuser/server.db
-sudo chown drawpileuser /home/drawpileuser/server.db
-wait $!
-sudo systemctl stop --now drawpile-srv.service
-wait $!
-sleep 2
-# Abuse Report String
 
+# Abuse Report String
 if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
 	echo "Report Auth token already inserted into server settings database file."
 else
@@ -9592,7 +9599,7 @@ comment_EOF_delete
 		echo
 		node -v
 		echo
-		install_or_update_nodejs
+		# install_or_update_nodejs
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
