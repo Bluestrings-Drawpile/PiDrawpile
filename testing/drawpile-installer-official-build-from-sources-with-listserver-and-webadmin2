@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9930
+drawpilescriptversion=2.9931
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1049,7 +1049,7 @@ function read_stored_config_value_query_function () {
 		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
 		[ -z "$value_description_1" ] || echo
 		while :; do
-			read -r -p "Would you like to use this value again? (Y)es or (N)o: " maybe_use_config_value
+			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
 			echo
 			if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ] || [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 				break
@@ -1127,6 +1127,17 @@ function version_test_by_distro_function () {
 			# Now that we know the package exists, it's time to determine if it's even installed.
 			installation_status=$( apt-cache policy $package_name | grep "Installed:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
 			candidate_status=$( apt-cache policy $package_name | grep "Candidate:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
+			if [[ "$package_name" == "nodejs" && ( "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ) ]]; then
+				# I believe this check should only be necessary on Raspbian for Desktop, due to manual download that doesn't update local available repo list of packages...
+				if node -v &> /dev/null; then
+					installation_status=$( node -v &> /dev/null )
+					candidate_status="v18.4.0"
+				else
+					installation_status="(none)"
+					candidate_status="v18.4.0"
+				fi
+				echo "Value: $not_available_check"
+			fi
 			if [ "$installation_status" == "(none)" ]; then
 				# Not installed.
 				test_version="Not Installed"
@@ -8696,10 +8707,20 @@ EOF
 		echo 'Press 1 to use this existing configuration'
 		echo 'Press 2 to re-generate configuration for List Server'
 		echo
-		echo 'Enter a number and hit enter to continue.'
-		echo
-		read list_server_config
-		echo
+		while :; do
+			read -r -p "${bold}${red}Enter a number and hit enter to continue:${normal} " list_server_config
+			echo
+			if [ "$list_server_config" == "1" ] || [ "$list_server_config" == "2" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		
 		if [ "$list_server_config" == "1" ]; then
 			echo "List server configuration file exists, skipping . . ."
 			
@@ -8926,8 +8947,7 @@ EOF
 
 		sudo mkdir -p /var/www/html/drawpile && cd "$_"
 		curl -s -L https://github.com/drawpile/dpserver/tarball/master | sudo tar xz --strip-components 2 --wildcards "*/public_html"
-		echo
-		echo
+		
 		echo '--------------------------------------------------------------------------------'
 		echo
 		echo "${bold}${cyan}*****Editing index.html file for list server . . . *****${normal}"
@@ -9643,10 +9663,10 @@ comment_EOF_delete
 		# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
 		# git describe - fatal: No names found, cannot describe anything.
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
 	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
 		echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
 		echo
 		echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
@@ -9804,10 +9824,10 @@ comment_EOF_delete
 		git clone https://github.com/drawpile/drawpile-admin-webui
 		cd "$dp_install_loc/Programs/drawpile-admin-webui"
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
 	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
 		echo "${bold}${yellow}New Web Admin interface is not installed yet or not up to date.${normal}"
 		echo
 		echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
@@ -9865,9 +9885,6 @@ comment_EOF_delete
 	else
 		echo "${bold}${green}New Web Admin interface is up to date, skipping step 2 through 4.${normal}"
 	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
 elif [ "$ssl_encryption_config" == "3" ]; then
 	echo "${bold}${red}List server needs HTTPS in order to work.${normal}"
 	echo "${bold}${red}Skipping List Server setup.${normal}"
@@ -9947,8 +9964,19 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		echo "${bold}${red}Would you like to install Pi-Hole? Note, you MUST type 'yes' without quotes${normal}"
 		echo "${bold}${red}in order for the installation to work.${normal}"
 		echo
-		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " Pi_Hole_Status
-		echo
+		while :; do
+			read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " Pi_Hole_Status
+			echo
+			if [ "$Pi_Hole_Status" == "yes" ] || [ "$Pi_Hole_Status" == "YES" ] || [ "$Pi_Hole_Status" == "Yes" ] || [ "$Pi_Hole_Status" == "no" ] || [ "$Pi_Hole_Status" == "NO" ] || [ "$Pi_Hole_Status" == "No" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 		if [ "$Pi_Hole_Status" == "yes" ] || [ "$Pi_Hole_Status" == "YES" ] || [ "$Pi_Hole_Status" == "Yes" ] ; then
 			echo Command to run: "curl -sSL https://install.pi-hole.net | bash"
 			echo
@@ -10190,7 +10218,7 @@ EOF
 					echo Shortcut for Pi-Hole already exists on Desktop.
 				fi
 			fi
-		elif [ "$Pi_Hole_Status" == "no" ] || [ "$Pi_Hole_Status" == "NO" ] || [ "$Pi_Hole_Status" == "No" ] ; then
+		elif [ "$Pi_Hole_Status" == "no" ] || [ "$Pi_Hole_Status" == "NO" ] || [ "$Pi_Hole_Status" == "No" ]; then
 			echo Skipping installation of Pi-Hole.
 		else
 			echo Invalid selection option, skipping installation of Pi-Hole.
@@ -10249,8 +10277,19 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		echo
 		echo https://github.com/XavierBerger/RPi-Monitor
 		echo
-		read -r -p "${bold}${cyan}1 for yes, 2 for no${normal}: " RPi_Monitor_Status
-		echo
+		while :; do
+			read -r -p "${bold}${cyan}1 for yes, 2 for no${normal}: " RPi_Monitor_Status
+			echo
+			if [ "$RPi_Monitor_Status" == "1" ] || [ "$RPi_Monitor_Status" == "2" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 		if [ "$RPi_Monitor_Status" == "1" ]; then
 			# Install notes
 			# https://xavierberger.github.io/RPi-Monitor-docs/11_installation.html#installation-from-repository
@@ -10282,8 +10321,19 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 			echo
 			echo "${bold}${cyan}Enable dark mode for RPi-Monitor web page?${normal}"
 			# echo 1 for yes, 2 for no, 3 to revert.
-			read -r -p "${bold}${cyan}1 for yes, 2 for no, 3 to revert:${normal} " RPi_Monitor_Dark_Mode
-			echo
+			while :; do
+				read -r -p "${bold}${cyan}1 for yes, 2 for no, 3 to revert:${normal} " RPi_Monitor_Dark_Mode
+				echo
+				if [ "$RPi_Monitor_Dark_Mode" == "1" ] || [ "$RPi_Monitor_Dark_Mode" == "2" ] || [ "$RPi_Monitor_Dark_Mode" == "3" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
 			if [ "$RPi_Monitor_Dark_Mode" == "2" ] || [ "$RPi_Monitor_Dark_Mode" = "3" ] || [ "$RPi_Monitor_Dark_Mode" != "1" ]; then
 				# Light Mode - https://xavierberger.github.io/RPi-Monitor-docs/31_configuration_examples.html
 				# Original colors are #f2f2f2 and #e9e9e9
@@ -11174,7 +11224,7 @@ if [ "$ssl_encryption_config" == "1" ] || [ "$ssl_encryption_config" == "3" ]; t
 	echo '--------------------------------------------------------------------------------'
 	echo
 	# echo 'Press 1 for Self Signed Certificates' / # echo 'Press 3 for no SSL security.'
-	echo "${invis}SSL Encryption Config set to 1 or 3, skipping certbot testing and timer.${normal}"
+	echo "${bold}${green}SSL Encryption Config set to 1 or 3, skipping certbot testing and timer.${normal}"
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 elif [ "$ssl_encryption_config" == "2" ] || [[ "$ssl_encryption_config" != "1" && "$ssl_encryption_config" != "3" ]]; then
@@ -11186,22 +11236,22 @@ elif [ "$ssl_encryption_config" == "2" ] || [[ "$ssl_encryption_config" != "1" &
 	echo "${invis}SSL Encryption Config set to 2 or invalid option, certbot testing required.${normal}"
 	# The options below configured the server to use SSL, so restarting Drawpile systemd services would be necessary.
 	if [ "$systemd_selection" == "1" ] || [ "$systemd_selection" == "2" ] || [ "$systemd_selection" == "3" ] || [ "$systemd_selection" == "4" ] || [ "$systemd_selection" == "6" ] || [ "$systemd_selection" == "8" ] ||  [ "$systemd_selection" == "11" ]; then
-		echo "${invis}The systemd_selection was set to 1, 2, 3, 4, 6, 8, or 11.${normal}"
+		echo "${bold}${yellow}The systemd_selection was set to 1, 2, 3, 4, 6, 8, or 11.${normal}"
 		certbot_configure_deploy_hook_function
 		testing_config_for_certbot_function
 	elif [ "$systemd_selection" == "5" ] || [ "$systemd_selection" == "7" ] || [ "$systemd_selection" == "9" ] || [ "$systemd_selection" == "10" ] || [ "$systemd_selection" == "12" ] || [ "$systemd_selection" == "13" ] || [ "$systemd_selection" == "14" ] || [ "$systemd_selection" == "15" ] || [ "$systemd_selection" == "16" ] || [ "$systemd_selection" == "17" ] || [ "$systemd_selection" == "18" ] || [ "$systemd_selection" == "19" ] || [ "$systemd_selection" == "20" ]; then
 		# Numbers 5, 7, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, and 20 option do not use SSL
-		echo "${invis}The systemd_selection was set to 5, 7, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, or 20, and do not use SSL.${normal}"
+		echo "${bold}${green}The systemd_selection was set to 5, 7, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, or 20, and do not use SSL.${normal}"
 		# Do nothing as no error was detected.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	else
 		# This is because the user provided invalid input, which assumed the use of SSL certs with systemd configuration.
-		echo "${invis}SSL Encryption Config set to invalid option, certbot testing required.${normal}"
+		echo "${bold}${yellow}SSL Encryption Config set to invalid option, certbot testing required.${normal}"
 		certbot_configure_deploy_hook_function
 		testing_config_for_certbot_function
 	fi
 else
-	echo "${invis}Error: SSL Encryption Config is somehow wrong for certbot timer. Skipping step.${normal}"
+	echo "${bold}${red}Error: SSL Encryption Config is somehow wrong for certbot timer. Skipping step.${normal}"
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 fi
