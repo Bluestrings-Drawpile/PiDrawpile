@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9931
+drawpilescriptversion=2.9932
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1130,11 +1130,11 @@ function version_test_by_distro_function () {
 			if [[ "$package_name" == "nodejs" && ( "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ) ]]; then
 				# I believe this check should only be necessary on Raspbian for Desktop, due to manual download that doesn't update local available repo list of packages...
 				if node -v &> /dev/null; then
-					installation_status=$( node -v &> /dev/null )
-					candidate_status="v18.4.0"
+					installation_status=$( node -v | cut -c2- )
+					candidate_status="18.4.0"
 				else
 					installation_status="(none)"
-					candidate_status="v18.4.0"
+					candidate_status="18.4.0"
 				fi
 				echo "Value: $not_available_check"
 			fi
@@ -3354,6 +3354,14 @@ function stop_drawpile_srv_if_running_function () {
 	echo
 	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
 	echo
+	if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
+		echo "Drawpile_monitor.service enabled, stopping service"
+		echo "to avoid unnecessary warnings in Discord."
+		sudo systemctl stop --now drawpile_monitor.service
+	else
+	 	echo Drawpile monitor is not available, no need to stop process.
+	fi
+	
 	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
 	service_name_to_check_01=drawpile-srv.socket
 	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
@@ -3409,14 +3417,28 @@ function start_drawpile_srv_if_updated_function () {
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_01"
 			sudo systemctl start --now $service_name_to_check_01
+			echo
+			sudo systemctl status $service_name_to_check_01 --no-pager
+			sudo systemctl status $service_name_to_check_02 --no-pager
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_02"
 			sudo systemctl start --now $service_name_to_check_02
+			echo
+			sudo systemctl status $service_name_to_check_02 --no-pager
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
 		else
 			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
 		fi
+	fi
+	echo
+	if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
+		echo "Drawpile_monitor.service enabled, starting service."
+		sudo systemctl start --now drawpile_monitor.service
+	else
+	 	:
+		# Do nothing as no error was detected.
+		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.		
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -7973,10 +7995,8 @@ wait $!
 sudo nginx -s reload
 sudo systemctl restart nginx
 wait $!
-echo
 # This specific step ensures a database file is generated and permissions assigned to it
 # so drawpileuser can access it.
-echo
 sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
 # sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
 sudo systemctl daemon-reload
@@ -7993,14 +8013,12 @@ sleep 2
 # Abuse Report String
 
 if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
-	echo "${invis}Report Auth token already inserted into server settings database file.${normal}"
+	echo "Report Auth token already inserted into server settings database file."
 else
 	echo "Inserting value into server database file so report mechanism works."
 	echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
 	sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
 fi
-
-echo
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -8708,7 +8726,7 @@ EOF
 		echo 'Press 2 to re-generate configuration for List Server'
 		echo
 		while :; do
-			read -r -p "${bold}${red}Enter a number and hit enter to continue:${normal} " list_server_config
+			read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " list_server_config
 			echo
 			if [ "$list_server_config" == "1" ] || [ "$list_server_config" == "2" ]; then
 				break
@@ -9531,22 +9549,18 @@ comment_EOF_delete
 		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "${bold}${red}Failed to install . . .${normal}"
 			echo "${bold}${red}The web admin interface will not work!${normal}"
-			echo
 			sleep 30
 		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
 			echo "${bold}${red}Failed to update past minimum version $minimum_versionnodejs . . .${normal}"
 			echo "${bold}${red}The web admin interface will not work!${normal}"
-			echo
 			sleep 30
 		elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
 			echo "${bold}${red}Meets minimum version $minimum_versionnodejs requirements for Node . . .${normal}"
 			echo "${bold}${green}The web admin interface should work!${normal}"
-			echo
 			sleep 5
 		elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
 			echo "${bold}${green}Updated successfully past minimum version $minimum_versionnodejs . . .${normal}"
 			echo "${bold}${green}The web admin interface should work!${normal}"
-			echo
 			sleep 5
 		else
 			echo "This message should not be visible."
@@ -9758,7 +9772,6 @@ EOF
 	else
 		echo "${bold}${green}Web Admin interface is up to date, skipping step 2 through 6.${normal}"
 	fi
-	echo
 	# https://create-react-app.dev/
 	# npx create-react-app builddpwebadmin
 	# npm install -g npm@9.5.1
@@ -11563,7 +11576,7 @@ echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo
 echo "${bold}${cyan}*****Scripts to be downloaded for managing server. . . .*****${normal}"
 echo "${bold}${red}*****     (To be completed at a later date)             *****${normal}"
-echo
+
 sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
 echo
@@ -11699,7 +11712,6 @@ function drawpile_custom_shortcut_icon_preference () {
 	
 if [[ -d "$option_loc_2" ]]; then
 	# sudo rm -f "$option_loc_2/Drawpile Admin.desktop" # sudo rm -f "$option_loc_2/Drawpile ListServer.desktop"
-	echo
 	echo "${bold}${cyan}*****Drawpile List Server and Web Admin Shortcuts . . .*****${normal}"
 	echo
 	echo "Would you like to use a custom icons for Desktop shortcuts to the Drawpile"
@@ -11944,11 +11956,11 @@ EOF
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 			# Trust the Desktop shortcut so it's launchable. --> https://askubuntu.com/questions/1218954/desktop-files-allow-launching-set-this-via-cli
 			gio set "$option_loc_2/Drawpile Admin GUI.desktop" metadata::trusted true
-			echo
 		fi
 	else
 		echo Shortcut for Drawpile Admin GUI already exists on Desktop.
 	fi
+	echo
 	# --------------------------------------------------------------------------------
 elif [[ ! -d "$option_loc_2" ]]; then
 	echo "Creating file in script directory with server info:"
