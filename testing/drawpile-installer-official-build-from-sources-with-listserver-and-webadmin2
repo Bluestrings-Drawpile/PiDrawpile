@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9936
+drawpilescriptversion=2.9937
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1734,7 +1734,8 @@ function script_update_check_function () {
 		validate_script_download_complete=$( tail -10 "$dp_install_loc/Programs/$script_name" | grep -io -m 1 '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' )
 		if [[ "$validate_script_download_complete" == '} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #' ]]; then
 			# Do nothing, entire file is present presumably.
-			echo "${invis}Verified that the download of updated script is successful.${normal}"
+			echo "${bold}${green}Verified that the download of updated script is successful.${normal}"
+			echo
 		else
 			echo "${bold}${yellow}Newest Script is using version $dp_check_version.${normal}"
 			echo "${bold}${red}However, download of updated script failed. Removing file and exiting script.${normal}"
@@ -2466,12 +2467,10 @@ echo
 echo 'Would you like to update all installed packages? This step may take a while' 
 echo 'to complete if you choose to do this.'
 echo
-echo 'Enter a letter and hit enter to continue.'
-echo
 echo 'y for yes'
 echo 'n for no'
 echo
-read install_all_packages
+read -r -p "${bold}${cyan}Enter a letter and hit enter to continue:${normal} " install_all_packages
 echo
 if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [ "$install_all_packages" == "yes" ] || [ "$install_all_packages" == "YES" ] || [ "$install_all_packages" == "Yes" ] ; then
 	echo 'Updating already installed packages . . .'
@@ -7367,7 +7366,7 @@ variable_to_read_1="samba_choice"
 variable_to_read_2="option_loc_num"
 variable_to_read_3="dp_install_loc_9_custom"
 
-value_description_1="***** Set up file sharing with other computers . . . (Samba) *****"
+value_description_1="${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
 value_description_2="Query 02: option_loc_num"
 value_description_3="     Number selected when selecting download/server set up location."
 value_description_4="Query 03: dp_install_loc_9_custom"
@@ -9936,9 +9935,9 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1="Whole network ad blocking service."
-	value_description_2=""
-	value_description_3=""
+	value_description_1="${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
+	value_description_2=" "
+	value_description_3="Whole network ad blocking service."
 	value_description_4=""
 	value_description_5=""
 
@@ -10281,11 +10280,11 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 	variable_to_read_2="RPi_Monitor_Dark_Mode"
 	variable_to_read_3=""
 
-	value_description_1="Query 01: RPi_Monitor_Dark_Mode"
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	value_description_1="${bold}${cyan}*****Configure Pi Monitoring . . . *****${normal}"
+	value_description_2=" "
+	value_description_3="RPi-Monitor provides real time monitoring of embedded devices."
+	value_description_4="Query 01: RPi_Monitor - 1 yes, 2 no"
+	value_description_5="Query 02: Dark Mode - 1 yes, 2 no, 3 revert"
 
 	read_stored_config_value_query_function
 	echo
@@ -10300,8 +10299,8 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 
 		echo "${bold}${cyan}*****Configure Pi Monitoring . . . *****${normal}"
 		echo
-		echo RPi-Monitor is an application designed to perform real time monitoring embedded
-		echo devices. The development platform is a Raspberry Pi B.
+		echo RPi-Monitor is an application designed to perform real time monitoring of 
+		echo embedded devices. The development platform is a Raspberry Pi B.
 		echo
 		echo RPi-Monitor provides a lot of feature such as Embedded Web server, Alert 
 		echo messaging, SNMP integration...
