@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9934
+drawpilescriptversion=2.9935
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -692,7 +692,7 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
-
+echo
 if [ $(getent group drawpileread) ]; then
 	echo "Group: drawpileread - exists."
 	drawpileread_test=yes
@@ -1043,11 +1043,10 @@ function read_stored_config_value_query_function () {
 	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
-		echo "${invis}No value read from file: $drawpile_configuration_values_file ${normal}"
+		echo "No value read from file: $drawpile_configuration_values_file"
 		# Force user to insert proper data this way without having to check for null variable.
 		maybe_use_config_value=no
 	else
-		echo
 		echo "${green}Value located:${normal} $read_stored_config_value_query_1"
 		echo
 		[ -z "$value_description_1" ] || echo "$value_description_1"
@@ -1059,7 +1058,7 @@ function read_stored_config_value_query_function () {
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
 		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
-		[ -z "$value_description_1" ] || echo
+		[ -z "$variable_to_read_3" ] || echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
 			echo
@@ -1148,7 +1147,6 @@ function version_test_by_distro_function () {
 					installation_status="(none)"
 					candidate_status="18.4.0"
 				fi
-				echo "Value: $not_available_check"
 			fi
 			if [ "$installation_status" == "(none)" ]; then
 				# Not installed.
@@ -1520,12 +1518,12 @@ fi
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-
+echo "${bold}${cyan}*****Select a location for build and server files . . .*****${normal}"
+echo
+	
 invalid_path_text="${red}${bold}X - Automatic local path selection is invalid -${normal}"
 
 function display_location_selection_options () {
-	echo "${bold}${cyan}*****Select a location for build and server files . . .*****${normal}"
-	echo
 	echo 'Pick an install location for the use of the Drawpile Server folders.'
 	echo 'This includes session recordings, file backed sessions which help the'
 	echo 'server survive crashes or power outages, or template files which help'
@@ -3273,10 +3271,12 @@ else
 	git clone https://github.com/drawpile/Drawpile.git
 	cd Drawpile
 fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
 drawpile_version_manual_type_for_script=2.1.20
 drawpile_program_version_with_git=$( git describe )
-echo
-echo
+
 echo "${bold}${cyan}***** Select Drawpile Branch . . . *****${normal}"
 echo
 echo "Would you like to get the latest drawpile, or the stable branch from"
@@ -3295,7 +3295,7 @@ echo "     3 - Drawpile 2.1.20 code for server and client ${underline}(Recommend
 echo "              Manually typed in: $drawpile_version_manual_type_for_script"
 echo
 
-read -r -p 'Enter a number and hit enter to continue: ' git_clone_dp_checkout
+read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " git_clone_dp_checkout
 
 if [ -z "$git_clone_dp_checkout" ] ; then
 	echo No value selected. Picking 3 for Drawpile 2.1.20 code.
@@ -4037,11 +4037,12 @@ function drawpile_build_and_compile_function () {
 	else
 		echo "Unable to make a determination of which version of qtbase5-dev is installed."
 	fi
+	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Drawpile Build Configuration . . .*****${normal}"
-	
+	echo
 	variable_to_read_1="drawpile_build_configuration"
 	variable_to_read_2="drawpile_build_configuration_number_desc"
 	variable_to_read_3="drawpile_build_configuration_settings"
@@ -4146,7 +4147,6 @@ function drawpile_build_and_compile_function () {
 			if [ -z "$thread_count" ] ; then
 				echo "Compiling using maximum"
 				thread_count=$t_max
-				echo
 				break
 			elif [[ $thread_count =~ ^[0-9]+$ ]] ; then
 				if (($thread_count>0)) && (($thread_count<=$t_max)) ; then
@@ -4774,6 +4774,9 @@ fi
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}***** This stage is for setting up an easy-to-remember *****${normal}"
+echo "${bold}${cyan}*****        way to connect to your server . . .       *****${normal}"
+echo 
 variable_to_read_1="dns_choice"
 variable_to_read_2=""
 variable_to_read_3=""
@@ -4791,9 +4794,6 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	dns_choice=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}***** This stage is for setting up an easy-to-remember *****${normal}"
-	echo "${bold}${cyan}*****        way to connect to your server . . .       *****${normal}"
-	echo 
 	echo "${underline}https://freedns.afraid.org/${normal}"
 	echo "${bold}Pros:${normal} Free registration, renew hostname every six months."
 	echo "${bold}Cons:${normal} Minor additional setup with script guided help required, guided setup."
@@ -5124,7 +5124,7 @@ echo '--------------------------------------------------------------------------
 echo '--------------------------------------------------------------------------------'
 echo
 echo "${bold}${cyan}***** Configure Hostname for Server . . .*****${normal}"
-
+echo
 #---------------------------------------------------------------------------------------------------------------------------------
 external_ip_4=$(curl -s ipv4.icanhazip.com)
 external_ip_6=$(curl -s ipv6.icanhazip.com)
@@ -5789,6 +5789,9 @@ function revoke_lets_encrypt_ssl () {
 	sudo certbot revoke --cert-path $ssl_cert_pem --reason $cert_revocation_reason
 }
 
+echo
+echo "${bold}${cyan}***** Setting up SSL Certificate Creation . . . *****${normal}"
+echo
 variable_to_read_1="ssl_encryption_config"
 variable_to_read_2=""
 variable_to_read_3=""
@@ -5817,8 +5820,6 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 		echo "${invis}No SSL being used.${normal}"
 	fi
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}***** Setting up SSL Certificate Creation . . . *****${normal}"
-	echo
 	echo "${underline}Self Signed Certificate${normal}"
 	echo "${bold}Pros:${normal} No registration, renew cert via script every year."
 	echo "${bold}Cons:${normal} If script does not update SSL cert, users cannot connect."
@@ -6016,6 +6017,8 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
+echo
 variable_to_read_1="drawpile_abuse_report_installation_status"
 variable_to_read_2="abuse_report_auth_token"
 variable_to_read_3="discord_webhook_URL"
@@ -6035,8 +6038,6 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	abuse_report_auth_token=$read_stored_config_value_query_2
 	discord_webhook_URL=$read_stored_config_value_query_3
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
-	echo
 	echo "This is so when a user goes into Drawpile's 'Session' menu,"
 	echo " 'Moderation', 'Report...', that a message is sent to a Discord"
 	echo " server and channel of your choosing, in order to notify about"
@@ -6307,7 +6308,7 @@ if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; th
 	echo
 fi
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
-echo
+
 echo 'Modifying drawpile-srv.service . . .'
 
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
@@ -6328,6 +6329,8 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
+	echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
+	echo
 	variable_to_read_1="drawpile_srv_crypt_key"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -6343,9 +6346,6 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 		echo "Storing value and moving on."
 		drawpile_srv_crypt_key=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		echo
-		echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
-		echo
 		echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
 		echo " ban lists. Unless multiple servers share the same encryption key, this"
 		echo " means that only the server the session was hosted on can utilize the"
@@ -6751,13 +6751,16 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 	fi
 }
 # --------------------------------------------------------------------------------
+echo
+echo "${bold}${cyan}***** Drawpile Server Start Up Options . . .*****${normal}"
+echo
 variable_to_read_1="systemd_selection"
 variable_to_read_2="systemd_selection_text"
 variable_to_read_3="systemd_configuration"
 
 value_description_1="This value corresponds to server related startup settings: "
 value_description_2=" "
-value_description_3="If you changed the encrypted ban export key, say no to this question."
+value_description_3="${bold}${red}Note:${normal} If you changed the encrypted ban export key, say no to this question."
 value_description_4=""
 value_description_5=""
 
@@ -6870,7 +6873,7 @@ sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
 sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service"
 sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service"
-echo
+
 echo 'Copying files drawpile-srv.service and drawpile-srv.socket to make systemd work.'
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" /etc/systemd/system/
@@ -7032,7 +7035,6 @@ sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
-echo
 
 # Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
 nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
@@ -7085,13 +7087,13 @@ sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_si
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
 sudo nginx -s reload
 
-echo
 sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
 sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
 echo
 echo '--------------------------------------------------------------------------------'
 echo
 echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
+echo
 
 if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 	variable_to_read_1="drawpile_monitor_installation_status"
@@ -7485,10 +7487,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# sudo sed -i 's/netbios name = $HOSTNAME$/&netbios name = $HOSTNAME\n		wins support = yes/' /etc/samba/smb.conf
 			# sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
 		fi
-		
 		echo
-		sudo sed -i '\!^samba_choice =!{h;s!=.*!= '"$samba_choice"'!};${x;\!^$!{s!!samba_choice = '"$samba_choice"'!;H};x}' $drawpile_configuration_values_file
-		
 		if [ "$samba_choice" == "1" ]; then
 			sudo chmod 777 $option_loc_1 -R
 		echo "
@@ -7637,6 +7636,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			samba_choice=4
 		fi	
 	fi
+	sudo sed -i '\!^samba_choice =!{h;s!=.*!= '"$samba_choice"'!};${x;\!^$!{s!!samba_choice = '"$samba_choice"'!;H};x}' $drawpile_configuration_values_file
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	# This section checks for SELinux and firewall-cmd blocks against Samba, and removes them accordingly.
@@ -8987,8 +8987,8 @@ EOF
 
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
-		echo
-		echo "${bold}${cyan}Would you like NSFM sessions to show up on the web page for the list server?${normal}"
+
+		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
 		echo
 		echo " (Y)es - Show NSFM sessions on the web page for list server."
@@ -9930,6 +9930,7 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 	value_description_5=""
 
 	read_stored_config_value_query_function
+	echo
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		Pi_Hole_Status=$read_stored_config_value_query_1
@@ -10274,6 +10275,7 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 	value_description_5=""
 
 	read_stored_config_value_query_function
+	echo
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		RPi_Monitor_Status=$read_stored_config_value_query_1
@@ -11061,6 +11063,8 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
+echo
 
 sudo chmod 777 $app_installation_status_file
 sudo chmod 777 $drawpile_configuration_values_file
@@ -11084,8 +11088,6 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	dp_srv_startup=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
-	echo
 	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
 	echo 'server powers on?'
 	echo
@@ -11277,6 +11279,8 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+echo "${bold}${cyan}*****Enable Drawpile External Authentication . . .*****${normal}"
+echo
 variable_to_read_1="drawpile_external_authentication"
 variable_to_read_2=""
 variable_to_read_3=""
@@ -11288,12 +11292,11 @@ value_description_4="2 - Do not Enable External Authentication."
 value_description_5=""
 
 read_stored_config_value_query_function
+
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	drawpile_external_authentication=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo
-	echo "${bold}${cyan}*****Enable Drawpile External Authentication . . .*****${normal}"
 	echo
 	echo 'Drawpile now supports saved username logins. To enable this feature, you'
 	echo 'must login to the server using the remote administration feature and then'
@@ -11347,6 +11350,8 @@ fi
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo
+echo "${bold}${cyan}***** Configure Journalctl Logging Limits . . . *****${normal}"
 echo
 function journalctl_set_size_function () {
 	echo "${bold}${cyan}Please select a size limit by number only:${normal}"
@@ -11427,8 +11432,6 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	journalctl_log_limit=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo
-	echo "${bold}${cyan}***** Configure Journalctl Logging Limits . . . *****${normal}"
 	echo
 	echo "${bold}${cyan}Current Disk Usage:${normal}"
 	df -h
