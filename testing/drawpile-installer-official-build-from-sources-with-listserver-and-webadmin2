@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9937
+drawpilescriptversion=2.9938
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -144,13 +144,13 @@ function drawpile_credits_function () {
 	echo 'Made with the assistance of the original creator of Drawpile (Calle Laakkonen)'
 	echo 'and the new developer askmeaboutloom! Donation links provided below.'
 	echo
-	echo 'For Calle Laakkonen (PayPal):'
+	echo 'Original Dev - Calle Laakkonen (PayPal):'
 	echo "     ${underline}laakkonenc@gmail.com${normal}"
 	echo
-	echo 'For askmeaboutloom: - Not yet provided'
+	echo 'Current Dev - askmeaboutloom: - Not yet provided'
 	echo "     ${underline}https://github.com/askmeaboutlo0m${normal}"
 	echo
-	echo 'Bluestrings (Ko-Fi):'
+	echo 'Script Creator - Bluestrings (Ko-Fi):'
 	echo "     ${underline}https://ko-fi.com/bluestrings${normal}"
 	echo
 }
@@ -1069,6 +1069,11 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_3" ] || echo "$value_description_3"
 		[ -z "$value_description_4" ] || echo "$value_description_4"
 		[ -z "$value_description_5" ] || echo "$value_description_5"
+		[ -z "$value_description_6" ] || echo "$value_description_6"
+		[ -z "$value_description_7" ] || echo "$value_description_7"
+		[ -z "$value_description_8" ] || echo "$value_description_8"
+		[ -z "$value_description_9" ] || echo "$value_description_9"
+		[ -z "$value_description_10" ] || echo "$value_description_10"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
@@ -1090,11 +1095,17 @@ function read_stored_config_value_query_function () {
 	fi
 	variable_to_read_2=""
 	variable_to_read_3=""
+	
 	value_description_1=""
 	value_description_2=""
 	value_description_3=""
 	value_description_4=""
 	value_description_5=""
+	value_description_6=""
+	value_description_7=""
+	value_description_8=""
+	value_description_9=""
+	value_description_10=""
 }
 
 <<comment_EOF
@@ -1600,6 +1611,7 @@ variable_to_read_3=""
 
 value_description_1="Set location to download source files, server scripts, server files, etc..."
 value_description_2="Will create sub-folder called programs and put files in there."
+
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -4466,6 +4478,7 @@ fi
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 
+echo
 echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
 
@@ -4795,10 +4808,12 @@ variable_to_read_3=""
 
 
 value_description_1="This value is for keeping your hostname and IP address synchronized."
-value_description_2="1 for freeDNS.afraid.org"
-value_description_3="2 for No-IP"
-value_description_4="3 for DuckDNS."
-value_description_5="9 for no DNS update service."
+value_description_2=" "
+value_description_3="1 for freeDNS.afraid.org"
+value_description_4="2 for No-IP"
+value_description_5="3 for DuckDNS."
+value_description_6=" "
+value_description_7="9 for no DNS update service."
 
 read_stored_config_value_query_function
 
@@ -4856,11 +4871,10 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		variable_to_read_2=""
 		variable_to_read_3=""
 		
-		value_description_1=""
-		value_description_2=""
-		value_description_3=""
-		value_description_4=""
-		value_description_5=""
+		value_description_1="A service to use with dynamic IP address,"
+		value_description_2="as this ensures people can connect to your"
+		value_description_3="server by updating your IP address to a hostname"
+		value_description_4="that was set up with this service."
 
 		read_stored_config_value_query_function
 		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5010,10 +5024,10 @@ $freeDNS_input #Drawpile Hostname") | sudo crontab -u root -
 		variable_to_read_2=""
 		variable_to_read_3=""
 		
-		value_description_1=""
-		value_description_2=""
-		value_description_3=""
-		value_description_4=""
+		value_description_1="A service to use with dynamic IP address,"
+		value_description_2="as this ensures people can connect to your"
+		value_description_3="server by updating your IP address to a hostname"
+		value_description_4="that was set up with this service."
 		value_description_5=""
 
 		read_stored_config_value_query_function
@@ -5335,11 +5349,7 @@ function generate_self_signed_ssl () {
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	value_description_1="Country name to use with self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5362,12 +5372,8 @@ function generate_self_signed_ssl () {
 	variable_to_read_1="ssl_state"
 	variable_to_read_2=""
 	variable_to_read_3=""
-
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	
+	value_description_1="State name to use with self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5390,12 +5396,8 @@ function generate_self_signed_ssl () {
 	variable_to_read_1="ssl_locality"
 	variable_to_read_2=""
 	variable_to_read_3=""
-
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	
+	value_description_1="City name to use with self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5419,11 +5421,8 @@ function generate_self_signed_ssl () {
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	value_description_1="Organization name, e.g. Internet Widgits Pty Ltd, to use with "
+	value_description_2="self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5447,11 +5446,8 @@ function generate_self_signed_ssl () {
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	value_description_1="Group name, e.g. Collaborating Artists, to use with "
+	value_description_2="self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5475,11 +5471,7 @@ function generate_self_signed_ssl () {
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
+	value_description_1="Email address to use with self signed SSL certificate."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -5809,10 +5801,10 @@ variable_to_read_2=""
 variable_to_read_3=""
 
 value_description_1="This is for the encryption method."
-value_description_2="1 - Self Signed Certificates"
-value_description_3="2 - Let's Encrypt Certificates"
-value_description_4="3 - No SSL Security"
-value_description_5=""
+value_description_2=" "
+value_description_3="1 - Self Signed Certificates"
+value_description_4="2 - Let's Encrypt Certificates"
+value_description_5="3 - No SSL Security"
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -6092,9 +6084,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 		value_description_1="You should not change this token unless someone else"
 		value_description_2="managed to get a hold of the auth token."
-		value_description_3=""
-		value_description_4=""
-		value_description_5=""
 
 		read_stored_config_value_query_function
 		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -6119,9 +6108,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 
 		value_description_1="You should not change this token unless someone else"
 		value_description_2="managed to get a hold of the discord webhook URL."
-		value_description_3=""
-		value_description_4=""
-		value_description_5=""
 
 		read_stored_config_value_query_function
 		if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -6349,8 +6335,6 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	value_description_1="Drawpile Encrypted Ban Export Private Key."
 	value_description_2="Used to encrypt ban lists so users can export"
 	value_description_3="the data and reuse when hosting a session."
-	value_description_4=""
-	value_description_5=""
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -7102,6 +7086,7 @@ sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_
 sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
 echo
 echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
 echo
 echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
 echo
@@ -7367,10 +7352,16 @@ variable_to_read_2="option_loc_num"
 variable_to_read_3="dp_install_loc_9_custom"
 
 value_description_1="${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
-value_description_2="Query 02: option_loc_num"
-value_description_3="     Number selected when selecting download/server set up location."
-value_description_4="Query 03: dp_install_loc_9_custom"
-value_description_5="     If this has a value, this is the user specified location."
+value_description_2=" "
+value_description_3="Used to enable file sharing with Windows devices on your home network."
+value_description_4=" "
+value_description_5="Query 02: option_loc_num"
+value_description_6="     Number selected when selecting download/server set up location."
+value_description_7=" "
+value_description_8="Query 03: dp_install_loc_9_custom"
+value_description_9="     If this has a value, this is the user specified location."
+value_description_10=""
+
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -9937,7 +9928,7 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 
 	value_description_1="${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
 	value_description_2=" "
-	value_description_3="Whole network ad blocking service."
+	value_description_3="Whole network ad blocking software."
 	value_description_4=""
 	value_description_5=""
 
@@ -11301,7 +11292,6 @@ value_description_1="Enable Drawpile External Authentication"
 value_description_2=" "
 value_description_3="1 - Enable External Authentication."
 value_description_4="2 - Do not Enable External Authentication."
-value_description_5=""
 
 read_stored_config_value_query_function
 
@@ -11434,10 +11424,12 @@ variable_to_read_2=""
 variable_to_read_3=""
 
 value_description_1="Configure Journalctl Logging Limits"
-value_description_2="1 - By file size"
-value_description_3="2 - By file size and by length of time"
-value_description_4="3 - By length of time"
-value_description_5="9 - Do not limit size of journalctl logs"
+value_description_2=" "
+value_description_3="1 - By file size"
+value_description_4="2 - By file size and by length of time"
+value_description_5="3 - By length of time"
+value_description_6=" "
+value_description_7="9 - Do not limit size of journalctl logs"
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
