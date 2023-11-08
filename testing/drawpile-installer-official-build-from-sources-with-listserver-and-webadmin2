@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9933
+drawpilescriptversion=2.9934
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1047,6 +1047,7 @@ function read_stored_config_value_query_function () {
 		# Force user to insert proper data this way without having to check for null variable.
 		maybe_use_config_value=no
 	else
+		echo
 		echo "${green}Value located:${normal} $read_stored_config_value_query_1"
 		echo
 		[ -z "$value_description_1" ] || echo "$value_description_1"
@@ -3417,9 +3418,9 @@ function stop_drawpile_srv_if_running_function () {
 }
 
 function start_drawpile_srv_if_updated_function () {
-	echo '--------------------------------------------------------------------------------'
-	echo '--------------------------------------------------------------------------------'
-	echo
+	# echo '--------------------------------------------------------------------------------'
+	# echo '--------------------------------------------------------------------------------'
+	# echo
 	echo "${bold}${cyan}***** If Drawpile-Srv was Running Previously, Starting Process . . . *****${normal}"
 	echo
 	service_name_to_check_01=drawpile-srv.socket
@@ -4040,7 +4041,7 @@ function drawpile_build_and_compile_function () {
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Drawpile Build Configuration . . .*****${normal}"
-
+	
 	variable_to_read_1="drawpile_build_configuration"
 	variable_to_read_2="drawpile_build_configuration_number_desc"
 	variable_to_read_3="drawpile_build_configuration_settings"
@@ -4452,7 +4453,7 @@ fi
 
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
-echo
+
 echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
 
@@ -6308,7 +6309,7 @@ fi
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
 echo
 echo 'Modifying drawpile-srv.service . . .'
-echo
+
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
 #
 cd "$dp_install_loc"
@@ -6319,7 +6320,7 @@ sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
-echo
+
 drawpile_srv_crypt_key_status=no
 drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
@@ -7090,6 +7091,7 @@ sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_
 echo
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
 
 if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 	variable_to_read_1="drawpile_monitor_installation_status"
@@ -7107,8 +7109,6 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 		echo "Storing value and moving on."
 		drawpile_monitor_installation_status=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		echo "${bold}${cyan}*****Drawpile Monitor NSFW Content Report Tool . . .*****${normal}"
-		echo
 		echo "This is a python script for monitoring for NSFW content via"
 		echo "session names, usernames, and room aliases."
 		echo
@@ -8791,7 +8791,7 @@ EOF
 	echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Running SystemD configuration for List Server . . .*****${normal}"
-	echo
+
 	cat <<EOF | sudo tee /etc/systemd/system/drawpile-listserver.service >/dev/null
 [Unit]
 Description=Drawpile statistics proxy
@@ -9039,7 +9039,6 @@ EOF
 			else
 				echo "This message should not be visible for: Preparing Favicon Setup"
 			fi
-			echo
 			favicon_copy_function
 			sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
 			sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
@@ -9598,7 +9597,6 @@ comment_EOF_delete
 		echo Status: $test_installation_status
 		echo
 		node -v
-		echo
 		# install_or_update_nodejs
 	fi
 	echo
