@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9938
+drawpilescriptversion=2.9939
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1055,7 +1055,8 @@ function read_stored_config_value_query_function () {
 		if [ "$read_stored_config_value_query_null_check" = "0" ]; then
 			echo "No value read from file: $drawpile_configuration_values_file"
 		elif [ "$read_stored_config_value_query_null_check" = "1" ]; then
-			echo "No value read from file: $app_installation_status_file"
+			echo "No value read from files: $drawpile_configuration_values_file"
+			echo "                          $app_installation_status_file"
 		else
 			echo "This message should not be visible for: read_stored_config_value_query_null_check"
 		fi
@@ -3836,7 +3837,6 @@ function drawpile_tools_compile_verification_function () {
 	if [[ -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
 		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" ]] && [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version compiled successfully!${normal}"
-			echo
 		else
 			echo "${red}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version have been detected but${normal}"
 			echo "${red}aren't the correct version of $drawpile_version_script_check.${normal}"
@@ -4407,7 +4407,6 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				stop_drawpile_srv_if_running_function
 				drawpile_build_and_compile_function
 				start_drawpile_srv_if_updated_function
-				echo
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
 			fi
@@ -4435,7 +4434,6 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				stop_drawpile_srv_if_running_function
 				drawpile_build_and_compile_function
 				start_drawpile_srv_if_updated_function
-				echo
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
 			fi
@@ -9921,14 +9919,16 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
+echo
 if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 	variable_to_read_1="Pi_Hole_Status"
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1="${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
-	value_description_2=" "
-	value_description_3="Whole network ad blocking software."
+	value_description_1="Whole network ad blocking software."
+	value_description_2=""
+	value_description_3=""
 	value_description_4=""
 	value_description_5=""
 
@@ -9938,8 +9938,6 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		echo "Storing value and moving on."
 		Pi_Hole_Status=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		echo "${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
-		echo 
 		echo This is certainly outside the scope of the project, but I will include it as an
 		echo installation option so users can choose to also use it, as there is special
 		echo nginx configuration required to work simultaneously with Drawpile. A description
@@ -10266,16 +10264,17 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}*****Configure Pi Monitoring . . . *****${normal}"
+echo
 if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 	variable_to_read_1="RPi_Monitor_Status"
 	variable_to_read_2="RPi_Monitor_Dark_Mode"
 	variable_to_read_3=""
 
-	value_description_1="${bold}${cyan}*****Configure Pi Monitoring . . . *****${normal}"
+	value_description_1="RPi-Monitor provides real time monitoring of embedded devices."
 	value_description_2=" "
-	value_description_3="RPi-Monitor provides real time monitoring of embedded devices."
-	value_description_4="Query 01: RPi_Monitor - 1 yes, 2 no"
-	value_description_5="Query 02: Dark Mode - 1 yes, 2 no, 3 revert"
+	value_description_3="Query 01: RPi_Monitor - 1 yes, 2 no"
+	value_description_4="Query 02: Dark Mode - 1 yes, 2 no, 3 revert"
 
 	read_stored_config_value_query_function
 	echo
@@ -10288,8 +10287,6 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		# dp_install_loc=/home/pi/Public
 		# current_username=pi
 
-		echo "${bold}${cyan}*****Configure Pi Monitoring . . . *****${normal}"
-		echo
 		echo RPi-Monitor is an application designed to perform real time monitoring of 
 		echo embedded devices. The development platform is a Raspberry Pi B.
 		echo
