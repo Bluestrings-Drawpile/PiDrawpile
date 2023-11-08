@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9935
+drawpilescriptversion=2.9936
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1038,12 +1038,27 @@ echo '--------------------------------------------------------------------------
 echo
 
 function read_stored_config_value_query_function () {
+	read_stored_config_value_query_null_check=0
 	read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
-		echo "No value read from file: $drawpile_configuration_values_file"
+		read_stored_config_value_query_null_check=1
+		# If variable cannot be found in drawpile configuration values file, check app installation status. Only when value is null or = sign.
+		read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	fi
+	
+	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
+		if [ "$read_stored_config_value_query_null_check" = "0" ]; then
+			echo "No value read from file: $drawpile_configuration_values_file"
+		elif [ "$read_stored_config_value_query_null_check" = "1" ]; then
+			echo "No value read from file: $app_installation_status_file"
+		else
+			echo "This message should not be visible for: read_stored_config_value_query_null_check"
+		fi
 		# Force user to insert proper data this way without having to check for null variable.
 		maybe_use_config_value=no
 	else
@@ -3841,7 +3856,6 @@ function drawpile_dprectool_compile_verification_function () {
 	if [[ "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/dprectool" ]]; then
 		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Dprectool $dprec_tool_version compiled successfully!${normal}"
-			echo
 		else
 			echo "${red}Dprectool $dprec_tool_version have been detected but${normal}"
 			echo "${red}aren't the correct version of $drawpile_version_script_check.${normal}"
@@ -4145,6 +4159,7 @@ function drawpile_build_and_compile_function () {
 		read -p "${bold}${cyan}Enter compiling thread count (blank for maximum of $t_max): ${normal}" thread_count
 		while [ true ] ; do
 			if [ -z "$thread_count" ] ; then
+				echo
 				echo "Compiling using maximum"
 				thread_count=$t_max
 				break
@@ -4152,10 +4167,12 @@ function drawpile_build_and_compile_function () {
 				if (($thread_count>0)) && (($thread_count<=$t_max)) ; then
 					break
 				else
+					echo
 					echo "Value: '$thread_count' is not within the range [1,$t_max]"
 					echo
 				fi
 			else
+				echo
 				echo "Value: '$thread_count' is not a positive integer"
 				echo
 			fi
@@ -4377,9 +4394,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
 				echo
 				stop_drawpile_srv_if_running_function
-				echo
 				drawpile_build_and_compile_function
-				echo
 				start_drawpile_srv_if_updated_function
 				echo
 			else
@@ -4407,9 +4422,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
 				echo
 				stop_drawpile_srv_if_running_function
-				echo
 				drawpile_build_and_compile_function
-				echo
 				start_drawpile_srv_if_updated_function
 				echo
 			else
@@ -5804,7 +5817,6 @@ value_description_5=""
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo
 	echo "Storing value and moving on."
 	ssl_encryption_config=$read_stored_config_value_query_1
 	if [ "$ssl_encryption_config" == "1" ]; then
@@ -6751,7 +6763,7 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 	fi
 }
 # --------------------------------------------------------------------------------
-echo
+
 echo "${bold}${cyan}***** Drawpile Server Start Up Options . . .*****${normal}"
 echo
 variable_to_read_1="systemd_selection"
@@ -7366,6 +7378,7 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	samba_choice=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo
 	echo "${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
 	echo
 	echo 'This stage will give you an option to set up your Raspberry Pi for file'
@@ -8140,14 +8153,14 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	fi
 	
 	if [[ -e  "$go_path/bin/listserver" ]]; then
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+		echo "Located ListServer: $go_path/bin/listserver"
 		go_path_manual=$go_path/bin/listserver
 	elif [[ -e  "/home/$current_username/go/bin/listserver" ]]; then
 		go_path_manual=/home/$current_username/go
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+		echo "Located ListServer: $go_path/bin/listserver"
 	elif [[ -e  "/home/pi/go/bin/listserver" ]]; then
 		go_path_manual=/home/pi/go
-		echo "${invis} Located ListServer: $go_path/bin/listserver${normal}"
+		echo "Located ListServer: $go_path/bin/listserver"
 	else
 		echo "${bold}${red}Was unable to determine location of listserver.${normal}"
 		echo "${bold}${red}This will cause issues with the script.${normal}"
