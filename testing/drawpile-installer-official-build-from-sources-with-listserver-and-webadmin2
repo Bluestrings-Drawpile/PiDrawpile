@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9939
+drawpilescriptversion=2.9940
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -9689,13 +9689,26 @@ comment_EOF_delete
 		echo
 		echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
 		echo
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			git checkout -f dev-2.2
+			echo
+		fi
 		echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
 		echo
-cat <<EOF | tee -a .env.local >/dev/null
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			cat <<EOF | tee -a .env.local >/dev/null
+PUBLIC_URL=/admin
 REACT_APP_BASENAME=/admin
 REACT_APP_APIROOT=/admin/api
 REACT_APP_AUTHMODE=basic
 EOF
+		else
+			cat <<EOF | tee -a .env.local >/dev/null
+REACT_APP_BASENAME=/admin
+REACT_APP_APIROOT=/admin/api
+REACT_APP_AUTHMODE=basic
+EOF
+		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
