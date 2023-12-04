@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9940
+drawpilescriptversion=2.9941
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1054,9 +1054,11 @@ function read_stored_config_value_query_function () {
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
 		if [ "$read_stored_config_value_query_null_check" = "0" ]; then
 			echo "No value read from file: $drawpile_configuration_values_file"
+			echo
 		elif [ "$read_stored_config_value_query_null_check" = "1" ]; then
 			echo "No value read from files: $drawpile_configuration_values_file"
 			echo "                          $app_installation_status_file"
+			echo
 		else
 			echo "This message should not be visible for: read_stored_config_value_query_null_check"
 		fi
@@ -4854,6 +4856,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " dns_choice
 		[[ $dns_choice =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
 		if (( $dns_choice >= 1 && $dns_choice <= 3 || $dns_choice == 9 )); then
+			echo
 			break
 		else
 			echo
@@ -5235,7 +5238,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo
 	read -r -p "${bold}${cyan}Please enter your hostname now:${normal} " hostname_1
 	read -r -p "${bold}${cyan}Please enter your hostname again:${normal} " hostname_2
-	echo
 	dns_ip_check
 
 	while [[ $hostname_1 != $hostname_2 ]] || [[ $external_ip_4 != $dns_verification_4_stripped ]]
@@ -6213,14 +6215,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo "Running command: pip install -r requirements.txt"
 			echo '--------------------------------------------------------------------------------'
 			pip install -r requirements.txt
-			echo
+			
 			# Used to exit virtual environment that is started with this command: . env/bin/activate
 			deactivate
 		else
 			echo "${bold}${green}Abuse report is up to date, skipping.${normal}"
 		fi
 		echo
-		echo '--------------------------------------------------------------------------------'
 		echo '--------------------------------------------------------------------------------'
 		echo
 		echo "${bold}${cyan}***** Setting Abuse Report for Automatic Startup *****${normal}"
@@ -8326,7 +8327,6 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		done
 		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		read -r -p "${bold}${cyan}Enter a location for the favicon${normal}: " list_server_favicon_location_entry
 		echo
 		if [ "$list_server_favicon_location_entry" = "" ]; then
 			list_server_favicon_toggle="# favicon"
@@ -11176,6 +11176,12 @@ fi
 
 function certbot_configure_deploy_hook_function () {
 	sudo sed -i -e '$adeploy-hook = systemctl reload nginx.service' /etc/letsencrypt/cli.ini
+
+<<comment_EOF_delete	
+	# Pretty sure this is no longer needed, since apparently this error occurs with: sudo certbot renew
+	# deploy-hook command "systemctl reload drawpile-srv.service" returned error code 3
+	##Error output from deploy-hook command systemctl:
+	# Failed to reload drawpile-srv.service: Job type reload is not applicable for unit drawpile-srv.service.
 	
 	if [ "$dp_srv_startup" == "1" ]; then
 		sudo sed -i -e '$adeploy-hook = systemctl reload drawpile-srv.socket' /etc/letsencrypt/cli.ini
@@ -11185,6 +11191,7 @@ function certbot_configure_deploy_hook_function () {
 	else
 		sudo sed -i -e '$adeploy-hook = systemctl reload drawpile-srv.service' /etc/letsencrypt/cli.ini
 	fi
+comment_EOF_delete
 }
 
 function testing_config_for_certbot_function () {
@@ -11198,6 +11205,9 @@ function testing_config_for_certbot_function () {
 	# echo "${bold}${cyan}Stopping NGINX web server ... ${normal}"
 	# sudo systemctl stop --now nginx.service
 	# echo
+	# Check Certificate Info
+	# sudo certbot certificates
+	#
 	echo "${bold}${cyan}Initiating certbot renewal dry run ... ${normal}"
 	sudo certbot renew --dry-run
 	echo
@@ -12337,9 +12347,8 @@ echo "Device IP Address:"
 hostname -I
 echo
 echo "To set up remote server administration instead of the web interface, read more"
-echo "here in Google Docs:"
+echo "here in Google Docs (not recommended):"
 echo "     https://tinyurl.com/y8xq4qta "
-echo
 echo
 echo "${bold}Note:${normal} Automatic Session resets are determined by 70% of the setting Session "
 echo '     Size Limit. What this means is that a server set to 15 MB will automatically reset at'
