@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9941
+drawpilescriptversion=2.9942
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -338,7 +338,7 @@ function debian_update_check_online_working_function () {
 
 function debian_x86_64_vs_arm_function () {
 	if [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
-		echo "${bold}${green}Running Raspbian on Raspberry Pi (arm64 Processor).${normal}" 
+		echo "${bold}${green}Running Raspbian on Raspberry Pi (arm or arm64 Processor).${normal}" 
 	elif [ "$what_architecture" == "Architecture: x86-64" ]; then
 		if [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
 			echo "${bold}${green}Running Raspbian for Desktop (x86-64).${normal}"
@@ -349,6 +349,8 @@ function debian_x86_64_vs_arm_function () {
 		else
 			echo "${bold}${green}Unsure if running Debian or Raspbian for Desktop (x86-64).${normal}"
 		fi
+	elif [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" != "Raspberry Pi" ]; then
+		echo "${bold}${green}Running on an arm or arm64 Processor, but not using Raspbian.${normal}" 
 	else
 		echo "${bold}${red}Unable to identify architecture. Exiting script.${normal}"
 		echo
@@ -9485,8 +9487,8 @@ EOF
 			fi
 comment_EOF_delete
 			elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && ( "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+				# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop. Debian systems with ARM processors are allowed in a section below.
 				# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
-				# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop
 				# https://github.com/nodesource/distributions
 				# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
 				sudo apt-get update
@@ -9512,7 +9514,7 @@ comment_EOF_delete
 				# sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
 				version_test_by_distro_function
 			elif [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
-				# See the "SCRIPT DEPRECATION WARNING" in the 'else' section below.
+				# For Debian systems with ARM processors. Not Raspbian specific. Also, see the "SCRIPT DEPRECATION WARNING" in the 'else' section below in regard to change of setup. 
 				echo "Adding Node.JS repository to get latest version . . ."
 				echo
 				
