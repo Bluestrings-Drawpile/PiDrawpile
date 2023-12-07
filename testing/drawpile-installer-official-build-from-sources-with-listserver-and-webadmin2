@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9942
+drawpilescriptversion=2.9943
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3268,7 +3268,11 @@ echo
 echo "${bold}${cyan}***** Cloning Drawpile Repository . . . *****${normal}"
 echo
 cd "$dp_install_loc"
-sudo chmod 777 "$dp_install_loc" -R
+
+if [[ ! -d  "$dp_install_loc/Programs/Drawpile" ]]; then
+	sudo chmod 777 "$dp_install_loc" -R
+fi
+
 cd "$dp_install_loc/Programs"
 if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 	# ---------------------------------------------------------------------------------
@@ -3289,6 +3293,7 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 	git_remote_commit=$( git rev-parse '@{u}' )
 	
 	if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+		git reset --hard origin/main
 		git_repo_status=currently_up_to_date
 	else
 		# Resets any changes made to the local code so it matches the remote code. 
@@ -4067,6 +4072,19 @@ function drawpile_build_and_compile_function () {
 		echo "Unable to make a determination of which version of qtbase5-dev is installed."
 	fi
 	echo
+	
+	drawpile_program_version_with_git_dirty=$( git describe --dirty )
+	
+	if [[ "$drawpile_program_version_with_git" == "$drawpile_program_version_with_git_dirty" ]]; then
+		# Do nothing, no action required
+		:
+	elif [[ "$drawpile_program_version_with_git" != "$drawpile_program_version_with_git_dirty" ]]; then
+		echo "Modifications to source file occurred. Updating version number for comparison check."
+		drawpile_program_version_with_git=$drawpile_program_version_with_git_dirty
+	else
+		echo "This git dirty check message should not be visible."
+	fi
+
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
