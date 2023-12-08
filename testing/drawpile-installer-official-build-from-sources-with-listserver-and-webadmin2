@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9943
+drawpilescriptversion=2.9944
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2534,22 +2534,9 @@ if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ] || [ "$what_linux_name" != "NAME=
 	#																										then replaces with captured group. Used ! instead of / to avoid escaping.
 fi
 
-# cargo clang
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev clang"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
-fi
-if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
-	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv python3-pip libsqlite3-dev policycoreutils clang"
-	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
-fi
-if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
-	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils clang"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
-fi
+# cargo clang build-essential
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
@@ -2560,7 +2547,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
-
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
@@ -2571,6 +2558,28 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang"
 	program_list_to_install_optional_dependencies="libmicrohttpd libsodium systemd-devel httpd nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+fi
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv python3-pip libsqlite3-dev policycoreutils clang"
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+fi
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils clang"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+fi
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 app_does_not_exist=0
 app_installed=0
