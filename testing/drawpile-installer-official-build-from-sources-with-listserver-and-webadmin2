@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9944
+drawpilescriptversion=2.9945
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -89,6 +89,9 @@ app_installation_status_file_bak=/home/drawpileuser/App-Installation-Status_bak.
 # Cannot use sed on an empty file containing no characters or new lines. 
 drawpile_configuration_values_file=/home/drawpileuser/Drawpile_Configuration_Values.txt
 drawpile_configuration_values_file_bak=/home/drawpileuser/Drawpile_Configuration_Values_bak.txt
+
+drawpile_completed_successfully_values_file=/home/drawpileuser/Drawpile_Completed_Values.txt
+drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Completed_Values_bak.txt
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 <<comment_VNC_EOF
@@ -743,6 +746,22 @@ function stored_data_creation_files_function () {
 		sudo chown drawpileuser:drawpileread $drawpile_configuration_values_file
 	else
 		echo This message for "$drawpile_configuration_values_file" should not be visible.
+	fi
+	
+	if [[ -e "$drawpile_completed_successfully_values_file" ]]; then
+		# sudo mv "$drawpile_completed_successfully_values_file" "$drawpile_configuration_values_file_bak"
+		sudo chmod 777 $drawpile_completed_successfully_values_file
+		sudo chown drawpileuser:drawpileread $drawpile_completed_successfully_values_file
+		# sudo chmod 777 $drawpile_configuration_values_file_bak
+		# echo "drawpilescriptversion = $drawpilescriptversion" | sudo tee -a $drawpile_completed_successfully_values_file > /dev/null 2>&1
+		# Not sure if I want to update noted script version on new script run
+		# sudo sed -i '\!^drawpilescriptversion =!{h;s!=.*!= '"$drawpilescriptversion"'!};${x;\!^$!{s!!drawpilescriptversion = '"$drawpilescriptversion"'!;H};x}' $drawpile_completed_successfully_values_file
+	elif [[ ! -e "$drawpile_completed_successfully_values_file" ]]; then
+		echo "drawpilescriptversion = $drawpilescriptversion" | sudo tee -a $drawpile_completed_successfully_values_file > /dev/null 2>&1
+		sudo chmod 777 $drawpile_completed_successfully_values_file
+		sudo chown drawpileuser:drawpileread $drawpile_completed_successfully_values_file
+	else
+		echo This message for "$drawpile_completed_successfully_values_file" should not be visible.
 	fi
 }
 
@@ -6210,7 +6229,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [[ "$git_repo_status" == "out_of_date" ]] ; then
+		read_stored_completed_status_value_query=$( grep -m 1 "$drawpile_abuse_report_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+		if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 			if [[ -e "/etc/systemd/system/drawpile_abuse_report.service" ]]; then
 				echo "${bold}${cyan}***** If Drawpile_Abuse_Report.service Running, Stopping Process . . . *****${normal}"
 				echo
@@ -6233,7 +6254,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo '--------------------------------------------------------------------------------'
 			echo "Running command: python -m venv env"
 			echo '--------------------------------------------------------------------------------'
-			python -m venv env
+			if ! python -m venv env; then
+				sudo sed -i '\!^drawpile_abuse_report_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_abuse_report_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				command_die "${bold}${red}Command 'python -m venv env' failed.${normal}"
+			else
+				sudo sed -i '\!^drawpile_abuse_report_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_abuse_report_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
+			fi
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo "Running command: . env/bin/activate"
