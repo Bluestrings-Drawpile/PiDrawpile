@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9946
+drawpilescriptversion=2.9947
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5831,7 +5831,7 @@ function revoke_lets_encrypt_ssl () {
 	elif [ "$cert_revocation_reason_entry" == "3" ]; then
 		cert_revocation_reason=cessationofOperation
 	elif [ "$cert_revocation_reason_entry" == "4" ]; then
-		cert_revocataion_reason=unspecified
+		cert_revocation_reason=unspecified
 	else
 		echo Invalid option selected. Assuming cert is being replaced.
 		echo 'Will use option 2 - superseded (RFC 5280 CRLReason #4)'
