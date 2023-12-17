@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9945
+drawpilescriptversion=2.9946
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2580,7 +2580,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential"
+	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5831,7 +5831,7 @@ function revoke_lets_encrypt_ssl () {
 	elif [ "$cert_revocation_reason_entry" == "3" ]; then
 		cert_revocation_reason=cessationofOperation
 	elif [ "$cert_revocation_reason_entry" == "4" ]; then
-		cert_revocation_reason=unspecified
+		cert_revocataion_reason=unspecified
 	else
 		echo Invalid option selected. Assuming cert is being replaced.
 		echo 'Will use option 2 - superseded (RFC 5280 CRLReason #4)'
@@ -7080,7 +7080,9 @@ done
 echo
 echo "Server Administration password is : $nginx_htpasswd_1"
 echo
-sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"
+if ! sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"; then
+	command_die "${bold}${red}Command to generate username and password failed.${normal}"
+fi
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
@@ -7233,7 +7235,8 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				cd "/home/drawpileuser/drawpile-monitor"
 			fi
 			echo
-			if [[ "$git_repo_status" == "out_of_date" ]] ; then
+			read_stored_completed_status_value_query=$( grep -m 1 "drawpile_monitor_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 				if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) || "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 					echo '--------------------------------------------------------------------------------'
 					echo "Need to install gfortran and libopenblas-dev for Raspbian"
@@ -7266,7 +7269,12 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo '--------------------------------------------------------------------------------'
 				echo "Running command: python -m venv env"
 				echo '--------------------------------------------------------------------------------'
-				python -m venv env
+				if ! python -m venv env; then
+					sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+					command_die "${bold}${red}Command 'python -m venv env' failed.${normal}"
+				else
+					sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
+				fi
 				echo
 				echo '--------------------------------------------------------------------------------'
 				echo "Running command: . env/bin/activate"
@@ -9028,6 +9036,8 @@ EOF
 
 		sudo mkdir -p /var/www/html/drawpile && cd "$_"
 		curl -s -L https://github.com/drawpile/dpserver/tarball/master | sudo tar xz --strip-components 2 --wildcards "*/public_html"
+		# sudo mv /var/www/html/drawpile/js/SessionList.js /var/www/html/drawpile/js/SessionList_old.js
+		# sudo wget -q --show-progress https://raw.githubusercontent.com/drawpile/website/master/static/js/SessionList.js -O /var/www/html/drawpile/js/SessionList.js
 		
 		echo '--------------------------------------------------------------------------------'
 		echo
@@ -9065,11 +9075,14 @@ EOF
 		done
 		if [ "$toggle_nsfm_on_list_server_web_page" == "y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "YES" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Yes" ]; then
 			echo "${bold}${red}Show NSFM sessions on list server web page.${normal}"
-			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"\/listing\/sessions\/?nsfm=true\"/g" /var/www/html/drawpile/index.html
+			# sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"\/listing\/sessions\/?nsfm=true\"/g" /var/www/html/drawpile/index.html
+			# No action required, NSFM is now enabled by default.
 		elif [ "$toggle_nsfm_on_list_server_web_page" == "n" ] || [ "$toggle_nsfm_on_list_server_web_page" == "N" ] || [ "$toggle_nsfm_on_list_server_web_page" == "no" ] || [ "$toggle_nsfm_on_list_server_web_page" == "NO" ] || [ "$toggle_nsfm_on_list_server_web_page" == "No" ]; then
 			echo "${bold}${cyan}Do not show NSFM sessions on list server web page.${normal}"
+			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/?nsfm=true\"/list-url=\"\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
 		else
 			echo "${bold}${cyan}Left blank. Will not show NSFM sessions on list server web page.${normal}"
+			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/?nsfm=true\"/list-url=\"\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
 		fi
 		# Previous version before I realized I didn't need to specify the website name....
 		# sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
@@ -9200,6 +9213,8 @@ EOF
 		echo
 		sudo mkdir -p /var/www/html/drawpile && cd "$_"
 		curl -s -L https://github.com/drawpile/dpserver/tarball/master | sudo tar xz --strip-components 2 --wildcards "*/public_html"
+		# sudo mv /var/www/html/drawpile/js/SessionList.js /var/www/html/drawpile/js/SessionList_old.js
+		# sudo wget -q --show-progress https://raw.githubusercontent.com/drawpile/website/master/static/js/SessionList.js -O /var/www/html/drawpile/js/SessionList.js
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
@@ -9218,7 +9233,44 @@ EOF
 
 		sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="https:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
+		
+		
+		echo "Would you like NSFM sessions to show up on the web page for the list server?"
+		echo "Leaving this blank will default to (N)o."
+		echo
+		echo " (Y)es - Show NSFM sessions on the web page for list server."
+		echo " (N)o  - Do not show NSFM sessions on the web page for list server."
+		echo
+		while :; do
+			read -r -p "${bold}${red}Type (y)es to allow NSFM listings, or (n)o to hide:${normal} " toggle_nsfm_on_list_server_web_page
+			echo
+			if [ "$toggle_nsfm_on_list_server_web_page" == "y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "YES" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "n" ] || [ "$toggle_nsfm_on_list_server_web_page" == "N" ] || [ "$toggle_nsfm_on_list_server_web_page" == "no" ] || [ "$toggle_nsfm_on_list_server_web_page" == "NO" ] || [ "$toggle_nsfm_on_list_server_web_page" == "No" ] || [ "$toggle_nsfm_on_list_server_web_page" == "" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		if [ "$toggle_nsfm_on_list_server_web_page" == "y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Y" ] || [ "$toggle_nsfm_on_list_server_web_page" == "yes" ] || [ "$toggle_nsfm_on_list_server_web_page" == "YES" ] || [ "$toggle_nsfm_on_list_server_web_page" == "Yes" ]; then
+			echo "${bold}${red}Show NSFM sessions on list server web page.${normal}"
+			# sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"\/listing\/sessions\/?nsfm=true\"/g" /var/www/html/drawpile/index.html
+			# No action required, NSFM is now enabled by default.
+		elif [ "$toggle_nsfm_on_list_server_web_page" == "n" ] || [ "$toggle_nsfm_on_list_server_web_page" == "N" ] || [ "$toggle_nsfm_on_list_server_web_page" == "no" ] || [ "$toggle_nsfm_on_list_server_web_page" == "NO" ] || [ "$toggle_nsfm_on_list_server_web_page" == "No" ]; then
+			echo "${bold}${cyan}Do not show NSFM sessions on list server web page.${normal}"
+			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/?nsfm=true\"/list-url=\"\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
+		else
+			echo "${bold}${cyan}Left blank. Will not show NSFM sessions on list server web page.${normal}"
+			sudo sed -i -e "s/list-url=\"\/listing\/sessions\/?nsfm=true\"/list-url=\"\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
+		fi
+		# Previous version before I realized I didn't need to specify the website name....
+		# sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
+		# Original
+		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="http:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		# --------------------------------------------------------------------------------
+		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
 		echo "*****${bold}${cyan}Preparing Favicon Setup . . .${normal}*****"
@@ -9263,22 +9315,24 @@ EOF
 		echo
 		echo "*****${bold}${cyan}Generating systemd configuration for list server and web admin. . .${normal}*****"
 		echo
-	cat <<EOF | sudo tee -a /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
+	cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
 server {
         listen *:80;
         listen [::]:80;
 
+		server_name $hostname;
         root /var/www/html/drawpile;
 
         location / {
-                return 307 https://\$host:443\$request_uri;
-                # return 307 https://$request_uri;
-                # try_files \$uri \$uri/ =404;
+			 return 307 https://\$server_name/\$request_uri;
+			# return 307 https://\$host:443\$request_uri;
+			# return 307 https://\$request_uri;
+			# try_files \$uri \$uri/ =404;
         }
 
         location /.well-known/acme-challenge/ {
-                # root /var/www/certbot;
-				root /etc/letsencrypt/renewal;
+			# root /var/www/certbot;
+			root /etc/letsencrypt/renewal;
         }
 }
 
@@ -9738,7 +9792,8 @@ comment_EOF_delete
 		# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
 		# git describe - fatal: No names found, cannot describe anything.
 	fi
-	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+	read_stored_completed_status_value_query=$( grep -m 1 "drawpile_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
@@ -9791,7 +9846,10 @@ EOF
 			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
 			echo '--------------------------------------------------------------------------------'
 			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
-				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
+			else
+				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
 		else
 			# elif [ "$no_swap_available" == "false" ]; then
@@ -9801,7 +9859,10 @@ EOF
 			echo "Running Command: npm install"
 			echo '--------------------------------------------------------------------------------'
 			if ! npm install; then
+				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
 				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			else
+				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
 		fi
 		# node_return_status_01=$?
@@ -9911,7 +9972,8 @@ comment_EOF_delete
 		git clone https://github.com/drawpile/drawpile-admin-webui
 		cd "$dp_install_loc/Programs/drawpile-admin-webui"
 	fi
-	if [[ "$git_repo_status" == "out_of_date" ]] ; then
+	read_stored_completed_status_value_query=$( grep -m 1 "drawpile_new_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
@@ -9927,7 +9989,10 @@ comment_EOF_delete
 			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
 			echo '--------------------------------------------------------------------------------'
 			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
-				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
+			else
+				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
 		else
 			# elif [ "$no_swap_available" == "false" ]; then
@@ -9937,7 +10002,10 @@ comment_EOF_delete
 			echo "Running Command: npm install"
 			echo '--------------------------------------------------------------------------------'
 			if ! npm install; then
+				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
 				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			else
+				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
 		fi
 		echo
@@ -9945,7 +10013,10 @@ comment_EOF_delete
 		echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
 		echo '--------------------------------------------------------------------------------'
 		if ! npm run build -- "https://$hostname/listing/admin/"; then
+			sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
 			command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
+		else
+			sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 		fi
 		echo
 		echo '--------------------------------------------------------------------------------'
@@ -11252,10 +11323,17 @@ comment_EOF_delete
 function testing_config_for_certbot_function () {
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}***** Testing Lets Encrypt Certbot config for auto renewal . . . *****${normal}"
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "${bold}${cyan}***** Reconfiguring Lets Encrypt Certs now that setup is complete . . . *****${normal}"
+	echo
+	echo 1 | certbot --nginx -d $hostname
 	echo
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+	echo
+	echo "${bold}${cyan}***** Testing Lets Encrypt Certbot config for auto renewal . . . *****${normal}"
 	echo
 	# echo "${bold}${cyan}Stopping NGINX web server ... ${normal}"
 	# sudo systemctl stop --now nginx.service
@@ -11275,12 +11353,13 @@ function testing_config_for_certbot_function () {
 	echo "You should get a message similar to the following near the bottom."
 	echo
 	echo "Congratulations, all simulated renewals succeeded:"
-	echo "  ssl_fullchain_certificate (success)"
+	echo "  $ssl_fullchain_certificate (success)"
 	echo
-	echo "Note that if you did not, something was done wrong or is configured"
+	echo "${bold}${red}Note that if you did not:${normal} something was done wrong or is configured"
 	echo "differently than this script was expecting. The server will not"
 	echo "behave as intended."
-	echo
+
+<<comment_EOF_delete
 	echo "${bold}Note:${normal} An error message indicating the following:"
 	echo "${red}     Dry run: skipping deploy hook command: systemctl restart drawpile-srv.service${normal}"
 	echo "is not necessarily a sign of failure. I haven't yet tested this"
@@ -11288,6 +11367,7 @@ function testing_config_for_certbot_function () {
 	echo "the Drawpile server if no cert renewal actually occurred."
 	echo "It is currently believed this is needed to read the new SSL cert"
 	echo "when they are generated so users can connect."
+comment_EOF_delete
 	echo
 	# The following command with deploy hooks appears to only be available to recent versions of certbot.
 	# sudo certbot renew --dry-run --run-deploy-hooks
