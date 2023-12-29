@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9947
+drawpilescriptversion=2.9948
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5866,7 +5866,11 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
 		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
-		ssl_certificate=$ssl_cert_pem	
+		# Difference between fullchain.pem and cert.pem --> https://community.letsencrypt.org/t/difference-between-fullchain-pem-and-cert-pem/184189
+		#      fullchain.pem is the combination of cert.pem (your "end-entity certificate") with chain.pem (your "(recommended) intermediate certificate chain"), in a single file.
+		#      These alternatives exist because different software prefers having these either together or separated, so having the alternatives makes it easier to configure different TLS server software.
+		#      In nginx you should currently be able to use fullchain.pem, and it should understand the nature and role of the various certificates in that file automatically.
+		ssl_certificate=$ssl_fullchain_certificate	
 	else
 		echo "${invis}No SSL being used.${normal}"
 	fi
@@ -5940,7 +5944,11 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
 		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
-		ssl_certificate=$ssl_cert_pem
+		# Difference between fullchain.pem and cert.pem --> https://community.letsencrypt.org/t/difference-between-fullchain-pem-and-cert-pem/184189
+		#      fullchain.pem is the combination of cert.pem (your "end-entity certificate") with chain.pem (your "(recommended) intermediate certificate chain"), in a single file.
+		#      These alternatives exist because different software prefers having these either together or separated, so having the alternatives makes it easier to configure different TLS server software.
+		#      In nginx you should currently be able to use fullchain.pem, and it should understand the nature and role of the various certificates in that file automatically.
+		ssl_certificate=$ssl_fullchain_certificate
 
 		sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
@@ -6032,6 +6040,10 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				generate_lets_encrypt_ssl
 			fi
 		fi
+		# Difference between fullchain.pem and cert.pem --> https://community.letsencrypt.org/t/difference-between-fullchain-pem-and-cert-pem/184189
+		#      fullchain.pem is the combination of cert.pem (your "end-entity certificate") with chain.pem (your "(recommended) intermediate certificate chain"), in a single file.
+		#      These alternatives exist because different software prefers having these either together or separated, so having the alternatives makes it easier to configure different TLS server software.
+		#      In nginx you should currently be able to use fullchain.pem, and it should understand the nature and role of the various certificates in that file automatically.
 		ssl_certificate=$ssl_fullchain_certificate
 		# sudo systemctl start --now nginx.service
 		# wait $!
@@ -6047,7 +6059,11 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
 		ssl_private_cert_key=/etc/letsencrypt/live/$hostname/privkey.pem
-		ssl_certificate=$ssl_cert_pem
+		# Difference between fullchain.pem and cert.pem --> https://community.letsencrypt.org/t/difference-between-fullchain-pem-and-cert-pem/184189
+		#      fullchain.pem is the combination of cert.pem (your "end-entity certificate") with chain.pem (your "(recommended) intermediate certificate chain"), in a single file.
+		#      These alternatives exist because different software prefers having these either together or separated, so having the alternatives makes it easier to configure different TLS server software.
+		#      In nginx you should currently be able to use fullchain.pem, and it should understand the nature and role of the various certificates in that file automatically.
+		ssl_certificate=$ssl_fullchain_certificate
 
 		sudo sed -i '\!^ssl_cert_pem =!{h;s!=.*!= '"$ssl_cert_pem"'!};${x;\!^$!{s!!ssl_cert_pem = '"$ssl_cert_pem"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^ssl_chain_pem =!{h;s!=.*!= '"$ssl_chain_pem"'!};${x;\!^$!{s!!ssl_chain_pem = '"$ssl_chain_pem"'!;H};x}' $drawpile_configuration_values_file
