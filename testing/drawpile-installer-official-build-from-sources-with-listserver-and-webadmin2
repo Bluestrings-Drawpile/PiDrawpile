@@ -9902,7 +9902,6 @@ EOF
 		echo "${bold}${cyan}*****Editing and Moving to root web directory . . . (Step 5 of 6)*****${normal}"
 		echo
 		sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
-		# sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile moo.strongson.com Server Admin<\/title>/g" "/var/www/html/drawpile/admin/index.html"
 		if [[ -d "/var/www/html/drawpile/admin-old" ]]; then
 			sudo rm -rf /var/www/html/drawpile/admin-old
 			if [[ -d "/var/www/html/drawpile/admin" ]]; then
