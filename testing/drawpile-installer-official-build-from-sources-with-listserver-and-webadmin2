@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9948
+drawpilescriptversion=2.9949
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -9903,6 +9903,18 @@ EOF
 		echo
 		sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
 		# sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile moo.strongson.com Server Admin<\/title>/g" "/var/www/html/drawpile/admin/index.html"
+		if [[ -d "/var/www/html/drawpile/admin-old" ]]; then
+			sudo rm -rf /var/www/html/drawpile/admin-old
+			if [[ -d "/var/www/html/drawpile/admin" ]]; then
+				sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
+			fi
+		elif [[ -d "/var/www/html/drawpile/admin" ]]; then
+			sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
+		else
+			:
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		fi
 		sudo mv build /var/www/html/drawpile/admin
 		sudo restorecon -R /var/www/html/drawpile/
 		echo
@@ -10039,6 +10051,18 @@ comment_EOF_delete
 		echo
 		echo "${bold}${cyan}*****Moving to root web directory . . . (Step 3 of 4)*****${normal}"
 		echo
+		if [[ -d "/var/www/html/drawpile/admin_ui_old" ]]; then
+			sudo rm -rf /var/www/html/drawpile/admin_ui_old
+			if [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+				sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+			fi
+		elif [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+			sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+		else
+			:
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		fi
 		sudo mv dist /var/www/html/drawpile/admin_ui
 		sudo restorecon -R /var/www/html/drawpile/
 		echo
