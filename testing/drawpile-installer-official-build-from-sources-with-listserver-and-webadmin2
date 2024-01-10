@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9949
+drawpilescriptversion=2.9950
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3430,18 +3430,44 @@ function stop_drawpile_srv_if_running_function () {
 	echo
 	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
 	echo
-	if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
-		echo "Drawpile_monitor.service enabled, stopping service"
-		echo "to avoid unnecessary warnings in Discord."
-		sudo systemctl stop --now drawpile_monitor.service
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	# Check for Drawpile_Monitor.service
+	if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
+		if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
+			echo "Drawpile_monitor.service enabled, stopping service"
+			echo "to avoid unnecessary warnings in Discord."
+			sudo systemctl stop --now drawpile_monitor.service
+		else
+			echo Drawpile monitor is not enabled, no need to stop process.
+		fi
+		echo
 	else
-	 	echo Drawpile monitor is not available, no need to stop process.
+		echo Drawpile monitor is not available.
+		echo
 	fi
-	echo
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	# Display limited info on the status of running Drawpile services.
 	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
 	service_name_to_check_01=drawpile-srv.socket
 	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
 		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# Check to ensure output is not blank and find it in an alternate way
+		# echo Value: $drawpile_srv_socket_loaded
+		# echo
+		if [ -z "$drawpile_srv_socket_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); preset:.*/\1/p" )
+			# echo
+		fi
+		# echo Value: $drawpile_srv_socket_loaded
+		# echo
+		if [ -z "$drawpile_srv_socket_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_socket_loaded=error
+			# echo
+		fi
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
 		echo "Service: $service_name_to_check_01"
 		echo "Value: $drawpile_srv_socket_loaded"
@@ -3455,7 +3481,27 @@ function stop_drawpile_srv_if_running_function () {
 	service_name_to_check_02=drawpile-srv.service
 	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
 		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# Check to ensure output is not blank and find it in an alternate way
+		# echo Value: $drawpile_srv_service_loaded
+		# echo
+		if [ -z "$drawpile_srv_service_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); preset:.*/\1/p" )
+			# echo
+		fi
+		# echo Value: $drawpile_srv_service_loaded
+		# echo
+		if [ -z "$drawpile_srv_service_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_service_loaded=error
+			# echo
+		fi
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		if [ -z "$drawpile_srv_service_status" ]; then
+			drawpile_srv_service_status=error
+		fi
 		echo "Service: $service_name_to_check_02"
 		echo "Value: $drawpile_srv_service_loaded"
 		echo "Value: $drawpile_srv_service_status"
@@ -3464,7 +3510,9 @@ function stop_drawpile_srv_if_running_function () {
 		drawpile_srv_service_status="not_loaded"
 		echo "The $service_name_to_check_02 is not yet loaded. No action required."
 	fi
-	
+	echo
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	# Stop the server if necessary. 
 	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(running)" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			sudo systemctl stop --now $service_name_to_check_01
@@ -3475,6 +3523,9 @@ function stop_drawpile_srv_if_running_function () {
 			sudo systemctl stop --now $service_name_to_check_02
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
+		elif [[ "$drawpile_srv_socket_loaded" == "error" || "$drawpile_srv_socket_status" == "error" || "$drawpile_srv_service_loaded" == "error" || "$drawpile_srv_service_status" == "error" ]]; then
+			echo "${bold}${cyan}Was not able to pull status values correctly.${normal}"
+			echo "${bold}${cyan}This section will not function as intended.${normal}"
 		else
 			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
 		fi
@@ -3504,17 +3555,17 @@ function start_drawpile_srv_if_updated_function () {
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
 		else
-			echo "This message should not be visible for stopping drawpile-srv prior to compiling code update."
+			echo "This message should not be visible for starting drawpile-srv after to compiling code update."
 		fi
 	fi
 	echo
-	if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
-		echo "Drawpile_monitor.service enabled, starting service."
-		sudo systemctl start --now drawpile_monitor.service
-	else
-	 	:
-		# Do nothing as no error was detected.
-		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.		
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	# Check for Drawpile_Monitor.service
+	if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
+		if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
+			echo "Drawpile_monitor.service enabled, starting service."
+			sudo systemctl start --now drawpile_monitor.service
+		fi
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -6256,7 +6307,25 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			service_name_to_check_04=drawpile_abuse_report.service
 			if [ -e "/etc/systemd/system/drawpile_abuse_report.service" ]; then
 				drawpile_abuse_report_loaded=$( systemctl status $service_name_to_check_04 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_04; (.*); vendor.*/\1/p" )
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# Check to ensure output is not blank and find it in an alternate way
+				# echo Value: $drawpile_abuse_report_loaded
+				# echo
+				if [ -z "$drawpile_abuse_report_loaded" ]; then
+					# echo Oops. Blank!
+					drawpile_abuse_report_loaded=$( systemctl status $service_name_to_check_04 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_04; (.*); preset:.*/\1/p" )
+					# echo
+				fi
+				# echo Value: $drawpile_abuse_report_loaded
+				# echo
+				if [ -z "$drawpile_abuse_report_loaded" ]; then
+					drawpile_abuse_report_loaded=error
+				fi
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 				drawpile_abuse_report_status=$( systemctl status $service_name_to_check_04 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+				if [ -z "$drawpile_abuse_report_status" ]; then
+					drawpile_abuse_report_status=error
+				fi
 				echo "Service: $service_name_to_check_04"
 				echo "Value: $drawpile_abuse_report_loaded"
 				echo "Value: $drawpile_abuse_report_status"
@@ -6339,7 +6408,7 @@ EOF
 		wait $!
 
 		# (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
-		# --report-url http://localhost:$abuse_report_port/
+		#
 		#
 		# Enable abuse reports in the drawpile-srv web UI and punch in what you wrote for AUTH_TOKEN.
 		# Enters the AUTH_TOKEN into the Drawpile Database server so the user doesn't have to enter it themselves.
@@ -6533,6 +6602,32 @@ function template_folder_function () {
 #---------------------------------------------------------------------------------------------------------------------------------
 #
 function systemd_options_definitions_function () {
+
+
+read -r -p "${bold}${cyan}Would you like to enable the Abuse Report Tool:${normal} " drawpile_abuse_report_installation_status
+	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+		drawpile_abuse_report_systemd="--report-url http://localhost:$abuse_report_port/"
+	elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abuse_report_installation_status" == "N" ] || [ "$drawpile_abuse_report_installation_status" == "no" ] || [ "$drawpile_abuse_report_installation_status" == "NO" ] || [ "$drawpile_abuse_report_installation_status" == "No" ]; then
+		drawpile_abuse_report_systemd=""
+	else
+		echo "This should not be visible."
+	fi
+	
+	# The systemd startup value is actually inserted where the server encryption of user exportable bans is set.
+	# It is only mentioned here because there is no reason to mention it elsewhere, since the web version of drawpile
+	# will ve available on the main website.
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		drawpile_2_point_2_description="${bold}web drawpile${normal} - enable server for web version of Drawpile client."
+		drawpile_2_point_2_option_text_01=" web drawpile,"
+		drawpile_2_point_2_option_text_02=", web drawpile,"
+		drawpile_2_point_2_option_text_03=" & web drawpile"
+	else
+		drawpile_2_point_2_description=""
+		drawpile_2_point_2_option_text_01=""
+		drawpile_2_point_2_option_text_02=""
+		drawpile_2_point_2_option_text_03=""
+	fi
+
 	echo "Determine how you want drawpile-srv to run now. ${underline}Option 2${normal} is recommended"
 	echo 'if you have a hostname. If you do not have a hostname, option 15 instead.'
 	echo 'All settings will automatically work, though some additional setup for'
@@ -6541,6 +6636,9 @@ function systemd_options_definitions_function () {
 	echo "${bold}${cyan}Short summary of options:${normal}"
 	echo "    Read more --> ${underline}https://drawpile.net/help/server/${normal}"
 	echo "${bold}web remote admin${normal} - add users, ban users, set auto session reset, etc."
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		echo $drawpile_2_point_2_description
+	fi
 	echo "${bold}file backed sessions${normal} - write sessions to file, helps sessions to survive"
 	echo '    power outages and server crashes. Can serve as a recording if server'
 	echo '    database set to Archive terminated sessions, however filenames are'
@@ -6570,20 +6668,20 @@ function systemd_options_with_ssl_enabled_function () {
 	echo "${bold}${cyan}These options all use SSL with drawpile-srv.${normal}"
 	echo '  1  - all options.'
 	echo "  2  - all options except session recording - ${underline}recommended${normal}"
-	echo '  3  - web admin, session recording, templates, & ssl'
-	echo '  4  - web admin, file backed sessions, & ssl'
-	echo '  6  - web admin, session recording, & ssl'
-	echo '  8  - web admin, templates, & ssl'
-	echo '  11 - web admin & ssl'
+	echo "  3  - web admin,$drawpile_2_point_2_option_text_01 session recording, templates, & ssl"
+	echo "  4  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & ssl"
+	echo "  6  - web admin,$drawpile_2_point_2_option_text_01 session recording, & ssl"
+	echo "  8  - web admin,$drawpile_2_point_2_option_text_01 templates, & ssl"
+	echo "  11 - web admin$drawpile_2_point_2_option_text_02 & ssl"
 	echo
 	echo "${bold}${cyan}These options do not use SSL with drawpile-srv. SSL is${normal}"
 	echo "     ${bold}${cyan}used for the list server and web admin only.${normal}"
-	echo '  5  - web admin, file backed sessions, & templates'
-	echo '  7  - web admin, session recording, & templates'
-	echo '  9  - web admin & file backed sessions'
-	echo '  10 - web admin & session recording'
-	echo '  12 - web admin & templates'
-	echo '  13 - web admin'
+	echo "  5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates"
+	echo "  7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates"
+	echo "  9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions"
+	echo "  10 - web admin$drawpile_2_point_2_option_text_02 & session recording"
+	echo "  12 - web admin$drawpile_2_point_2_option_text_02 & templates"
+	echo "  13 - web admin$drawpile_2_point_2_option_text_03"
 	echo
 	while :; do
 		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
@@ -6609,58 +6707,58 @@ function systemd_options_with_ssl_enabled_options_function () {
 		sessions_record_folder_function
 		template_folder_function
 		sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "2" ]; then
 		systemd_selection_text="2 - all options except session recording" && echo "Selected - $systemd_selection_text"
 		echo '         - recommended'
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "3" ]; then
-		systemd_selection_text="3 - web admin, session recording, ssl, & templates." && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="3 - web admin,$drawpile_2_point_2_option_text_01 session recording, ssl, & templates." && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "4" ]; then
-		systemd_selection_text="4 - web admin, file backed sessions, & ssl" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="4 - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "5" ]; then
-		systemd_selection_text="5  - web admin, file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "6" ]; then
-		systemd_selection_text="6  - web admin, session recording, & ssl" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="6  - web admin,$drawpile_2_point_2_option_text_01 session recording, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "7" ]; then
-		systemd_selection_text="7  - web admin, session recording, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "8" ]; then
-		systemd_selection_text="8  - web admin, ssl, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="8  - web admin,$drawpile_2_point_2_option_text_01 ssl, & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "9" ]; then
-		systemd_selection_text="9  - web admin & file backed sessions" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "10" ]; then
-		systemd_selection_text="10 - web admin & session recording" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="10 - web admin$drawpile_2_point_2_option_text_02 & session recording" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "11" ]; then
-		systemd_selection_text="11 - web admin & ssl" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_selection_text="11 - web admin$drawpile_2_point_2_option_text_02 & ssl" && echo "Selected - $systemd_selection_text"
+		systemd_configuration="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "12" ]; then
-		systemd_selection_text="12 - web admin & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="12 - web admin$drawpile_2_point_2_option_text_02 & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "13" ]; then
-		systemd_selection_text="13 - w web admin" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="--local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_selection_text="13 - w web admin$drawpile_2_point_2_option_text_03" && echo "Selected - $systemd_selection_text"
+		systemd_configuration="--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
 		systemd_selection_text="2  - all options except session recording" && echo "Selected - $systemd_selection_text - ${underline}recommended${normal}"
@@ -6668,7 +6766,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 		echo
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	fi
 }
 
@@ -6678,12 +6776,12 @@ function systemd_options_without_ssl_with_hostname_function () {
 	# Numbers 5, 7, 9, 10, 12, and 13 option do not use SSL but have a hostname
 	echo "${bold}${cyan}These options assume you have a host name.${normal}"
 	echo "     No SSL is used, so no List Server or Web Admin."
-	echo "  5  - web admin, file backed sessions, & templates - ${underline}recommended${normal}"
-	echo '  7  - web admin, session recording, & templates'
-	echo '  9  - web admin & file backed sessions'
-	echo '  10 - web admin & session recording'
-	echo '  12 - web admin & templates'
-	echo '  13 - web admin'
+	echo "  5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates - ${underline}recommended${normal}"
+	echo '  7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates'
+	echo '  9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions'
+	echo '  10 - web admin$drawpile_2_point_2_option_text_02 & session recording'
+	echo '  12 - web admin$drawpile_2_point_2_option_text_02 & templates'
+	echo '  13 - web admin$drawpile_2_point_2_option_text_03'
 	echo
 	while :; do
 		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
@@ -6705,38 +6803,38 @@ function systemd_options_without_ssl_with_hostname_options_function () {
 	# Numbers 5, 7, 9, 10, 12, and 13 option do not use SSL but have a hostname
 
 	if [ "$systemd_selection" == "5" ]; then
-		systemd_selection_text="5  - web admin, file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "7" ]; then
-		systemd_selection_text="7  - web admin, session recording, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "9" ]; then
-		systemd_selection_text="9  - web admin & file backed sessions" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "10" ]; then
-		systemd_selection_text="10 - web admin & session recording" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="10 - web admin$drawpile_2_point_2_option_text_02 & session recording" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "12" ]; then
-		systemd_selection_text="12 - web admin & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="12 - web admin$drawpile_2_point_2_option_text_02 & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "13" ]; then
-		systemd_selection_text="13 - w web admin" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="--local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_selection_text="13 - w web admin$drawpile_2_point_2_option_text_03" && echo "Selected - $systemd_selection_text"
+		systemd_configuration="--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
-		systemd_selection_text="5 - web admin, file backed sessions, & templates" && echo "Selected - $systemd_selection_text - ${underline}recommended${normal}"
+		systemd_selection_text="5 - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates" && echo "Selected - $systemd_selection_text - ${underline}recommended${normal}"
 		systemd_selection=5
 		echo
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	fi
 }
 
@@ -6748,11 +6846,11 @@ function systemd_options_without_ssl_without_hostname_function () {
 	echo "      No SSL is used, so no List Server or Web Admin."
 	echo '  14  - all options.'
 	echo "  15  - all options except session recording - ${underline}recommended${normal}"
-	echo '  16  - web admin, session recording, & templates'
-	echo '  17  - web admin & file backed sessions'
-	echo '  18  - web admin & session recording'
-	echo '  19  - web admin & templates'
-	echo '  20  - web admin'
+	echo '  16  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates'
+	echo '  17  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions'
+	echo '  18  - web admin$drawpile_2_point_2_option_text_02 & session recording'
+	echo '  19  - web admin$drawpile_2_point_2_option_text_02 & templates'
+	echo '  20  - web admin$drawpile_2_point_2_option_text_03'
 	echo
 	while :; do
 		read -r -p "${cyan}${bold}Enter a number and hit enter to continue: ${normal}" systemd_selection
@@ -6777,34 +6875,34 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 		sessions_folder_function
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "15" ]; then
 		systemd_selection_text="15 - all options except session recording" && echo "Selected - $systemd_selection_text"
 		echo '         - recommended'
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/" 
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/" 
 	elif [ "$systemd_selection" == "16" ]; then
-		systemd_selection_text="16 - web admin, session recording, & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="16 - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "17" ]; then
-		systemd_selection_text="17 - web admin & file backed sessions" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="17 - web admin$drawpile_2_point_2_option_text_02 & file backed sessions" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "18" ]; then
-		systemd_selection_text="18  - web admin, session recording" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="18  - web admin$drawpile_2_point_2_option_text_02 session recording" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "19" ]; then
-		systemd_selection_text="19  - web admin & templates" && echo "Selected - $systemd_selection_text"
+		systemd_selection_text="19  - web admin$drawpile_2_point_2_option_text_02 & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
 		sudo mkdir -p -v templates
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "20" ]; then
-		systemd_selection_text="20 - web admin" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="--extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/"
+		systemd_selection_text="20 - web admin$drawpile_2_point_2_option_text_03" && echo "Selected - $systemd_selection_text"
+		systemd_configuration="--extauth https://drawpile.net/api/ext-auth/"
 	else
 		echo 'Invalid option selected. Assuming recommended configuration.'
 		systemd_selection_text="15 - all options except session recording" && echo "Selected - $systemd_selection_text ${underline}recommended${normal}"
@@ -6812,7 +6910,7 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 		echo
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/ --report-url http://localhost:$abuse_report_port/" 
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --extauth https://drawpile.net/api/ext-auth/" 
 	fi
 }
 # --------------------------------------------------------------------------------
@@ -6857,14 +6955,32 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		systemd_options_with_ssl_enabled_function
 		systemd_options_with_ssl_enabled_options_function
 	fi
-	
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+		drawpile_abuse_report_systemd="--report-url http://localhost:$abuse_report_port/"
+		systemd_configuration="$systemd_configuration $drawpile_abuse_report_systemd"
+	else
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	fi
+	# --------------------------------------------------------------------------------
 	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
 		systemd_configuration="$systemd_configuration --crypt-key \"$drawpile_srv_crypt_key\""
 	else
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	fi
-		
+	# --------------------------------------------------------------------------------
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		drawpile_web_support_systemd="--websocket-port 27751"
+		systemd_configuration="$systemd_configuration $drawpile_web_support_systemd"
+	else
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	fi
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
 	sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_selection_text =!{h;s!=.*!= '"$systemd_selection_text"'!};${x;\!^$!{s!!systemd_selection_text = '"$systemd_selection_text"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_configuration =!{h;s!=.*!= '"$systemd_configuration"'!};${x;\!^$!{s!!systemd_configuration = '"$systemd_configuration"'!;H};x}' $drawpile_configuration_values_file
@@ -7269,7 +7385,25 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				service_name_to_check_05=drawpile_monitor.service
 				if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
 					drawpile_monitor_loaded=$( systemctl status $service_name_to_check_05 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_05; (.*); vendor.*/\1/p" )
+					# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+					# Check to ensure output is not blank and find it in an alternate way
+					# echo Value: $drawpile_monitor_loaded
+					# echo
+					if [ -z "$drawpile_monitor_loaded" ]; then
+						# echo Oops. Blank!
+						drawpile_monitor_loaded=$( systemctl status $service_name_to_check_05 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_05; (.*); preset:.*/\1/p" )
+						# echo
+					fi
+					# echo Value: $drawpile_monitor_loaded
+					# echo
+					if [ -z "$drawpile_monitor_loaded" ]; then
+						drawpile_monitor_loaded=error
+					fi
+					# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 					drawpile_monitor_status=$( systemctl status $service_name_to_check_05 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+					if [ -z "$drawpile_monitor_status" ]; then
+						drawpile_monitor_status=error
+					fi
 					echo "Service: $service_name_to_check_05"
 					echo "Value: $drawpile_monitor_loaded"
 					echo "Value: $drawpile_monitor_status"
@@ -8171,7 +8305,25 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	service_name_to_check_03=drawpile-listserver.service
 	if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
 		drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# Check to ensure output is not blank and find it in an alternate way
+		# echo Value: $drawpile_listserver_loaded
+		# echo
+		if [ -z "$drawpile_listserver_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); preset:.*/\1/p" )
+			# echo
+		fi
+		# echo Value: $drawpile_listserver_loaded
+		# echo
+		if [ -z "$drawpile_listserver_loaded" ]; then
+			drawpile_listserver_loaded=error
+		fi
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		if [ -z "$drawpile_listserver_status" ]; then
+			drawpile_listserver_status=error
+		fi
 		echo "Service: $service_name_to_check_03"
 		echo "Value: $drawpile_listserver_loaded"
 		echo "Value: $drawpile_listserver_status"
@@ -9069,6 +9221,9 @@ EOF
 
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
+		
+		sudo sed -i -e 's/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g' /var/www/html/drawpile/index.html
+		# sudo sed -i -e 's/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g' /var/www/html/drawpile/index.html
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
@@ -9149,7 +9304,94 @@ EOF
 			echo
 			echo No further guidance will be provided. When you are ready to continue...
 		fi
-		cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
+server {
+	listen *:80;
+	listen [::]:80;
+	
+	server_name $hostname;
+	root /var/www/html/drawpile;
+	
+	error_log /var/log/nginx/localsite.error_log info;
+	
+	location / {
+		try_files \$uri \$uri/ =404;
+	}
+	
+	location /listing/ {
+		proxy_pass http://127.0.0.1:8080/;
+		proxy_redirect default;
+		proxy_set_header X-Real-IP \$remote_addr;
+	}
+	
+	location /admin/ {
+		return 301 https://\$server_name\$request_uri;
+	}
+	
+	location /admin_ui/ {
+		return 301 https://\$server_name\$request_uri;
+	}
+}
+
+server {
+	listen *:443 ssl;
+	listen [::]:443 ssl;
+	
+	server_name $hostname;
+	root /var/www/html/drawpile;
+	
+	ssl_certificate $ssl_certificate;
+	ssl_certificate_key $ssl_private_cert_key;
+
+	location / {
+		return 301 http://\$server_name\$request_uri;
+	}
+
+	location /admin/ {
+		auth_basic "admin";
+		auth_basic_user_file /etc/nginx/passwords;
+		try_files \$uri /admin/index.html =404;
+		
+		location /admin/api/ {
+			proxy_pass http://127.0.0.1:27780/api/;
+			proxy_redirect default;
+		}
+	}
+	
+	location /admin_ui/ {
+		try_files \$uri /admin_ui/index.html =404;
+	}
+	
+	location /drawpile-web/ws {
+		if (\$http_origin != "https://web.drawpile.net") {
+			return 403;
+		}
+		proxy_pass http://localhost:27751;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade \$http_upgrade;
+		proxy_set_header Connection "upgrade";
+		proxy_set_header X-Real-IP \$remote_addr;
+	}
+
+	location /listing/ {
+		return 301 http://\$server_name\$request_uri;
+	}
+	
+	location /listing/admin/ {
+		proxy_pass http://127.0.0.1:8080/admin/;
+		proxy_redirect default;
+	}
+
+	location /listing/sessions/ {
+		proxy_pass http://127.0.0.1:8080/sessions/;
+		proxy_redirect default;
+		proxy_set_header X-Real-IP \$remote_addr;
+	}
+}
+EOF
+		else
+			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
 server {
 	listen *:80;
 	listen [::]:80;
@@ -9223,6 +9465,7 @@ server {
 	}
 }
 EOF
+		fi
 	elif [ "$ssl_encryption_config" == "2" ] || [ "$ssl_encryption_config" != "1" || "$ssl_encryption_config" != "3" ]; then
 		# echo 'Press 2 for Lets Encrypt'
 		# echo Invalid option selected. Assuming option 2 intended.
@@ -9331,7 +9574,83 @@ EOF
 		echo
 		echo "*****${bold}${cyan}Generating systemd configuration for list server and web admin. . .${normal}*****"
 		echo
-	cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
+server {
+        listen *:80;
+        listen [::]:80;
+
+		server_name $hostname;
+        root /var/www/html/drawpile;
+
+        location / {
+			 return 307 https://\$server_name/\$request_uri;
+			# return 307 https://\$host:443\$request_uri;
+			# return 307 https://\$request_uri;
+			# try_files \$uri \$uri/ =404;
+        }
+
+        location /.well-known/acme-challenge/ {
+			# root /var/www/certbot;
+			root /etc/letsencrypt/renewal;
+        }
+}
+
+server {
+	# listen *:80;
+	# listen [::]:80;
+	listen *:443 ssl;
+	listen [::]:443 ssl;
+	
+	server_name $hostname;
+	root /var/www/html/drawpile;
+	
+	ssl_certificate $ssl_certificate;
+	ssl_certificate_key $ssl_private_cert_key;
+	
+	location / {
+			try_files \$uri \$uri/ =404;
+	}
+	
+	location /admin/ {
+			auth_basic "admin";
+			auth_basic_user_file /etc/nginx/passwords;
+			try_files \$uri /admin/index.html =404;
+			location /admin/api/ {
+					proxy_pass http://127.0.0.1:27780/api/;
+					proxy_redirect default;
+			}
+	}
+	
+	location /admin_ui/ {
+		try_files \$uri /admin_ui/index.html =404;
+	}
+	
+	location /drawpile-web/ws {
+		if (\$http_origin != "https://web.drawpile.net") {
+			return 403;
+		}
+		proxy_pass http://localhost:27751;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade \$http_upgrade;
+		proxy_set_header Connection "upgrade";
+		proxy_set_header X-Real-IP \$remote_addr;
+	}
+
+	location /listing/ {
+			proxy_pass http://127.0.0.1:8080/;
+			proxy_redirect default;
+			proxy_set_header X-Real-IP \$remote_addr;
+	}
+	
+	location /listing/admin/ {
+		proxy_pass http://127.0.0.1:8080/admin/;
+		proxy_redirect default;
+	}
+}
+EOF
+		else
+			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
 server {
         listen *:80;
         listen [::]:80;
@@ -9394,6 +9713,7 @@ server {
 	}
 }
 EOF
+		fi
 		# sudo systemctl enable --now nginx
 		# nginx -t -c /etc/nginx/nginx.conf
 
