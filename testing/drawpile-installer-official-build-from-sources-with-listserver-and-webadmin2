@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9951
+drawpilescriptversion=2.9952
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3400,9 +3400,11 @@ echo
 echo '--------------------------------------------------------------------------------'
 
 if [ "$git_clone_dp_checkout" == "1" ]; then
+	git checkout -f feature/qtwasm
+	git pull
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-	:
+	# :
 elif [ "$git_clone_dp_checkout" == "2" ]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -3547,7 +3549,7 @@ function start_drawpile_srv_if_updated_function () {
 			echo
 			sudo systemctl status $service_name_to_check_01 --no-pager
 			sudo systemctl status $service_name_to_check_02 --no-pager
-		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && ( "$drawpile_srv_service_status" == "(running)" || "$drawpile_srv_service_status" != "(running)" ) ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_02"
 			sudo systemctl start --now $service_name_to_check_02
 			echo
@@ -10104,6 +10106,8 @@ comment_EOF_delete
 		git config --global --add safe.directory "$dp_install_loc/Programs/dpwebadmin"
 		# Updates local repo
 		git fetch
+		git checkout -f feature/qtwasm
+		git pull
 		
 		# Checks local commit info
 		git_local_commit=$( git rev-parse HEAD )
@@ -10122,6 +10126,8 @@ comment_EOF_delete
 		echo Downloading dp web admin from github.
 		echo
 		git clone https://github.com/drawpile/dpwebadmin.git
+		git checkout -f feature/qtwasm
+		git pull
 		cd "$dp_install_loc/Programs/dpwebadmin"
 		# Doesn't work
 		# drawpile_dp_webadmin_version_with_git=$( git describe )
