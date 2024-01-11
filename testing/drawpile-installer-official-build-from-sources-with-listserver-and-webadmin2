@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9952
+drawpilescriptversion=2.9953
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3323,17 +3323,23 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 	if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
 		git reset --hard origin/main
 		git_repo_status=currently_up_to_date
+		git checkout -f feature/qtwasm
+		git pull
 	else
 		# Resets any changes made to the local code so it matches the remote code. 
 		# git reset --hard origin/master
 		git reset --hard origin/main
 		git_repo_status=out_of_date
+		git checkout -f feature/qtwasm
+		git pull
 	fi
 else
 	git_repo_status=out_of_date
 	# Use the git hub link to access more information about drawpile on a web browser.
 	git clone https://github.com/drawpile/Drawpile.git
 	cd Drawpile
+	git checkout -f feature/qtwasm
+	git pull
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -3400,8 +3406,6 @@ echo
 echo '--------------------------------------------------------------------------------'
 
 if [ "$git_clone_dp_checkout" == "1" ]; then
-	git checkout -f feature/qtwasm
-	git pull
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	# :
@@ -3410,11 +3414,13 @@ elif [ "$git_clone_dp_checkout" == "2" ]; then
 	echo '--------------------------------------------------------------------------------'
 	echo
 	git checkout -f $drawpile_program_version_release_on_website
+	git pull
 elif [ "$git_clone_dp_checkout" == "3" ]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
 	git checkout -f $drawpile_version_manual_type_for_script
+	git pull
 else
 	echo "This message for git_clone_dp_checkout should not be visible."
 fi
@@ -6605,8 +6611,6 @@ function template_folder_function () {
 #
 function systemd_options_definitions_function () {
 
-
-read -r -p "${bold}${cyan}Would you like to enable the Abuse Report Tool:${normal} " drawpile_abuse_report_installation_status
 	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 		drawpile_abuse_report_systemd="--report-url http://localhost:$abuse_report_port/"
 	elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abuse_report_installation_status" == "N" ] || [ "$drawpile_abuse_report_installation_status" == "no" ] || [ "$drawpile_abuse_report_installation_status" == "NO" ] || [ "$drawpile_abuse_report_installation_status" == "No" ]; then
@@ -10106,8 +10110,6 @@ comment_EOF_delete
 		git config --global --add safe.directory "$dp_install_loc/Programs/dpwebadmin"
 		# Updates local repo
 		git fetch
-		git checkout -f feature/qtwasm
-		git pull
 		
 		# Checks local commit info
 		git_local_commit=$( git rev-parse HEAD )
@@ -10126,8 +10128,6 @@ comment_EOF_delete
 		echo Downloading dp web admin from github.
 		echo
 		git clone https://github.com/drawpile/dpwebadmin.git
-		git checkout -f feature/qtwasm
-		git pull
 		cd "$dp_install_loc/Programs/dpwebadmin"
 		# Doesn't work
 		# drawpile_dp_webadmin_version_with_git=$( git describe )
@@ -10142,7 +10142,9 @@ comment_EOF_delete
 		echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
 		echo
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			git checkout -f dev-2.2
+			# git checkout -f dev-2.2
+			git checkout -f feature/qtwasm
+			git pull
 			echo
 		fi
 		echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
