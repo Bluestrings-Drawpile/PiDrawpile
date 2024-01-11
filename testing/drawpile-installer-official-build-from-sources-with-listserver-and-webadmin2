@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9953
+drawpilescriptversion=2.9954
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -9253,8 +9253,10 @@ EOF
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
-		sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
-		# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		fi
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
@@ -9420,6 +9422,18 @@ server {
 		proxy_set_header X-Real-IP \$remote_addr;
 	}
 }
+
+# Use this block if you want to redirect old website name ($hostname_old) to the new ($hostname_new)
+# Simply remove the first pound (hashtag) symbol in front of the lines below and edit accordingly.
+#
+#server {
+#	server_name \$hostname_old;
+#	return 301 \$scheme://\$hostname_new\$request_uri;
+#
+#	# For pre-0.8.42 installations:
+#	# rewrite ^ \$scheme://a.example.com\$request_uri? permanent;
+#	# https://stackoverflow.com/questions/10531975/how-to-configure-nginx-to-auto-redirect-to-the-main-hostname
+#}
 EOF
 		else
 			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
@@ -9495,6 +9509,18 @@ server {
 		proxy_set_header X-Real-IP \$remote_addr;
 	}
 }
+
+# Use this block if you want to redirect old website name ($hostname_old) to the new ($hostname_new)
+# Simply remove the first pound (hashtag) symbol in front of the lines below and edit accordingly.
+#
+#server {
+#	server_name \$hostname_old;
+#	return 301 \$scheme://\$hostname_new\$request_uri;
+#
+#	# For pre-0.8.42 installations:
+#	# rewrite ^ \$scheme://a.example.com\$request_uri? permanent;
+#	# https://stackoverflow.com/questions/10531975/how-to-configure-nginx-to-auto-redirect-to-the-main-hostname
+#}
 EOF
 		fi
 	elif [ "$ssl_encryption_config" == "2" ] || [ "$ssl_encryption_config" != "1" || "$ssl_encryption_config" != "3" ]; then
@@ -9524,8 +9550,10 @@ EOF
 		sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="https:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		
-		sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
-		# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		fi
 		
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
@@ -9681,6 +9709,18 @@ server {
 		proxy_redirect default;
 	}
 }
+
+# Use this block if you want to redirect old website name ($hostname_old) to the new ($hostname_new)
+# Simply remove the first pound (hashtag) symbol in front of the lines below and edit accordingly.
+#
+#server {
+#	server_name \$hostname_old;
+#	return 301 \$scheme://\$hostname_new\$request_uri;
+#
+#	# For pre-0.8.42 installations:
+#	# rewrite ^ \$scheme://a.example.com\$request_uri? permanent;
+#	# https://stackoverflow.com/questions/10531975/how-to-configure-nginx-to-auto-redirect-to-the-main-hostname
+#}
 EOF
 		else
 			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
@@ -9745,6 +9785,18 @@ server {
 		proxy_redirect default;
 	}
 }
+
+# Use this block if you want to redirect old website name ($hostname_old) to the new ($hostname_new)
+# Simply remove the first pound (hashtag) symbol in front of the lines below and edit accordingly.
+#
+#server {
+#	server_name \$hostname_old;
+#	return 301 \$scheme://\$hostname_new\$request_uri;
+#
+#	# For pre-0.8.42 installations:
+#	# rewrite ^ \$scheme://a.example.com\$request_uri? permanent;
+#	# https://stackoverflow.com/questions/10531975/how-to-configure-nginx-to-auto-redirect-to-the-main-hostname
+#}
 EOF
 		fi
 		# sudo systemctl enable --now nginx
