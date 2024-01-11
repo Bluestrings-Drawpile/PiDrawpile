@@ -1098,6 +1098,16 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_8" ] || echo "$value_description_8"
 		[ -z "$value_description_9" ] || echo "$value_description_9"
 		[ -z "$value_description_10" ] || echo "$value_description_10"
+		[ -z "$value_description_11" ] || echo "$value_description_11"
+		[ -z "$value_description_12" ] || echo "$value_description_12"
+		[ -z "$value_description_13" ] || echo "$value_description_13"
+		[ -z "$value_description_14" ] || echo "$value_description_14"
+		[ -z "$value_description_15" ] || echo "$value_description_15"
+		[ -z "$value_description_16" ] || echo "$value_description_16"
+		[ -z "$value_description_17" ] || echo "$value_description_17"
+		[ -z "$value_description_18" ] || echo "$value_description_18"
+		[ -z "$value_description_19" ] || echo "$value_description_19"
+		[ -z "$value_description_20" ] || echo "$value_description_20"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
@@ -1130,6 +1140,16 @@ function read_stored_config_value_query_function () {
 	value_description_8=""
 	value_description_9=""
 	value_description_10=""
+	value_description_11=""
+	value_description_12=""
+	value_description_13=""
+	value_description_14=""
+	value_description_15=""
+	value_description_16=""
+	value_description_17=""
+	value_description_18=""
+	value_description_19=""
+	value_description_20=""
 }
 
 <<comment_EOF
@@ -3408,7 +3428,7 @@ echo '--------------------------------------------------------------------------
 if [ "$git_clone_dp_checkout" == "1" ]; then
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-	# :
+	:
 elif [ "$git_clone_dp_checkout" == "2" ]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -7571,14 +7591,19 @@ variable_to_read_3="dp_install_loc_9_custom"
 
 value_description_1="${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
 value_description_2=" "
-value_description_3="Used to enable file sharing with Windows devices on your home network."
-value_description_4=" "
-value_description_5="Query 02: option_loc_num"
-value_description_6="     Number selected when selecting download/server set up location."
-value_description_7=" "
-value_description_8="Query 03: dp_install_loc_9_custom"
-value_description_9="     If this has a value, this is the user specified location."
-value_description_10=""
+value_description_3="For the value located above, the values 1-3 specifies file sharing"
+value_description_4="     is set up, while 4 means not set up."
+value_description_5=" "
+value_description_6="Used to enable file sharing with Windows devices on your home network."
+value_description_7="     ${bold}${red}This should not be used for remote servers that are not on your${normal}"
+value_description_8="     ${bold}${red}local network.${normal}"
+value_description_9=" "
+value_description_10="Query 02: option_loc_num"
+value_description_11="     Number selected when selecting download/server set up location."
+value_description_12=" "
+value_description_13="Query 03: dp_install_loc_9_custom"
+value_description_14="     If this has a value, this is the user specified location."
+value_description_15=" "
 
 
 read_stored_config_value_query_function
@@ -9228,8 +9253,8 @@ EOF
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
-		sudo sed -i -e 's/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g' /var/www/html/drawpile/index.html
-		# sudo sed -i -e 's/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g' /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
@@ -9499,6 +9524,8 @@ EOF
 		sudo sed -i -e "s/list-url=\"\/listing\/sessions\/\"/list-url=\"https:\/\/$hostname\/listing\/sessions\/\"/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="https:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		
+		sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+		# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 		
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
@@ -12497,22 +12524,16 @@ EOF
 	echo
 	# --------------------------------------------------------------------------------
 elif [[ ! -d "$option_loc_2" ]]; then
-	echo "Creating file in script directory with server info:"
+	echo "${bold}${cyan}Creating file in script directory with server info:${normal}"
 	echo "     $script_directory/My Server Information.txt"
 	echo
-	echo "Please save this somewhere securely, then delete the file."
+	echo "${bold}${cyan}Please save this somewhere securely, then delete the file.${normal}"
 	echo
 	echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
 	if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
 	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
 	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
 	echo
-	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
-	echo
-	echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
-	if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
-	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
-	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
@@ -12681,7 +12702,8 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
-if [[ -d "$option_loc_2" ]] && [[ "$USER" = "root" || "$USER" = "Root" || "$USER" = "ROOT" || $EUID == 0 ]]; then
+if [[ -d "$option_loc_2" && ( "$USER" = "root" || "$USER" = "Root" || "$USER" = "ROOT" || $EUID == 0 ) ]]; then
+	:
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] || [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]]; then
 		cat <<EOF | sudo tee "$option_loc_2/trusted_shortcuts.sh" >/dev/null
 #!/bin/bash
@@ -12839,14 +12861,27 @@ echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+server_ipv4=$( hostname -I | awk '{ print $1 }' )
+server_ipv6=$( hostname -I | awk '{ print $2 }' )
 echo "${bold}${green}*****Drawpile Server Installation and Setup Complete . . .*****${normal}"
 echo
 drawpile_credits_urls_functions 
 echo
 drawpile_credits_function
 echo
-echo "Device IP Address:"
-hostname -I
+if [[ "$server_ipv4" == "server_ipv6" ]]; then
+	echo "Device IP Address:"
+	echo "     $server_ipv4"
+elif [[ "$server_ipv4" != "server_ipv6" ]]; then
+	echo "Device IP Addresses:"
+	echo "     $server_ipv4"
+	echo "     $server_ipv6"
+else
+	echo "This message should not be visible..."
+	echo "Device IP Addresses:"
+	echo $server_ipv4
+	echo $server_ipv6
+fi
 echo
 echo "To set up remote server administration instead of the web interface, read more"
 echo "here in Google Docs (not recommended):"
