@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9954
+drawpilescriptversion=2.9955
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -8401,6 +8401,10 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	
 	if [[ ! -e  "/usr/local/bin/listserver" ]]; then
 		sudo cp $go_path/bin/listserver /usr/local/bin
+	elif [ "$go_path/bin/listserver" -nt "/usr/local/bin/listserver" ]; then
+		sudo cp $go_path/bin/listserver /usr/local/bin
+	else
+		echo "List server in /usr/local/bin is up to date ..."
 	fi
 	
 	if [[ -e  "$go_path/bin/listserver" ]]; then
