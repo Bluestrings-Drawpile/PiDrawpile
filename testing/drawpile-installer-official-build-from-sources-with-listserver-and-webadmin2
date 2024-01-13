@@ -2582,9 +2582,13 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
-	# Full List
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang libqt5websockets5-dev"
-	program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+	# Full List 
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel"
+	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
+
+	# Full List Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
@@ -2593,28 +2597,46 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
-	# Full List
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang libqt5websockets5-dev"
-	program_list_to_install_optional_dependencies="libmicrohttpd libsodium systemd-devel httpd nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+	# Full List - optional dependencies are slightly different - httpd-core libmicrohttpd-devel libsodium-devel
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel"
+	program_list_to_install_optional_dependencies="httpd libmicrohttpd libsodium libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
+	
+	# Full List unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
+	# program_list_to_install_optional_dependencies="libmicrohttpd libsodium systemd-devel httpd nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv python3-pip libsqlite3-dev policycoreutils clang libqt5websockets5-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+
+	
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv python3-pip libsqlite3-dev policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+	# Unsorted
+	#program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils clang libqt5websockets5-dev"
-	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+	
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2635,32 +2657,36 @@ echo
 # 
 # *********** Actual Dependencies ***********
 # **** Debian Packages (* means in use) *****																										Fedora Alternates (* means in use)
-# cmake * Cross platform open source make system																									cmake							*
-# extra-cmake-modules * Extra modules and scripts for CMake																							extra-cmake-modules				*
-# g++ * compiler 																																	gcc-c++							*
-# git - Git is a fast, scalable, distributed revision control system with an 																		git								*
-#       unusually rich command set that provides both high-level operations and full access to internals.											-								-
-# libgif-dev * library for GIF images (development) (enables animated GIF export)																	giflib-devel.x86_64				*
-# libkf5archive-dev * development files for karchive																								kf5-karchive-devel				*
-# libkf5dnssd-dev * development files for kdnssd (enables local server discovery)																	kf5-kdnssd-devel
-# libminiupnpc-dev * UPnP IGD client lightweight library development files (enables automatic port forwarding)										miniupnpc-devel
-# libqt5network5  * Qt 5 network module																												qt5-qtnetworkauth-devel
-# libqt5svg5-dev * Qt 5 SVG module development files																								qt5-qtsvg-devel					*
-# make - A GNU tool for controlling the generation of executables and other non-source files of a program from the program's source files. 			make							*
-#       Make allows users to build and install packages without any significant knowledge about the details of the build process. The details 		-								-
-#       about how the program should be built are provided for make in the program's makefile.														-								-
-# miniupnpc * UPnP IGD client lightweight library client (enables automatic port forwarding)														miniupnpc-devel					
-# policycoreutils-python-utils - SELinux policy core python utilities																				policycoreutils-python-utils	*
-# qtbase5-dev * Qt 5 base development files																											qt5-qtbase-devel				*
-# qtmultimedia5-dev * APIs for multimedia functionality - development files																			qt5-qtmultimedia-devel			*
-# qttools5-dev * Qt 5 tools development files																										qt5-qttools-devel				
-# zlib-devel - is a general-purpose, patent-free, lossless data compression library which is used by many different programs.						zlib-devel						*
-# cronie - Cronie contains the standard UNIX daemon crond that runs specified programs at scheduled times and related tools. It is a 				cronie							*
-#       fork of the original vixie-cron and has security and configuration enhancements like the ability to use pam and SELinux.					-
-# cargo - Rust's package manager and build tool - that allows Rust projects to declare their various dependencies
-#         and ensure that you'll always get a repeatable build.
-# clang - A C language family front-end for LLVM. The goal of the Clang project is to create a new C, C++, Objective C and Objective C++ 
-#			front-end for the LLVM compiler. Its tools are built as libraries and designed to be loosely-coupled and extensible.
+# cargo - Rust's package manager and build tool - that allows Rust projects to declare their various dependencies									-										
+#         and ensure that you'll always get a repeatable build.																						-										
+# clang - A C language family front-end for LLVM. The goal of the Clang project is to create a new C, C++, Objective C and Objective C++ 			clang									
+#			front-end for the LLVM compiler. Its tools are built as libraries and designed to be loosely-coupled and extensible.					-										
+# cmake * Cross platform open source make system																									cmake									*
+# cronie - Cronie contains the standard UNIX daemon crond that runs specified programs at scheduled times and related tools. It is a 				cronie									*
+#       fork of the original vixie-cron and has security and configuration enhancements like the ability to use pam and SELinux.					-										
+# extra-cmake-modules * Extra modules and scripts for CMake																							extra-cmake-modules						*
+# g++ * compiler 																																	gcc-c++									*
+# git - Git is a fast, scalable, distributed revision control system with an 																		git										*
+#       unusually rich command set that provides both high-level operations and full access to internals.											-										-
+# libgif-dev * library for GIF images (development) (enables animated GIF export)																	giflib-devel.x86_64						*
+# libkf5archive-dev * development files for karchive																								kf5-karchive-devel						*
+# libkf5dnssd-dev * development files for kdnssd (enables local server discovery)																	kf5-kdnssd-devel						
+# libminiupnpc-dev * UPnP IGD client lightweight library development files (enables automatic port forwarding)										miniupnpc-devel							
+# libqt5network5  * Qt 5 network module																												qt5-qtnetworkauth-devel					
+# libqt5svg5-dev * Qt 5 SVG module development files																								qt5-qtsvg-devel							*
+# make - A GNU tool for controlling the generation of executables and other non-source files of a program from the program's source files. 			make									*
+#       Make allows users to build and install packages without any significant knowledge about the details of the build process. The details 		-										-
+#       about how the program should be built are provided for make in the program's makefile.														-										-
+# miniupnpc * UPnP IGD client lightweight library client (enables automatic port forwarding)														miniupnpc-devel							
+# policycoreutils-python-utils - SELinux policy core python utilities																				policycoreutils-python-utils			*
+# python3-gunicorn - Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients or sleepy applications. That is to say; 		python3-gunicorn						*
+#		behind a buffering front-end server such as nginx or lighttpd.																														
+# python-unversioned-command - This package contains /usr/bin/python - the "python" command that runs Python 3.										python-unversioned-command 				*
+# qtbase5-dev * Qt 5 base development files																											qt5-qtbase-devel						*
+# qtmultimedia5-dev * APIs for multimedia functionality - development files																			qt5-qtmultimedia-devel					*
+# qttools5-dev * Qt 5 tools development files																										qt5-qttools-devel						
+# zlib-devel - is a general-purpose, patent-free, lossless data compression library which is used by many different programs.						zlib-devel								*
+# libqt5websockets5-dev * This package contains the development files needed to build Qt applications using Qt 5 Web Sockets library.				qt5-qtwebsockets-devel					*
 
 sudo $package_install_program $program_list_to_install_actual_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
@@ -2668,18 +2694,27 @@ echo
 
 # *********** Optional Dependencies ***********
 # ***** Debian Packages (* means in use) ******																										Fedora Alternates (* means in use)
-# libmicrohttpd-dev * library embedding HTTP server functionality (development, used for remote administration of drawpile server)					libmicrohttpd-devel				*
-# libsodium-dev * Network communication, cryptography and signaturing library - headers (server only, enables external authentication support)		libsodium-devel					*
-# libsystemd-dev * systemd utility library - development files (enable socket drawpile server startup I believe)										systemd-devel
-# mini-httpd * Small HTTP server (Used for creating password for use with NGINX)																	httpd-core
-# nginx * small, powerful, scalable web/proxy server (used for reverse proxy to manage drawpile server in a more secure manner)						nginx
-# openssl * Secure Sockets Layer toolkit - cryptographic utility (used to create SSL key for encrypted drawing sessions)							openssl
-# QtColorPicker - Not chosen for install as it is bundled, but external library is used if available												-								-
-# qt5keychain-dev * It can use KWallet or GNOME Keyring, if one of them is available. Used for Drawpile Password storage.							qtkeychain-qt5-devel
-# libvpx-dev * VP8 and VP9 video codec (development files) - VP8 and VP9 are open video codecs, originally developed by On2 and 					libvpx-devel
-#				released as open source by Google Inc. They are the successor of the VP3 codec, on which the Theora codec was based.				-								-
-# 				This package contains the development libraries, header files needed by programs that want to compile with libvpx.					-								-
-# sqlite3 * Command line interface for SQLite 3, used by script to auto add settings so users don't have to do so.									sqlite							*
+# libmicrohttpd-dev * library embedding HTTP server functionality (development, used for remote administration of drawpile server)					libmicrohttpd-devel	/ libmicrohttpd		*
+#		libmicrohttpd-devel - Development files for libmicrohttpd																															
+#		ibmicrohttpd - is a small C library that is supposed to make it easy to run an HTTP server as part of another application.															
+# libsodium-dev * Network communication, cryptography and signaturing library - headers (server only, enables external authentication support)		libsodium-devel / libsodium				*
+#		libsodium-devel - This package contains librarys and header files for developing applications that use libsodium libraries.															
+#		libsodium - Sodium is a new, easy-to-use software library for encryption, decryption, signatures, password hashing, and more. It is a												
+#				portable, cross-compilable, installable, packageable fork of NaCl, with a compatible API, and an extended API to improve usability											
+#				even further. Its goal is to provide all of the core operations needed to build higher-level cryptographic tools. The design 												
+#				choices emphasize security, and "magic constants" have clear rationales. 																									
+# libsystemd-dev * systemd utility library - development files (enable socket drawpile server startup I believe)									systemd-devel							
+# libvpx-dev * VP8 and VP9 video codec (development files) - VP8 and VP9 are open video codecs, originally developed by On2 and 					libvpx-devel							
+#				released as open source by Google Inc. They are the successor of the VP3 codec, on which the Theora codec was based.				-										-
+# 				This package contains the development libraries, header files needed by programs that want to compile with libvpx.					-										-
+# mini-httpd * Small HTTP server (Used for creating password for use with NGINX)																	httpd-core / httpd						
+#		httpd-core - The httpd-core package contains essential httpd binaries.																												
+#		httpd - The Apache HTTP Server is a powerful, efficient, and extensible web server.																									
+# nginx * small, powerful, scalable web/proxy server (used for reverse proxy to manage drawpile server in a more secure manner)						nginx									
+# openssl * Secure Sockets Layer toolkit - cryptographic utility (used to create SSL key for encrypted drawing sessions)							openssl									
+# qt5keychain-dev * It can use KWallet or GNOME Keyring, if one of them is available. Used for Drawpile Password storage.							qtkeychain-qt5-devel					
+# QtColorPicker - Not chosen for install as it is bundled, but external library is used if available												-										-
+# sqlite3 * Command line interface for SQLite 3, used by script to auto add settings so users don't have to do so.									sqlite									*
 
 sudo $package_install_program $program_list_to_install_optional_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
