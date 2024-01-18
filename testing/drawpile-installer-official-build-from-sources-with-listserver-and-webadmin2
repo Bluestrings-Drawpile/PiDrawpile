@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9955
+drawpilescriptversion=2.9956
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -307,16 +307,26 @@ function debian_update_check_online_working_function () {
 	if grep -q "^# deb cdrom:" $apt_sources_list; then
 		echo "${invis}Debian CD-ROM entry is disabled.${normal}"
 	elif grep -q "^deb cdrom:" $apt_sources_list; then
+		#
+		# Sources List 											--> 	https://wiki.debian.org/SourcesList
+		# Chapter 9. Keeping your Debian system up-to-date		--> 	https://www.debian.org/doc/manuals/debian-faq/uptodate.en.html
+		#
 		echo "${bold}${red}Debian CD-ROM entry is enabled.${normal}"
 		echo
 		echo "Script may not function as intended. Please add a viable update"
 		echo "mirror for use by clicking on activities, click on 'Type to search',"
 		echo "type in 'Software', open 'Software & Updates', click on"
-		echo "'Other Software', and paste in one of the links below. Make sure to"
+		echo "'Other Software', and paste in the links below. Make sure to"
 		echo "disable the 'cdrom' option and click 'Close'."
 		echo
 		echo "${bold}${cyan}For US-based Users:${normal}"
 		echo "deb http://ftp.us.debian.org/debian stable main contrib"
+		echo
+		echo "${bold}${cyan}Example sources.list for Debian 12 - Bookworm:${normal}"
+		echo "deb http://deb.debian.org/debian bookworm main"
+		echo "deb http://deb.debian.org/debian-security/ bookworm-security main"
+		echo "deb http://deb.debian.org/debian bookworm-updates main"
+		echo
 		echo
 		echo "${bold}${cyan}For other locations, consult the Debian Mirrors (worldwide) list:${normal}"
 		echo "     https://www.debian.org/mirror/list"
@@ -3378,23 +3388,23 @@ if [[ -d  "$dp_install_loc/Programs/Drawpile" ]]; then
 	if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
 		git reset --hard origin/main
 		git_repo_status=currently_up_to_date
-		git checkout -f feature/qtwasm
-		git pull
+		# git checkout -f feature/qtwasm
+		# git pull
 	else
 		# Resets any changes made to the local code so it matches the remote code. 
 		# git reset --hard origin/master
 		git reset --hard origin/main
 		git_repo_status=out_of_date
-		git checkout -f feature/qtwasm
-		git pull
+		# git checkout -f feature/qtwasm
+		# git pull
 	fi
 else
 	git_repo_status=out_of_date
 	# Use the git hub link to access more information about drawpile on a web browser.
 	git clone https://github.com/drawpile/Drawpile.git
 	cd Drawpile
-	git checkout -f feature/qtwasm
-	git pull
+	# git checkout -f feature/qtwasm
+	# git pull
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -4983,6 +4993,12 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	echo "Storing value and moving on."
 	dns_choice=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo "This step is primarily intended for small servers ran from home with a dynamic IP address"
+	echo "which may change without notice, as these have options to automatically update the IP address"
+	echo "with the service. FreeDNS.afraid.org, No-IP, and DuckDNS are great options for low cost servers"
+	echo "to run from home. However, a paid hostname option will allow for greater security and versatility"
+	echo "with server settings."
+	echo
 	echo "${underline}https://freedns.afraid.org/${normal}"
 	echo "${bold}Pros:${normal} Free registration, renew hostname every six months."
 	echo "${bold}Cons:${normal} Minor additional setup with script guided help required, guided setup."
@@ -5003,8 +5019,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "${underline}Note:${normal}"
 	echo "      If you have purchased your own domain name, usually they will provide the ability to set"
 	echo "      a DNS A-record for you. In which case, this step is not needed and can be safely skipped."
-	echo "      This step is primarily intended for small servers ran from home with a dynamic IP address"
-	echo "      which may change without notice."
+	echo "      Some services are listed below"
+	echo "           https://porkbun.com/products/domains"
+	echo "           https://domains.squarespace.com/"
 	echo
 	echo 'Do you want to use freeDNS.afraid.org, No-IP, DuckDNS, or skip this step?'
 	echo
@@ -5391,8 +5408,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	fi
 	echo
 	echo 'If you do not have one, simply leave it blank and hit enter'
-	echo 'twice. However, it is highly recommended to have one, they'
-	echo 'are free after all!'
+	echo 'twice. However, it is highly recommended to have one. They '
+	echo 'can be available for free or low cost and makes it easier for'
+	echo 'users to connect to your server.'
 	echo
 	echo "${bold}Note:${normal} If you do make a mistake, you can always run"
 	echo "Option ${underline}6 - Change all startup options.${normal} via the script"
@@ -5525,7 +5543,6 @@ function generate_self_signed_ssl () {
 		else
 			ssl_country="AU"
 		fi
-		sudo sed -i '\!^ssl_country =!{h;s!=.*!= '"$ssl_country"'!};${x;\!^$!{s!!ssl_country = '"$ssl_country"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -5549,7 +5566,6 @@ function generate_self_signed_ssl () {
 		else
 			ssl_state="Some-State"
 		fi
-		sudo sed -i '\!^ssl_state =!{h;s!=.*!= '"$ssl_state"'!};${x;\!^$!{s!!ssl_state = '"$ssl_state"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -5573,7 +5589,6 @@ function generate_self_signed_ssl () {
 		else
 			ssl_locality="Some-City"
 		fi
-		sudo sed -i '\!^ssl_locality =!{h;s!=.*!= '"$ssl_locality"'!};${x;\!^$!{s!!ssl_locality = '"$ssl_locality"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -5598,7 +5613,6 @@ function generate_self_signed_ssl () {
 		else
 			ssl_organization="Internet Widgits Pty Ltd"
 		fi
-		sudo sed -i '\!^ssl_organization =!{h;s!=.*!= '"$ssl_organization"'!};${x;\!^$!{s!!ssl_organization = '"$ssl_organization"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -5623,7 +5637,6 @@ function generate_self_signed_ssl () {
 		else
 			ssl_unitname="Collaborating Artists"
 		fi
-		sudo sed -i '\!^ssl_unitname =!{h;s!=.*!= '"$ssl_unitname"'!};${x;\!^$!{s!!ssl_unitname = '"$ssl_unitname"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -5647,10 +5660,15 @@ function generate_self_signed_ssl () {
 		else
 			ssl_email="noemail@noemail.com"
 		fi
-		sudo sed -i '\!^ssl_email =!{h;s!=.*!= '"$ssl_email"'!};${x;\!^$!{s!!ssl_email = '"$ssl_email"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
+	sudo sed -i '\!^ssl_country =!{h;s!=.*!= '"$ssl_country"'!};${x;\!^$!{s!!ssl_country = '"$ssl_country"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_state =!{h;s!=.*!= '"$ssl_state"'!};${x;\!^$!{s!!ssl_state = '"$ssl_state"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_locality =!{h;s!=.*!= '"$ssl_locality"'!};${x;\!^$!{s!!ssl_locality = '"$ssl_locality"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_organization =!{h;s!=.*!= '"$ssl_organization"'!};${x;\!^$!{s!!ssl_organization = '"$ssl_organization"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_unitname =!{h;s!=.*!= '"$ssl_unitname"'!};${x;\!^$!{s!!ssl_unitname = '"$ssl_unitname"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^ssl_email =!{h;s!=.*!= '"$ssl_email"'!};${x;\!^$!{s!!ssl_email = '"$ssl_email"'!;H};x}' $drawpile_configuration_values_file
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -5881,8 +5899,25 @@ function generate_lets_encrypt_ssl () {
 	echo
 	pause
 	echo 
+	drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+	certbot_version=$( certbot --version | awk '{ print $2 }' )
 	# sudo certbot certificates
-	sudo certbot certonly --nginx -d $hostname
+	if [[ ( "$certbot_version" = "2.0.0" || "$certbot_version" > "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) || ( "$certbot_version" < "2.0.0" && $drawpile_srv_version_stripped < "2.2.0" ) || (( "$certbot_version" < "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" )) ]]; then
+		#					First condition		Second condition	Third Condition
+		# certbot			2.0.0 and Newer		1.9.9 and Older		1.9.9 and Older
+		# drawpile-srv		2.2.0 and Newer		2.1.x and Older		2.2.0 and Newer
+		# For first grouped condition, Should be ECDSA / Elliptical by default with Certbot 2.0 or greater, which should not be an issue for Drawpile-srv ver 2.2.0 or greater.
+		# For second grouped condition, if Certbot is 1.9.9 and older and the Drawpile-srv is 2.1.x and older, it should default to RSA, which will work fine with the server.
+		# For third condition, will use RSA type. Script will account for this and act accordingly.
+		sudo certbot certonly --nginx -d $hostname
+	elif [[ "$certbot_version" = "2.0.0" || "$certbot_version" > "2.0.0" ]] && [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
+		# certbot			2.0.0 and Newer
+		# drawpile-srv		2.1.x and Older
+		# Should be RSA type, but is ECDSA / Elliptical by default with Certbot 2.0 or greater, won't work with Drawpile-srv ver 2.1.x or older. Need special argument to generate RSA.
+		sudo certbot certonly --nginx -d $hostname --key-type rsa
+	else
+		echo "This message should not be visible for Let's Encrypt Cert type to generate."
+	fi
 	# sudo certbot certonly --nginx -d example.hostwebsite.com
 
 	if sudo test -e  "/etc/letsencrypt/live/$hostname/fullchain.pem"; then
@@ -5989,18 +6024,29 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 		echo "${invis}No SSL being used.${normal}"
 	fi
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "${underline}Self Signed Certificate${normal}"
-	echo "${bold}Pros:${normal} No registration, renew cert via script every year."
-	echo "${bold}Cons:${normal} If script does not update SSL cert, users cannot connect."
-	echo '      Requires users to replace cert or cannot connect.'
-	echo '      Also less trusted on web browsers due to it being self signed.'
+	echo "${bold}${underline}Self Signed Certificate${normal}"
+	echo "${bold}${green}Pros:${normal}"
+	echo "  * No registration"
+	echo "  * Renew cert via automated script every year."
+	echo "${bold}${red}Cons:${normal}"
+	echo "  * If script does not update SSL cert, users cannot connect."
+	echo '  * Requires users to replace cert in app or cannot connect.'
+	echo '  * Also less trusted on web browsers due to it being self signed.'
+	echo '  * Drawpile web users will need to manually install certificate in order to'
+	echo '         use the web version of Drawpile on the server. There is no other way'
+	echo '         to get around this issue if you use self signed certificates (and'
+	echo '         a free hostname, generally speaking).'
 	echo 
-	echo "${underline}Let's Encrypt ${normal}"
-	echo "${bold}Pros:${normal} Free, simple setup, only slightly more complex."
-	echo '      Creates 3rd party signed certificate.'
-	echo "${bold}Cons:${normal} 'Should' be automated with certbot."
-	echo '      May not be available when using free hostnames as there'
-	echo '      are too many hostnames using it for SSL encryption.'
+	echo "${bold}${underline}Let's Encrypt ${normal}"
+	echo "${bold}${green}Pros:${normal}"
+	echo "  * Free to use, simple setup, only slightly more complex."
+	echo '  * Creates 3rd party signed certificate from Certificate Authority'
+	echo '  * Works well with paid domains, from Squarespace or other services.'
+	echo "${bold}${red}Cons:${normal}"
+	echo '  * May not be available when using free hostnames as there are too many'
+	echo '         hostnames using it for SSL encryption. To increase chances of'
+	echo '         useability, one should use a hostname from FreeDNS with as few'
+	echo '         as possible users of a particular domain name (5 or less).'
 	echo
 	echo "${bold}${red}IMPORTANT NOTE:${normal} Selecting option 3 will prevent you from using"
 	echo "the list server function or web admin function. Selecting this option also changes"
@@ -6194,6 +6240,46 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 else
 	echo "This message should not be visible."
 fi
+echo
+echo "${bold}${cyan}***** Determine SSL algorithm for server startup . . .*****${normal}"
+echo
+# --------------------------------------------------------------------------------
+#  --ssl-cert <certificate>                 SSL certificate file
+#  --ssl-key <key>                          SSL key file
+#  --ssl-key-algorithm <algorithm>          SSL key algorithm: guess (the
+#                                           default), rsa, ec, dsa or dh.
+# --------------------------------------------------------------------------------
+if [ "$ssl_encryption_config" == "1" ]; then
+	# 1 - Self Signed
+	echo "Self Signed: RSA type certificate."
+	ssl_cert_and_key_startup_confg="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+elif [ "$ssl_encryption_config" == "2" ]; then
+	# 2 - Let's Encrypt
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		lets_encrypt_cert_type=$( sudo certbot certificates | grep -i "Key Type:" | awk '{ print $3 }' )
+		if [[ "$lets_encrypt_cert_type" == "RSA" ]]; then
+			echo "Lets Encrypt: RSA type certificate."
+			ssl_cert_and_key_startup_confg="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+		elif [[ "$lets_encrypt_cert_type" == "ECDSA" ]]; then
+			echo "Lets Encrypt: ECDSA type elliptic certificate."
+			ssl_cert_and_key_startup_confg="--ssl-key-algorithm ec --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+		else
+			echo "${bold}${red}Certificate type unknown, will hope for the best.${normal}"
+			# Not specifying 'ssl-key-algorithm' lets the server try to decide and select the appropriate cert type.
+			ssl_cert_and_key_startup_confg="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+		fi
+	elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
+		ssl_cert_and_key_startup_confg="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+	else
+		echo "${bold}${red}This option for Drawpile 2.1.x and SSL key algorithm detection should not be visible.${normal}"
+	fi
+elif [ "$ssl_encryption_config" == "3" ]; then
+	# 3 - No SSL. Do nothing as no error was detected.
+	echo "No SSL certificate."
+else
+	echo "${bold}${red}This option for SSL key algorithm detection should not be visible.${normal}"
+fi
+
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -6506,6 +6592,7 @@ if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; th
 	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
 	echo
 fi
+
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
 
 echo 'Modifying drawpile-srv.service . . .'
@@ -6768,22 +6855,22 @@ function systemd_options_with_ssl_enabled_options_function () {
 		sessions_record_folder_function
 		template_folder_function
 		sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "2" ]; then
 		systemd_selection_text="2 - all options except session recording" && echo "Selected - $systemd_selection_text"
 		echo '         - recommended'
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "3" ]; then
 		systemd_selection_text="3 - web admin,$drawpile_2_point_2_option_text_01 session recording, ssl, & templates." && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "4" ]; then
 		systemd_selection_text="4 - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "5" ]; then
 		systemd_selection_text="5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
@@ -6792,7 +6879,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 	elif [ "$systemd_selection" == "6" ]; then
 		systemd_selection_text="6  - web admin,$drawpile_2_point_2_option_text_01 session recording, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "7" ]; then
 		systemd_selection_text="7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
@@ -6801,7 +6888,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 	elif [ "$systemd_selection" == "8" ]; then
 		systemd_selection_text="8  - web admin,$drawpile_2_point_2_option_text_01 ssl, & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "9" ]; then
 		systemd_selection_text="9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
@@ -6812,7 +6899,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "11" ]; then
 		systemd_selection_text="11 - web admin$drawpile_2_point_2_option_text_02 & ssl" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="$ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "12" ]; then
 		systemd_selection_text="12 - web admin$drawpile_2_point_2_option_text_02 & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
@@ -6827,7 +6914,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 		echo
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	fi
 }
 
@@ -7224,68 +7311,275 @@ function nginx_password_function () {
 echo "${bold}${cyan}*****     Setting up NGINX for remote authentication     *****${normal}"
 echo "${bold}${cyan}*****             for Server Administration.             *****${normal}"
 echo
-echo 'Please type in a username you wish to use for making changes to your drawpile'
-echo 'server. If you make a mistake or need to update the server login, open a new'
-echo 'terminal window and type in the following:'
-echo
-echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
-echo
-echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
-echo "     Certain portions of the script require storing your username and password"
-echo "     in plain text format on the server."
-echo
-echo "     The purpose is so the list server gains access to the admin interface"
-echo "     to automatically list sessions that are hosted on the server and have"
-echo "     a default username and login for the new web admin interface page."
-echo
-echo "     Drawpile-Monitor uses this to gain access to the admin API to auto"
-echo "     moderate sessions, usernames, and session aliases. This will only"
-echo "     be stored for this one should you choose to utilize this feature."
-echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
-echo
-echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
-echo
-read -r -p "Enter username                    : " nginx_username_1
-read -r -p "Enter username again              : " nginx_username_2
-
-while [ $nginx_username_1 != $nginx_username_2 ]
-do
+function nginx_username_and_password_function () {
+	nginx_username_and_password_reuse_test_condition="false"
+	echo 'Please type in a username you wish to use for making changes to your drawpile'
+	echo 'server. If you make a mistake or need to update the server login, open a new'
+	echo 'terminal window and type in the following:'
 	echo
-		echo "Usernames entered do not match!"
+	echo 'sudo htpasswd -bc /etc/nginx/passwords USERNAME PASSWORD'
 	echo
+	echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+	echo "     Certain portions of the script require storing your username and password"
+	echo "     in plain text format on the server."
+	echo
+	echo "     The purpose is so the list server gains access to the admin interface"
+	echo "     to automatically list sessions that are hosted on the server and have"
+	echo "     a default username and login for the new web admin interface page."
+	echo
+	echo "     Drawpile-Monitor uses this to gain access to the admin API to auto"
+	echo "     moderate sessions, usernames, and session aliases. This will only"
+	echo "     be stored for this one should you choose to utilize this feature."
+	echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+	echo
+	echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
+	echo
+	login_credentials_length_minimum="14"
+	while :; do
 		read -r -p "Enter username                    : " nginx_username_1
 		read -r -p "Enter username again              : " nginx_username_2
-done
-echo
-echo "Server Administration username is : $nginx_username_1"
-echo
-echo
-read -r -p "Enter password                    : " nginx_htpasswd_1
-read -r -p "Enter password again              : " nginx_htpasswd_2
-while [ $nginx_htpasswd_1 != $nginx_htpasswd_2 ]
-do
+		nginx_username_length_1=${#nginx_username_1}
+		nginx_username_length_2=${#nginx_username_2}
+		echo
+		if [[ "$nginx_username_1" != "$nginx_username_2" ]]; then
+			echo "${bold}${red}Usernames entered do not match!${normal}"
+			echo
+		elif (( "$nginx_username_length_1" < "$login_credentials_length_minimum" || "$nginx_username_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
+			echo
+		else
+			break
+		fi
+	done
+	echo "${bold}${green}Server Administration username is :${normal} $nginx_username_1"
 	echo
-		echo "Passwords entered do not match!"
-	echo
+	while :; do
 		read -r -p "Enter password                    : " nginx_htpasswd_1
 		read -r -p "Enter password again              : " nginx_htpasswd_2
-done
-echo
-echo "Server Administration password is : $nginx_htpasswd_1"
-echo
-if ! sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"; then
-	command_die "${bold}${red}Command to generate username and password failed.${normal}"
+		nginx_password_length_1=${#nginx_htpasswd_1}
+		nginx_password_length_2=${#nginx_htpasswd_2}
+		echo
+		if [[ "$nginx_htpasswd_1" != "$nginx_htpasswd_2" ]]; then
+			echo "${bold}${red}Passwords entered do not match!${normal}"
+			echo
+		elif (( "$nginx_password_length_1" < "$login_credentials_length_minimum" || "$nginx_password_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
+			echo
+		elif [[ "$nginx_username_1" == "$nginx_htpasswd_2" ]]; then
+			echo "${bold}${red}For security reasons, the username and password${normal}"
+			echo "${bold}${red}cannot be the same. Please try again.${normal}"
+			echo
+		else
+			break
+		fi
+	done
+	echo "${bold}${green}Server Administration password is :${normal} $nginx_htpasswd_1"
+	echo
+	if ! sudo htpasswd -bc /etc/nginx/passwords "$nginx_username_1" "$nginx_htpasswd_1"; then
+		command_die "${bold}${red}Command to generate username and password failed.${normal}"
+	fi
+}
+
+if [[ -e "/etc/nginx/passwords" ]]; then
+	echo "${bold}${green}Located password file: /etc/nginx/passwords${normal}"
+	echo
+	echo "${bold}${cyan}Contains the following usernames and encoded passwords${normal}"
+	echo "${bold}${cyan}     in format USERNAME:PASSWORD (encoded, not human readable)${normal}"
+	cat /etc/nginx/passwords
+	echo
+	echo 
+	echo "${bold}${cyan}How would you like to proceed?${normal}"
+	echo " ${cyan}1 - Reuse existing username(s) and password(s)${normal}"
+	echo "       ${bold}${red}Note:${normal} Will display first three characters of password"
+	echo "       to verify successful retrieval of password."
+	echo " ${cyan}2 - Clear all data and create new username and password${normal}"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Please type 1 or 2:${normal} " nginx_username_and_password_reuse
+		echo
+		if (( "$nginx_username_and_password_reuse" >= "1" && "$nginx_username_and_password_reuse" <= "2" )) ; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$nginx_username_and_password_reuse" == "1" ]; then
+		# 1 - Reuse existing username(s) and password(s)
+		nginx_username_encoded_1=$( grep -m 1 "nginx_username_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		nginx_htpasswd_encoded_1=$( grep -m 1 "nginx_htpasswd_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+		if [ -z "$nginx_username_encoded_1" ] || [ -z "$nginx_htpasswd_encoded_1" ]; then
+			echo "${bold}${red}Wasn't able to read username and/or password from:${normal} $drawpile_configuration_values_file"
+			echo "${bold}${red}Regenerating username and password.${normal}"
+			echo
+			nginx_username_and_password_function
+		else
+			#Value not null, proceeding.
+			nginx_username_1="$(echo "$nginx_username_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			
+			nginx_htpasswd_1="$(echo "$nginx_htpasswd_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			nginx_htpasswd_short_1=${nginx_htpasswd_1:0:3}
+			
+			echo "${bold}${green}Username retrieved for script     :${normal} $nginx_username_1"
+			echo "${bold}${green}Password retrieved for script     :${normal} $nginx_htpasswd_short_1"
+			nginx_username_and_password_reuse_test_condition="true"
+		fi
+	elif [ "$nginx_username_and_password_reuse" == "2" ]; then
+		# 2 - Clear all data and create new username and password
+		nginx_username_and_password_function
+	else
+		echo "This message should not be visible."
+	fi
+else
+	nginx_username_and_password_function
 fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo
+function nginx_username_and_password_admin_ui_function () {
+	nginx_username_and_password_admin_ui_reuse_test_condition="false"
+	echo "${bold}${green}This will be your username and password for logging into the new ${normal}"
+	echo "${bold}${green}web admin interface.${normal}"
+	echo
+	echo "${bold}${green}This is necessary to help enforce security and prevent unauthorized${normal}"
+	echo "${bold}${green}access. If you select later to enable Fail2Ban, failing multiple ${normal}"
+	echo "${bold}${green}times within a short period, you will be locked out until the${normal}"
+	echo "${bold}${green}configured duration expires.${normal}"
+	echo
+	login_credentials_length_minimum="14"
+	while :; do
+		read -r -p "Enter username                    : " nginx_username_admin_ui_1
+		read -r -p "Enter username again              : " nginx_username_admin_ui_2
+		nginx_username_admin_ui_length_1=${#nginx_username_admin_ui_1}
+		nginx_username_admin_ui_length_2=${#nginx_username_admin_ui_2}
+		echo
+		if [[ "$nginx_username_admin_ui_1" != "$nginx_username_admin_ui_2" ]]; then
+			echo "${bold}${red}Usernames entered do not match!${normal}"
+			echo
+		elif (( "$nginx_username_admin_ui_length_1" < "$login_credentials_length_minimum" || "$nginx_username_admin_ui_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
+			echo
+		elif [[ "$nginx_username_admin_ui_1" == "$nginx_username_1" ]] || [[ "$nginx_username_admin_ui_1" == "$nginx_htpasswd_2" ]]; then
+			echo "${bold}${red}For security reasons, the username cannot be${normal}"
+			echo "${bold}${red}reused. Please try again.${normal}"
+			echo
+		else
+			break
+		fi
+	done
+	echo "${bold}${green}New Web Admin username is         :${normal} $nginx_username_admin_ui_1"
+	echo
+	while :; do
+		read -r -p "Enter password                    : " nginx_htpasswd_admin_ui_1
+		read -r -p "Enter password again              : " nginx_htpasswd_admin_ui_2
+		nginx_htpasswd_admin_ui_length_1=${#nginx_htpasswd_admin_ui_1}
+		nginx_htpasswd_admin_ui_length_2=${#nginx_htpasswd_admin_ui_2}
+		echo
+		if [[ "$nginx_htpasswd_admin_ui_1" != "$nginx_htpasswd_admin_ui_2" ]]; then
+			echo "${bold}${red}Passwords entered do not match!${normal}"
+			echo
+		elif (( "$nginx_htpasswd_admin_ui_length_1" < "$login_credentials_length_minimum" || "$nginx_htpasswd_admin_ui_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
+			echo
+		elif [[ "$nginx_username_admin_ui_1" == "$nginx_htpasswd_admin_ui_2" ]]; then
+			echo "${bold}${red}For security reasons, the username and password${normal}"
+			echo "${bold}${red}cannot be the same. Please try again.${normal}"
+			echo
+		elif [[ "$nginx_htpasswd_admin_ui_1" == "$nginx_username_1" ]] || [[ "$nginx_htpasswd_admin_ui_1" == "$nginx_htpasswd_2" ]]; then
+			echo "${bold}${red}For security reasons, the password cannot be${normal}"
+			echo "${bold}${red}reused. Please try again.${normal}"
+			echo
+		else
+			break
+		fi
+	done
+	echo "${bold}${green}New Web Admin password is         :${normal} $nginx_htpasswd_admin_ui_1"
+	echo
+	if ! sudo htpasswd -bc /etc/nginx/passwords-admin-ui "$nginx_username_admin_ui_1" "$nginx_htpasswd_admin_ui_1"; then
+		command_die "${bold}${red}Command to generate username and password failed.${normal}"
+	fi
+}
+
+
+if [[ -e "/etc/nginx/passwords-admin-ui" ]]; then
+	echo "${bold}${green}Located password file: /etc/nginx/passwords-admin-ui${normal}"
+	echo
+	echo "${bold}${cyan}Contains the following usernames and encoded passwords${normal}"
+	echo "${bold}${cyan}     in format USERNAME:PASSWORD (encoded, not human readable)${normal}"
+	cat /etc/nginx/passwords-admin-ui
+	echo
+	echo 
+	echo "${bold}${cyan}How would you like to proceed?${normal}"
+	echo " ${cyan}1 - Reuse existing username(s) and password(s)${normal}"
+	echo "       ${bold}${red}Note:${normal} Will display first three characters of password"
+	echo "       to verify successful retrieval of password."
+	echo " ${cyan}2 - Clear all data and create new username and password${normal}"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Please type 1 or 2:${normal} " nginx_username_and_password_admin_ui_reuse
+		echo
+		if (( "$nginx_username_and_password_admin_ui_reuse" >= "1" && "$nginx_username_and_password_admin_ui_reuse" <= "2" )) ; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	if [ "$nginx_username_and_password_admin_ui_reuse" == "1" ]; then
+		# 1 - Reuse existing username(s) and password(s)
+		nginx_username_admin_ui_encoded_1=$( grep -m 1 "nginx_username_admin_ui_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		nginx_htpasswd_admin_ui_encoded_1=$( grep -m 1 "nginx_htpasswd_admin_ui_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+		if [ -z "$nginx_username_admin_ui_encoded_1" ] || [ -z "$nginx_htpasswd_admin_ui_encoded_1" ]; then
+			echo "${bold}${red}Wasn't able to read username and/or password from:${normal} $drawpile_configuration_values_file"
+			echo "${bold}${red}Regenerating username and password.${normal}"
+			echo
+			nginx_username_and_password_admin_ui_function
+		else
+			#Value not null, proceeding.
+			nginx_username_admin_ui_1="$(echo "$nginx_username_admin_ui_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			
+			nginx_htpasswd_admin_ui_1="$(echo "$nginx_htpasswd_admin_ui_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			nginx_htpasswd_admin_ui_short_1=${nginx_htpasswd_admin_ui_1:0:3}
+			
+			echo "${bold}${green}Username retrieved for script     :${normal} $nginx_username_admin_ui_1"
+			echo "${bold}${green}Password retrieved for script     :${normal} $nginx_htpasswd_admin_ui_short_1"
+			nginx_username_and_password_admin_ui_reuse_test_condition="true"
+		fi
+	elif [ "$nginx_username_and_password_admin_ui_reuse" == "2" ]; then
+		# 2 - Clear all data and create new username and password
+		nginx_username_and_password_admin_ui_function
+	else
+		echo "This message should not be visible."
+	fi
+else
+	nginx_username_and_password_admin_ui_function
+fi
+echo
+echo '--------------------------------------------------------------------------------'
 echo
 echo 'Modifying file nginx.conf for remote administration of the Drawpile Server.'
 echo
 
 # Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
 nginx_username_encoded_1="$(echo "$nginx_username_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+nginx_username_admin_ui_encoded_1="$(echo "$nginx_username_admin_ui_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
 # echo "Value Encoded $nginx_username_encoded_1"
 
 # Used for List Server to read hosted sessions and list them automatically, even with special characters being used.
 nginx_htpasswd_encoded_1="$(echo "$nginx_htpasswd_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
+nginx_htpasswd_admin_ui_encoded_1="$(echo "$nginx_htpasswd_admin_ui_1" | python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.readline().strip(), safe=""))')"
 # echo "Value Encoded $nginx_htpasswd_encoded_1"
 
 # To be used later with server management scripts, to decode URL encoded usernames/passwords
@@ -7328,11 +7622,18 @@ comment_server_management_script_later
 
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
 
-sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "Server Administration"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
+sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "admin"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
 sudo nginx -s reload
 
-sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
-sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+
+if [[ "$nginx_username_and_password_reuse_test_condition" == "false" ]]; then
+	sudo sed -i '\!^nginx_username_encoded_1 =!{h;s!=.*!= '"$nginx_username_encoded_1"'!};${x;\!^$!{s!!nginx_username_encoded_1 = '"$nginx_username_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^nginx_htpasswd_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_encoded_1 = '"$nginx_htpasswd_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+fi
+if [[ "$nginx_username_and_password_admin_ui_reuse_test_condition" == "false" ]]; then
+	sudo sed -i '\!^nginx_username_admin_ui_encoded_1 =!{h;s!=.*!= '"$nginx_username_admin_ui_encoded_1"'!};${x;\!^$!{s!!nginx_username_admin_ui_encoded_1 = '"$nginx_username_admin_ui_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+	sudo sed -i '\!^nginx_htpasswd_admin_ui_encoded_1 =!{h;s!=.*!= '"$nginx_htpasswd_admin_ui_encoded_1"'!};${x;\!^$!{s!!nginx_htpasswd_admin_ui_encoded_1 = '"$nginx_htpasswd_admin_ui_encoded_1"'!;H};x}' $drawpile_configuration_values_file
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -8291,13 +8592,19 @@ echo '--------------------------------------------------------------------------
 echo
 echo "${bold}${cyan}*****Drawpile Server Database Prep . . . *****${normal}"
 echo
-# sudo /etc/init.d/nginx restart
-# sudo nginx -s reload
-# sudo /etc/init.d/nginx restart
 
-sudo nginx -s reload
-sudo systemctl restart nginx
-wait $!
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	# Wrapped in if-statement in order to avoid error message on Fedora:
+	#	nginx: [error] open() "/run/nginx.pid" failed (2: No such file or directory)
+	
+	# sudo /etc/init.d/nginx restart
+	# sudo nginx -s reload
+	# sudo /etc/init.d/nginx restart
+
+	sudo nginx -s reload
+	sudo systemctl restart nginx
+	wait $!
+fi
 
 # Abuse Report String
 if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
@@ -8458,11 +8765,15 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		sudo free -m
 		echo
 		echo "Please copy output from terminal for diagnostic purposes."
-		# No longer needed I think
-		# echo "${bold}${red}Script will exit in 30 seconds.${normal}"
+		echo "Clearing 'go' cache of files, this sometimes causes failure."
+		echo
+		# https://www.adityathebe.com/how-to-clean-go-build-cache/
+		go clean -cache
+		echo
+		echo "${bold}${red}Script will exit in 30 seconds.${normal}"
 		echo
 		sleep 30
-		# exit
+		exit
 	fi
 
 	echo
@@ -9293,8 +9604,13 @@ EOF
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
-			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, you must first manually install the certificate from the server (which is good for 1 year). Once installed, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			
+			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			
+			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<p>To install a cert in Chrome, click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files(\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>/g" /var/www/html/drawpile/index.html
+
+			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
 		fi
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
@@ -9376,6 +9692,7 @@ EOF
 			echo
 			echo No further guidance will be provided. When you are ready to continue...
 		fi
+		# echo 'Press 1 for Self Signed Certificates'
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null
 server {
@@ -9389,6 +9706,7 @@ server {
 	
 	location / {
 		try_files \$uri \$uri/ =404;
+		# This has to remain available, or the client will refuse to add the list server.
 	}
 	
 	location /listing/ {
@@ -9417,7 +9735,9 @@ server {
 	ssl_certificate_key $ssl_private_cert_key;
 
 	location / {
-		return 301 http://\$server_name\$request_uri;
+		try_files \$uri \$uri/ =404;
+		# Otherwise users can't access HTTPS page to download cert and manually install it to use web version of Drawpile.
+		# return 301 http://\$server_name\$request_uri;
 	}
 
 	location /admin/ {
@@ -9432,6 +9752,8 @@ server {
 	}
 	
 	location /admin_ui/ {
+		auth_basic "admin_ui";
+		auth_basic_user_file /etc/nginx/passwords-admin-ui;
 		try_files \$uri /admin_ui/index.html =404;
 	}
 	
@@ -9530,6 +9852,8 @@ server {
 	}
 	
 	location /admin_ui/ {
+		auth_basic "admin_ui";
+		auth_basic_user_file /etc/nginx/passwords-admin-ui;
 		try_files \$uri /admin_ui/index.html =404;
 	}
 
@@ -9573,7 +9897,7 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "*****${bold}${cyan}Editing index.html file for list server . . .${normal}*****"
+		echo "${bold}${cyan}*****Editing index.html file for list server . . .*****${normal}"
 		echo
 		# --------------------------------------------------------------------------------
 		# This section below set to modify List server page with server specific information.
@@ -9590,8 +9914,8 @@ EOF
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="https:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
-			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 		fi
 		
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
@@ -9674,6 +9998,7 @@ EOF
 		echo
 		echo "*****${bold}${cyan}Generating systemd configuration for list server and web admin. . .${normal}*****"
 		echo
+		# echo 'Press 2 for Lets Encrypt'
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 			cat <<EOF | sudo tee /etc/nginx/conf.d/localsite.conf >/dev/null                                                                      
 server {
@@ -9723,6 +10048,8 @@ server {
 	}
 	
 	location /admin_ui/ {
+		auth_basic "admin_ui";
+		auth_basic_user_file /etc/nginx/passwords-admin-ui;
 		try_files \$uri /admin_ui/index.html =404;
 	}
 	
@@ -9810,6 +10137,8 @@ server {
 	}
 	
 	location /admin_ui/ {
+		auth_basic "admin_ui";
+		auth_basic_user_file /etc/nginx/passwords-admin-ui;
 		try_files \$uri /admin_ui/index.html =404;
 	}
 	
@@ -9874,138 +10203,259 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Configuring Web Admin interface . . .*****${normal}"
 	echo
+	echo "You can choose to build the web admin interface yourself"
+	echo "or use a pre-built configuration."
+	echo
+	echo "${bold}${cyan}Option 1 --> Use Pre-built:${normal}"
+	echo "${bold}${cyan}Pros:${normal}    Fast to download and set up."
+	echo "${bold}${cyan}Cons:${normal}    May not be the most up to date."
+	echo
+	echo "${bold}${cyan}Option 2 --> Build it${normal}"
+	echo "${bold}${cyan}Pros:${normal}    Latest version, may be more up to date."
+	echo "${bold}${cyan}Cons:${normal}    Slow, requires installation of additional software"
+	echo
+	while :; do
+		read -r -p "${bold}${cyan}Please make your selection now by entering 1 or 2:${normal} " select_web_build_or_prebuilt
+		if [ "$select_web_build_or_prebuilt" == "1" ] || [ "$select_web_build_or_prebuilt" == "2" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			continue
+		fi
+	done
+	echo
+	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}*****Checking for Node.JS installation and version . . . (Install 1 of 2) *****${normal}"
-	echo
-	function nodejs_warning_raspbian_for_desktop_x86_64_only () {
-		echo "**********************************************************************************"
+	if [ "$select_web_build_or_prebuilt" == "1" ]; then
+		# Pre-built web admin
+		echo "${bold}${cyan}*****Downloading Web Admin interface . . . (Step 1 of 3) *****${normal}"
 		echo
-		echo "${bold}${red}### WARNING ###"
-		echo "${bold}${red}DO NOT EXPOSE NODE-RED TO THE OPEN INTERNET WITHOUT SECURING IT FIRST${normal}"
-		echo 
-		echo "${bold}${red}Even if your Node-RED does not have anything valuable, (automated) attacks will${normal}"
-		echo "${bold}${red}happen and could provide a foothold in your local network"
-		echo 
-		echo "${bold}${red}Follow the guide at https://nodered.org/docs/user-guide/runtime/securing-node-red${normal}"
-		echo "${bold}${red}to setup security.${normal}"
-		echo 
-		echo "### ADDITIONAL RECOMMENDATIONS ###"
-		echo " - Remove the /etc/sudoers.d/010_pi-nopasswd file to require entering your password"
-		echo "   when performing any sudo/root commands:"
-		echo 
-		echo "sudo rm -f /etc/sudoers.d/010_pi-nopasswd"
-		echo 
-		echo " - You can customise the initial settings by running:"
-		echo 
-		echo "  node-red admin init"
-		echo 
-		echo " - After running Node-RED for the first time, change the ownership of the settings"
-		echo "   file to 'root' to prevent unauthorised changes:"
-		echo 
-		echo "	  sudo chown root:root ~/.node-red/settings.js"
+		# For use with the WIP drawpile-srv for the web client of Drawpile. This is a development release. It may be unstable, gets updated in-place and will go away eventually.
+		# 
+		# The attached binary is built with the following parameters in .env.local:
+		# 
+		# REACT_APP_APIROOT=/admin/api
+		# REACT_APP_BASENAME=/admin
+		# PUBLIC_URL=/admin
+		# If you want to use other paths, you must build this yourself.
+		pwd
+		cd "$dp_install_loc/Programs"
+		pwd
+		web_admin_release=wip-webclient
+		web_admin_release_filename=dpwebadmin-wip-webclient.tar.gz
+		sudo wget -q --show-progress https://github.com/drawpile/dpwebadmin/releases/download/$web_admin_release/$web_admin_release_filename
 		echo
-		**********************************************************************************
-	}
-
-	function install_or_update_nodejs () {
+		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "Running apt update and apt upgrade"
+		echo "${bold}${cyan}*****Extracting Web Admin interface . . . (Step 2 of 3) *****${normal}"
+		sudo tar vzxf $web_admin_release_filename
 		echo
-		# Node must be version 14 or higher, has version 12 by default on latest version of Rasbpian...
-		# https://pimylifeup.com/raspberry-pi-nodejs/
-		# node --version
-		sudo $packages_update_program
-		sudo $packages_system_upgrade
+		echo '--------------------------------------------------------------------------------'
 		echo
-		app_does_not_exist=0
-		app_installed=0
-		app_not_installed=0
-		progs=(nodejs);
-		package_install_status_check_function
+		echo "${bold}${cyan}*****Editing Title and Moving to root web directory . . . (Step 3 of 3)*****${normal}"
 		echo
-		
-		package_name=nodejs
-		minimum_versionnodejs=14.0.0
-		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
-			echo "${bold}${red}Pi Zero can only get to NodeJS version 10 by default. That's${normal}"
-			echo "${bold}${red}a pretty big problem since we need at least version 14 or later.${normal}"
-			echo
-			echo "Would you like to try an unofficial install of NodeJS LTS?"
-			echo "Note that this has not currently been tested by the maker of"
-			echo "this script, this was something that someone else tried as they"
-			echo "wanted to run it on a Pi Zero W. Do this at your own risk!"
-			echo
-			echo "Read more here --> https://gist.github.com/mandrean/71f2cbf707025a5983c0fc04d78f3e9a"
-			echo 
-			read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " pi_zero_nodejs
-			echo
-			if [ "$pi_zero_nodejs" == "yes" ] || [ "$pi_zero_nodejs" == "YES" ] || [ "$pi_zero_nodejs" == "Yes" ] ; then
-				# update system
-				sudo apt update && sudo apt upgrade
-				#
-				# uninstall old node (v10?)
-				sudo apt remove nodejs npm -y
-				#
-				# install nvm
-				curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
-				#
-				# use 'unofficial builds' in nvm
-				echo "export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release" >> ~/.bashrc
-				#
-				# reload bashrc
-				source ~/.bashrc
-				#
-				# install latest LTS
-				nvm install --lts
-				nvm use --lts
-				#
-				# verify versions
-				node -v
-				npm -v
-			elif [ "$pi_zero_nodejs" == "no" ] || [ "$pi_zero_nodejs" == "NO" ] || [ "$pi_zero_nodejs" == "No" ] ; then
-				echo "Skipping Node.JS Installation for Pi Zero W . . ."
-			else
-				echo "Invalid selection option, skipping installation of unofficial NodeJS LTS."
-				pi_zero_nodejs=no
+		sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin-$web_admin_release/index.html"
+		if [[ -d "/var/www/html/drawpile/admin-old" ]]; then
+			sudo rm -rf /var/www/html/drawpile/admin-old
+			if [[ -d "/var/www/html/drawpile/admin" ]]; then
+				sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
 			fi
+		elif [[ -d "/var/www/html/drawpile/admin" ]]; then
+			sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
 		else
-			if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
-				# Raspbian for Desktop
-				echo "${bold}${cyan}Installing NodeJS from Node-Red Script (need 32 bit binary)${normal}"
-				echo
-				# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
-				nodered_install_log=nodered-install.log
-				tgtl18=18.4.0    # need x86 latest from https://unofficial-builds.nodejs.org/download/release/
-				tgtl=$tgtl18
-				tgta18=18.16.1    # need armv6l latest from https://unofficial-builds.nodejs.org/download/release/
-				tgta=$tgta18
-				echo "Using 32bit nodejs" | sudo tee -a /var/log/$nodered_install_log >>/dev/null
-				curl -sSL -o /tmp/node.tgz https://unofficial-builds.nodejs.org/download/release/v$tgtl/node-v$tgtl-linux-x86.tar.gz 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null
-				# unpack it into the correct places
-				hd=$(head -c 9 /tmp/node.tgz)
-				if [ "$hd" == "<!DOCT" ] || [ "$hd" == "<html>" ]; then
-					CHAR="$CROSS File $f not downloaded";
-				else
-					if [[ -d /tmp/nodejs ]]; then
-						sudo rm -rf /tmp/nodejs
-					fi
-					mkdir -p /tmp/nodejs
-					sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /tmp/nodejs
-					sudo chown -R 0:0 /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-					if sudo cp -PR /tmp/nodejs/* /usr/ 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
-					sudo rm -rf /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-					# if sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /usr 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
-				fi
-				# rm /tmp/node.tgz 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
-				echo "  Install Node.js for i686            $CHAR"
-				echo
-				echo "Installed version is . . ."
-				node -v
-				echo
-				test_installation_status="Installed"
-				test_version=$(node -v | cut -c 2-100)
+			:
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		fi
+		sudo mv "dpwebadmin-$web_admin_release" /var/www/html/drawpile/admin
+		sudo restorecon -R /var/www/html/drawpile/
+		echo
+		echo "Will reload NGINX after the New Web Admin interface is downloaded."
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Downloading New Web Admin interface . . . (Step 1 of 4) *****${normal}"
+		echo
+		# The prebuilt version uses /listing/admin as the root for the list server admin API. If you put it somewhere else, edit index.html to point it at the correct path.
+		pwd
+		list_server_admin_release=1.0.0
+		list_server_admin_release_filename=drawpile-admin-webui-1.0.0.tar.gz
+		sudo wget -q --show-progress https://github.com/drawpile/drawpile-admin-webui/releases/download/$list_server_admin_release/$list_server_admin_release_filename
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Extracting New Web Admin interface . . . (Step 2 of 4) *****${normal}"
+		echo
+		sudo tar vzxf $list_server_admin_release_filename
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Moving to NGINX web directory . . . (Step 3 of 4)*****${normal}"
+		echo
+		if [[ -d "/var/www/html/drawpile/admin_ui_old" ]]; then
+			sudo rm -rf /var/www/html/drawpile/admin_ui_old
+			if [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+				sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+			fi
+		elif [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+			sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+		else
+			:
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		fi
+		sudo mv "drawpile-admin-webui-$list_server_admin_release" /var/www/html/drawpile/admin_ui
+		sudo restorecon -R /var/www/html/drawpile/
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
+		echo
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			sudo systemctl enable nginx.service
+		fi
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		sudo nginx -s reload
+		sudo systemctl restart nginx.service
+		systemctl status nginx.service --no-pager
+		wait $!
+	elif [ "$select_web_build_or_prebuilt" == "2" ]; then
+		# Build web admin
+		echo "${bold}${cyan}*****Checking for Node.JS installation and version . . . (Install 1 of 2) *****${normal}"
+		echo
+		function nodejs_warning_raspbian_for_desktop_x86_64_only () {
+			echo "**********************************************************************************"
+			echo
+			echo "${bold}${red}### WARNING ###"
+			echo "${bold}${red}DO NOT EXPOSE NODE-RED TO THE OPEN INTERNET WITHOUT SECURING IT FIRST${normal}"
+			echo 
+			echo "${bold}${red}Even if your Node-RED does not have anything valuable, (automated) attacks will${normal}"
+			echo "${bold}${red}happen and could provide a foothold in your local network"
+			echo 
+			echo "${bold}${red}Follow the guide at https://nodered.org/docs/user-guide/runtime/securing-node-red${normal}"
+			echo "${bold}${red}to setup security.${normal}"
+			echo 
+			echo "### ADDITIONAL RECOMMENDATIONS ###"
+			echo " - Remove the /etc/sudoers.d/010_pi-nopasswd file to require entering your password"
+			echo "   when performing any sudo/root commands:"
+			echo 
+			echo "sudo rm -f /etc/sudoers.d/010_pi-nopasswd"
+			echo 
+			echo " - You can customise the initial settings by running:"
+			echo 
+			echo "  node-red admin init"
+			echo 
+			echo " - After running Node-RED for the first time, change the ownership of the settings"
+			echo "   file to 'root' to prevent unauthorised changes:"
+			echo 
+			echo "	  sudo chown root:root ~/.node-red/settings.js"
+			echo
+			**********************************************************************************
+		}
+
+		function install_or_update_nodejs () {
+			echo
+			echo "Running apt update and apt upgrade"
+			echo
+			# Node must be version 14 or higher, has version 12 by default on latest version of Rasbpian...
+			# https://pimylifeup.com/raspberry-pi-nodejs/
+			# node --version
+			sudo $packages_update_program
+			sudo $packages_system_upgrade
+			echo
+			app_does_not_exist=0
+			app_installed=0
+			app_not_installed=0
+			progs=(nodejs);
+			package_install_status_check_function
+			echo
 			
+			package_name=nodejs
+			minimum_versionnodejs=14.0.0
+			if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$verify_pi_model" == "Raspberry Pi Zero W" ]; then
+				echo "${bold}${red}Pi Zero can only get to NodeJS version 10 by default. That's${normal}"
+				echo "${bold}${red}a pretty big problem since we need at least version 14 or later.${normal}"
+				echo
+				echo "Would you like to try an unofficial install of NodeJS LTS?"
+				echo "Note that this has not currently been tested by the maker of"
+				echo "this script, this was something that someone else tried as they"
+				echo "wanted to run it on a Pi Zero W. Do this at your own risk!"
+				echo
+				echo "Read more here --> https://gist.github.com/mandrean/71f2cbf707025a5983c0fc04d78f3e9a"
+				echo 
+				read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " pi_zero_nodejs
+				echo
+				if [ "$pi_zero_nodejs" == "yes" ] || [ "$pi_zero_nodejs" == "YES" ] || [ "$pi_zero_nodejs" == "Yes" ] ; then
+					# update system
+					sudo apt update && sudo apt upgrade
+					#
+					# uninstall old node (v10?)
+					sudo apt remove nodejs npm -y
+					#
+					# install nvm
+					curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
+					#
+					# use 'unofficial builds' in nvm
+					echo "export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release" >> ~/.bashrc
+					#
+					# reload bashrc
+					source ~/.bashrc
+					#
+					# install latest LTS
+					nvm install --lts
+					nvm use --lts
+					#
+					# verify versions
+					node -v
+					npm -v
+				elif [ "$pi_zero_nodejs" == "no" ] || [ "$pi_zero_nodejs" == "NO" ] || [ "$pi_zero_nodejs" == "No" ] ; then
+					echo "Skipping Node.JS Installation for Pi Zero W . . ."
+				else
+					echo "Invalid selection option, skipping installation of unofficial NodeJS LTS."
+					pi_zero_nodejs=no
+				fi
+			else
+				if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
+					# Raspbian for Desktop
+					echo "${bold}${cyan}Installing NodeJS from Node-Red Script (need 32 bit binary)${normal}"
+					echo
+					# Acquired from - https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered
+					nodered_install_log=nodered-install.log
+					tgtl18=18.4.0    # need x86 latest from https://unofficial-builds.nodejs.org/download/release/
+					tgtl=$tgtl18
+					tgta18=18.16.1    # need armv6l latest from https://unofficial-builds.nodejs.org/download/release/
+					tgta=$tgta18
+					echo "Using 32bit nodejs" | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+					curl -sSL -o /tmp/node.tgz https://unofficial-builds.nodejs.org/download/release/v$tgtl/node-v$tgtl-linux-x86.tar.gz 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null
+					# unpack it into the correct places
+					hd=$(head -c 9 /tmp/node.tgz)
+					if [ "$hd" == "<!DOCT" ] || [ "$hd" == "<html>" ]; then
+						CHAR="$CROSS File $f not downloaded";
+					else
+						if [[ -d /tmp/nodejs ]]; then
+							sudo rm -rf /tmp/nodejs
+						fi
+						mkdir -p /tmp/nodejs
+						sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /tmp/nodejs
+						sudo chown -R 0:0 /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+						if sudo cp -PR /tmp/nodejs/* /usr/ 2>&1 | sudo tee -a /var/log/$nodered_install_log >>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
+						sudo rm -rf /tmp/nodejs 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+						# if sudo tar -zxof /tmp/node.tgz --strip-components=1 -C /usr 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null; then CHAR=$TICK; else CHAR=$CROSS; fi
+					fi
+					# rm /tmp/node.tgz 2>&1 | sudo tee -a /var/log/$nodered_install_log>>/dev/null
+					echo "  Install Node.js for i686            $CHAR"
+					echo
+					echo "Installed version is . . ."
+					node -v
+					echo
+					test_installation_status="Installed"
+					test_version=$(node -v | cut -c 2-100)			
 <<comment_EOF_delete
 			echo "${bold}${cyan}Would you like to try (1) Node-RED Install or just update (2) nodejs which may not work?${normal}"
 			echo
@@ -10053,338 +10503,338 @@ EOF
 				test_version=$(node -v | cut -c 2-100)
 			fi
 comment_EOF_delete
-			elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && ( "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
-				# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop. Debian systems with ARM processors are allowed in a section below.
-				# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
-				# https://github.com/nodesource/distributions
-				# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
-				sudo apt-get update
-				sudo apt-get  -q -y install ca-certificates curl gnupg
-				sudo mkdir -p /etc/apt/keyrings
-				curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-				NODE_MAJOR=18
-				# NODE_MAJOR=20
-				echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-				sudo apt-get update
-				sudo apt-get -q -y install nodejs
-				version_test_by_distro_function
-			elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				# https://github.com/nodesource/distributions
-				# https://github.com/nodesource/distributions#fedora-versions
-				#
-				# NODE_MAJOR=18 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
-				sudo yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
-				sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
-				#
-				# NODE_MAJOR=20 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
-				# sudo yum install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
-				# sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
-				version_test_by_distro_function
-			elif [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
-				# For Debian systems with ARM processors. Not Raspbian specific. Also, see the "SCRIPT DEPRECATION WARNING" in the 'else' section below in regard to change of setup. 
-				echo "Adding Node.JS repository to get latest version . . ."
-				echo
-				
-				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-				echo
-				echo "Installing/updating Node.JS . . ."
-				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-				echo
-				echo "Installed version is . . ."
-				node -v
-				echo
-				version_test_by_distro_function
-			else
-				#						SCRIPT DEPRECATION WARNING                   
-				#	This script, located at https://deb.nodesource.com/setup_X, used to
-				#	install Node.js is deprecated now and will eventually be made inactive.
-				#
-				#	Please visit the NodeSource distributions Github and follow the
-				#	instructions to migrate your repo.
-				#	https://github.com/nodesource/distributions
-				#
-				#	The NodeSource Node.js Linux distributions GitHub repository contains
-				#	information about which versions of Node.js and which Linux distributions
-				#	are supported and how to install it.
-				#	https://github.com/nodesource/distributions
-				#						SCRIPT DEPRECATION WARNING
-				echo "Adding Node.JS repository to get latest version . . ."
-				echo
-				sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-				sleep 20
-				echo
-				echo "Installing/updating Node.JS . . ."
-				sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-				echo
-				echo "Installed version is . . ."
-				node -v
-				echo
-				version_test_by_distro_function
+				elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ] || [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && ( "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+					# Should work for Ubuntu, Debian, and Raspbian for ARM, but NOT Raspbian for Desktop. Debian systems with ARM processors are allowed in a section below.
+					# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
+					# https://github.com/nodesource/distributions
+					# https://github.com/nodesource/distributions#debian-and-ubuntu-based-distributions
+					sudo apt-get update
+					sudo apt-get  -q -y install ca-certificates curl gnupg
+					sudo mkdir -p /etc/apt/keyrings
+					curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+					NODE_MAJOR=18
+					# NODE_MAJOR=20
+					echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+					sudo apt-get update
+					sudo apt-get -q -y install nodejs
+					version_test_by_distro_function
+				elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					# https://github.com/nodesource/distributions
+					# https://github.com/nodesource/distributions#fedora-versions
+					#
+					# NODE_MAJOR=18 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
+					sudo yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+					sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
+					#
+					# NODE_MAJOR=20 --> Label only, do not need to uncomment, can uncomment below if wishing to activate
+					# sudo yum install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+					# sudo yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
+					version_test_by_distro_function
+				elif [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] && [[ "$what_architecture" == "Architecture: arm64" || "$what_architecture" == "Architecture: arm" ]]; then
+					# For Debian systems with ARM processors. Not Raspbian specific. Also, see the "SCRIPT DEPRECATION WARNING" in the 'else' section below in regard to change of setup. 
+					echo "Adding Node.JS repository to get latest version . . ."
+					echo
+					
+					sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+					echo
+					echo "Installing/updating Node.JS . . ."
+					sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+					echo
+					echo "Installed version is . . ."
+					node -v
+					echo
+					version_test_by_distro_function
+				else
+					#						SCRIPT DEPRECATION WARNING                   
+					#	This script, located at https://deb.nodesource.com/setup_X, used to
+					#	install Node.js is deprecated now and will eventually be made inactive.
+					#
+					#	Please visit the NodeSource distributions Github and follow the
+					#	instructions to migrate your repo.
+					#	https://github.com/nodesource/distributions
+					#
+					#	The NodeSource Node.js Linux distributions GitHub repository contains
+					#	information about which versions of Node.js and which Linux distributions
+					#	are supported and how to install it.
+					#	https://github.com/nodesource/distributions
+					#						SCRIPT DEPRECATION WARNING
+					echo "Adding Node.JS repository to get latest version . . ."
+					echo
+					sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+					sleep 20
+					echo
+					echo "Installing/updating Node.JS . . ."
+					sudo $package_install_program nodejs # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+					echo
+					echo "Installed version is . . ."
+					node -v
+					echo
+					version_test_by_distro_function
+				fi
 			fi
-		fi
-		if [[ "$test_installation_status" = "Not Installed" ]]; then
-			echo "${bold}${red}Failed to install . . .${normal}"
-			echo "${bold}${red}The web admin interface will not work!${normal}"
-			sleep 30
-		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
-			echo "${bold}${red}Failed to update past minimum version $minimum_versionnodejs . . .${normal}"
-			echo "${bold}${red}The web admin interface will not work!${normal}"
-			sleep 30
-		elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
-			echo "${bold}${red}Meets minimum version $minimum_versionnodejs requirements for Node . . .${normal}"
-			echo "${bold}${green}The web admin interface should work!${normal}"
-			sleep 5
-		elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
-			echo "${bold}${green}Updated successfully past minimum version $minimum_versionnodejs . . .${normal}"
-			echo "${bold}${green}The web admin interface should work!${normal}"
-			sleep 5
-		else
-			echo "This message should not be visible."
-			echo
-			echo "Package nodejs installed version: "
-			node -v
-			sleep 10
-		fi
-	}
+			if [[ "$test_installation_status" = "Not Installed" ]]; then
+				echo "${bold}${red}Failed to install . . .${normal}"
+				echo "${bold}${red}The web admin interface will not work!${normal}"
+				sleep 30
+			elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
+				echo "${bold}${red}Failed to update past minimum version $minimum_versionnodejs . . .${normal}"
+				echo "${bold}${red}The web admin interface will not work!${normal}"
+				sleep 30
+			elif [[ "$test_version" = "$minimum_versionnodejs" ]]; then
+				echo "${bold}${red}Meets minimum version $minimum_versionnodejs requirements for Node . . .${normal}"
+				echo "${bold}${green}The web admin interface should work!${normal}"
+				sleep 5
+			elif [[ "$test_version" > "$minimum_versionnodejs" ]]; then
+				echo "${bold}${green}Updated successfully past minimum version $minimum_versionnodejs . . .${normal}"
+				echo "${bold}${green}The web admin interface should work!${normal}"
+				sleep 5
+			else
+				echo "This message should not be visible."
+				echo
+				echo "Package nodejs installed version: "
+				node -v
+				sleep 10
+			fi
+		}
 
-	# versionnodejs=$( apt-cache policy nodejs | grep "Installed:" | cut -c 14-20 )
-	package_name=nodejs
-	version_test_by_distro_function
-	minimum_versionnodejs=14.0.0
-	if [[ "$test_installation_status" = "Not Installed" ]]; then
-		echo "Preparing to install package node.js . . ."
-		echo Version installed is $test_version . . .
-		echo
-		install_or_update_nodejs
-	elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
-		echo "Preparing to update package node.js . . ."
-		echo Version installed is $test_version . . .
-		echo
-		install_or_update_nodejs
-	else
-		echo "Package nodejs already installed."
-		echo Version installed is $test_version . . .
-		echo Status: $test_installation_status
-		echo
-		node -v
-		# install_or_update_nodejs
-	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	function install_or_update_npm () {
-		if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ]; then
-			# You do not need to install npm when installing nodejs from nodesource, as it already includes npm.
-			# https://askubuntu.com/questions/899756/cant-install-npm-unable-to-correct-problems-you-have-held-broken-packages
-			echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 2 of 2) *****${normal}"
+		# versionnodejs=$( apt-cache policy nodejs | grep "Installed:" | cut -c 14-20 )
+		package_name=nodejs
+		version_test_by_distro_function
+		minimum_versionnodejs=14.0.0
+		if [[ "$test_installation_status" = "Not Installed" ]]; then
+			echo "Preparing to install package node.js . . ."
+			echo Version installed is $test_version . . .
 			echo
-			echo "Installing package npm . . ."
+			install_or_update_nodejs
+		elif [[ "$test_version" < "$minimum_versionnodejs" ]]; then
+			echo "Preparing to update package node.js . . ."
+			echo Version installed is $test_version . . .
 			echo
-			app_does_not_exist=0
-			app_installed=0
-			app_not_installed=0
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-				progs=(npm);
-				package_install_status_check_function
-				sudo $package_install_program npm # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-			elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				progs=(nodejs-npm);
-				package_install_status_check_function
-				sudo $package_install_program nodejs-npm # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-			else
-				:
-			fi
-		fi
-	}
-	package_name=npm
-	test_side_load_installation_status="Installed"
-	command -v $package_name > /dev/null 2>&1 || type $package_name > /dev/null 2>&1 || hash $package_name 2>/dev/null || test_side_load_installation_status="Not Installed"
-	if [[ "$test_side_load_installation_status" = "Not Installed" ]]; then
-		install_or_update_npm
-	elif [[ "$test_side_load_installation_status" = "Installed" ]]; then
-		echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 2 of 2) *****${normal}"
-		echo
-		echo "Skipping installation of NPM, already installed with NodeJS and gets broken "
-		echo "packages message on install attempt in Ubuntu."
-	else
-		echo "This message should not be visible for NPM."
-	fi
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "${bold}${cyan}*****Downloading Web Admin interface . . . (Step 1 of 6) *****${normal}"
-	echo
-	cd "$dp_install_loc/Programs"
-	if [[ -d  "$dp_install_loc/Programs/dpwebadmin" ]]; then
-		# ---------------------------------------------------------------------------------
-		# Testing new concept - commented out temporarily
-			# echo "Drawpile Web Admin already pulled, changing directory..."
-			# cd "$dp_install_loc/Programs/dpwebadmin/src"
-		# echo Download detected of Drawpile Admin, removing content before downloading.
-		# rm -f -R "$dp_install_loc/Programs/dpwebadmin"
-		# ---------------------------------------------------------------------------------
-		cd dpwebadmin
-		
-		git config --global --add safe.directory "$dp_install_loc/Programs/dpwebadmin"
-		# Updates local repo
-		git fetch
-		
-		# Checks local commit info
-		git_local_commit=$( git rev-parse HEAD )
-		# Checks remote commit info
-		git_remote_commit=$( git rev-parse '@{u}' )
-		
-		if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
-			git_repo_status=currently_up_to_date
+			install_or_update_nodejs
 		else
-			# Resets any changes made to the local code so it matches the remote code. 
-			git reset --hard origin/master
-			git_repo_status=out_of_date
+			echo "Package nodejs already installed."
+			echo Version installed is $test_version . . .
+			echo Status: $test_installation_status
+			echo
+			node -v
+			# install_or_update_nodejs
 		fi
-	else
-		git_repo_status=out_of_date
-		echo Downloading dp web admin from github.
-		echo
-		git clone https://github.com/drawpile/dpwebadmin.git
-		cd "$dp_install_loc/Programs/dpwebadmin"
-		# Doesn't work
-		# drawpile_dp_webadmin_version_with_git=$( git describe )
-		# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
-		# git describe - fatal: No names found, cannot describe anything.
-	fi
-	read_stored_completed_status_value_query=$( grep -m 1 "drawpile_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
-		echo
-		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			# git checkout -f dev-2.2
-			git checkout -f feature/qtwasm
-			git pull
+		function install_or_update_npm () {
+			if [ "$what_linux_name" != "NAME=\"Ubuntu\"" ]; then
+				# You do not need to install npm when installing nodejs from nodesource, as it already includes npm.
+				# https://askubuntu.com/questions/899756/cant-install-npm-unable-to-correct-problems-you-have-held-broken-packages
+				echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 2 of 2) *****${normal}"
+				echo
+				echo "Installing package npm . . ."
+				echo
+				app_does_not_exist=0
+				app_installed=0
+				app_not_installed=0
+				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+					progs=(npm);
+					package_install_status_check_function
+					sudo $package_install_program npm # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					progs=(nodejs-npm);
+					package_install_status_check_function
+					sudo $package_install_program nodejs-npm # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				else
+					:
+				fi
+			fi
+		}
+		package_name=npm
+		test_side_load_installation_status="Installed"
+		command -v $package_name > /dev/null 2>&1 || type $package_name > /dev/null 2>&1 || hash $package_name 2>/dev/null || test_side_load_installation_status="Not Installed"
+		if [[ "$test_side_load_installation_status" = "Not Installed" ]]; then
+			install_or_update_npm
+		elif [[ "$test_side_load_installation_status" = "Installed" ]]; then
+			echo "${bold}${cyan}*****Checking for NPM installation . . . (Install 2 of 2) *****${normal}"
 			echo
+			echo "Skipping installation of NPM, already installed with NodeJS and gets broken "
+			echo "packages message on install attempt in Ubuntu."
+		else
+			echo "This message should not be visible for NPM."
 		fi
-		echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
 		echo
-		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			cat <<EOF | tee -a .env.local >/dev/null
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Downloading Web Admin interface . . . (Step 1 of 6) *****${normal}"
+		echo
+		cd "$dp_install_loc/Programs"
+		if [[ -d  "$dp_install_loc/Programs/dpwebadmin" ]]; then
+			# ---------------------------------------------------------------------------------
+			# Testing new concept - commented out temporarily
+				# echo "Drawpile Web Admin already pulled, changing directory..."
+				# cd "$dp_install_loc/Programs/dpwebadmin/src"
+			# echo Download detected of Drawpile Admin, removing content before downloading.
+			# rm -f -R "$dp_install_loc/Programs/dpwebadmin"
+			# ---------------------------------------------------------------------------------
+			cd dpwebadmin
+			
+			git config --global --add safe.directory "$dp_install_loc/Programs/dpwebadmin"
+			# Updates local repo
+			git fetch
+			
+			# Checks local commit info
+			git_local_commit=$( git rev-parse HEAD )
+			# Checks remote commit info
+			git_remote_commit=$( git rev-parse '@{u}' )
+			
+			if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+				git_repo_status=currently_up_to_date
+			else
+				# Resets any changes made to the local code so it matches the remote code. 
+				git reset --hard origin/master
+				git_repo_status=out_of_date
+			fi
+		else
+			git_repo_status=out_of_date
+			echo Downloading dp web admin from github.
+			echo
+			git clone https://github.com/drawpile/dpwebadmin.git
+			cd "$dp_install_loc/Programs/dpwebadmin"
+			# Doesn't work
+			# drawpile_dp_webadmin_version_with_git=$( git describe )
+			# sudo sed -i '\!^drawpile_dp_webadmin_version_with_git =!{h;s!=.*!= '"$drawpile_dp_webadmin_version_with_git"'!};${x;\!^$!{s!!drawpile_dp_webadmin_version_with_git = '"$drawpile_dp_webadmin_version_with_git"'!;H};x}' $drawpile_configuration_values_file
+			# git describe - fatal: No names found, cannot describe anything.
+		fi
+		read_stored_completed_status_value_query=$( grep -m 1 "drawpile_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${yellow}Web Admin interface is not installed yet or not up to date.${normal}"
+			echo
+			if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+				# git checkout -f dev-2.2
+				git checkout -f feature/qtwasm
+				git pull
+				echo
+			fi
+			echo "${bold}${cyan}*****Generate .env for Web Admin interface . . . (Step 2 of 6) *****${normal}"
+			echo
+			if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+				cat <<EOF | tee -a .env.local >/dev/null
 PUBLIC_URL=/admin
 REACT_APP_BASENAME=/admin
 REACT_APP_APIROOT=/admin/api
 REACT_APP_AUTHMODE=basic
 EOF
-		else
-			cat <<EOF | tee -a .env.local >/dev/null
+			else
+				cat <<EOF | tee -a .env.local >/dev/null
 REACT_APP_BASENAME=/admin
 REACT_APP_APIROOT=/admin/api
 REACT_APP_AUTHMODE=basic
 EOF
-		fi
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
-		echo
-		if [[ ! -e "$dp_install_loc/Programs/dpwebadmin/package-orig.json" ]]; then
-			cp "$dp_install_loc/Programs/dpwebadmin/package.json" "$dp_install_loc/Programs/dpwebadmin/package-orig.json"
-		fi
-		sudo sed -i "s|\"proxy\": \"http://localhost:27780/\"|\"proxy\": \"http://localhost:27780/\",\n  \"homepage\": \"/admin/\"|g" "$dp_install_loc/Programs/dpwebadmin/package.json"
-		# Olde commands
-		# mv package.json package-orig.json
-		# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
-		#
-		# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Building for Web Admin interface . . . (Step 4 of 6) *****${normal}"
-		echo
-		# if [ "$no_swap_available" == "true" ]; then
-		if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
-			echo This step may take about an hour to complete. Please be patient.
+			fi
 			echo
 			echo '--------------------------------------------------------------------------------'
-			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
-			echo '--------------------------------------------------------------------------------'
-			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
-				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-				command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
-			else
-				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+			echo
+			echo "${bold}${cyan}*****Preparing package.json for Web Admin interface . . . (Step 3 of 6) *****${normal}"
+			echo
+			if [[ ! -e "$dp_install_loc/Programs/dpwebadmin/package-orig.json" ]]; then
+				cp "$dp_install_loc/Programs/dpwebadmin/package.json" "$dp_install_loc/Programs/dpwebadmin/package-orig.json"
 			fi
-		else
-			# elif [ "$no_swap_available" == "false" ]; then
-			echo This step may take a while to complete. Please be patient.
+			sudo sed -i "s|\"proxy\": \"http://localhost:27780/\"|\"proxy\": \"http://localhost:27780/\",\n  \"homepage\": \"/admin/\"|g" "$dp_install_loc/Programs/dpwebadmin/package.json"
+			# Olde commands
+			# mv package.json package-orig.json
+			# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '/admin/'}, 0, 2)" > package.json
+			#
+			# node -p "JSON.stringify({...require('./package-orig.json'), homepage: '.'}, 0, 2)" > package.json
 			echo
 			echo '--------------------------------------------------------------------------------'
-			echo "Running Command: npm install"
-			echo '--------------------------------------------------------------------------------'
-			if ! npm install; then
-				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-				command_die "${bold}${red}Command 'npm install' failed.${normal}"
+			echo
+			echo "${bold}${cyan}*****Building for Web Admin interface . . . (Step 4 of 6) *****${normal}"
+			echo
+			# if [ "$no_swap_available" == "true" ]; then
+			if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
+				echo This step may take about an hour to complete. Please be patient.
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+				echo '--------------------------------------------------------------------------------'
+				if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+					sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+					command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
+				else
+					sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				fi
 			else
-				sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				# elif [ "$no_swap_available" == "false" ]; then
+				echo This step may take a while to complete. Please be patient.
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running Command: npm install"
+				echo '--------------------------------------------------------------------------------'
+				if ! npm install; then
+					sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+					command_die "${bold}${red}Command 'npm install' failed.${normal}"
+				else
+					sudo sed -i '\!^drawpile_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+				fi
 			fi
-		fi
-		# node_return_status_01=$?
-		# echo
-		# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
-		# echo Return status of command: $node_return_status_01
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
-		echo '--------------------------------------------------------------------------------'
-		if ! NODE_OPTIONS=--openssl-legacy-provider npm run build; then
-			command_die "${bold}${red}Command 'NODE_OPTIONS=--openssl-legacy-provider npm run build' failed${normal}"
-		fi
-		# node_return_status_02=$?
-		# echo
-		# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
-		# echo Return status of command: $node_return_status_02
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Editing and Moving to root web directory . . . (Step 5 of 6)*****${normal}"
-		echo
-		sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
-		if [[ -d "/var/www/html/drawpile/admin-old" ]]; then
-			sudo rm -rf /var/www/html/drawpile/admin-old
-			if [[ -d "/var/www/html/drawpile/admin" ]]; then
+			# node_return_status_01=$?
+			# echo
+			# 134 - FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+			# echo Return status of command: $node_return_status_01
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo "Running Command: NODE_OPTIONS=--openssl-legacy-provider npm run build"
+			echo '--------------------------------------------------------------------------------'
+			if ! NODE_OPTIONS=--openssl-legacy-provider npm run build; then
+				command_die "${bold}${red}Command 'NODE_OPTIONS=--openssl-legacy-provider npm run build' failed${normal}"
+			fi
+			# node_return_status_02=$?
+			# echo
+			# 254 - Could not read package.json: Error: ENOENT: no such file or directory, open '/home/ubuntu/package.json'
+			# echo Return status of command: $node_return_status_02
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${cyan}*****Editing and Moving to root web directory . . . (Step 5 of 6)*****${normal}"
+			echo
+			sudo sed -i -e "s/<title>Drawpile Server Admin<\/title>/<title>Drawpile Server Admin - $hostname<\/title>/g" "$dp_install_loc/Programs/dpwebadmin/build/index.html"
+			if [[ -d "/var/www/html/drawpile/admin-old" ]]; then
+				sudo rm -rf /var/www/html/drawpile/admin-old
+				if [[ -d "/var/www/html/drawpile/admin" ]]; then
+					sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
+				fi
+			elif [[ -d "/var/www/html/drawpile/admin" ]]; then
 				sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
+			else
+				:
+				# Do nothing as no error was detected.
+				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			fi
-		elif [[ -d "/var/www/html/drawpile/admin" ]]; then
-			sudo mv /var/www/html/drawpile/admin /var/www/html/drawpile/admin-old
+			sudo mv build /var/www/html/drawpile/admin
+			sudo restorecon -R /var/www/html/drawpile/
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
+			echo
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+				sudo systemctl enable nginx.service
+			fi
+			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+			sudo systemctl daemon-reload
+			sudo systemctl restart systemd-modules-load
+			sudo nginx -s reload
+			sudo systemctl restart nginx.service
+			systemctl status nginx.service --no-pager
+			wait $!
 		else
-			:
-			# Do nothing as no error was detected.
-			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			echo "${bold}${green}Web Admin interface is up to date, skipping step 2 through 6.${normal}"
 		fi
-		sudo mv build /var/www/html/drawpile/admin
-		sudo restorecon -R /var/www/html/drawpile/
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
-		echo
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			sudo systemctl enable nginx.service
-		fi
-		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
-		sudo systemctl daemon-reload
-		sudo systemctl restart systemd-modules-load
-		sudo nginx -s reload
-		sudo systemctl restart nginx.service
-		systemctl status nginx.service --no-pager
-		wait $!
-	else
-		echo "${bold}${green}Web Admin interface is up to date, skipping step 2 through 6.${normal}"
-	fi
-	# https://create-react-app.dev/
-	# npx create-react-app builddpwebadmin
-	# npm install -g npm@9.5.1
-	# cd "$dp_install_loc/Programs/dpwebadmin/dpwebadmin"
-	# npm start
+		# https://create-react-app.dev/
+		# npx create-react-app builddpwebadmin
+		# npm install -g npm@9.5.1
+		# cd "$dp_install_loc/Programs/dpwebadmin/dpwebadmin"
+		# npm start
 <<comment_EOF_delete
 	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ] && [ "$nodejs_or_red" == "1" ]; then
 		# https://nodered.org/docs/user-guide/runtime/securing-node-red
@@ -10407,126 +10857,129 @@ EOF
 		echo
 	fi
 comment_EOF_delete
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo	
-	echo "${bold}${cyan}*****Downloading New Web Admin interface . . . (Step 1 of 4) *****${normal}"
-	echo
-	cd "$dp_install_loc/Programs"
-	if [[ -d  "$dp_install_loc/Programs/drawpile-admin-webui" ]]; then
-		# ---------------------------------------------------------------------------------
-		# Testing new concept - commented out temporarily
-		# echo "Drawpile Web Admin already pulled, changing directory..."
-		# echo Download detected of new drawpile-admin-webui, removing content before downloading.
-		# rm -f -R "$dp_install_loc/Programs/drawpile-admin-webui"
-		# ---------------------------------------------------------------------------------
-		cd drawpile-admin-webui
-		
-		git config --global --add safe.directory "$dp_install_loc/Programs/drawpile-admin-webui"
-		# Updates local repo
-		git fetch
-		
-		# Checks local commit info
-		git_local_commit=$( git rev-parse HEAD )
-		# Checks remote commit info
-		git_remote_commit=$( git rev-parse '@{u}' )
-		
-		if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
-			git_repo_status=currently_up_to_date
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo	
+		echo "${bold}${cyan}*****Downloading New Web Admin interface . . . (Step 1 of 4) *****${normal}"
+		echo
+		cd "$dp_install_loc/Programs"
+		if [[ -d  "$dp_install_loc/Programs/drawpile-admin-webui" ]]; then
+			# ---------------------------------------------------------------------------------
+			# Testing new concept - commented out temporarily
+			# echo "Drawpile Web Admin already pulled, changing directory..."
+			# echo Download detected of new drawpile-admin-webui, removing content before downloading.
+			# rm -f -R "$dp_install_loc/Programs/drawpile-admin-webui"
+			# ---------------------------------------------------------------------------------
+			cd drawpile-admin-webui
+			
+			git config --global --add safe.directory "$dp_install_loc/Programs/drawpile-admin-webui"
+			# Updates local repo
+			git fetch
+			
+			# Checks local commit info
+			git_local_commit=$( git rev-parse HEAD )
+			# Checks remote commit info
+			git_remote_commit=$( git rev-parse '@{u}' )
+			
+			if [[ "$git_local_commit" == "$git_remote_commit" ]] ; then
+				git_repo_status=currently_up_to_date
+			else
+				# Resets any changes made to the local code so it matches the remote code. 
+				git reset --hard origin/main
+				git_repo_status=out_of_date
+			fi
 		else
-			# Resets any changes made to the local code so it matches the remote code. 
-			git reset --hard origin/main
 			git_repo_status=out_of_date
+			echo Downloading new drawpile-admin-webui from github.
+			echo
+			git clone https://github.com/drawpile/drawpile-admin-webui
+			cd "$dp_install_loc/Programs/drawpile-admin-webui"
 		fi
-	else
-		git_repo_status=out_of_date
-		echo Downloading new drawpile-admin-webui from github.
-		echo
-		git clone https://github.com/drawpile/drawpile-admin-webui
-		cd "$dp_install_loc/Programs/drawpile-admin-webui"
-	fi
-	read_stored_completed_status_value_query=$( grep -m 1 "drawpile_new_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${yellow}New Web Admin interface is not installed yet or not up to date.${normal}"
-		echo
-		echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
-		echo
-		# if [ "$no_swap_available" == "true" ]; then
-		if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
-			echo This step may take about an hour to complete. Please be patient.
+		read_stored_completed_status_value_query=$( grep -m 1 "drawpile_new_web_admin_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 			echo
 			echo '--------------------------------------------------------------------------------'
-			echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+			echo
+			echo "${bold}${yellow}New Web Admin interface is not installed yet or not up to date.${normal}"
+			echo
+			echo "${bold}${cyan}*****Building for New Web Admin interface . . . (Step 2 of 4) *****${normal}"
+			echo
+			# if [ "$no_swap_available" == "true" ]; then
+			if (( "$swap_total" == "0" )) || [ "$no_swap_available" == "true" ] || (( "$mem_total" <= "512" )); then
+				echo This step may take about an hour to complete. Please be patient.
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running Command: NODE_OPTIONS=--max_old_space_size=1024 npm install"
+				echo '--------------------------------------------------------------------------------'
+				if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+					sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+					command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
+				else
+					sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
+				fi
+			else
+				# elif [ "$no_swap_available" == "false" ]; then
+				echo This step may take a while to complete. Please be patient.
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running Command: npm install"
+				echo '--------------------------------------------------------------------------------'
+				if ! npm install; then
+					sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
+					command_die "${bold}${red}Command 'npm install' failed.${normal}"
+				else
+					sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
+				fi
+			fi
+			echo
 			echo '--------------------------------------------------------------------------------'
-			if ! NODE_OPTIONS=--max_old_space_size=1024 npm install; then
+			echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
+			echo '--------------------------------------------------------------------------------'
+			if ! npm run build -- "https://$hostname/listing/admin/"; then
 				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-				command_die "${bold}${red}Command 'npm install' failed (slow mode).${normal}"
+				command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
 			else
 				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
-		else
-			# elif [ "$no_swap_available" == "false" ]; then
-			echo This step may take a while to complete. Please be patient.
 			echo
 			echo '--------------------------------------------------------------------------------'
-			echo "Running Command: npm install"
-			echo '--------------------------------------------------------------------------------'
-			if ! npm install; then
-				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-				command_die "${bold}${red}Command 'npm install' failed.${normal}"
-			else
-				sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
-			fi
-		fi
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo "Running Command: npm run build -- \"https://$hostname/listing/admin/\""
-		echo '--------------------------------------------------------------------------------'
-		if ! npm run build -- "https://$hostname/listing/admin/"; then
-			sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-			command_die "${bold}${red}Command 'npm run build -- \"https://$hostname/listing/admin/\"' failed${normal}"
-		else
-			sudo sed -i '\!^drawpile_new_web_admin_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_new_web_admin_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
-		fi
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Moving to root web directory . . . (Step 3 of 4)*****${normal}"
-		echo
-		if [[ -d "/var/www/html/drawpile/admin_ui_old" ]]; then
-			sudo rm -rf /var/www/html/drawpile/admin_ui_old
-			if [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+			echo
+			echo "${bold}${cyan}*****Moving to NGINX web directory . . . (Step 3 of 4)*****${normal}"
+			echo
+			if [[ -d "/var/www/html/drawpile/admin_ui_old" ]]; then
+				sudo rm -rf /var/www/html/drawpile/admin_ui_old
+				if [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
+					sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+				fi
+			elif [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
 				sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+			else
+				:
+				# Do nothing as no error was detected.
+				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			fi
-		elif [[ -d "/var/www/html/drawpile/admin_ui" ]]; then
-			sudo mv /var/www/html/drawpile/admin_ui /var/www/html/drawpile/admin_ui_old
+			sudo mv dist /var/www/html/drawpile/admin_ui
+			sudo restorecon -R /var/www/html/drawpile/
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
+			echo
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+				sudo systemctl enable nginx.service
+			fi
+			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+			sudo systemctl daemon-reload
+			sudo systemctl restart systemd-modules-load
+			sudo nginx -s reload
+			sudo systemctl restart nginx.service
+			systemctl status nginx.service --no-pager
+			wait $!
 		else
-			:
-			# Do nothing as no error was detected.
-			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			echo "${bold}${green}New Web Admin interface is up to date, skipping step 2 through 4.${normal}"
 		fi
-		sudo mv dist /var/www/html/drawpile/admin_ui
-		sudo restorecon -R /var/www/html/drawpile/
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
-		echo
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			sudo systemctl enable nginx.service
-		fi
-		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
-		sudo systemctl daemon-reload
-		sudo systemctl restart systemd-modules-load
-		sudo nginx -s reload
-		sudo systemctl restart nginx.service
-		systemctl status nginx.service --no-pager
-		wait $!
 	else
-		echo "${bold}${green}New Web Admin interface is up to date, skipping step 2 through 4.${normal}"
+		echo "This option shouldn't be visible for web admin: prebuilt or build ..."
 	fi
 elif [ "$ssl_encryption_config" == "3" ]; then
 	echo "${bold}${red}List server needs HTTPS in order to work.${normal}"
@@ -10538,6 +10991,112 @@ elif [ "$ssl_encryption_config" == "3" ]; then
 else
 	echo "${bold}${red}This message should not be visible,${normal}"
 	echo "${bold}${red}regarding list server and web admin.${normal}"
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}***** Configure Fail2Ban . . . *****${normal}"
+echo 
+variable_to_read_1="fail2ban_status"
+variable_to_read_2=""
+variable_to_read_3=""
+
+value_description_1="Fail2Ban installation: This is intended for blocking abuse of trying to get into"
+value_description_2="web admin interface. It monitors log files and temporarily (or permanently) bans"
+value_description_3="failures to prevent brute force attacks against the server."
+value_description_4=""
+value_description_5=""
+
+read_stored_config_value_query_function
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	fail2ban_status=$read_stored_config_value_query_1
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo "This is intended for blocking abuse of trying to get into web admin interface."
+	echo "The package description is included below, but this installation will not support"
+	echo "email notification at this time."
+	echo
+	echo "Description: ban hosts that cause multiple authentication errors"
+	echo
+	echo "  Fail2ban monitors log files (e.g. /var/log/auth.log, /var/log/apache/access.log)" 
+	echo "  and temporarily or persistently bans failure-prone addresses by updating "
+	echo "  existing firewall rules.  Fail2ban allows easy specification of different actions"
+	echo "  to be taken such as to ban an IP using iptables or hostsdeny rules, or simply to"
+	echo "  send a notification email."
+	echo
+	echo "This is highly recommended for use. The default configuration will ban users that"
+	echo "fail authentication 15 times for 10 minutes." 
+	echo
+	echo "Would you like to protect your server against unauthorized access attempts?"
+	while :; do
+		read -r -p "${bold}${cyan}Without quotes, type 'yes' or 'no':${normal} " fail2ban_status
+		echo
+		if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ] || [ "$fail2ban_status" == "N" ] || [ "$fail2ban_status" == "n" ] || [ "$fail2ban_status" == "no" ] || [ "$fail2ban_status" == "NO" ] || [ "$fail2ban_status" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	echo
+
+	if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
+		sudo $package_install_program fail2ban # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+		if [ "$local_or_remote" == "Remote" ]; then
+			cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
+[DEFAULT]
+ignoreip  = 127.0.0.1/8
+action    = %(action_)s
+bantime   = 10m
+maxretry  = 15
+
+[nginx-http-auth]
+enabled   = true
+
+[sshd]
+enabled   = true
+EOF
+			wait $!
+		elif [ "$local_or_remote" == "Local" ]; then
+			cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
+[DEFAULT]
+ignoreip  = 127.0.0.1/8
+action    = %(action_)s
+bantime   = 10m
+maxretry  = 15
+
+[nginx-http-auth]
+enabled   = true
+
+[sshd]
+enabled   = false
+EOF
+			wait $!
+		else
+			echo "This message shouldn't be visible for Fail2Ban - Remote or Local"
+		fi
+		# sudo nano /etc/fail2ban/jail.local
+		sleep 3
+		sudo service fail2ban restart
+		sleep 3
+		echo
+		sudo fail2ban-client status
+		# For more detailed status:
+		# sudo fail2ban-client status nginx-http-auth
+		#
+		# To ban an IP address that was blocked.
+		# sudo fail2ban-client set nginx-http-auth unbanip IP-ADDRESS-here
+	else
+		echo "Skipping installation of Fail2Ban."
+	fi
+	echo
+	sudo sed -i '\!^fail2ban_status =!{h;s!=.*!= '"$fail2ban_status"'!};${x;\!^$!{s!!fail2ban_status = '"$fail2ban_status"'!;H};x}' $drawpile_configuration_values_file
+else
+	echo "This message should not be visible."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -10708,20 +11267,20 @@ server {
         fastcgi_param SCRIPT_FILENAME \$document_root/\$fastcgi_script_name;
         fastcgi_pass unix:/run/php/php7.4-fpm.sock;
         fastcgi_param FQDN true;
-        auth_basic "Restricted"; # For Basic Auth
+        auth_basic "Pi-Hole Restricted"; # For Basic Auth
         auth_basic_user_file /etc/nginx/passwords_pihole; # For Basic Auth
     }
 
     location /*.js {
         index pihole/index.js;
-        auth_basic "Restricted"; # For Basic Auth
+        auth_basic "Pi-Hole Restricted"; # For Basic Auth
         auth_basic_user_file /etc/nginx/passwords_pihole; # For Basic Auth
     }
 
     location /admin {
         root /var/www/html;
         index index.php index.html index.htm;
-        auth_basic "Restricted"; # For Basic Auth
+        auth_basic "Pi-Hole Restricted"; # For Basic Auth
         auth_basic_user_file /etc/nginx/passwords_pihole; # For Basic Auth
     }
 
@@ -10735,48 +11294,113 @@ EOF
 			echo
 			echo "${bold}${cyan}*****Configure Pi-Hole Admin Password in NGINX  . . . *****${normal}"
 			echo
-			echo 'Please type in a username you wish to use for making changes to your Pi-Hole'
-			echo 'server. If you make a mistake or need to update the server login, open a new'
-			echo 'terminal window and type in the following:'
+function nginx_username_and_password_pihole_function () {
+	echo 'Please type in a username you wish to use for making changes to your Pi-Hole'
+	echo 'server. If you make a mistake or need to update the server login, open a new'
+	echo 'terminal window and type in the following:'
+	echo
+	echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole USERNAME PASSWORD'
+	echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole "USERNAME" "PASSWORD"'
+	echo
+	echo
+	echo 'You can change the web interface password itself with this command:'
+	echo
+	echo 'pihole -a -p'
+	echo
+	echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
+	echo 'can be any password you like to use without spaces.'
+	echo
+	login_credentials_length_minimum="14"
+	while :; do
+		read -r -p "Enter username                    : " nginx_username_pihole_1
+		read -r -p "Enter username again              : " nginx_username_pihole_2
+		pihole_username_length_1=${#nginx_username_pihole_1}
+		pihole_username_length_2=${#nginx_username_pihole_2}
+		echo
+		if [[ "$nginx_username_pihole_1" != "$nginx_username_pihole_2" ]]; then
+			echo "${bold}${red}Usernames entered do not match!${normal}"
 			echo
-			echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole USERNAME PASSWORD'
+		elif (( "$pihole_username_length_1" < "$login_credentials_length_minimum" || "$pihole_username_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
 			echo
+		else
+			break
+		fi
+	done
+	echo
+	echo "${bold}${green}Your Pi-Hole Administration username is :${normal} $nginx_username_pihole_1"
+	echo
+	while :; do
+		read -r -p "Enter password                    : " nginx_htpasswd_pihole_1
+		read -r -p "Enter password again              : " nginx_htpasswd_pihole_2
+		pihole_password_length_1=${#nginx_htpasswd_pihole_1}
+		pihole_password_length_2=${#nginx_htpasswd_pihole_2}
+		echo
+		if [[ "$nginx_htpasswd_pihole_1" != "$nginx_htpasswd_pihole_2" ]]; then
+			echo "${bold}${red}Passwords entered do not match!${normal}"
 			echo
-			echo 'You can change the web interface password itself with this command:'
+		elif (( "$pihole_password_length_1" < "$login_credentials_length_minimum" || "$pihole_password_length_2" < "$login_credentials_length_minimum" )); then
+			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+			echo "${bold}${red}Please try again.${normal}"
 			echo
-			echo 'pihole -a -p'
+		elif [[ "$nginx_username_pihole_1" == "$nginx_htpasswd_pihole_1" ]]; then
+			echo "${bold}${red}For security reasons, the username and password${normal}"
+			echo "${bold}${red}cannot be the same. Please try again.${normal}"
 			echo
-			echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
-			echo 'can be any password you like to use without spaces.'
-			echo
-			read -r -p "Enter username                         : " nginx_username_pihole_1
-			read -r -p "Enter username again                   : " nginx_username_pihole_2
-			while [ $nginx_username_pihole_1 != $nginx_username_pihole_2 ]
-			do
+		else
+			break
+		fi
+	done
+	echo
+	echo "${bold}${green}Your Pi-Hole Administration password is :${normal} $nginx_htpasswd_pihole_1"
+}
+			if [[ ! -e "/etc/nginx/passwords_pihole" ]]; then
+				if [ ! -z "$nginx_username_1" ] && [ ! -z "$nginx_htpasswd_1" ]; then
+					echo "This step is to create a username for authentication for the Pi-Hole"
+					echo "admin interface, as we don't want other people in the home network to"
+					echo "change our black and whitelist."
+					echo
+					echo "Would you like to reuse the password you used earlier for web admin?"
+					echo
+					echo "This should be ok since it is on your local network and not exposed"
+					echo "to the web (which is not a good idea to forward ports to make pi-hole"
+					echo "accessible from outside of your home)."
+					echo
+					echo " ${cyan}1 - Reuse existing username(s) and password(s) from web admin${normal}"
+					echo " ${cyan}2 - Generate separate password for Pi-Hole${normal}"
+					echo
+					while :; do
+						read -r -p "${bold}${cyan}Please type 1 or 2:${normal} " nginx_username_and_password_reuse_for_pihole
+						echo
+						if (( "$nginx_username_and_password_reuse_for_pihole" >= "1" && "$nginx_username_and_password_reuse_for_pihole" <= "2" )) ; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					
+					if [ "$nginx_username_and_password_reuse_for_pihole" == "1" ]; then
+						nginx_username_pihole_1=$nginx_username_1
+						nginx_htpasswd_pihole_1=$nginx_htpasswd_1
+					elif [ "$nginx_username_and_password_reuse_for_pihole" == "2" ]; then
+						nginx_username_and_password_pihole_function
+					else
+						echo "This message should not be visible."
+					fi
+				else
+					# It is HIGHLY unlikely this should ever trigger, since those variables should never be null. But I'm including it to be safe....
+					nginx_username_and_password_pihole_function
+				fi
 				echo
-					echo "Usernames entered do not match!"
-				echo
-					read -r -p "Enter username                         : " nginx_username_pihole_1
-					read -r -p "Enter username again                   : " nginx_username_pihole_2
-			done
-			echo
-			echo "Your Pi-Hole Administration username is: $nginx_username_pihole_1"
-			echo
-			echo
-			read -r -p "Enter password                         : " nginx_htpasswd_pihole_1
-			read -r -p "Enter password without spaces again    : " nginx_htpasswd_pihole_2
-			while [ $nginx_htpasswd_pihole_1 != $nginx_htpasswd_pihole_2 ]
-			do
-				echo
-					echo "Passwords entered do not match!"
-				echo
-					read -r -p "Enter password                         : " nginx_htpasswd_pihole_1
-					read -r -p "Enter password again                   : " nginx_htpasswd_pihole_2
-			done
-			echo
-			echo "Your Pi-Hole Administration password is: $nginx_htpasswd_pihole_1"
-			echo
-			sudo htpasswd -bc /etc/nginx/passwords_pihole "$nginx_username_pihole_1" "$nginx_htpasswd_pihole_1"
+				sudo htpasswd -bc /etc/nginx/passwords_pihole "$nginx_username_pihole_1" "$nginx_htpasswd_pihole_1"
+			else
+				echo "Pi-Hole password file already exists. Skipping password configuration."
+			fi
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
@@ -12692,9 +13316,16 @@ EOF
 	wait $!
 	#---------------------------------------------------------------------------------------------------------------------------------
 	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-**** Drawpile Admin Web Page Login Information ****
-Web Admin Username = $nginx_username_1
-Web Admin Password = $nginx_htpasswd_1
+**** Drawpile Web Admin Page Login Information ****
+Note: Should only share with minimal number of users
+Web Admin Username      = $nginx_username_1
+Web Admin Password      = $nginx_htpasswd_1
+
+**** Drawpile New Web Admin Page Login Information ****
+Note: Can share with users to gain access to moderation interface
+      and they have a user account set up to limit their access.
+New Web Admin Username  = $nginx_username_admin_ui_1
+New Web Admin Password  = $nginx_htpasswd_admin_ui_1
 
 EOF
 	wait $!
@@ -12909,9 +13540,16 @@ if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL en
 echo
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
-echo "${bold}${cyan}**** Drawpile Admin Web Page Login Information ****${normal}"
-echo "Web Admin Username = $nginx_username_1"
-echo "Web Admin Password = $nginx_htpasswd_1"
+echo "${bold}${cyan}**** Drawpile Web Admin Page Login Information ****${normal}"
+echo "Note: Should only share with minimal number of users"
+echo "Web Admin Username      = $nginx_username_1"
+echo "Web Admin Password      = $nginx_htpasswd_1"
+echo
+echo "${bold}${cyan}**** Drawpile New Web Admin Page Login Information ****${normal}"
+echo "Note: Can share with users to gain access to moderation interface"
+echo "      and they have a user account set up to limit their access."
+echo "New Web Admin Username  = $nginx_username_admin_ui_1"
+echo "New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
 echo
 if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
 	echo "${bold}${cyan}**** Drawpile Server Crypt Key ****${normal}"
