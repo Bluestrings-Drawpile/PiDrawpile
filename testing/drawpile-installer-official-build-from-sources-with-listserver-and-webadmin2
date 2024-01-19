@@ -5890,11 +5890,11 @@ function generate_lets_encrypt_ssl () {
 	echo
 	echo "${bold}${cyan}***** Lets Encrypt Signed Certs . . .*****${normal}"
 	echo
-	echo You will have to enter a valid email address for urgent renewal and security notices.
-	echo You may also need this in the event you need to revoke the SSL certificate to create
-	echo another. You should also read the terms of Service for Lets Encrypt, which can be
-	echo found here:
-	echo     https://letsencrypt.org/documents/LE-SA-v1.3-September-21-2022.pdf
+	echo "You will have to enter a valid email address for urgent renewal and security notices."
+	echo "You may also need this in the event you need to revoke the SSL certificate to create"
+	echo "another. You should also read the terms of Service for Lets Encrypt, which can be"
+	echo "found here:"
+	echo "    https://letsencrypt.org/documents/LE-SA-v1.3-September-21-2022.pdf"
 	echo
 	echo
 	pause
@@ -5904,8 +5904,17 @@ function generate_lets_encrypt_ssl () {
 		echo "Stripping beta from Drawpile version for comparison."
 		drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
 	else
-		echo "Removing everything after dash from Drawpile version for comparison."
-		drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+		echo "Removing everything after first five characters from Drawpile version for comparison."
+		drawpile_srv_version_stripped=${drawpile_srv_version:0:5}
+		# echo "Removing everything after dash from Drawpile version for comparison."
+		# drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+	fi
+	if [ -z "$drawpile_srv_version_stripped" ] ; then
+		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
+		echo "${bold}${red}Exiting script, unable to continue.${normal}"
+		echo
+		sleep 30
+		exit
 	fi
 	certbot_version=$( certbot --version | awk '{ print $2 }' )
 	# sudo certbot certificates
@@ -6636,8 +6645,17 @@ if echo "$drawpile_srv_version" | grep -qw "beta"; then
 	echo "Stripping beta from Drawpile version for comparison."
 	drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
 else
-	echo "Removing everything after dash from Drawpile version for comparison."
-	drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+	echo "Removing everything after first five characters from Drawpile version for comparison."
+	drawpile_srv_version_stripped=${drawpile_srv_version:0:5}
+	# echo "Removing everything after dash from Drawpile version for comparison."
+	# drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+fi
+if [ -z "$drawpile_srv_version_stripped" ] ; then
+	echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
+	echo "${bold}${red}Exiting script, unable to continue.${normal}"
+	echo
+	sleep 30
+	exit
 fi
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
