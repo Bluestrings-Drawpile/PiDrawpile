@@ -3904,8 +3904,17 @@ function drawpile_srv_compile_verification_function () {
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
 		# echo "Provide the password for: drawpileuser"
 		drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+		drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
 	else
 		drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+		drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+	fi
+	if [ -z "$drawpile_srv_version_stripped" ] ; then
+		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
+		echo "${bold}${red}Exiting script, unable to continue.${normal}"
+		echo
+		sleep 30
+		exit
 	fi
 	
 	if [[ -e  "/usr/local/bin/drawpile-srv" ]] || [[ -e  "/usr/bin/drawpile-srv" ]]; then
@@ -4048,10 +4057,13 @@ function drawpile_compile_verification_function () {
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
 		# echo "Provide the password for: drawpileuser"
 		drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+		drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
 	else
 		drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+		drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
 	fi
 	drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+	
 
 	if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "2" ]; then
 		# 1 - Server - Graphical User Interface (GUI)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF
@@ -5899,23 +5911,6 @@ function generate_lets_encrypt_ssl () {
 	echo
 	pause
 	echo 
-	if echo "$drawpile_srv_version" | grep -qw "beta"; then
-		# 2.2.0-beta.7-55-gd464a68d
-		echo "Stripping beta from Drawpile version for comparison."
-		drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
-	else
-		echo "Removing everything after first five characters from Drawpile version for comparison."
-		drawpile_srv_version_stripped=${drawpile_srv_version:0:5}
-		# echo "Removing everything after dash from Drawpile version for comparison."
-		# drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
-	fi
-	if [ -z "$drawpile_srv_version_stripped" ] ; then
-		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
-		echo "${bold}${red}Exiting script, unable to continue.${normal}"
-		echo
-		sleep 30
-		exit
-	fi
 	certbot_version=$( certbot --version | awk '{ print $2 }' )
 	# sudo certbot certificates
 	if [[ ( "$certbot_version" = "2.0.0" || "$certbot_version" > "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) || ( "$certbot_version" < "2.0.0" && $drawpile_srv_version_stripped < "2.2.0" ) || (( "$certbot_version" < "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" )) ]]; then
@@ -6640,23 +6635,6 @@ sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 
 drawpile_srv_crypt_key_status=no
-if echo "$drawpile_srv_version" | grep -qw "beta"; then
-	# 2.2.0-beta.7-55-gd464a68d
-	echo "Stripping beta from Drawpile version for comparison."
-	drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
-else
-	echo "Removing everything after first five characters from Drawpile version for comparison."
-	drawpile_srv_version_stripped=${drawpile_srv_version:0:5}
-	# echo "Removing everything after dash from Drawpile version for comparison."
-	# drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
-fi
-if [ -z "$drawpile_srv_version_stripped" ] ; then
-	echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
-	echo "${bold}${red}Exiting script, unable to continue.${normal}"
-	echo
-	sleep 30
-	exit
-fi
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -11128,6 +11106,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
 		sudo $package_install_program fail2ban # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 		if [ "$local_or_remote" == "Remote" ]; then
+			echo
+			echo "${bold}${cyan}***** Configure Fail2Ban for SSH or not . . . *****${normal}"
+			echo
 			echo "Script is running through remote SSH. You can choose to enable Fail2Ban to protect"
 			echo "against unauthorized access via SSH if you like, but this may fail if the default"
 			echo "log location is incorrect."
