@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9956
+drawpilescriptversion=2.9957
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5899,7 +5899,14 @@ function generate_lets_encrypt_ssl () {
 	echo
 	pause
 	echo 
-	drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+	if echo "$drawpile_srv_version" | grep -qw "beta"; then
+		# 2.2.0-beta.7-55-gd464a68d
+		echo "Stripping beta from Drawpile version for comparison."
+		drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+	else
+		echo "Removing everything after dash from Drawpile version for comparison."
+		drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+	fi
 	certbot_version=$( certbot --version | awk '{ print $2 }' )
 	# sudo certbot certificates
 	if [[ ( "$certbot_version" = "2.0.0" || "$certbot_version" > "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) || ( "$certbot_version" < "2.0.0" && $drawpile_srv_version_stripped < "2.2.0" ) || (( "$certbot_version" < "2.0.0" ) && ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" )) ]]; then
@@ -6252,30 +6259,45 @@ echo
 if [ "$ssl_encryption_config" == "1" ]; then
 	# 1 - Self Signed
 	echo "Self Signed: RSA type certificate."
-	ssl_cert_and_key_startup_confg="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		# The space at the end of the variable is intentional.
+		ssl_cert_and_key_startup_config="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
+	elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
+	# The space at the end of the variable is intentional.
+		ssl_cert_and_key_startup_config="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
+	else
+		echo "${bold}${red}This option for Drawpile 2.1.x and SSL key algorithm detection should not be visible.${normal}"
+	fi	
 elif [ "$ssl_encryption_config" == "2" ]; then
 	# 2 - Let's Encrypt
 	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 		lets_encrypt_cert_type=$( sudo certbot certificates | grep -i "Key Type:" | awk '{ print $3 }' )
 		if [[ "$lets_encrypt_cert_type" == "RSA" ]]; then
 			echo "Lets Encrypt: RSA type certificate."
-			ssl_cert_and_key_startup_confg="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+			# The space at the end of the variable is intentional.
+			ssl_cert_and_key_startup_config="--ssl-key-algorithm rsa --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
 		elif [[ "$lets_encrypt_cert_type" == "ECDSA" ]]; then
 			echo "Lets Encrypt: ECDSA type elliptic certificate."
-			ssl_cert_and_key_startup_confg="--ssl-key-algorithm ec --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+			# The space at the end of the variable is intentional.
+			ssl_cert_and_key_startup_config="--ssl-key-algorithm ec --ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
 		else
 			echo "${bold}${red}Certificate type unknown, will hope for the best.${normal}"
 			# Not specifying 'ssl-key-algorithm' lets the server try to decide and select the appropriate cert type.
-			ssl_cert_and_key_startup_confg="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+			# The space at the end of the variable is intentional.
+			ssl_cert_and_key_startup_config="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
 		fi
 	elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
-		ssl_cert_and_key_startup_confg="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key"
+		# The space at the end of the variable is intentional.
+		echo "Drawpile older than 2.2.0, not specifying ssl key algorithm startup parameter."
+		ssl_cert_and_key_startup_config="--ssl-cert $ssl_certificate --ssl-key $ssl_private_cert_key "
 	else
 		echo "${bold}${red}This option for Drawpile 2.1.x and SSL key algorithm detection should not be visible.${normal}"
 	fi
 elif [ "$ssl_encryption_config" == "3" ]; then
 	# 3 - No SSL. Do nothing as no error was detected.
 	echo "No SSL certificate."
+	# The lack of space character is intentional.
+	ssl_cert_and_key_startup_config=""
 else
 	echo "${bold}${red}This option for SSL key algorithm detection should not be visible.${normal}"
 fi
@@ -6609,7 +6631,14 @@ sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 
 drawpile_srv_crypt_key_status=no
-drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+if echo "$drawpile_srv_version" | grep -qw "beta"; then
+	# 2.2.0-beta.7-55-gd464a68d
+	echo "Stripping beta from Drawpile version for comparison."
+	drawpile_srv_version_stripped=${drawpile_srv_version%-beta*}
+else
+	echo "Removing everything after dash from Drawpile version for comparison."
+	drawpile_srv_version_stripped=${drawpile_srv_version%%[_-]*}
+fi
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -6855,22 +6884,22 @@ function systemd_options_with_ssl_enabled_options_function () {
 		sessions_record_folder_function
 		template_folder_function
 		sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "2" ]; then
 		systemd_selection_text="2 - all options except session recording" && echo "Selected - $systemd_selection_text"
 		echo '         - recommended'
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "3" ]; then
 		systemd_selection_text="3 - web admin,$drawpile_2_point_2_option_text_01 session recording, ssl, & templates." && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
 		template_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "4" ]; then
 		systemd_selection_text="4 - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "5" ]; then
 		systemd_selection_text="5  - web admin,$drawpile_2_point_2_option_text_01 file backed sessions, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
@@ -6879,7 +6908,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 	elif [ "$systemd_selection" == "6" ]; then
 		systemd_selection_text="6  - web admin,$drawpile_2_point_2_option_text_01 session recording, & ssl" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
-		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "7" ]; then
 		systemd_selection_text="7  - web admin,$drawpile_2_point_2_option_text_01 session recording, & templates" && echo "Selected - $systemd_selection_text"
 		sessions_record_folder_function
@@ -6888,7 +6917,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 	elif [ "$systemd_selection" == "8" ]; then
 		systemd_selection_text="8  - web admin,$drawpile_2_point_2_option_text_01 ssl, & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
-		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "9" ]; then
 		systemd_selection_text="9  - web admin$drawpile_2_point_2_option_text_02 & file backed sessions" && echo "Selected - $systemd_selection_text"
 		sessions_folder_function
@@ -6899,7 +6928,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 		systemd_configuration="--record \"$dp_install_loc/Programs/Drawpile-Srv-Files/session-record/%d--%a--%a.dprec\" --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "11" ]; then
 		systemd_selection_text="11 - web admin$drawpile_2_point_2_option_text_02 & ssl" && echo "Selected - $systemd_selection_text"
-		systemd_configuration="$ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="$ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	elif [ "$systemd_selection" == "12" ]; then
 		systemd_selection_text="12 - web admin$drawpile_2_point_2_option_text_02 & templates" && echo "Selected - $systemd_selection_text"
 		template_folder_function
@@ -6914,7 +6943,7 @@ function systemd_options_with_ssl_enabled_options_function () {
 		echo
 		sessions_folder_function
 		template_folder_function
-		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_confg --local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
+		systemd_configuration="--sessions \"$dp_install_loc/Programs/Drawpile-Srv-Files/sessions/\" --templates \"$dp_install_loc/Programs/Drawpile-Srv-Files/templates/\" $ssl_cert_and_key_startup_config--local-host $hostname --extauth https://drawpile.net/api/ext-auth/"
 	fi
 }
 
@@ -10995,6 +11024,40 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+function fail2ban_nginx_http_auth_and_ssdh () {
+	cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
+[DEFAULT]
+ignoreip  = 127.0.0.1/8
+action    = %(action_)s
+bantime   = 10m
+maxretry  = 15
+
+[nginx-http-auth]
+enabled   = true
+
+[sshd]
+enabled   = true
+EOF
+	wait $!
+}
+
+function fail2ban_nginx_http_auth () {
+	cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
+[DEFAULT]
+ignoreip  = 127.0.0.1/8
+action    = %(action_)s
+bantime   = 10m
+maxretry  = 15
+
+[nginx-http-auth]
+enabled   = true
+
+[sshd]
+enabled   = false
+EOF
+	wait $!
+}
+
 echo
 echo "${bold}${cyan}***** Configure Fail2Ban . . . *****${normal}"
 echo 
@@ -11047,35 +11110,40 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
 		sudo $package_install_program fail2ban # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 		if [ "$local_or_remote" == "Remote" ]; then
-			cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
-[DEFAULT]
-ignoreip  = 127.0.0.1/8
-action    = %(action_)s
-bantime   = 10m
-maxretry  = 15
-
-[nginx-http-auth]
-enabled   = true
-
-[sshd]
-enabled   = true
-EOF
-			wait $!
+			echo "Script is running through remote SSH. You can choose to enable Fail2Ban to protect"
+			echo "against unauthorized access via SSH if you like, but this may fail if the default"
+			echo "log location is incorrect."
+			echo
+			echo "As long as username and password authentication is disabled via this script, this"
+			echo "should be safe to leave unprotected via Fail2Ban (until I figure out how to make"
+			echo "this smarter)."
+			echo
+			echo "Configure Fail2Ban Options: /etc/fail2ban/jail.local"
+			echo "1 - NGINX HTTPD Auth (Recommended)"
+			echo "2 - NGINX HTTPD Auth and SSHD"
+			while :; do
+				read -r -p "${bold}${cyan}Please type 1 or 2:${normal} " fail2ban_remote_config
+				echo
+				if [ "$fail2ban_remote_config" == "1" ] || [ "$fail2ban_remote_config" == "2" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			echo
+			if [ "$fail2ban_remote_config" == "1" ]; then
+				fail2ban_nginx_http_auth
+			elif [ "$fail2ban_remote_config" == "2" ]; then
+				fail2ban_nginx_http_auth_and_ssdh
+			else
+				echo "This message for Fail2Ban choice of jail.local should not be visible."
+			fi
 		elif [ "$local_or_remote" == "Local" ]; then
-			cat <<EOF | sudo tee /etc/fail2ban/jail.local >/dev/null
-[DEFAULT]
-ignoreip  = 127.0.0.1/8
-action    = %(action_)s
-bantime   = 10m
-maxretry  = 15
-
-[nginx-http-auth]
-enabled   = true
-
-[sshd]
-enabled   = false
-EOF
-			wait $!
+			fail2ban_nginx_http_auth
 		else
 			echo "This message shouldn't be visible for Fail2Ban - Remote or Local"
 		fi
