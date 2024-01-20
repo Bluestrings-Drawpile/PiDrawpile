@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9957
+drawpilescriptversion=2.9958
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2820,16 +2820,6 @@ package_action_3_not_min=
 
 install_package_set="yes"
 package_version_check_and_update_function
-
-# Find Latest Version (May provide beta or stable release info)
-# drawpile_program_version_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -m 1 'release version' )
-drawpile_program_version_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
-
-# Find Latest Stable Release - <release version="2.1.20" date="2021-09-12">
-drawpile_program_version_release_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -v 'type="development"' | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
-
-# Find Latest Beta Version - <release version="2.2.0-beta.5" type="development" date="2023-06-21">
-drawpile_program_version_beta_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep 'type="development"' | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -3411,6 +3401,16 @@ echo '--------------------------------------------------------------------------
 echo
 drawpile_version_manual_type_for_script=2.1.20
 drawpile_program_version_with_git=$( git describe )
+
+# Find Latest Version (May provide beta or stable release info)
+# drawpile_program_version_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -m 1 'release version' )
+drawpile_program_version_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
+
+# Find Latest Stable Release - <release version="2.1.20" date="2021-09-12">
+drawpile_program_version_release_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep -v 'type="development"' | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
+
+# Find Latest Beta Version - <release version="2.2.0-beta.5" type="development" date="2023-06-21">
+drawpile_program_version_beta_on_website=$( curl -s -N https://raw.githubusercontent.com/drawpile/Drawpile/main/src/desktop/net.drawpile.drawpile.appdata.xml | grep 'type="development"' | grep -m 1 'release version' | awk '{ print $2 }' | grep -o -P '(?<=version=").*(?=")' )
 
 echo "${bold}${cyan}***** Select Drawpile Branch . . . *****${normal}"
 echo
@@ -7942,162 +7942,163 @@ elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abu
 else
 	"This message should not be visible for Drawpile Monitor."
 fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-variable_to_read_1="samba_choice"
-variable_to_read_2="option_loc_num"
-variable_to_read_3="dp_install_loc_9_custom"
+if [ "$local_or_remote" == "Local" ]; then
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	variable_to_read_1="samba_choice"
+	variable_to_read_2="option_loc_num"
+	variable_to_read_3="dp_install_loc_9_custom"
 
-value_description_1="${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
-value_description_2=" "
-value_description_3="For the value located above, the values 1-3 specifies file sharing"
-value_description_4="     is set up, while 4 means not set up."
-value_description_5=" "
-value_description_6="Used to enable file sharing with Windows devices on your home network."
-value_description_7="     ${bold}${red}This should not be used for remote servers that are not on your${normal}"
-value_description_8="     ${bold}${red}local network.${normal}"
-value_description_9=" "
-value_description_10="Query 02: option_loc_num"
-value_description_11="     Number selected when selecting download/server set up location."
-value_description_12=" "
-value_description_13="Query 03: dp_install_loc_9_custom"
-value_description_14="     If this has a value, this is the user specified location."
-value_description_15=" "
+	value_description_1="${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
+	value_description_2=" "
+	value_description_3="For the value located above, the values 1-3 specifies file sharing"
+	value_description_4="     is set up, while 4 means not set up."
+	value_description_5=" "
+	value_description_6="Used to enable file sharing with Windows devices on your home network."
+	value_description_7="     ${bold}${red}This should not be used for remote servers that are not on your${normal}"
+	value_description_8="     ${bold}${red}local network.${normal}"
+	value_description_9=" "
+	value_description_10="Query 02: option_loc_num"
+	value_description_11="     Number selected when selecting download/server set up location."
+	value_description_12=" "
+	value_description_13="Query 03: dp_install_loc_9_custom"
+	value_description_14="     If this has a value, this is the user specified location."
+	value_description_15=" "
 
 
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	samba_choice=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo
-	echo "${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
-	echo
-	echo 'This stage will give you an option to set up your Raspberry Pi for file'
-	echo 'sharing with Windows so that you can copy or move files to and from'
-	echo 'the device. This also means it will be easier to get recorded sessions,'
-	echo 'templates, and the archived file backed sessions from the drawpile'
-	echo 'server to your computer.'
-	echo
-	echo 'What folders would you like to share to access on the network?'
-	echo
-	echo "${red}${bold}NOTE: If using server remotely that is NOT on your home network, you${normal}"
-	echo "${red}${bold}      should NOT use this option. Select 4 to skip this step.${normal}"
-	echo
-	echo
-	echo "							${bold}Actual Path to be shared${normal}"
-	echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-	if [[ -d "$option_loc_1" ]]; then
-		echo " 1 - ${underline}Public Folder (Recommended)${normal}			$option_loc_1"
-	else
-		echo " ${red}${bold}$invalid_path_text	$option_loc_1${normal}"
-	fi
-	echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-	if [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
-		echo " 2 - ${underline}Music, Pictures, Public, and Videos${normal}		$option_loc_10
-							$option_loc_4
-							$option_loc_1
-							$option_loc_11"
-	else
-		echo " ${red}${bold}$invalid_path_text	$option_loc_10
-							$option_loc_4
-							$option_loc_1
-							$option_loc_11${normal}"
-	fi
-	echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-	if [[ -d "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" ]]; then
-		echo " 3 - ${underline}Custom location of drawpile${normal}			$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" || echo "${red}${bold}$invalid_path_text	- $dp_install_loc/Programs/Drawpile-Srv-Files${normal}"
-		echo "     Server files only to be shared, like recordings,"
-		echo "           templates, and file-backed sessions."
-	elif [[ -d "$dp_install_loc/Programs/Drawpile-Srv-Files" ]]; then
-		echo " 3 - ${underline}Server files only to be shared.${normal}			$dp_install_loc/Programs/Drawpile-Srv-Files"
-		echo "     Server files only to be shared, like recordings,"
-		echo "           templates, and file-backed sessions."
-	else
-		echo "${red}${bold} $invalid_path_text	$dp_install_loc/Programs/Drawpile-Srv-Files"
-	fi
-	echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-	echo " 4 - ${underline}No Windows file sharing to be set up.${normal}"
-	echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-	echo
-	read -r -p 'Enter a number and hit enter to continue: ' samba_choice
-	echo
-	if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-
-		echo "${bold}${cyan}*****Installing Samba for Windows Network Sharing . . . *****${normal}"
+	read_stored_config_value_query_function
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Storing value and moving on."
+		samba_choice=$read_stored_config_value_query_1
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		echo
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-			version_samba=$( apt-cache policy samba | grep "Installed:" | cut -c 14-22 )
-			# minimum_version_samba=2:4.13.13
-			version_samba_common_bin=$( apt-cache policy samba-common-bin | grep "Installed:" | cut -c 14-22 )
-			# minimum_version_samba_common_bin=2:4.13.13
-			progs=(samba samba-common-bin);
-		fi
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			version_samba=$( dnf info samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-			installation_status_samba=$( dnf info samba | sed -n '2 p' )
-			# minimum_version_samba=2:4.13.13
-			version_samba_common_bin=$( dnf info samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-			installation_status_samba_common_bin=$( dnf info samba-common | sed -n '2 p' )
-			# minimum_version_samba_common_bin=2:4.13.13
-			progs=(samba samba-common);
-			# Installed Packages
-			# Available Packages
-			# Error: No matching Packages to list
-		fi
-		app_does_not_exist=0
-		app_installed=0
-		app_not_installed=0
-		package_install_status_check_function		
-		if [[ "$version_samba" = "(none)" ]] || [[ "$installation_status_samba" = "Available Packages" ]]; then
-			echo "Installing package samba . . ."
-			echo
-			sudo $package_install_program samba # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
-			echo
+		echo "${bold}${cyan}***** Set up file sharing with other computers . . . (Samba) *****${normal}"
+		echo
+		echo 'This stage will give you an option to set up your Raspberry Pi for file'
+		echo 'sharing with Windows so that you can copy or move files to and from'
+		echo 'the device. This also means it will be easier to get recorded sessions,'
+		echo 'templates, and the archived file backed sessions from the drawpile'
+		echo 'server to your computer.'
+		echo
+		echo 'What folders would you like to share to access on the network?'
+		echo
+		echo "${red}${bold}NOTE: If using server remotely that is NOT on your home network, you${normal}"
+		echo "${red}${bold}      should NOT use this option. Select 4 to skip this step.${normal}"
+		echo
+		echo
+		echo "							${bold}Actual Path to be shared${normal}"
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		if [[ -d "$option_loc_1" ]]; then
+			echo " 1 - ${underline}Public Folder (Recommended)${normal}			$option_loc_1"
 		else
-			echo "Package samba already installed."
+			echo " ${red}${bold}$invalid_path_text	$option_loc_1${normal}"
 		fi
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		if [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
+			echo " 2 - ${underline}Music, Pictures, Public, and Videos${normal}		$option_loc_10
+								$option_loc_4
+								$option_loc_1
+								$option_loc_11"
+		else
+			echo " ${red}${bold}$invalid_path_text	$option_loc_10
+								$option_loc_4
+								$option_loc_1
+								$option_loc_11${normal}"
+		fi
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		if [[ -d "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" ]]; then
+			echo " 3 - ${underline}Custom location of drawpile${normal}			$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" || echo "${red}${bold}$invalid_path_text	- $dp_install_loc/Programs/Drawpile-Srv-Files${normal}"
+			echo "     Server files only to be shared, like recordings,"
+			echo "           templates, and file-backed sessions."
+		elif [[ -d "$dp_install_loc/Programs/Drawpile-Srv-Files" ]]; then
+			echo " 3 - ${underline}Server files only to be shared.${normal}			$dp_install_loc/Programs/Drawpile-Srv-Files"
+			echo "     Server files only to be shared, like recordings,"
+			echo "           templates, and file-backed sessions."
+		else
+			echo "${red}${bold} $invalid_path_text	$dp_install_loc/Programs/Drawpile-Srv-Files"
+		fi
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		echo " 4 - ${underline}No Windows file sharing to be set up.${normal}"
+		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 		echo
-		if [[ "$version_samba_common_bin" = "(none)" ]] || [[ "$installation_status_samba_common_bin" = "Available Packages" ]]; then
-			echo "Installing package samba . . ."
+		read -r -p 'Enter a number and hit enter to continue: ' samba_choice
+		echo
+		if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+
+			echo "${bold}${cyan}*****Installing Samba for Windows Network Sharing . . . *****${normal}"
 			echo
 			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-				package_name=samba-common-bin
+				version_samba=$( apt-cache policy samba | grep "Installed:" | cut -c 14-22 )
+				# minimum_version_samba=2:4.13.13
+				version_samba_common_bin=$( apt-cache policy samba-common-bin | grep "Installed:" | cut -c 14-22 )
+				# minimum_version_samba_common_bin=2:4.13.13
+				progs=(samba samba-common-bin);
 			fi
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				package_name=samba-common
+				version_samba=$( dnf info samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba=$( dnf info samba | sed -n '2 p' )
+				# minimum_version_samba=2:4.13.13
+				version_samba_common_bin=$( dnf info samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba_common_bin=$( dnf info samba-common | sed -n '2 p' )
+				# minimum_version_samba_common_bin=2:4.13.13
+				progs=(samba samba-common);
+				# Installed Packages
+				# Available Packages
+				# Error: No matching Packages to list
 			fi
-			sudo $package_install_program samba-common-bin # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+			app_does_not_exist=0
+			app_installed=0
+			app_not_installed=0
+			package_install_status_check_function		
+			if [[ "$version_samba" = "(none)" ]] || [[ "$installation_status_samba" = "Available Packages" ]]; then
+				echo "Installing package samba . . ."
+				echo
+				sudo $package_install_program samba # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				echo
+			else
+				echo "Package samba already installed."
+			fi
 			echo
-		else
-			echo "Package samba already installed."
-		fi
-		echo
-		if [[ ! -e /etc/samba/smb.conf.bak && -e /etc/samba/smb.conf ]]; then
-			sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
-			# sudo cp /etc/samba/smb.conf.bak /etc/samba/smb.conf
-			echo Backup made of smb.conf to smb.conf.bak
-		fi
-		sudo chmod 777 /etc/samba/smb.conf
-		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-			sudo sed -i '/workgroup = WORKGROUP/ c\	workgroup = workgroup' /etc/samba/smb.conf
-			sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
-			sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
-		fi
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			sudo sed -i '/workgroup = SAMBA/ c\	workgroup = workgroup' /etc/samba/smb.conf
-			sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
-			sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
-			# sudo sed -i 's/workgroup = SAMBA$/&workgroup = WORKGROUP\n   netbios name = $HOSTNAME/' /etc/samba/smb.conf
-			# sudo sed -i 's/netbios name = $HOSTNAME$/&netbios name = $HOSTNAME\n		wins support = yes/' /etc/samba/smb.conf
-			# sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
-		fi
-		echo
-		if [ "$samba_choice" == "1" ]; then
-			sudo chmod 777 $option_loc_1 -R
-		echo "
+			if [[ "$version_samba_common_bin" = "(none)" ]] || [[ "$installation_status_samba_common_bin" = "Available Packages" ]]; then
+				echo "Installing package samba . . ."
+				echo
+				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+					package_name=samba-common-bin
+				fi
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					package_name=samba-common
+				fi
+				sudo $package_install_program samba-common-bin # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
+				echo
+			else
+				echo "Package samba already installed."
+			fi
+			echo
+			if [[ ! -e /etc/samba/smb.conf.bak && -e /etc/samba/smb.conf ]]; then
+				sudo cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
+				# sudo cp /etc/samba/smb.conf.bak /etc/samba/smb.conf
+				echo Backup made of smb.conf to smb.conf.bak
+			fi
+			sudo chmod 777 /etc/samba/smb.conf
+			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+				sudo sed -i '/workgroup = WORKGROUP/ c\	workgroup = workgroup' /etc/samba/smb.conf
+				sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
+				sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
+			fi
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+				sudo sed -i '/workgroup = SAMBA/ c\	workgroup = workgroup' /etc/samba/smb.conf
+				sudo sed -i "s/workgroup = workgroup$/&\n	netbios name = $HOSTNAME/" /etc/samba/smb.conf
+				sudo sed -i "s/netbios name = $HOSTNAME$/&\n	wins support = yes/" /etc/samba/smb.conf
+				# sudo sed -i 's/workgroup = SAMBA$/&workgroup = WORKGROUP\n   netbios name = $HOSTNAME/' /etc/samba/smb.conf
+				# sudo sed -i 's/netbios name = $HOSTNAME$/&netbios name = $HOSTNAME\n		wins support = yes/' /etc/samba/smb.conf
+				# sudo sed -i '/\#   wins support = no/ c\   wins support = yes' /etc/samba/smb.conf
+			fi
+			echo
+			if [ "$samba_choice" == "1" ]; then
+				sudo chmod 777 $option_loc_1 -R
+			echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
 	path = $option_loc_1
@@ -8106,30 +8107,30 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	read only = no
 	create mask = 0777
 	directory mask = 0777" >> /etc/samba/smb.conf
-			sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-				sudo systemctl restart smbd
-				wait $!
-				sudo systemctl restart nmbd
-				wait $!
-				sudo samba restart
-				wait $!
-			fi
-			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				sudo systemctl enable smb --now
-				wait $!
-				sudo systemctl restart smb
-				wait $!
-			fi
-			echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
-			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
-			echo
-		elif [ "$samba_choice" == "2" ]; then
-			sudo chmod 777 $option_loc_1 -R
-			sudo chmod 777 $option_loc_10 -R
-			sudo chmod 777 $option_loc_4 -R
-			sudo chmod 777 $option_loc_11 -R
-			echo "
+				sudo chmod 641 /etc/samba/smb.conf
+				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+					sudo systemctl restart smbd
+					wait $!
+					sudo systemctl restart nmbd
+					wait $!
+					sudo samba restart
+					wait $!
+				fi
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					sudo systemctl enable smb --now
+					wait $!
+					sudo systemctl restart smb
+					wait $!
+				fi
+				echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
+				#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
+				echo
+			elif [ "$samba_choice" == "2" ]; then
+				sudo chmod 777 $option_loc_1 -R
+				sudo chmod 777 $option_loc_10 -R
+				sudo chmod 777 $option_loc_4 -R
+				sudo chmod 777 $option_loc_11 -R
+				echo "
 [$current_username - Public]
 	comment = $current_username Public Shared Folder
 	path = $option_loc_1
@@ -8169,27 +8170,27 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	create mask = 0777
 	directory mask = 0777
 	force user = root" >> /etc/samba/smb.conf
-			sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-				sudo systemctl restart smbd
-				wait $!
-				sudo systemctl restart nmbd
-				wait $!
-				sudo samba restart
-				wait $!
-			fi
-			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				sudo systemctl enable smb --now
-				wait $!
-				sudo systemctl restart smb
-				wait $!
-			fi
-			echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
-			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
-		elif [ "$samba_choice" == "3" ]; then
-			if [ -z "$dp_install_loc_9_custom" ]; then
-				sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
-				echo "
+				sudo chmod 641 /etc/samba/smb.conf
+				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+					sudo systemctl restart smbd
+					wait $!
+					sudo systemctl restart nmbd
+					wait $!
+					sudo samba restart
+					wait $!
+				fi
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					sudo systemctl enable smb --now
+					wait $!
+					sudo systemctl restart smb
+					wait $!
+				fi
+				echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
+				#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
+			elif [ "$samba_choice" == "3" ]; then
+				if [ -z "$dp_install_loc_9_custom" ]; then
+					sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
+					echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
 	path = \"$dp_install_loc/Programs/Drawpile-Srv-Files\"
@@ -8199,9 +8200,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	create mask = 0777
 	directory mask = 0777
 	force user = root" >> /etc/samba/smb.conf
-			else	
-				sudo chmod 777 "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files/" -R
-				echo "
+				else	
+					sudo chmod 777 "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files/" -R
+					echo "
 [$HOSTNAME - Drawpile-Server]
 	comment = $HOSTNAME Drawpile Server
 	path = \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files\"
@@ -8211,46 +8212,46 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	create mask = 0777
 	directory mask = 0777
 	force user = root" >> /etc/samba/smb.conf
+				fi
+			sudo chmod 641 /etc/samba/smb.conf
+				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+					sudo systemctl restart smbd
+					wait $!
+					sudo systemctl restart nmbd
+					wait $!
+					sudo samba restart
+					wait $!
+				fi
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					sudo systemctl enable smb --now
+					wait $!
+					sudo systemctl restart smb
+					wait $!
+				fi
+			echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
+				#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
+			else
+				echo 'Invalid option selected. No Windows file sharing to be'
+				echo 'set up! Moving on . . .'
+				samba_choice=4
 			fi
-		sudo chmod 641 /etc/samba/smb.conf
-			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-				sudo systemctl restart smbd
-				wait $!
-				sudo systemctl restart nmbd
-				wait $!
-				sudo samba restart
-				wait $!
-			fi
-			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				sudo systemctl enable smb --now
-				wait $!
-				sudo systemctl restart smb
-				wait $!
-			fi
-		echo 'Read more on Samba --> http://tinyurl.com/y9t5qxbv'
-			#Read more on Samba --> https://www.daedtech.com/create-a-windows-share-on-your-raspberry-pi/
 		else
-			echo 'Invalid option selected. No Windows file sharing to be'
-			echo 'set up! Moving on . . .'
-			samba_choice=4
+			if [ "$samba_choice" == "4" ]; then
+				echo 'No Windows file sharing to be set up. Moving on . . .'
+			else
+				echo 'Invalid option selected. No Windows file sharing to be'
+				echo 'set up! Moving on . . .'
+				samba_choice=4
+			fi	
 		fi
-	else
-		if [ "$samba_choice" == "4" ]; then
-			echo 'No Windows file sharing to be set up. Moving on . . .'
-		else
-			echo 'Invalid option selected. No Windows file sharing to be'
-			echo 'set up! Moving on . . .'
-			samba_choice=4
-		fi	
-	fi
-	sudo sed -i '\!^samba_choice =!{h;s!=.*!= '"$samba_choice"'!};${x;\!^$!{s!!samba_choice = '"$samba_choice"'!;H};x}' $drawpile_configuration_values_file
-	#---------------------------------------------------------------------------------------------------------------------------------
-	#---------------------------------------------------------------------------------------------------------------------------------
-	# This section checks for SELinux and firewall-cmd blocks against Samba, and removes them accordingly.
-	# https://docs.fedoraproject.org/en-US/quick-docs/samba/
-	
-	if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
+		sudo sed -i '\!^samba_choice =!{h;s!=.*!= '"$samba_choice"'!};${x;\!^$!{s!!samba_choice = '"$samba_choice"'!;H};x}' $drawpile_configuration_values_file
+		#---------------------------------------------------------------------------------------------------------------------------------
+		#---------------------------------------------------------------------------------------------------------------------------------
+		# This section checks for SELinux and firewall-cmd blocks against Samba, and removes them accordingly.
 		# https://docs.fedoraproject.org/en-US/quick-docs/samba/
+		
+		if [[ "$selinux_available_check" -ne "127" || "$firewall_cmd_available_check" -ne "1" ]] && (( "$samba_choice" >= "1" && "$samba_choice" <= "3" )); then
+			# https://docs.fedoraproject.org/en-US/quick-docs/samba/
 		<<comment_EOF_delete
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo
@@ -8272,200 +8273,201 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo systemctl restart smb
 		fi
 comment_EOF_delete
-		#---------------------------------------------------------------------------------------------------------------------------------
-		function selinux_samba_adjustments_function () {
-			if [ "$samba_choice" == "1" ]; then
-				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
-				echo
-				echo "sudo restorecon -R \"$option_loc_1\""
-				sudo restorecon -R "$option_loc_1"
-			elif [ "$samba_choice" == "2" ]; then
-				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
-				echo
-				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_10(/.*)?\""
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
-				echo
-				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_4(/.*)?\""
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
-				echo
-				echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_11(/.*)?\""
-				sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
-				echo
-				sudo "restorecon -R \"$option_loc_1\""
-				sudo restorecon -R "$option_loc_1"
-				echo
-				sudo "restorecon -R \"$option_loc_10\""
-				sudo restorecon -R "$option_loc_10"
-				echo
-				sudo "restorecon -R \"$option_loc_4\""
-				sudo restorecon -R "$option_loc_4"
-				echo
-				sudo "restorecon -R \"$option_loc_11\""
-				sudo restorecon -R "$option_loc_11"
-			elif [ "$samba_choice" == "3" ]; then
-				if [ -z "$dp_install_loc_9_custom" ]; then
-					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?\""
-					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
+			#---------------------------------------------------------------------------------------------------------------------------------
+			function selinux_samba_adjustments_function () {
+				if [ "$samba_choice" == "1" ]; then
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
+					sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
 					echo
-					echo "sudo restorecon -R \"$dp_install_loc/Programs/Drawpile-Srv-Files\""
-					sudo restorecon -R "$dp_install_loc/Programs/Drawpile-Srv-Files"
-				else	
-					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?\""
-					sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
+					echo "sudo restorecon -R \"$option_loc_1\""
+					sudo restorecon -R "$option_loc_1"
+				elif [ "$samba_choice" == "2" ]; then
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_1(/.*)?\""
+					sudo semanage fcontext --add --type "samba_share_t" "$option_loc_1(/.*)?"
 					echo
-					echo "sudo restorecon -R \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files\""
-					sudo restorecon -R "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files"
-				fi
-			else
-				echo "${bold}${red}This message for SELinux Samba check should not be visible.${normal}"
-				echo
-				sleep 10
-			fi
-		}
-		selinux_status=$( getenforce 2>/dev/null )
-		selinux_available_check=$?
-		echo
-		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		echo
-		if [ "$selinux_available_check" -eq "0" ]; then
-			# SELinux installed.
-			if [ "$selinux_status" == "Disabled" ]; then
-				echo "${bold}${green}SELinux status is: Disabled.${normal}"
-				echo "No action is required. However, if you enable it in the future,"
-				echo "it will cause samba to not function as intended."
-				echo
-				sleep 30
-			else
-				selinux_config_status=$( sestatus 2>/dev/null | grep -i "Mode from config file:" | awk '{ print $5 }' )
-				# echo "SELinux Config Status:	$selinux_config_status"
-				# echo
-				if [ "${selinux_status,,}" == "${selinux_config_status,,}" ]; then
-					echo "${bold}${green}SELinux status is not temporarily changed.${normal}"
-					if [ "$selinux_status" == "Enforcing" ]; then
-						echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_10(/.*)?\""
+					sudo semanage fcontext --add --type "samba_share_t" "$option_loc_10(/.*)?"
+					echo
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_4(/.*)?\""
+					sudo semanage fcontext --add --type "samba_share_t" "$option_loc_4(/.*)?"
+					echo
+					echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$option_loc_11(/.*)?\""
+					sudo semanage fcontext --add --type "samba_share_t" "$option_loc_11(/.*)?"
+					echo
+					sudo "restorecon -R \"$option_loc_1\""
+					sudo restorecon -R "$option_loc_1"
+					echo
+					sudo "restorecon -R \"$option_loc_10\""
+					sudo restorecon -R "$option_loc_10"
+					echo
+					sudo "restorecon -R \"$option_loc_4\""
+					sudo restorecon -R "$option_loc_4"
+					echo
+					sudo "restorecon -R \"$option_loc_11\""
+					sudo restorecon -R "$option_loc_11"
+				elif [ "$samba_choice" == "3" ]; then
+					if [ -z "$dp_install_loc_9_custom" ]; then
+						echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?\""
+						sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc/Programs/Drawpile-Srv-Files(/.*)?"
 						echo
-						echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+						echo "sudo restorecon -R \"$dp_install_loc/Programs/Drawpile-Srv-Files\""
+						sudo restorecon -R "$dp_install_loc/Programs/Drawpile-Srv-Files"
+					else	
+						echo "sudo semanage fcontext --add --type \"samba_share_t\" \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?\""
+						sudo semanage fcontext --add --type "samba_share_t" "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files(/.*)?"
 						echo
-						echo '-------------------------------------------'				
-						echo 
-						selinux_samba_adjustments_function
-						echo
-						sleep 10
-					elif [ "$selinux_status" == "Permissive" ]; then
-						echo "${bold}${green}SELinux status is: Permissive.${normal}"
-						echo
-						echo "No action is required."
-						echo
-						sleep 10
-					else
-						echo "${bold}${red}This message for SELinux status Samba (1) should not be visible.${normal}"
-					fi
-				elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
-					echo "${bold}${yellow}SELinux status is temporarily changed."
-					if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
-						echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
-						echo
-						echo "However, on system reboot the status will return to permissive."
-						echo "No action is required. It is recommended that you reboot when"
-						echo "the script is completed or turn it back to permissive mode with"
-						echo "the following command:"
-						echo "     sudo setenforce 0"
-						echo
-						pause
-						echo
-					elif [ "$selinux_status" == "Permissive" ] && [ "$selinux_config_status" == "enforcing" ]; then
-						echo "${bold}${yellow}SELinux status is: Permissive.${normal}"
-						echo
-						echo "However, on system reboot the status will return to enforcing."
-						echo "Action required to ensure samba works on reboot."
-						echo
-						echo '-------------------------------------------'				
-						echo
-						selinux_samba_adjustments_function
-						echo
-						sleep 10
-					else
-						echo "${bold}${red}This message for SELinux status Samba (2) should not be visible.${normal}"
-						echo
-						sleep 10
+						echo "sudo restorecon -R \"$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files\""
+						sudo restorecon -R "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files"
 					fi
 				else
-					echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
+					echo "${bold}${red}This message for SELinux Samba check should not be visible.${normal}"
 					echo
 					sleep 10
 				fi
-			fi
-		elif [ "$selinux_available_check" -eq "127" ]; then
-			echo "${bold}${green}SELinux is not available. No action required.${normal}"
+			}
+			selinux_status=$( getenforce 2>/dev/null )
+			selinux_available_check=$?
 			echo
-			sleep 10
-		else
-			echo "${bold}${red}This message for SELinux check should not be visible.${normal}"
+			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 			echo
-			sleep 10
-		fi
-		#---------------------------------------------------------------------------------------------------------------------------------
-		function firewall_cmd_samba_adjustments_function () {
-			firewall_zone_name=$( sudo firewall-cmd --list-all | sed -n '1 p' | awk '{ print $1 }' )
-			
-			echo "sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba"
-			sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba
-			echo
-			echo "sudo firewall-cmd --reload"
-			sudo firewall-cmd --reload
-		}
-
-		firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
-		firewall_cmd_available_check=$?
-		# echo Check: $firewall_cmd_available_check
-		echo
-		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		echo
-		if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_check" -eq "252" ] || [ "$firewall_cmd_available_check" -ne "1" ]; then
-			# 0 is running, 252 is not running.
-			# echo State: $firewall_cmd_status
-			echo "${bold}${yellow}Firewall-cmd installed.${normal}"
-			if [ "$firewall_cmd_status" == "running" ]; then
-				echo "${bold}${yellow}Firewall-cmd is running currently.${normal}"
-				echo
-				echo "${bold}${yellow}Action required to ensure samba works.${normal}"
-				echo
-				echo '-------------------------------------------'				
-				echo
-				firewall_cmd_samba_adjustments_function
-				echo
-				sleep 10
-			elif [ "$firewall_cmd_status" == "not running" ]; then
-				echo "${bold}${green}Firewall-cmd is not running currently.${normal}"
-				echo
-				echo "${bold}${yellow}Action required to ensure samba works.${normal}"
-				echo
-				echo '-------------------------------------------'				
-				echo
-				firewall_cmd_samba_adjustments_function
+			if [ "$selinux_available_check" -eq "0" ]; then
+				# SELinux installed.
+				if [ "$selinux_status" == "Disabled" ]; then
+					echo "${bold}${green}SELinux status is: Disabled.${normal}"
+					echo "No action is required. However, if you enable it in the future,"
+					echo "it will cause samba to not function as intended."
+					echo
+					sleep 30
+				else
+					selinux_config_status=$( sestatus 2>/dev/null | grep -i "Mode from config file:" | awk '{ print $5 }' )
+					# echo "SELinux Config Status:	$selinux_config_status"
+					# echo
+					if [ "${selinux_status,,}" == "${selinux_config_status,,}" ]; then
+						echo "${bold}${green}SELinux status is not temporarily changed.${normal}"
+						if [ "$selinux_status" == "Enforcing" ]; then
+							echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+							echo
+							echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+							echo
+							echo '-------------------------------------------'				
+							echo 
+							selinux_samba_adjustments_function
+							echo
+							sleep 10
+						elif [ "$selinux_status" == "Permissive" ]; then
+							echo "${bold}${green}SELinux status is: Permissive.${normal}"
+							echo
+							echo "No action is required."
+							echo
+							sleep 10
+						else
+							echo "${bold}${red}This message for SELinux status Samba (1) should not be visible.${normal}"
+						fi
+					elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
+						echo "${bold}${yellow}SELinux status is temporarily changed."
+						if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
+							echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+							echo
+							echo "However, on system reboot the status will return to permissive."
+							echo "No action is required. It is recommended that you reboot when"
+							echo "the script is completed or turn it back to permissive mode with"
+							echo "the following command:"
+							echo "     sudo setenforce 0"
+							echo
+							pause
+							echo
+						elif [ "$selinux_status" == "Permissive" ] && [ "$selinux_config_status" == "enforcing" ]; then
+							echo "${bold}${yellow}SELinux status is: Permissive.${normal}"
+							echo
+							echo "However, on system reboot the status will return to enforcing."
+							echo "Action required to ensure samba works on reboot."
+							echo
+							echo '-------------------------------------------'				
+							echo
+							selinux_samba_adjustments_function
+							echo
+							sleep 10
+						else
+							echo "${bold}${red}This message for SELinux status Samba (2) should not be visible.${normal}"
+							echo
+							sleep 10
+						fi
+					else
+						echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
+						echo
+						sleep 10
+					fi
+				fi
+			elif [ "$selinux_available_check" -eq "127" ]; then
+				echo "${bold}${green}SELinux is not available. No action required.${normal}"
 				echo
 				sleep 10
 			else
-				echo "${bold}${red}This message should not be visible for firewall-cmd status.${normal}"
+				echo "${bold}${red}This message for SELinux check should not be visible.${normal}"
 				echo
 				sleep 10
 			fi
-		elif [ "$firewall_cmd_available_check" -eq "1" ]; then
-			echo "${bold}${green}Firewall_cmd is not available. No action required.${normal}"
+			#---------------------------------------------------------------------------------------------------------------------------------
+			function firewall_cmd_samba_adjustments_function () {
+				firewall_zone_name=$( sudo firewall-cmd --list-all | sed -n '1 p' | awk '{ print $1 }' )
+				
+				echo "sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba"
+				sudo firewall-cmd --permanent --zone=$firewall_zone_name --add-service=samba
+				echo
+				echo "sudo firewall-cmd --reload"
+				sudo firewall-cmd --reload
+			}
+
+			firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
+			firewall_cmd_available_check=$?
+			# echo Check: $firewall_cmd_available_check
 			echo
-			sleep 10
-		else
-			echo "${bold}${red}This message for Firewall_cmd check should not be visible.${normal}"
+			echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
 			echo
-			sleep 10
+			if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_check" -eq "252" ] || [ "$firewall_cmd_available_check" -ne "1" ]; then
+				# 0 is running, 252 is not running.
+				# echo State: $firewall_cmd_status
+				echo "${bold}${yellow}Firewall-cmd installed.${normal}"
+				if [ "$firewall_cmd_status" == "running" ]; then
+					echo "${bold}${yellow}Firewall-cmd is running currently.${normal}"
+					echo
+					echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+					echo
+					echo '-------------------------------------------'				
+					echo
+					firewall_cmd_samba_adjustments_function
+					echo
+					sleep 10
+				elif [ "$firewall_cmd_status" == "not running" ]; then
+					echo "${bold}${green}Firewall-cmd is not running currently.${normal}"
+					echo
+					echo "${bold}${yellow}Action required to ensure samba works.${normal}"
+					echo
+					echo '-------------------------------------------'				
+					echo
+					firewall_cmd_samba_adjustments_function
+					echo
+					sleep 10
+				else
+					echo "${bold}${red}This message should not be visible for firewall-cmd status.${normal}"
+					echo
+					sleep 10
+				fi
+			elif [ "$firewall_cmd_available_check" -eq "1" ]; then
+				echo "${bold}${green}Firewall_cmd is not available. No action required.${normal}"
+				echo
+				sleep 10
+			else
+				echo "${bold}${red}This message for Firewall_cmd check should not be visible.${normal}"
+				echo
+				sleep 10
+			fi
 		fi
+		#---------------------------------------------------------------------------------------------------------------------------------
+		#---------------------------------------------------------------------------------------------------------------------------------
+	else
+		echo "This message should not be visible."
 	fi
-	#---------------------------------------------------------------------------------------------------------------------------------
-	#---------------------------------------------------------------------------------------------------------------------------------
-else
-	echo "This message should not be visible."
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -8631,13 +8633,16 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	wait $!
 fi
 
-# Abuse Report String
-if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
-	echo "Report Auth token already inserted into server settings database file."
-else
-	echo "Inserting value into server database file so report mechanism works."
-	echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
-	sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+
+if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+	# Abuse Report String
+	if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
+		echo "Report Auth token already inserted into server settings database file."
+	else
+		echo "Inserting value into server database file so report mechanism works."
+		echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
+		sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+	fi
 fi
 echo
 echo '--------------------------------------------------------------------------------'
