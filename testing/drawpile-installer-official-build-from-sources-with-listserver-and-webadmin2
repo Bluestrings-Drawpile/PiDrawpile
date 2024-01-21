@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9958
+drawpilescriptversion=2.9959
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -767,7 +767,8 @@ function stored_data_creation_files_function () {
 		# Not sure if I want to update noted script version on new script run
 		# sudo sed -i '\!^drawpilescriptversion =!{h;s!=.*!= '"$drawpilescriptversion"'!};${x;\!^$!{s!!drawpilescriptversion = '"$drawpilescriptversion"'!;H};x}' $drawpile_completed_successfully_values_file
 	elif [[ ! -e "$drawpile_completed_successfully_values_file" ]]; then
-		echo "drawpilescriptversion = $drawpilescriptversion" | sudo tee -a $drawpile_completed_successfully_values_file > /dev/null 2>&1
+		echo "drawpilescriptversion = $drawpilescriptversion
+This file is for resuming installation in the event of script failure" | sudo tee -a $drawpile_completed_successfully_values_file > /dev/null 2>&1
 		sudo chmod 777 $drawpile_completed_successfully_values_file
 		sudo chown drawpileuser:drawpileread $drawpile_completed_successfully_values_file
 	else
@@ -3504,12 +3505,41 @@ function stop_drawpile_srv_if_running_function () {
 	echo "${bold}${cyan}***** If Drawpile-Srv Running, Stopping Process . . . *****${normal}"
 	echo
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-	# Check for Drawpile_Monitor.service
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	# Check for drawpile-monitor.service
+	# This one looks for legacy name. Checks if it exists, then if it is enabled. Stops it, renames it, restarts it so the script can continue as it normally would do so.
 	if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
+		echo "Detected old service name, drawpile_monitor.service."
+		echo "Reconfiguring service to utilize - instead of _."
 		if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
-			echo "Drawpile_monitor.service enabled, stopping service"
+			drawpile_monitor_test_rename_status=enabled
+			sudo systemctl disable drawpile_monitor.service
+		else
+			drawpile_monitor_test_rename_status=disabled
+		fi
+		sudo systemctl stop --now drawpile_monitor.service
+		
+		sudo mv /etc/systemd/system/drawpile_monitor.service /etc/systemd/system/drawpile-monitor.service
+		
+		if [[ "$drawpile_monitor_test_rename_status" == "enabled" ]]; then
+			sudo systemctl enable drawpile-monitor.service
+			sudo systemctl start --now drawpile-monitor.service
+			sleep 3
+		fi
+		# Fixes up RPi-Monitor if configured
+		if [ -e "/etc/rpimonitor/template/services.conf" ]; then
+			sudo sed -i -e 's/drawpile_monitor.service/drawpile-monitor.service/g' /etc/rpimonitor/template/services.conf
+			wait $!
+			sudo systemctl daemon-reload
+			sudo service rpimonitor restart
+		fi
+	fi
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	if [ -e "/etc/systemd/system/drawpile-monitor.service" ]; then
+		if [ "`systemctl is-enabled drawpile-monitor.service`" = "enabled" ]; then
+			echo "drawpile-monitor.service enabled, stopping service"
 			echo "to avoid unnecessary warnings in Discord."
-			sudo systemctl stop --now drawpile_monitor.service
+			sudo systemctl stop --now drawpile-monitor.service
 		else
 			echo Drawpile monitor is not enabled, no need to stop process.
 		fi
@@ -3518,6 +3548,7 @@ function stop_drawpile_srv_if_running_function () {
 		echo Drawpile monitor is not available.
 		echo
 	fi
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	# Display limited info on the status of running Drawpile services.
 	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
@@ -3633,11 +3664,11 @@ function start_drawpile_srv_if_updated_function () {
 	fi
 	echo
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-	# Check for Drawpile_Monitor.service
-	if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
-		if [ "`systemctl is-enabled drawpile_monitor.service`" = "enabled" ]; then
-			echo "Drawpile_monitor.service enabled, starting service."
-			sudo systemctl start --now drawpile_monitor.service
+	# Check for drawpile-monitor.service
+	if [ -e "/etc/systemd/system/drawpile-monitor.service" ]; then
+		if [ "`systemctl is-enabled drawpile-monitor.service`" = "enabled" ]; then
+			echo "drawpile-monitor.service enabled, starting service."
+			sudo systemctl start --now drawpile-monitor.service
 		fi
 	fi
 	echo
@@ -5610,20 +5641,25 @@ function generate_self_signed_ssl () {
 	variable_to_read_2=""
 	variable_to_read_3=""
 
-	value_description_1="Organization name, e.g. Internet Widgits Pty Ltd, to use with "
+	value_description_1="Organization name, e.g. Community Drawpile Server, to use with "
 	value_description_2="self signed SSL certificate."
 
 	read_stored_config_value_query_function
+	if [ "$hostname" != "no_value_selected" ]; then
+		hostname_space_padded="$hostname "
+	else
+		hostname_space_padded=""
+	fi
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		ssl_organization=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'Organization Name (eg, company) [Internet Widgits Pty Ltd]: ' ssl_organization
+		read -r -p "Organization Name (e.g., company) [$hostname Drawpile Server]: " ssl_organization
 		if [ "$ssl_organization" != "" ]; then
 			echo
 			echo "Selected: $ssl_organization"
 		else
-			ssl_organization="Internet Widgits Pty Ltd"
+			ssl_organization="$hostname_space_paddedDrawpile Server"
 		fi
 	else
 		echo "This message should not be visible."
@@ -6309,6 +6345,32 @@ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
+if [ -e "/etc/systemd/system/drawpile_abuse_report.service" ]; then
+	echo "Detected old service name, drawpile_abuse_report.service."
+	echo "Reconfiguring service to utilize - instead of _."
+	if [ "`systemctl is-enabled drawpile_abuse_report.service`" = "enabled" ]; then
+		drawpile_abuse_report_test_rename_status=enabled
+		sudo systemctl disable drawpile_abuse_report.service
+	else
+		drawpile_abuse_report_test_rename_status=disabled
+	fi
+	sudo systemctl stop --now drawpile_abuse_report.service
+	
+	sudo mv /etc/systemd/system/drawpile_abuse_report.service /etc/systemd/system/drawpile-abuse-report.service
+	
+	if [[ "$drawpile_abuse_report_test_rename_status" == "enabled" ]]; then
+		sudo systemctl enable drawpile-abuse-report.service
+		sudo systemctl start --now drawpile-abuse-report.service
+		sleep 3
+	fi
+	# Fixes up RPi-Monitor if configured
+	if [ -e "/etc/rpimonitor/template/services.conf" ]; then
+		sudo sed -i -e 's/drawpile_abuse_report.service/drawpile-abuse-report.service/g' /etc/rpimonitor/template/services.conf
+		wait $!
+		sudo systemctl daemon-reload
+		sudo service rpimonitor restart
+	fi
+fi
 echo
 echo "${bold}${cyan}*****Setting Up Drawpile Abuse Report Tool . . .*****${normal}"
 echo
@@ -6359,8 +6421,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 		# dp_install_loc=/home/pi/Public
 		# hostname=drawpile-test.duckdns.org
-		# sudo systemctl stop --now drawpile_abuse_report.service
-		# sudo systemctl disable drawpile_abuse_report.service
+		# sudo systemctl stop --now drawpile-abuse-report.service
+		# sudo systemctl disable drawpile-abuse-report.service
 		# discord_webhook_URL=https://discord.com/api/webhooks/1133190759890305145/5gEGFz4teebUjKU965CCUWutCw3l3hAI6D5kz8ejaxYZOpiGIU2bfntiwSZNKRq_6vNe
 		echo
 		echo ----------------------------------------------------------------------------------
@@ -6474,13 +6536,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		read_stored_completed_status_value_query=$( grep -m 1 "$drawpile_abuse_report_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		
 		if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
-			if [[ -e "/etc/systemd/system/drawpile_abuse_report.service" ]]; then
-				echo "${bold}${cyan}***** If Drawpile_Abuse_Report.service Running, Stopping Process . . . *****${normal}"
+			if [[ -e "/etc/systemd/system/drawpile-abuse-report.service" ]]; then
+				echo "${bold}${cyan}***** If drawpile-abuse-report.service Running, Stopping Process . . . *****${normal}"
 				echo
 			fi
 			# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-			service_name_to_check_04=drawpile_abuse_report.service
-			if [ -e "/etc/systemd/system/drawpile_abuse_report.service" ]; then
+			service_name_to_check_04=drawpile-abuse-report.service
+			if [ -e "/etc/systemd/system/drawpile-abuse-report.service" ]; then
 				drawpile_abuse_report_loaded=$( systemctl status $service_name_to_check_04 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_04; (.*); vendor.*/\1/p" )
 				# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 				# Check to ensure output is not blank and find it in an alternate way
@@ -6556,7 +6618,7 @@ exec gunicorn report_relay.main:App --bind "localhost:\$PORT" --worker-class aio
 EOF
 		sudo chown drawpileuser "/usr/local/bin/./drawpile_abuse_report"
 		sudo chmod 755 "/usr/local/bin/./drawpile_abuse_report"
-		cat <<EOF | sudo tee /etc/systemd/system/drawpile_abuse_report.service >/dev/null
+		cat <<EOF | sudo tee /etc/systemd/system/drawpile-abuse-report.service >/dev/null
 [Unit]
 Description=Drawpile abuse report tool
 
@@ -6572,14 +6634,14 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		sudo chmod 655 /etc/systemd/system/drawpile_abuse_report.service
+		sudo chmod 655 /etc/systemd/system/drawpile-abuse-report.service
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		wait $!
-		sudo systemctl enable drawpile_abuse_report.service
-		sudo systemctl start --now drawpile_abuse_report.service
+		sudo systemctl enable drawpile-abuse-report.service
+		sudo systemctl start --now drawpile-abuse-report.service
 		wait $!
-		sudo systemctl status drawpile_abuse_report.service --no-pager
+		sudo systemctl status drawpile-abuse-report.service --no-pager
 		wait $!
 
 		# (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
@@ -7254,10 +7316,10 @@ if [ "`systemctl is-enabled drawpile-srv.service`" = "disabled" ]; then
 	sudo chown drawpileuser /home/drawpileuser/server.db
 	sudo systemctl stop --now drawpile-srv.service
 	wait $!
-elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile_monitor.service`" = "active" ]]; then
-	sudo systemctl stop --now drawpile_monitor.service
+elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile-monitor.service`" = "active" ]]; then
+	sudo systemctl stop --now drawpile-monitor.service
 	sudo systemctl restart --now drawpile-srv.service
-	sudo systemctl start --now drawpile_monitor.service
+	sudo systemctl start --now drawpile-monitor.service
 elif [ "`systemctl is-active drawpile-srv.service`" = "active" ]; then
 	# This should account for using sockets or service file to start it. Other status result is "inactive"
 	sudo systemctl restart --now drawpile-srv.service
@@ -7356,10 +7418,12 @@ function nginx_username_and_password_function () {
 	echo "     moderate sessions, usernames, and session aliases. This will only"
 	echo "     be stored for this one should you choose to utilize this feature."
 	echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
+	login_credentials_length_minimum="14"
 	echo
 	echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
 	echo
-	login_credentials_length_minimum="14"
+	echo "${bold}${red}Please note, both username and password minimum length: $login_credentials_length_minimum characters ${normal}"
+	echo
 	while :; do
 		read -r -p "Enter username                    : " nginx_username_1
 		read -r -p "Enter username again              : " nginx_username_2
@@ -7470,12 +7534,17 @@ echo
 function nginx_username_and_password_admin_ui_function () {
 	nginx_username_and_password_admin_ui_reuse_test_condition="false"
 	echo "${bold}${green}This will be your username and password for logging into the new ${normal}"
-	echo "${bold}${green}web admin interface.${normal}"
+	echo "${bold}${green}web admin interface. After that, you can use the username and ${normal}"
+	echo "${bold}${green}password you just created above to log into the interface to ${normal}"
+	echo "${bold}${green}create roles and users to act as moderators, admins, etc. ${normal}"
+	echo 
+	echo "${bold}${red}Because of this, you can't reuse either the username or password${normal}"
+	echo "${bold}${red}created earlier.${normal}"
 	echo
-	echo "${bold}${green}This is necessary to help enforce security and prevent unauthorized${normal}"
-	echo "${bold}${green}access. If you select later to enable Fail2Ban, failing multiple ${normal}"
-	echo "${bold}${green}times within a short period, you will be locked out until the${normal}"
-	echo "${bold}${green}configured duration expires.${normal}"
+	echo "${bold}${red}This is necessary to help enforce security and prevent unauthorized${normal}"
+	echo "${bold}${red}access. If you select later to enable Fail2Ban, failing multiple ${normal}"
+	echo "${bold}${red}times within a short period, you will be locked out until the${normal}"
+	echo "${bold}${red}configured duration expires.${normal}"
 	echo
 	login_credentials_length_minimum="14"
 	while :; do
@@ -7702,7 +7771,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 		echo "${bold}Custom words or phrases can be added by editing the following file${normal}"
 		echo "${bold}and then restart the systemd service used to run the script.${normal}"
 		echo "     nano /home/drawpileuser/drawpile-monitor-custom-list.txt"
-		echo "     sudo systemctl restart drawpile_monitor.service"
+		echo "     sudo systemctl restart drawpile-monitor.service"
 		echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to enable the drawpile-monitor service:${normal} " drawpile_monitor_installation_status
@@ -7764,13 +7833,13 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					sudo $package_install_program gfortran libopenblas-dev
 					echo
 				fi
-				if [[ -e "/etc/systemd/system/drawpile_monitor.service" ]]; then
+				if [[ -e "/etc/systemd/system/drawpile-monitor.service" ]]; then
 					echo "${bold}${cyan}***** If Drawpile_Monitor Running, Stopping Process . . . *****${normal}"
 					echo
 				fi
 				# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-				service_name_to_check_05=drawpile_monitor.service
-				if [ -e "/etc/systemd/system/drawpile_monitor.service" ]; then
+				service_name_to_check_05=drawpile-monitor.service
+				if [ -e "/etc/systemd/system/drawpile-monitor.service" ]; then
 					drawpile_monitor_loaded=$( systemctl status $service_name_to_check_05 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_05; (.*); vendor.*/\1/p" )
 					# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 					# Check to ensure output is not blank and find it in an alternate way
@@ -7908,7 +7977,7 @@ EOF
 			sudo chown drawpileuser "/usr/local/bin/./drawpile_monitor_report"
 			sudo chmod 775 "/usr/local/bin/./drawpile_monitor_report"
 
-			cat <<EOF | sudo tee /etc/systemd/system/drawpile_monitor.service >/dev/null
+			cat <<EOF | sudo tee /etc/systemd/system/drawpile-monitor.service >/dev/null
 [Unit]
 Description=Drawpile Monitor Language Report tool
 
@@ -7921,7 +7990,7 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
-			sudo chmod 655 /etc/systemd/system/drawpile_monitor.service 
+			sudo chmod 655 /etc/systemd/system/drawpile-monitor.service 
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
 			# Systemd service to be started later in the script after server is started up.
@@ -9089,8 +9158,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 7 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per external host. ${normal}: "
-			list_server_max_sessions_per_host_toggle=# list_server_max_sessions_per_host
+			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per ${normal} "
+			echo "${bold}${cyan}  external host. ${normal} "
+			list_server_max_sessions_per_host_toggle="# list_server_max_sessions_per_host"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Configure the max number of listings for other unspecified servers."
 			echo
@@ -9115,7 +9185,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 8 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per named host. ${normal}: "
+			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per named host. ${normal} "
 			max_sessions_per_named_host_toggle="# max_sessions_per_named_host"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Configure the max number of listings for other named servers."
@@ -9141,7 +9211,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 9 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, skipping setting for server listing limitation. ${normal}: "
+			echo "${bold}${cyan} Configured in read only mode, skipping setting for server listing limitation. ${normal} "
 			trusted_list_hosts_toggle="# trusted_list_hosts"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Configure servers which are exempt from listing limitations"
@@ -9167,7 +9237,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 10 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, skipping setting for servers banned from listing. ${normal}: "
+			echo "${bold}${cyan} Configured in read only mode, skipping setting for servers banned from listing. ${normal} "
 			list_server_banned_hosts_toggle="# list_server_banned_hosts"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Configure servers that are banned from listing sessions"
@@ -9193,7 +9263,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${yellow}Setting 11 of 11${normal}"
 		echo
 		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, skipping setting for minutes passed before session de-listed and use default. ${normal}"
+			echo "${bold}${cyan} Configured in read only mode, skipping setting for minutes passed before ${normal}"
+			echo "${bold}${cyan}  session de-listed and use default. ${normal}"
 			list_server_delist_time="10"
 		else
 			echo "${bold}${yellow}Optional setting:${normal} Number of minutes after which a session is automatically de-listed unless refreshed"
@@ -9640,7 +9711,7 @@ EOF
 			
 			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<p>To install a cert in Chrome, click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files(\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>/g" /var/www/html/drawpile/index.html
 
-			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
 		fi
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
@@ -11174,6 +11245,104 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
+echo
+
+sudo chmod 777 $app_installation_status_file
+sudo chmod 777 $drawpile_configuration_values_file
+# sudo adduser $current_username drawpileread
+if [[ -e "/home/drawpileuser/cert.pem" ]]; then sudo chmod 700 /home/drawpileuser/cert.pem; fi
+if [[ -e "/home/drawpileuser/key.pem" ]]; then sudo chmod 700 /home/drawpileuser/key.pem; fi
+sudo chown drawpileuser:drawpileread /home/drawpileuser/ -R
+
+variable_to_read_1="dp_srv_startup"
+variable_to_read_2=""
+variable_to_read_3=""
+
+value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
+value_description_2="server powers on?"
+value_description_3=" "
+value_description_4="${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
+value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
+
+read_stored_config_value_query_function
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	dp_srv_startup=$read_stored_config_value_query_1
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
+	echo 'server powers on?'
+	echo
+	echo "${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
+	echo '    This setting is less resource intensive on the server or Raspberry Pi,'
+	echo '     as the drawpile server is only running when a user is connected.' 
+	echo "${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
+	echo '    The drawpile-srv starts on Server or Raspberry Pi power up, runs all'
+	echo '    the time in the background.'
+	echo
+	while :; do
+	read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " dp_srv_startup
+		[[ $dp_srv_startup =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+		if (( $dp_srv_startup >= 1 && $dp_srv_startup <= 2)); then
+			break
+		else
+			echo
+			echo "${red}${bold}Invalid number selection, try again.${normal}"
+			echo
+		fi
+	done
+	echo
+	if [ "$dp_srv_startup" == "1" ]; then
+		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
+		wait $!
+		echo
+		echo 'Reloading systemctl and systemd.'
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		wait $!
+		echo
+		sudo systemctl enable --now drawpile-srv.socket
+		wait $!
+		#Read more on systemd --> https://drawpile.net/help/server
+	elif [ "$dp_srv_startup" == "2" ]; then
+		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
+		wait $!
+		echo
+		echo 'Reloading systemctl and systemd.'
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		wait $!
+		echo
+		sudo systemctl enable --now drawpile-srv.service
+		wait $!
+		#Read more on systemd --> https://drawpile.net/help/server
+	else
+		echo "This message should not be visible."
+	fi
+	sudo sed -i '\!^dp_srv_startup =!{h;s!=.*!= '"$dp_srv_startup"'!};${x;\!^$!{s!!dp_srv_startup = '"$dp_srv_startup"'!;H};x}' $drawpile_configuration_values_file
+	sleep 2
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}***** Enabling Drawpile-Monitor for Automatic Startup *****${normal}"
+		echo
+		echo "Startup was delayed to prevent the script from reporting server errors to"
+		echo " Discord server."
+		echo
+		sudo systemctl enable drawpile-monitor.service
+		sudo systemctl start --now drawpile-monitor.service 
+		wait $!
+		sudo systemctl status drawpile-monitor.service  --no-pager
+		wait $!
+	fi
+else
+	echo "This message should not be visible."
+fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 echo "${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
 echo
 if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
@@ -11643,7 +11812,12 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 			package_install_status_check_function # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 			sudo $package_install_program dirmngr # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 10 && exit
 			sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 2C0D3C0F
-			sudo wget -q --show-progress http://goo.gl/vewCLL -O /etc/apt/sources.list.d/rpimonitor.list
+			#
+			# The line below used to work, but sometimes gives error
+			# sudo wget -q --show-progress http://goo.gl/vewCLL -O /etc/apt/sources.list.d/rpimonitor.list
+			#
+			#	Updated with line below, pulled info https://github.com/XavierBerger/RPi-Monitor/issues/267 ... apparently adding 'www.' was enough.
+			echo "deb http://www.giteduberger.fr rpimonitor/" | sudo tee /etc/apt/sources.list.d/rpimonitor.list
 			# Necessary after adding repository, don't remove or rpimonitor will fail to install
 			sudo $packages_update_program
 			app_does_not_exist=0
@@ -11910,127 +12084,224 @@ EOF
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
+			rpi_monitor_test_output=n
+			if [ "$rpi_monitor_test_output" == "y" ]; then
+				# Test Section to verify this works for RPi-Monitor
+				drawpile_abuse_report_installation_status=y
+				drawpile_monitor_installation_status=y
+				fail2ban_status=y
+					# Value 2 is let's encrypt, 1 is for self signed certificates, and 3 is disabled.
+				ssl_encryption_config=2
+					# Can be values 1 through 3 to be enabled
+				samba_choice=1
+					# yes must be explicitly typed out.
+				Pi_Hole_Status=yes
+			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
+			rpi_start=1
 			
-			# Drawpile-Monitor 
-			
-			DYN_DP_M_01=19
-			DYN_DP_M_02=20
-			DYN_DP_M_03=21
+			# Optional - drawpile-abuse-report.service
+
+			if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 				
+				DYN_ABS_R_01=$(($rpi_start))
+				DYN_ABS_R_02=$(($rpi_start+1))
+				DYN_ABS_R_03=$(($rpi_start+2))
+				
+				services_conf_contents_abuse_report_01=$(cat << EOF
+dynamic.$DYN_ABS_R_01.name=abuse_report_desc
+dynamic.$DYN_ABS_R_01.source=systemctl status drawpile-abuse-report.service | grep "drawpile-abuse-report.service -"
+dynamic.$DYN_ABS_R_01.regexp=- (.*)
+dynamic.$DYN_ABS_R_02.name=abuse_report_act
+dynamic.$DYN_ABS_R_02.source=systemctl status drawpile-abuse-report.service | grep "Active: "
+dynamic.$DYN_ABS_R_02.regexp=(\(.*\))
+dynamic.$DYN_ABS_R_03.name=abuse_report_runtime
+dynamic.$DYN_ABS_R_03.source=systemctl status drawpile-abuse-report.service | grep "Active: "
+dynamic.$DYN_ABS_R_03.regexp=; (.*)
+EOF
+)
+				services_conf_contents_abuse_report_02=$(cat << EOF
+<tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile Abuse Report</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
+			else
+				# Does not increment value, continues from last.
+				services_conf_contents_abuse_report_01=""
+				services_conf_contents_abuse_report_02=""
+			fi
+			
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Always shown - drawpile-listserver.service
+			
+			DYN_LS_01=$(($rpi_start))
+			DYN_LS_02=$(($rpi_start+1))
+			DYN_LS_03=$(($rpi_start+2))
+			
+			services_conf_contents_listserver_01=$(cat << EOF
+
+dynamic.$DYN_LS_01.name=drawpile_listserver_desc
+dynamic.$DYN_LS_01.source=systemctl status drawpile-listserver.service | grep "drawpile-listserver.service -"
+dynamic.$DYN_LS_01.regexp=- (.*)
+dynamic.$DYN_LS_02.name=drawpile_listserver_act
+dynamic.$DYN_LS_02.source=systemctl status drawpile-listserver.service | grep "Active: "
+dynamic.$DYN_LS_02.regexp=(\(.*\))
+dynamic.$DYN_LS_03.name=drawpile_listserver_runtime
+dynamic.$DYN_LS_03.source=systemctl status drawpile-listserver.service | grep "Active: "
+dynamic.$DYN_LS_03.regexp=; (.*)
+EOF
+)
+			services_conf_contents_listserver_02=$(cat << EOF
+<tr><td>"+Label(data.drawpile_listserver_act,"=='(running)'","OK","success")+Label(data.drawpile_listserver_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile ListServer</b></td><td>" + data.drawpile_listserver_desc + "</td><td>"+Label(data.drawpile_listserver_act,"=='(running)'",data.drawpile_listserver_runtime,"default")+Label(data.drawpile_listserver_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+			rpi_increment=3
+			rpi_start=$(($rpi_start + $rpi_increment))
+			
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Optional - Drawpile-Monitor 
+			
 			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+				
+				DYN_DP_M_01=$(($rpi_start))
+				DYN_DP_M_02=$(($rpi_start+1))
+				DYN_DP_M_03=$(($rpi_start+2))
+
 				services_conf_contents_drawpile_monitor_01=$(cat << EOF
 
 dynamic.$DYN_DP_M_01.name=drawpile_monitor_desc
-dynamic.$DYN_DP_M_01.source=systemctl status drawpile_monitor.service | grep "drawpile_monitor.service - "
+dynamic.$DYN_DP_M_01.source=systemctl status drawpile-monitor.service | grep "drawpile-monitor.service - "
 dynamic.$DYN_DP_M_01.regexp=- (.*)
 dynamic.$DYN_DP_M_02.name=drawpile_monitor_act
-dynamic.$DYN_DP_M_02.source=systemctl status drawpile_monitor.service | grep "Active: "
+dynamic.$DYN_DP_M_02.source=systemctl status drawpile-monitor.service | grep "Active: "
 dynamic.$DYN_DP_M_02.regexp=(\(.*\))
 dynamic.$DYN_DP_M_03.name=drawpile_monitor_runtime
-dynamic.$DYN_DP_M_03.source=systemctl status drawpile_monitor.service | grep "Active: "
+dynamic.$DYN_DP_M_03.source=systemctl status drawpile-monitor.service | grep "Active: "
 dynamic.$DYN_DP_M_03.regexp=; (.*)
+
 EOF
 )
-			else
-				services_conf_contents_drawpile_monitor_01=""
-			fi
-			#---------------------------------------------------------------------------------------------------------------------------------
-			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
 				services_conf_contents_drawpile_monitor_02=$(cat << EOF
-<tr><td>"+Label(data.drawpile_monitor_act,"=='(running)'","OK","success")+Label(data.drawpile_monitor_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_monitor</b></td><td>" + data.drawpile_monitor_desc + "</td><td>"+Label(data.drawpile_monitor_act,"=='(running)'",data.drawpile_monitor_runtime,"default")+Label(data.drawpile_monitor_act,"!='(running)'","-","default")+"</td></tr>
+<tr><td>"+Label(data.drawpile_monitor_act,"=='(running)'","OK","success")+Label(data.drawpile_monitor_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile Monitor</b></td><td>" + data.drawpile_monitor_desc + "</td><td>"+Label(data.drawpile_monitor_act,"=='(running)'",data.drawpile_monitor_runtime,"default")+Label(data.drawpile_monitor_act,"!='(running)'","-","default")+"</td></tr>
 EOF
 )
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
 			else
+				# Does not increment value, continues from last. 
+				services_conf_contents_drawpile_monitor_01=""
 				services_conf_contents_drawpile_monitor_02=""
 			fi
+			
 			#---------------------------------------------------------------------------------------------------------------------------------
-			#---------------------------------------------------------------------------------------------------------------------------------
-			
-			# Samba
-			#      For invalid options, 4 is assumed (no Samba).
-			
-			if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-				# Drawpile-Monitor 	Yes
-				DYN_SMBD_01=22
-				DYN_SMBD_02=23
-				DYN_SMBD_03=24
-			else
-				# Drawpile-Monitor 	No
-				DYN_SMBD_01=19
-				DYN_SMBD_02=20
-				DYN_SMBD_03=21
-			fi
-			
-			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-				services_conf_contents_samba_choice_01=$(cat << EOF
+			# Always shown - drawpile-srv.service
+			# Optional - drawpile-srv.socket
+			# 1 - Socket Activation
+			# 2 - Always on Service
 
-dynamic.$DYN_SMBD_01.name=smbd_desc
-dynamic.$DYN_SMBD_01.source=service smbd status | grep "smbd.service - "
-dynamic.$DYN_SMBD_01.regexp=- (.*)
-dynamic.$DYN_SMBD_02.name=smbd_act
-dynamic.$DYN_SMBD_02.source=service smbd status | grep "Active: "
-dynamic.$DYN_SMBD_02.regexp=(\(.*\))
-dynamic.$DYN_SMBD_03.name=smbd_runtime
-dynamic.$DYN_SMBD_03.source=service smbd status | grep "Active: "
-dynamic.$DYN_SMBD_03.regexp=; (.*)
+			function rpi_monitor_drawpile-srv.service () {
+				DYN_DP_SRV_SVC_01=$(($rpi_start))
+				DYN_DP_SRV_SVC_02=$(($rpi_start+1))
+				DYN_DP_SRV_SVC_03=$(($rpi_start+2))
+			
+				services_conf_contents_drawpile_srv_01=$(cat << EOF
+
+dynamic.$DYN_DP_SRV_SVC_01.name=drawpile_srv_desc
+dynamic.$DYN_DP_SRV_SVC_01.source=systemctl status drawpile-srv.service | grep "drawpile-srv.service -"
+dynamic.$DYN_DP_SRV_SVC_01.regexp=- (.*)
+dynamic.$DYN_DP_SRV_SVC_02.name=drawpile_srv_act
+dynamic.$DYN_DP_SRV_SVC_02.source=systemctl status drawpile-srv.service | grep "Active: "
+dynamic.$DYN_DP_SRV_SVC_02.regexp=(\(.*\))
+dynamic.$DYN_DP_SRV_SVC_03.name=drawpile_srv_runtime
+dynamic.$DYN_DP_SRV_SVC_03.source=systemctl status drawpile-srv.service | grep "Active: "
+dynamic.$DYN_DP_SRV_SVC_03.regexp=; (.*)
 EOF
 )
-			else
-				services_conf_contents_samba_choice_01=""
-			fi
-			#---------------------------------------------------------------------------------------------------------------------------------
-			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-				services_conf_contents_samba_choice_02=$(cat << EOF
-<tr><td>"+Label(data.smbd_act,"=='(running)'","OK","success")+Label(data.smbd_act,"!='(running)'","KO","danger")+"</td><td><b>smbd</b></td><td>" + data.smbd_desc + "</td><td>"+Label(data.smbd_act,"=='(running)'",data.smbd_runtime,"default")+Label(data.smbd_act,"!='(running)'","-","default")+"</td></tr>
+				services_conf_contents_drawpile_srv_02=$(cat << EOF
+<tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile-srv Service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr>
 EOF
 )
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
+			}
+
+			function rpi_monitor_drawpile-srv.socket () {			
+				DYN_DP_SRV_SOCK_01=$(($rpi_start))
+				DYN_DP_SRV_SOCK_02=$(($rpi_start+1))
+				DYN_DP_SRV_SOCK_03=$(($rpi_start+2))
+				
+				services_conf_contents_drawpile_srv_socket_01=$(cat << EOF
+
+dynamic.$DYN_DP_SRV_SOCK_01.name=drawpile_srv_socket_desc
+dynamic.$DYN_DP_SRV_SOCK_01.source=systemctl status drawpile-srv.socket | grep "drawpile-srv.socket -"
+dynamic.$DYN_DP_SRV_SOCK_01.regexp=- (.*)
+dynamic.$DYN_DP_SRV_SOCK_02.name=drawpile_srv_socket_act
+dynamic.$DYN_DP_SRV_SOCK_02.source=systemctl status drawpile-srv.socket | grep "Active: "
+dynamic.$DYN_DP_SRV_SOCK_02.regexp=(\(.*\))
+dynamic.$DYN_DP_SRV_SOCK_03.name=drawpile_srv_socket_runtime
+dynamic.$DYN_DP_SRV_SOCK_03.source=systemctl status drawpile-srv.socket | grep "Active: "
+dynamic.$DYN_DP_SRV_SOCK_03.regexp=; (.*)
+EOF
+)
+				services_conf_contents_drawpile_srv_socket_02=$(cat << EOF
+<tr><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile-srv Socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)			
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
+			}
+			
+			if [ "$dp_srv_startup" == "1" ]; then
+				# 1 - Socket Activation
+				rpi_monitor_drawpile-srv.service
+				rpi_monitor_drawpile-srv.socket
+			elif [ "$dp_srv_startup" == "2" ]; then
+				# 2 - Always on Service
+				services_conf_contents_drawpile_srv_socket_01=""
+				services_conf_contents_drawpile_srv_socket_02=""
+				rpi_monitor_drawpile-srv.service
 			else
-				services_conf_contents_samba_choice_02=""
+				echo "This message should not be visible for RPi-Monitor for Drawpile-srv."
+				echo "Will set drawpile-srv to only show up on page."
+				rpi_monitor_drawpile-srv.service
+			fi
+			
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Optional - Fail2Ban 
+			
+			if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
+			
+				DYN_F2B_01=$(($rpi_start))
+				DYN_F2B_02=$(($rpi_start+1))
+				DYN_F2B_03=$(($rpi_start+2))
+			
+				services_conf_contents_fail2ban_01=$(cat << EOF
+
+dynamic.$DYN_F2B_01.name=fail2ban_desc
+dynamic.$DYN_F2B_01.source=systemctl status fail2ban.service | grep "fail2ban.service -"
+dynamic.$DYN_F2B_01.regexp=- (.*)
+dynamic.$DYN_F2B_02.name=fail2ban_act
+dynamic.$DYN_F2B_02.source=systemctl status fail2ban.service | grep "Active: "
+dynamic.$DYN_F2B_02.regexp=(\(.*\))
+dynamic.$DYN_F2B_03.name=fail2ban_runtime
+dynamic.$DYN_F2B_03.source=systemctl status fail2ban.service | grep "Active: "
+dynamic.$DYN_F2B_03.regexp=; (.*)
+EOF
+)
+				services_conf_contents_fail2ban_02=$(cat << EOF
+<tr><td>"+Label(data.fail2ban_act,"=='(running)'","OK","success")+Label(data.fail2ban_act,"!='(running)'","KO","danger")+"</td><td><b>Fail2Ban</b></td><td>" + data.fail2ban_desc + "</td><td>"+Label(data.fail2ban_act,"=='(running)'",data.fail2ban_runtime,"default")+Label(data.fail2ban_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
+			else
+				# Does not increment value, continues from last. 
+				services_conf_contents_fail2ban_01=""
+				services_conf_contents_fail2ban_02=""
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
-			#---------------------------------------------------------------------------------------------------------------------------------
-			
-			# Let's Encrypt - certbot
-			
-			if [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [[ "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ]]; then
-				# Samba 			Yes
-				# Drawpile-Monitor 	Yes
-				# LETE = Let's Encrypt
-				DYN_LETE_01=25
-				DYN_LETE_02=26
-				DYN_LETE_03=27
-				DYN_LETE_04=28
-				DYN_LETE_05=29
-				DYN_LETE_06=30
-			elif [[ "$samba_choice" == "4" ]] && [[ "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ]]; then
-				# Samba 			No
-				# Drawpile-Monitor 	Yes
-				DYN_LETE_01=22
-				DYN_LETE_02=23
-				DYN_LETE_03=24
-				DYN_LETE_04=25
-				DYN_LETE_05=26
-				DYN_LETE_06=27
-			elif [[ "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ]] && [[ "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ]]; then
-				# Samba 			Yes
-				# Drawpile-Monitor 	No
-				DYN_LETE_01=22
-				DYN_LETE_02=23
-				DYN_LETE_03=24
-				DYN_LETE_04=25
-				DYN_LETE_05=26
-				DYN_LETE_06=27
-			else
-				# Samba 			No
-				# Drawpile-Monitor 	No
-				DYN_LETE_01=19
-				DYN_LETE_02=20
-				DYN_LETE_03=21
-				DYN_LETE_04=22
-				DYN_LETE_05=23
-				DYN_LETE_06=24
-			fi
+			# Optional - Let's Enrypt
 			
 			# echo 'Press 1 for Self Signed Certificates'
 			# echo "Press 2 for Lets Encrypt ${bold}(Default)${normal}"
@@ -12038,6 +12309,13 @@ EOF
 			# For invalid options, 2 is assumed. 
 			
 			if [ "$ssl_encryption_config" == "2" ]; then
+				DYN_LETE_01=$(($rpi_start))
+				DYN_LETE_02=$(($rpi_start+1))
+				DYN_LETE_03=$(($rpi_start+2))
+				DYN_LETE_04=$(($rpi_start+3))
+				DYN_LETE_05=$(($rpi_start+4))
+				DYN_LETE_06=$(($rpi_start+5))
+
 				services_conf_contents_Lets_Encrypt_01=$(cat << EOF
 
 dynamic.$DYN_LETE_01.name=certbot_service_desc
@@ -12061,66 +12339,53 @@ dynamic.$DYN_LETE_06.source=systemctl status certbot.timer | grep "Active: "
 dynamic.$DYN_LETE_06.regexp=; (.*)
 EOF
 )
-			else
-				services_conf_contents_Lets_Encrypt_01=""
-			fi
-			#---------------------------------------------------------------------------------------------------------------------------------
-			if [ "$ssl_encryption_config" == "2" ]; then
 				services_conf_contents_Lets_Encrypt_02=$(cat << EOF
 <tr><td>"+Label(data.certbot_service_act,"=='(running)'","OK","success")+Label(data.certbot_service_act,"!='(running)'","KO","danger")+"</td><td><b>Let's Encrypt Certbot</b></td><td>" + data.certbot_service_desc + "</td><td>"+Label(data.certbot_service_act,"=='(running)'",data.certbot_service_runtime,"default")+Label(data.certbot_service_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.certbot_timer_act,"=='(running)'","OK","success")+Label(data.certbot_timer_act,"!='(running)'","KO","danger")+"</td><td><b>Let's Encrypt Timer</b></td><td>" + data.certbot_timer_desc + "</td><td>"+Label(data.certbot_timer_act,"=='(running)'",data.certbot_timer_runtime,"default")+Label(data.certbot_timer_act,"!='(running)'","-","default")+"</td></tr>
 EOF
 )
+				rpi_increment=6
+				rpi_start=$(($rpi_start + $rpi_increment))
 			else
+				# Does not increment value, continues from last. 
+				services_conf_contents_Lets_Encrypt_01=""
 				services_conf_contents_Lets_Encrypt_02=""
-			fi
+			fi			
 			#---------------------------------------------------------------------------------------------------------------------------------
-			#---------------------------------------------------------------------------------------------------------------------------------
+			# Always shown - NGINX
 			
+			DYN_NGINX_01=$(($rpi_start))
+			DYN_NGINX_02=$(($rpi_start+1))
+			DYN_NGINX_03=$(($rpi_start+2))
+			
+			services_conf_contents_nginx_01=$(cat << EOF
+
+dynamic.$DYN_NGINX_01.name=nginx_desc
+dynamic.$DYN_NGINX_01.source=systemctl status nginx.service | grep "nginx.service -"
+dynamic.$DYN_NGINX_01.regexp=- (.*)
+dynamic.$DYN_NGINX_02.name=nginx_act
+dynamic.$DYN_NGINX_02.source=systemctl status nginx.service | grep "Active: "
+dynamic.$DYN_NGINX_02.regexp=(\(.*\))
+dynamic.$DYN_NGINX_03.name=nginx_runtime
+dynamic.$DYN_NGINX_03.source=systemctl status nginx.service | grep "Active: "
+dynamic.$DYN_NGINX_03.regexp=; (.*)
+EOF
+)
+			services_conf_contents_nginx_02=$(cat << EOF
+<tr><td>"+Label(data.nginx_act,"=='(running)'","OK","success")+Label(data.nginx_act,"!='(running)'","KO","danger")+"</td><td><b>NGINX Web Server</b></td><td>" + data.nginx_desc + "</td><td>"+Label(data.nginx_act,"=='(running)'",data.nginx_runtime,"default")+Label(data.nginx_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+			rpi_increment=3
+			rpi_start=$(($rpi_start + $rpi_increment))
+			
+			#---------------------------------------------------------------------------------------------------------------------------------
 			# Pi-hole
 			# Group if statements / group compound conditions https://stackoverflow.com/questions/14964805/groups-of-compound-conditions-in-bash-test
 
-			if [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" == "2" ]]; then
-				# 					Installed	Installed	Numbers Taken (12)
-				# Drawpile-Monitor 	yes						3
-				# Samba 			yes						3
-				# Let's encrypt		yes						6
-				DYN_PI_H_01=31
-				DYN_PI_H_02=32
-				DYN_PI_H_03=33
-			elif [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" == "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && "$samba_choice" == "4" && "$ssl_encryption_config" == "2" ]]; then
-				# 					Installed	Installed	Numbers Taken (9)
-				# Drawpile-Monitor 	No			Yes			3
-				# Samba 			Yes			No			3
-				# Let's encrypt		Yes			Yes			6
-				DYN_PI_H_01=28
-				DYN_PI_H_02=29
-				DYN_PI_H_03=30
-			elif [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" != "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && "$samba_choice" == "4" && "$ssl_encryption_config" == "2" ]]; then
-				# 					Installed	Installed	Numbers Taken (6)
-				# Drawpile-Monitor 	Yes			No			3
-				# Samba 			Yes			No			3
-				# Let's encrypt		No			Yes			6
-				DYN_PI_H_01=25
-				DYN_PI_H_02=26
-				DYN_PI_H_03=27
-			elif [[ ( "$drawpile_monitor_installation_status" == "n" || "$drawpile_monitor_installation_status" == "N" || "$drawpile_monitor_installation_status" == "no" || "$drawpile_monitor_installation_status" == "NO" || "$drawpile_monitor_installation_status" == "No" ) && ( "$samba_choice" == "1" || "$samba_choice" == "2" || "$samba_choice" == "3" ) && "$ssl_encryption_config" != "2" ]] || [[ ( "$drawpile_monitor_installation_status" == "y" || "$drawpile_monitor_installation_status" == "Y" || "$drawpile_monitor_installation_status" == "yes" || "$drawpile_monitor_installation_status" == "YES" || "$drawpile_monitor_installation_status" == "Yes" ) && "$samba_choice" == "4" && "$ssl_encryption_config" != "2" ]]; then
-				# 					Installed	Installed	Numbers Taken (3)
-				# Drawpile-Monitor 	No			Yes			3
-				# Samba 			Yes			No			3
-				# Let's encrypt		No			No			6
-				DYN_PI_H_01=22
-				DYN_PI_H_02=23
-				DYN_PI_H_03=24
-			else
-				# Drawpile-Monitor 	No
-				# Samba 			No
-				# Let's encrypt		No
-				DYN_PI_H_01=19
-				DYN_PI_H_02=20
-				DYN_PI_H_03=21
-			fi
-			#---------------------------------------------------------------------------------------------------------------------------------
 			if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
+				DYN_PI_H_01=$(($rpi_start))
+				DYN_PI_H_02=$(($rpi_start+1))
+				DYN_PI_H_03=$(($rpi_start+2))
+			
 				services_conf_contents_PiHole_01=$(cat << EOF
 
 dynamic.$DYN_PI_H_01.name=pihole_desc
@@ -12134,17 +12399,110 @@ dynamic.$DYN_PI_H_03.source=systemctl status pihole-FTL.service | grep "Active: 
 dynamic.$DYN_PI_H_03.regexp=; (.*)
 EOF
 )
-			else
-				services_conf_contents_PiHole_01=""
-			fi
-			#---------------------------------------------------------------------------------------------------------------------------------
-			if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
 				services_conf_contents_PiHole_02=$(cat << EOF
-<tr><td>"+Label(data.pihole_act,"=='(running)'","OK","success")+Label(data.pihole_act,"!='(running)'","KO","danger")+"</td><td><b>pihole-FTL.service</b></td><td>" + data.pihole_desc + "</td><td>"+Label(data.pihole_act,"=='(running)'",data.pihole_runtime,"default")+Label(data.pihole_act,"!='(running)'","-","default")+"</td></tr>
+<tr><td>"+Label(data.pihole_act,"=='(running)'","OK","success")+Label(data.pihole_act,"!='(running)'","KO","danger")+"</td><td><b>Pi-hole FTL</b></td><td>" + data.pihole_desc + "</td><td>"+Label(data.pihole_act,"=='(running)'",data.pihole_runtime,"default")+Label(data.pihole_act,"!='(running)'","-","default")+"</td></tr>
 EOF
 )
+				rpi_increment=3
+				rpi_start=$(($rpi_start + $rpi_increment))
 			else
+				# Does not increment value, continues from last. 
+				services_conf_contents_PiHole_01=""
 				services_conf_contents_PiHole_02=""
+			fi
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Always shown - RPi_Monitor
+			
+			DYN_RPI_01=$(($rpi_start))
+			DYN_RPI_02=$(($rpi_start+1))
+			DYN_RPI_03=$(($rpi_start+2))
+			
+			services_conf_contents_rpi_monitor_01=$(cat << EOF
+
+dynamic.$DYN_RPI_01.name=rpimonitor_desc
+dynamic.$DYN_RPI_01.source=service rpimonitor status | grep "rpimonitor.service -"
+dynamic.$DYN_RPI_01.regexp=- (.*)
+dynamic.$DYN_RPI_02.name=rpimonitor_act
+dynamic.$DYN_RPI_02.source=service rpimonitor status | grep "Active: "
+dynamic.$DYN_RPI_02.regexp=(\(.*\))
+dynamic.$DYN_RPI_03.name=rpimonitor_runtime
+dynamic.$DYN_RPI_03.source=service rpimonitor status | grep "Active: "
+dynamic.$DYN_RPI_03.regexp=; (.*)
+EOF
+)
+			services_conf_contents_rpi_monitor_02=$(cat << EOF
+<tr><td>"+Label(data.rpimonitor_act,"=='(running)'","OK","success")+Label(data.rpimonitor_act,"!='(running)'","KO","danger")+"</td><td><b>RPi-Monitor</b></td><td>" + data.rpimonitor_desc + "</td><td>"+Label(data.rpimonitor_act,"=='(running)'",data.rpimonitor_runtime,"default")+Label(data.rpimonitor_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+			rpi_increment=3
+			rpi_start=$(($rpi_start + $rpi_increment))
+			
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Optional - Samba
+			#      For invalid options, 4 is assumed (no Samba).
+			
+			if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+				
+				DYN_NMBD_01=$(($rpi_start))
+				DYN_NMBD_02=$(($rpi_start+1))
+				DYN_NMBD_03=$(($rpi_start+2))
+				
+				DYN_SMBD_01=$(($rpi_start+3))
+				DYN_SMBD_02=$(($rpi_start+4))
+				DYN_SMBD_03=$(($rpi_start+5))
+
+				services_conf_contents_samba_choice_01=$(cat << EOF
+
+dynamic.$DYN_NMBD_01.name=nmbd_desc
+dynamic.$DYN_NMBD_01.source=service nmbd status | grep "nmbd.service - "
+dynamic.$DYN_NMBD_01.regexp=- (.*)
+dynamic.$DYN_NMBD_02.name=nmbd_act
+dynamic.$DYN_NMBD_02.source=service nmbd status | grep "Active: "
+dynamic.$DYN_NMBD_02.regexp=(\(.*\))
+dynamic.$DYN_NMBD_03.name=nmbd_runtime
+dynamic.$DYN_NMBD_03.source=service nmbd status | grep "Active: "
+dynamic.$DYN_NMBD_03.regexp=; (.*)
+
+dynamic.$DYN_SMBD_01.name=smbd_desc
+dynamic.$DYN_SMBD_01.source=service smbd status | grep "smbd.service - "
+dynamic.$DYN_SMBD_01.regexp=- (.*)
+dynamic.$DYN_SMBD_02.name=smbd_act
+dynamic.$DYN_SMBD_02.source=service smbd status | grep "Active: "
+dynamic.$DYN_SMBD_02.regexp=(\(.*\))
+dynamic.$DYN_SMBD_03.name=smbd_runtime
+dynamic.$DYN_SMBD_03.source=service smbd status | grep "Active: "
+dynamic.$DYN_SMBD_03.regexp=; (.*)
+EOF
+)
+				services_conf_contents_samba_choice_02=$(cat << EOF
+<tr><td>"+Label(data.nmbd_act,"=='(running)'","OK","success")+Label(data.nmbd_act,"!='(running)'","KO","danger")+"</td><td><b>Samba NetBIOS to IP</b></td><td>" + data.nmbd_desc + "</td><td>"+Label(data.nmbd_act,"=='(running)'",data.nmbd_runtime,"default")+Label(data.nmbd_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.smbd_act,"=='(running)'","OK","success")+Label(data.smbd_act,"!='(running)'","KO","danger")+"</td><td><b>Samba File and Printer Share</b></td><td>" + data.smbd_desc + "</td><td>"+Label(data.smbd_act,"=='(running)'",data.smbd_runtime,"default")+Label(data.smbd_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+
+				rpi_increment=6
+				rpi_start=$(($rpi_start + $rpi_increment))
+			else
+				# Does not increment value, continues from last.
+				services_conf_contents_samba_choice_01=""
+				services_conf_contents_samba_choice_02=""
+			fi
+			#---------------------------------------------------------------------------------------------------------------------------------
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Test Section to verify this works for RPi-Monitor
+			if [ "$rpi_monitor_test_output" == "y" ]; then
+				echo "
+$services_conf_contents_abuse_report_01
+$services_conf_contents_listserver_01
+$services_conf_contents_drawpile_monitor_01
+$services_conf_contents_drawpile_srv_01
+$services_conf_contents_drawpile_srv_socket_01
+$services_conf_contents_fail2ban_01
+$services_conf_contents_Lets_Encrypt_01
+$services_conf_contents_nginx_01
+$services_conf_contents_PiHole_01
+$services_conf_contents_rpi_monitor_01
+$services_conf_contents_samba_choice_01" | sed -e ':L;N;s/^\n$//;t L'
+# The sed line removes double blank lines.
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
@@ -12154,80 +12512,33 @@ EOF
 #  Page: 1
 #  Information               Status     Statistics
 #  - ssh port (22)           - yes      - no
-#  - rpimonotor port (8888)  - yes      - no
+#  - rpimonitor port (8888)  - yes      - no
 #  - http port (80)          - yes      - yes
 #  - https port (443)        - yes      - yes
 #  - mysql port (3306) - yes - no
 ########################################################################
-dynamic.1.name=rpimonitor_desc
-dynamic.1.source=service rpimonitor status | grep "rpimonitor.service -"
-dynamic.1.regexp=- (.*)
-dynamic.2.name=rpimonitor_act
-dynamic.2.source=service rpimonitor status | grep "Active: "
-dynamic.2.regexp=(\(.*\))
-dynamic.3.name=rpimonitor_runtime
-dynamic.3.source=service rpimonitor status | grep "Active: "
-dynamic.3.regexp=; (.*)
-
-dynamic.4.name=nginx_desc
-dynamic.4.source=systemctl status nginx.service | grep "nginx.service -"
-dynamic.4.regexp=- (.*)
-dynamic.5.name=nginx_act
-dynamic.5.source=systemctl status nginx.service | grep "Active: "
-dynamic.5.regexp=(\(.*\))
-dynamic.6.name=nginx_runtime
-dynamic.6.source=systemctl status nginx.service | grep "Active: "
-dynamic.6.regexp=; (.*)
-
-dynamic.7.name=drawpile_srv_socket_desc
-dynamic.7.source=systemctl status drawpile-srv.socket | grep "drawpile-srv.socket -"
-dynamic.7.regexp=- (.*)
-dynamic.8.name=drawpile_srv_socket_act
-dynamic.8.source=systemctl status drawpile-srv.socket | grep "Active: "
-dynamic.8.regexp=(\(.*\))
-dynamic.9.name=drawpile_srv_socket_runtime
-dynamic.9.source=systemctl status drawpile-srv.socket | grep "Active: "
-dynamic.9.regexp=; (.*)
-
-dynamic.10.name=drawpile_srv_desc
-dynamic.10.source=systemctl status drawpile-srv.service | grep "drawpile-srv.service -"
-dynamic.10.regexp=- (.*)
-dynamic.11.name=drawpile_srv_act
-dynamic.11.source=systemctl status drawpile-srv.service | grep "Active: "
-dynamic.11.regexp=(\(.*\))
-dynamic.12.name=drawpile_srv_runtime
-dynamic.12.source=systemctl status drawpile-srv.service | grep "Active: "
-dynamic.12.regexp=; (.*)
-
-dynamic.13.name=drawpile_listserver_desc
-dynamic.13.source=systemctl status drawpile-listserver.service | grep "drawpile-listserver.service -"
-dynamic.13.regexp=- (.*)
-dynamic.14.name=drawpile_listserver_act
-dynamic.14.source=systemctl status drawpile-listserver.service | grep "Active: "
-dynamic.14.regexp=(\(.*\))
-dynamic.15.name=drawpile_listserver_runtime
-dynamic.15.source=systemctl status drawpile-listserver.service | grep "Active: "
-dynamic.15.regexp=; (.*)
-
-dynamic.16.name=abuse_report_desc
-dynamic.16.source=systemctl status drawpile_abuse_report.service | grep "drawpile_abuse_report.service -"
-dynamic.16.regexp=- (.*)
-dynamic.17.name=abuse_report_act
-dynamic.17.source=systemctl status drawpile_abuse_report.service | grep "Active: "
-dynamic.17.regexp=(\(.*\))
-dynamic.18.name=abuse_report_runtime
-dynamic.18.source=systemctl status drawpile_abuse_report.service | grep "Active: "
-dynamic.18.regexp=; (.*)
+$services_conf_contents_abuse_report_01
+$services_conf_contents_listserver_01
 $services_conf_contents_drawpile_monitor_01
-$services_conf_contents_samba_choice_01
+$services_conf_contents_drawpile_srv_01
+$services_conf_contents_drawpile_srv_socket_01
+$services_conf_contents_fail2ban_01
 $services_conf_contents_Lets_Encrypt_01
+$services_conf_contents_nginx_01
 $services_conf_contents_PiHole_01
+$services_conf_contents_rpi_monitor_01
+$services_conf_contents_samba_choice_01
 
 web.status.1.content.11.name=Services
 web.status.1.content.11.icon=daemons.png
-web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr><tr><td>"+Label(data.rpimonitor_act,"=='(running)'","OK","success")+Label(data.rpimonitor_act,"!='(running)'","KO","danger")+"</td><td><b>rpimonitor</b></td><td>" + data.rpimonitor_desc + "</td><td>"+Label(data.rpimonitor_act,"=='(running)'",data.rpimonitor_runtime,"default")+Label(data.rpimonitor_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.nginx_act,"=='(running)'","OK","success")+Label(data.nginx_act,"!='(running)'","KO","danger")+"</td><td><b>nginx.service</b></td><td>" + data.nginx_desc + "</td><td>"+Label(data.nginx_act,"=='(running)'",data.nginx_runtime,"default")+Label(data.nginx_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-srv.service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.drawpile_listserver_act,"=='(running)'","OK","success")+Label(data.drawpile_listserver_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-listserver.service</b></td><td>" + data.drawpile_listserver_desc + "</td><td>"+Label(data.drawpile_listserver_act,"=='(running)'",data.drawpile_listserver_runtime,"default")+Label(data.drawpile_listserver_act,"!='(running)'","-","default")+"</td></tr><tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_abuse_report.service</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>$services_conf_contents_drawpile_monitor_02$services_conf_contents_samba_choice_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_PiHole_02</table>"
+web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr>$services_conf_contents_abuse_report_02$services_conf_contents_listserver_02$services_conf_contents_drawpile_monitor_02$services_conf_contents_drawpile_srv_02$services_conf_contents_drawpile_srv_socket_02$services_conf_contents_fail2ban_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_nginx_02$services_conf_contents_PiHole_02$services_conf_contents_rpi_monitor_02$services_conf_contents_samba_choice_02</table>"
 EOF
 )
+services_conf_contents=$( echo "
+$services_conf_contents" | sed -e ':L;N;s/^\n$//;t L' )
+# The sed line removes double blank lines.
+echo "$services_conf_contents" | sudo tee /etc/rpimonitor/template/services.conf >/dev/null
+sudo service rpimonitor restart
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 <<comment_EOF
@@ -12246,7 +12557,7 @@ web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse
 
 <tr><td>"+Label(data.drawpile_listserver_act,"=='(running)'","OK","success")+Label(data.drawpile_listserver_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-listserver.service</b></td><td>" + data.drawpile_listserver_desc + "</td><td>"+Label(data.drawpile_listserver_act,"=='(running)'",data.drawpile_listserver_runtime,"default")+Label(data.drawpile_listserver_act,"!='(running)'","-","default")+"</td></tr>
 
-<tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile_abuse_report.service</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>
+<tr><td>"+Label(data.abuse_report_act,"=='(running)'","OK","success")+Label(data.abuse_report_act,"!='(running)'","KO","danger")+"</td><td><b>drawpile-abuse-report.service</b></td><td>" + data.abuse_report_desc + "</td><td>"+Label(data.abuse_report_act,"=='(running)'",data.abuse_report_runtime,"default")+Label(data.abuse_report_act,"!='(running)'","-","default")+"</td></tr>
 
 $services_conf_contents_samba_choice_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_PiHole_01"
 
@@ -12379,105 +12690,6 @@ else
 	RPi_Monitor_Status=2
 	sudo sed -i '\!^RPi_Monitor_Status =!{h;s!=.*!= '"$RPi_Monitor_Status"'!};${x;\!^$!{s!!RPi_Monitor_Status = '"$RPi_Monitor_Status"'!;H};x}' $app_installation_status_file
 fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
-echo
-
-sudo chmod 777 $app_installation_status_file
-sudo chmod 777 $drawpile_configuration_values_file
-# sudo adduser $current_username drawpileread
-if [[ -e "/home/drawpileuser/cert.pem" ]]; then sudo chmod 700 /home/drawpileuser/cert.pem; fi
-if [[ -e "/home/drawpileuser/key.pem" ]]; then sudo chmod 700 /home/drawpileuser/key.pem; fi
-sudo chown drawpileuser:drawpileread /home/drawpileuser/ -R
-
-variable_to_read_1="dp_srv_startup"
-variable_to_read_2=""
-variable_to_read_3=""
-
-value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
-value_description_2="server powers on?"
-value_description_3=" "
-value_description_4="${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
-value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
-
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	dp_srv_startup=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
-	echo 'server powers on?'
-	echo
-	echo "${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
-	echo '    This setting is less resource intensive on the server or Raspberry Pi,'
-	echo '     as the drawpile server is only running when a user is connected.' 
-	echo "${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
-	echo '    The drawpile-srv starts on Server or Raspberry Pi power up, runs all'
-	echo '    the time in the background.'
-	echo
-	while :; do
-	read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " dp_srv_startup
-		[[ $dp_srv_startup =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
-		if (( $dp_srv_startup >= 1 && $dp_srv_startup <= 2)); then
-			break
-		else
-			echo
-			echo "${red}${bold}Invalid number selection, try again.${normal}"
-			echo
-		fi
-	done
-	echo
-	if [ "$dp_srv_startup" == "1" ]; then
-		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
-		wait $!
-		echo
-		echo 'Reloading systemctl and systemd.'
-		sudo systemctl daemon-reload
-		sudo systemctl restart systemd-modules-load
-		wait $!
-		echo
-		sudo systemctl enable --now drawpile-srv.socket
-		wait $!
-		#Read more on systemd --> https://drawpile.net/help/server
-	elif [ "$dp_srv_startup" == "2" ]; then
-		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
-		wait $!
-		echo
-		echo 'Reloading systemctl and systemd.'
-		sudo systemctl daemon-reload
-		sudo systemctl restart systemd-modules-load
-		wait $!
-		echo
-		sudo systemctl enable --now drawpile-srv.service
-		wait $!
-		#Read more on systemd --> https://drawpile.net/help/server
-	else
-		echo "This message should not be visible."
-	fi
-	sudo sed -i '\!^dp_srv_startup =!{h;s!=.*!= '"$dp_srv_startup"'!};${x;\!^$!{s!!dp_srv_startup = '"$dp_srv_startup"'!;H};x}' $drawpile_configuration_values_file
-	sleep 2
-	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}***** Enabling Drawpile-Monitor for Automatic Startup *****${normal}"
-		echo
-		echo "Startup was delayed to prevent the script from reporting server errors to"
-		echo " Discord server."
-		echo
-		sudo systemctl enable drawpile_monitor.service
-		sudo systemctl start --now drawpile_monitor.service 
-		wait $!
-		sudo systemctl status drawpile_monitor.service  --no-pager
-		wait $!
-	fi
-else
-	echo "This message should not be visible."
-fi
-
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 
@@ -12947,9 +13159,10 @@ echo
 # Removal of Testing Distro Changes if Previously Applied
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
-sudo sed -i '\!^testing_package_decision =!{h;s!=.*!= '"$testing_package_decision"'!};${x;\!^$!{s!!testing_package_decision = '"$testing_package_decision"'!;H};x}' $drawpile_configuration_values_file
 
 if [ "$testing_package_decision" == "y" ] || [ "$testing_package_decision" == "Y" ] || [ "$testing_package_decision" == "yes" ] || [ "$testing_package_decision" == "YES" ] || [ "$testing_package_decision" == "Yes" ] ; then
+	
+	sudo sed -i '\!^testing_package_decision =!{h;s!=.*!= '"$testing_package_decision"'!};${x;\!^$!{s!!testing_package_decision = '"$testing_package_decision"'!;H};x}' $drawpile_configuration_values_file
 	echo
 	echo "${bold}${cyan}*****Removing Testing Package Repo for updated packages. . . .*****${normal}"
 	echo
@@ -13018,6 +13231,7 @@ if [ "$testing_package_decision" == "y" ] || [ "$testing_package_decision" == "Y
 	echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 	echo
 elif [ "$testing_package_decision" == "n" ] || [ "$testing_package_decision" == "N" ] || [ "$testing_package_decision" == "no" ] || [ "$testing_package_decision" == "NO" ] || [ "$testing_package_decision" == "No" ] ; then
+	sudo sed -i '\!^testing_package_decision =!{h;s!=.*!= '"$testing_package_decision"'!};${x;\!^$!{s!!testing_package_decision = '"$testing_package_decision"'!;H};x}' $drawpile_configuration_values_file
 	# Do nothing as no error was detected.
 	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	:
@@ -13311,167 +13525,216 @@ EOF
 	echo
 	# --------------------------------------------------------------------------------
 elif [[ ! -d "$option_loc_2" ]]; then
+	my_server_information="$script_directory/My Server Information.txt"
 	echo "${bold}${cyan}Creating file in script directory with server info:${normal}"
-	echo "     $script_directory/My Server Information.txt"
+	echo "     $my_server_information"
 	echo
 	echo "${bold}${cyan}Please save this somewhere securely, then delete the file.${normal}"
 	echo
-	echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
-	if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
-	if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
-	if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
-	echo
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-***********************************************************************
-************************ My Server Information ************************
-***********************************************************************
+	# This section is for generating info to save into the file on the server, rather than append to it forever.
+	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
+		display_drawpile_admin_web_page="https://$hostname/admin/
 
-**** Drawpile Server Files ****
-$dp_install_loc/Programs/Drawpile-Srv-Files
-/home/drawpileuser/Drawpile_Configuration_Values.txt
-EOF
-	wait $!
-	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-/home/drawpileuser/drawpile-monitor.db
-/home/drawpileuser/drawpile-monitor-custom-list.txt
-EOF
-		wait $!
-	fi
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-/home/drawpileuser/listserverconfig.cfg
-EOF
-	wait $!
-	if [ "$list_server_database_connection_string_num" == "3" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-/home/drawpileuser/ListServerDB.db
-EOF
-		wait $!
-	fi
-	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-/home/drawpileuser/server.db
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**** Drawpile List Server Page ****
-http://$hostname
-
-**** Drawpile List Server Page For Drawpile Client ****
-EOF
-	wait $!
-	if [[ "$ssl_encryption_config" = "1" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-http://$hostname/listing/
-EOF
-		wait $!
-	fi
-	if [[ "$ssl_encryption_config" = "2" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-https://$hostname/listing/
-EOF
-		wait $!
-	fi
-	if [[ "$ssl_encryption_config" = "3" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-Not Available without SSL enabled
-EOF
-		wait $!
-	fi
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-EOF
-	wait $!
-	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
 **** Drawpile Web Admin Page Login Information ****
 Note: Should only share with minimal number of users
 Web Admin Username      = $nginx_username_1
-Web Admin Password      = $nginx_htpasswd_1
-
+Web Admin Password      = $nginx_htpasswd_1"
+	else
+		# if [[ "$ssl_encryption_config" = "3" ]]; then 
+		display_drawpile_admin_web_page="Not Available without SSL enabled"
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------
+	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
+		display_drawpile__new_admin_web_page="https://$hostname/admin_ui/
+		
 **** Drawpile New Web Admin Page Login Information ****
 Note: Can share with users to gain access to moderation interface
       and they have a user account set up to limit their access.
 New Web Admin Username  = $nginx_username_admin_ui_1
-New Web Admin Password  = $nginx_htpasswd_admin_ui_1
-
-EOF
-	wait $!
-	#---------------------------------------------------------------------------------------------------------------------------------
-	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-**** Drawpile Server Crypt Key ****
-$drawpile_srv_crypt_key
-
-EOF
-		wait $!
+New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
+	else
+		# [[ "$ssl_encryption_config" = "3" ]]; then 
+		display_drawpile__new_admin_web_page="Not Available without SSL enabled"
 	fi
 	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-**** Drawpile Admin Web Page ****
-EOF
-	wait $!
-	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-https://$hostname/admin/
-EOF
-		wait $!
+	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+		display_drawpile_abuse_report="
+systemctl status drawpile-abuse-report.service --no-pager"
+	else
+		display_drawpile_abuse_report=""
 	fi
-	if [[ "$ssl_encryption_config" = "3" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-Not Available without SSL enabled
-EOF
-		wait $!
+	
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		display_drawpile_monitor="systemctl status drawpile-monitor.service --no-pager"
+	else
+		display_drawpile_monitor=""
+	fi
+	if [ "$dp_srv_startup" == "1" ]; then
+		# 1 - Socket Activation
+		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager
+systemctl status drawpile-srv.socket --no-pager"
+	else
+		# 2 - Always on Service
+		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager"
+	fi
+	if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
+		display_fail2ban="
+systemctl status fail2ban.service"
+	fi
+	if [ "$ssl_encryption_config" == "2" ]; then
+		display_lets_encrypt="
+Let's Encrypt Services for SSL Cert Renewal
+     systemctl status certbot.service --no-pager
+     systemctl status certbot.timer --no-pager"
+	fi
+	if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
+		display_pihole="
+Pi-Hole Service
+     systemctl status pihole-FTL.service --no-pager"
+	fi
+	if [ "$RPi_Monitor_Status" == "1" ]; then
+		display_rpimonitor="service rpimonitor status --no-pager"
+	fi
+	if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+		display_samba_status="Samba - Local Network File Sharing
+     systemctl status nmbd.service --no-pager
+     systemctl status smbd.service --no-pager"
+	fi
+	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
+		display_new_web_admin_url="Note: Eventually will be used in the new web admin UI, to administer
+      multiple servers from one interface.
+https://$hostname/listing/admin/"
+	else
+		display_new_web_admin_url="Not Available without SSL enabled"
 	fi
 	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-
-**** Drawpile New Admin Web Page ****
-EOF
-	wait $!
-	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-https://$hostname/admin_ui/
-EOF
-		wait $!
+	if [[ "$ssl_encryption_config" = "1" ]]; then 
+		display_server_webpage="http://$hostname
+https://$hostname"
+	elif [[ "$ssl_encryption_config" = "2" ]]; then 
+		display_server_webpage="https://$hostname"
+	else
+		# [[ "$ssl_encryption_config" = "3" ]]; then 
+		display_server_webpage="http://$hostname"
 	fi
-	if [[ "$ssl_encryption_config" = "3" ]]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-Not Available without SSL enabled
-EOF
-		wait $!
+	
+	if [[ "$ssl_encryption_config" = "1" ]]; then 
+		display_server_listserver="http://$hostname/listing/"
+	elif [[ "$ssl_encryption_config" = "2" ]]; then 
+		display_server_listserver="https://$hostname/listing/"
+	else
+		# [[ "$ssl_encryption_config" = "3" ]]; then 
+		display_server_listserver="Not Available without SSL enabled"
 	fi
-	#---------------------------------------------------------------------------------------------------------------------------------
-	cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-
-***** Drawpile Admin GUI Desktop on another machine *****
-**** (For Emergency Use Only, messes with web admin) ****
-drawpile-srv --gui --remote http://$hostname:8081/
-
-EOF
-	wait $!
+	
 	#---------------------------------------------------------------------------------------------------------------------------------
 	if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-		cat <<EOF | sudo tee -a "$script_directory/My Server Information.txt" >/dev/null
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		display_samba="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **** Samba Network Configuration ****
 Type this into address bar of file explorer to check contents of local server.
-\\$HOSTNAME"
+\\\\$HOSTNAME
+"
+	fi
+	#---------------------------------------------------------------------------------------------------------------------------------	
+	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+		display_drawpile_monitor_files="/home/drawpileuser/drawpile-monitor.db
+/home/drawpileuser/drawpile-monitor-custom-list.txt"
+	fi
+	if [ -e "/home/drawpileuser/ListServerDB.db" ]; then
+		display_listserver_file="/home/drawpileuser/ListServerDB.db"
+	fi
+	if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+		display_drawpile_srv_crypt_key_status="
 
-EOF
-		wait $!
+**** Drawpile Server Crypt Key ****
+$drawpile_srv_crypt_key"
 	fi
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
-else
-	echo "This message for Desktop Icon should not be visible. (Drawpile Admin and Drawpile Admin GUI)"
-fi
+	if [ ! -e "$my_server_information" ]; then sudo touch "$my_server_information"; fi
+	#cat <<EOF | sudo tee "$my_server_information" >/dev/null
+	
+	my_server_information_store=$(cat << EOF
 
+
+***********************************************************************
+******************** Start - My Server Information ********************
+***********************************************************************
+
+**********************************************
+**** Drawpile Web Pages For Server Admins ****
+**********************************************
+
+**** Drawpile Admin Web Page ****
+$display_drawpile_admin_web_page
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**** Drawpile New Admin Web Page ****
+$display_drawpile__new_admin_web_page
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+****  Drawpile Related Services  ****$display_drawpile_abuse_report
+systemctl status drawpile-listserver.service --no-pager
+$display_drawpile_monitor
+$display_drawpile_srv_status
+
+**** Services that help Drawpile function  ****$display_fail2ban$display_lets_encrypt
+systemctl status nginx.service --no-pager$display_pihole
+$display_rpimonitor
+$display_samba_status
+
+**** Drawpile New Admin Web URLs ****
+$display_new_web_admin_url
+
+***** Drawpile Admin GUI Desktop on another machine *****
+**** (For EMERGENCY USE ONLY, messes with web admin) ****
+drawpile-srv --gui --remote http://$hostname:8081/
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**************************************
+**** Drawpile Web Pages For Users ****
+**************************************
+
+**** Drawpile Server Homepage ****
+$display_server_webpage
+
+**** Drawpile List Server Page For Drawpile Client ****
+$display_server_listserver
+
+$display_samba
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Important files and data to back up in the event the server needs to
+be wiped and start over.
+
+**** Important Drawpile Server Files ****
+$dp_install_loc/Programs/Drawpile-Srv-Files
+/home/drawpileuser/Drawpile_Configuration_Values.txt
+$display_drawpile_monitor_files
+/home/drawpileuser/listserverconfig.cfg
+$display_listserver_file
+/home/drawpileuser/server.db$display_drawpile_srv_crypt_key_status
+
+***********************************************************************
+******************** End   - My Server Information ********************
+***********************************************************************
+
+EOF
+)
+	my_server_information_store=$( echo "
+	$my_server_information_store" | sed -e ':L;N;s/^\n$//;t L' )
+	echo "$my_server_information_store" | sudo tee "$my_server_information" >/dev/null
+else
+	echo "This message for Desktop Icons or Text file should not be visible."
+fi
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
@@ -13584,70 +13847,129 @@ fi
 comment_EOF_delete
 
 echo "${bold}${cyan}***********************************************************************${normal}"
-echo "${bold}${cyan}************************ My Server Information ************************${normal}"
+echo "${bold}${cyan}******************** Start - My Server Information ********************${normal}"
 echo "${bold}${cyan}***********************************************************************${normal}"
 echo
-echo "${bold}${cyan}**** Important Drawpile Server Files ****${normal}"
-echo "$dp_install_loc/Programs/Drawpile-Srv-Files"
-echo "/home/drawpileuser/Drawpile_Configuration_Values.txt"
-if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-	echo "/home/drawpileuser/drawpile-monitor.db"
-	echo "/home/drawpileuser/drawpile-monitor-custom-list.txt"
-fi
-echo "/home/drawpileuser/listserverconfig.cfg"
-if [ "$list_server_database_connection_string_num" == "3" ]; then
-	echo "/home/drawpileuser/ListServerDB.db"
-fi
-echo "/home/drawpileuser/server.db"
+echo "${bold}${cyan}**********************************************${normal}"
+echo "${bold}${cyan}**** Drawpile Web Pages For Server Admins ****${normal}"
+echo "${bold}${cyan}**********************************************${normal}"
 echo
-echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
-echo
-echo "${bold}${cyan}**** Drawpile List Server Page ****${normal}"
-echo "http://$hostname"
-echo
-echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
-if [[ "$ssl_encryption_config" = "1" ]]; then echo "http://$hostname/listing/"; fi
-if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/listing/"; fi
-if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
-echo
-echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
-echo
-echo "${bold}${cyan}**** Drawpile Web Admin Page Login Information ****${normal}"
-echo "Note: Should only share with minimal number of users"
-echo "Web Admin Username      = $nginx_username_1"
-echo "Web Admin Password      = $nginx_htpasswd_1"
-echo
-echo "${bold}${cyan}**** Drawpile New Web Admin Page Login Information ****${normal}"
-echo "Note: Can share with users to gain access to moderation interface"
-echo "      and they have a user account set up to limit their access."
-echo "New Web Admin Username  = $nginx_username_admin_ui_1"
-echo "New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
-echo
-if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
-	echo "${bold}${cyan}**** Drawpile Server Crypt Key ****${normal}"
-	echo "$drawpile_srv_crypt_key"
-	echo
-fi
 echo "${bold}${cyan}**** Drawpile Admin Web Page ****${normal}"
-if [[ "$ssl_encryption_config" = "1" ]]; then echo "https://$hostname/admin/"; fi
-if [[ "$ssl_encryption_config" = "2" ]]; then echo "https://$hostname/admin/"; fi
-if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
-echo
-echo "${bold}${cyan}**** Drawpile New Admin Web URLs ****${normal}"
-if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
-	echo "https://$hostname/listing/admin/"
+if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then
+	echo "https://$hostname/admin/
+
+${bold}${cyan}**** Drawpile Web Admin Page Login Information ****${normal}
+${cyan}Note: Should only share with minimal number of users${normal}
+Web Admin Username      = $nginx_username_1
+Web Admin Password      = $nginx_htpasswd_1"
+
+else
+	# if [[ "$ssl_encryption_config" = "3" ]]; then 
+	echo "Not Available without SSL enabled"
 fi
-if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+echo
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
 echo "${bold}${cyan}**** Drawpile New Admin Web Page ****${normal}"
 if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
 	echo "https://$hostname/admin_ui/"
+	echo
+	echo "${bold}${cyan}**** Drawpile New Web Admin Page Login Information ****${normal}"
+	echo "${cyan}Note: Can share with users to gain access to moderation interface${normal}"
+	echo "      ${cyan}and they have a user account set up to limit their access.${normal}"
+	echo "New Web Admin Username  = $nginx_username_admin_ui_1"
+	echo "New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
+else
+	# [[ "$ssl_encryption_config" = "3" ]]; then 
+	echo "Not Available without SSL enabled"
 fi
-if [[ "$ssl_encryption_config" = "3" ]]; then echo "Not Available without SSL enabled"; fi
+echo
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo
+echo "${bold}${cyan}****  Drawpile Related Services  ****${normal}"
+if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
+	echo "systemctl status drawpile-abuse-report.service --no-pager"
+fi
+echo "systemctl status drawpile-listserver.service --no-pager"
+if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+	echo "systemctl status drawpile-monitor.service --no-pager"
+fi
+if [ "$dp_srv_startup" == "1" ]; then
+	# 1 - Socket Activation
+	echo "systemctl status drawpile-srv.service --no-pager"
+	echo "systemctl status drawpile-srv.socket --no-pager"
+elif [ "$dp_srv_startup" == "2" ]; then
+	# 2 - Always on Service
+	echo "systemctl status drawpile-srv.service --no-pager"
+else
+	echo "This message should not be visible for showing services for Drawpile-srv."
+	echo "systemctl status drawpile-srv.service --no-pager"
+fi
+echo
+echo "${bold}${cyan}**** Services that help Drawpile function  ****${normal}"
+if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
+	echo "systemctl status fail2ban.service"
+fi
+if [ "$ssl_encryption_config" == "2" ]; then
+	echo "${cyan}Let's Encrypt Services for SSL Cert Renewal${normal}"
+	echo "     systemctl status certbot.service --no-pager"
+	echo "     systemctl status certbot.timer --no-pager"
+fi
+echo "systemctl status nginx.service --no-pager"
+if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
+	echo "${cyan}Pi-Hole Service${normal}"
+	echo "     systemctl status pihole-FTL.service --no-pager"
+fi
+if [ "$RPi_Monitor_Status" == "1" ]; then
+	echo "service rpimonitor status --no-pager"
+fi
+if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
+	echo "${cyan}Samba - Local Network File Sharing${normal}"
+	echo "     systemctl status nmbd.service --no-pager"
+	echo "     systemctl status smbd.service --no-pager"
+fi
+echo
+echo "${bold}${cyan}**** Drawpile New Admin Web URLs ****${normal}"
+if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
+	echo "${cyan}Note: Eventually will be used in the new web admin UI, to administer${normal}"
+	echo "      ${cyan}multiple servers from one interface.${normal}"
+	echo "https://$hostname/listing/admin/"
+else
+	# [[ "$ssl_encryption_config" = "3" ]]; then 
+	echo "Not Available without SSL enabled"
+fi
 echo
 echo "${bold}${cyan}***** Drawpile Admin GUI Desktop on another machine *****${normal}"
-echo "${bold}${cyan}**** (For Emergency Use Only, messes with web admin) ****${normal}"
+echo "${bold}${cyan}**** (For EMERGENCY USE ONLY, messes with web admin) ****${normal}"
 echo "drawpile-srv --gui --remote http://$hostname:8081/"
+echo
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo
+echo "${bold}${cyan}**************************************${normal}"
+echo "${bold}${cyan}**** Drawpile Web Pages For Users ****${normal}"
+echo "${bold}${cyan}**************************************${normal}"
+echo 
+echo "${bold}${cyan}**** Drawpile Server Homepage ****${normal}"
+if [[ "$ssl_encryption_config" = "1" ]]; then 
+	echo "http://$hostname"
+	echo "https://$hostname"
+elif [[ "$ssl_encryption_config" = "2" ]]; then 
+	echo "https://$hostname"
+else
+	# [[ "$ssl_encryption_config" = "3" ]]; then 
+	echo "http://$hostname"
+fi
+echo
+echo "${bold}${cyan}**** Drawpile List Server Page For Drawpile Client ****${normal}"
+if [[ "$ssl_encryption_config" = "1" ]]; then 
+	echo "http://$hostname/listing/"
+elif [[ "$ssl_encryption_config" = "2" ]]; then 
+	echo "https://$hostname/listing/"
+else
+	# [[ "$ssl_encryption_config" = "3" ]]; then 
+	echo "Not Available without SSL enabled"
+fi
 echo
 if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
@@ -13658,9 +13980,33 @@ if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice"
 	echo
 fi
 echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 echo
-echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo "${cyan}Important files and data to back up in the event the server needs to${normal}"
+echo "${cyan}be wiped and start over.${normal}"
+echo
+echo "${bold}${cyan}**** Important Drawpile Server Files ****${normal}"
+echo "$dp_install_loc/Programs/Drawpile-Srv-Files"
+echo "/home/drawpileuser/Drawpile_Configuration_Values.txt"
+if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
+	echo "/home/drawpileuser/drawpile-monitor.db"
+	echo "/home/drawpileuser/drawpile-monitor-custom-list.txt"
+fi
+echo "/home/drawpileuser/listserverconfig.cfg"
+if [ -e "/home/drawpileuser/ListServerDB.db" ]; then
+	echo "/home/drawpileuser/ListServerDB.db"
+fi
+echo "/home/drawpileuser/server.db"
+
+if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ]; then
+	echo
+	echo "${bold}${cyan}**** Drawpile Server Crypt Key ****${normal}"
+	echo "$drawpile_srv_crypt_key"
+fi
+echo
+echo "${bold}${cyan}***********************************************************************${normal}"
+echo "${bold}${cyan}******************** End   - My Server Information ********************${normal}"
+echo "${bold}${cyan}***********************************************************************${normal}"
 echo
 server_ipv4=$( hostname -I | awk '{ print $1 }' )
 server_ipv6=$( hostname -I | awk '{ print $2 }' )
