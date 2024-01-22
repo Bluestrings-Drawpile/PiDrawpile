@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9959
+drawpilescriptversion=2.9960001
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -393,6 +393,14 @@ function dnf_function () {
 	package_info_program="dnf info"
 }
 
+function yum_function () {
+	package_install_program="yum install"
+	packages_update_program="yum check-update"
+	packages_system_upgrade="yum upgrade"
+	packages_clean_program="echo ${invis} Skipping 'yum clean dbcache' ${normal}"
+	package_info_program="yum info"
+}
+
 function adduser_and_addgroup_function () {
 	# Debian and Ubuntu
 	user_add_program="adduser"
@@ -499,34 +507,61 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		exit
 	fi	
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	# Was for Firewall-cmd which is currently commented out. 
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
-	dnf_function
+	#
+	what_fedora_variant_name=$( cat /etc/*-release | grep -i "^VARIANT_ID" | cut -d "=" -f2 )
+	# dnf_function
+	yum_function
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Workstation 38.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
-		echo "${bold}${green}Running Fedora Server 37.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2023-11-14.${normal}"
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 36.${normal}" && echo && echo "${bold}${red}End of Life support since 2023-05-16.${normal}"
-		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 35 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 35 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 35.${normal}" && echo && echo "${bold}${red}End of Life support since 2022-12-13.${normal}"
-		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 34 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 34 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 34.${normal}" && echo && echo "${bold}${red}End of Life support since 2022-06-07.${normal}"
-		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 33 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 33 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 33.${normal}" && echo && echo "${bold}${red}End of Life support since 2021-11-30.${normal}"
-		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 32.${normal}" && echo && echo "${bold}${red}End of Life support since 2021-05-25.${normal}"
-		fedora_end_of_life_function
-	elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
-		echo "${bold}${red}Running Fedora Server 31.${normal}" && echo && echo "${bold}${red}End of Life support since 2020-11-24.${normal}"
-		fedora_end_of_life_function
+	if [ "$what_fedora_variant_name" == "server" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 39.${normal}"
+			echo "Currently undergoing testing for support."
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
+			echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
+			# fedora_end_of_life_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
+			echo "${bold}${green}Running Fedora Server 37.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2023-11-14.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 36 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 36 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 36.${normal}" && echo && echo "${bold}${red}End of Life support since 2023-05-16.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 35 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 35 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 35.${normal}" && echo && echo "${bold}${red}End of Life support since 2022-12-13.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 34 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 34 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 34.${normal}" && echo && echo "${bold}${red}End of Life support since 2022-06-07.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 33 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 33 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 33.${normal}" && echo && echo "${bold}${red}End of Life support since 2021-11-30.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 32.${normal}" && echo && echo "${bold}${red}End of Life support since 2021-05-25.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" ]]; then
+			echo "${bold}${red}Running Fedora Server 31.${normal}" && echo && echo "${bold}${red}End of Life support since 2020-11-24.${normal}"
+			fedora_end_of_life_function
+		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			echo "${bold}${yellow}Running Fedora Server, version may not be supported.${normal}"
+			echo "Version: $what_linux_flavor"
+			echo
+			sleep 30
+		else
+			echo "This message shouldn't be visible to determine Fedora type (Server)."
+		fi
+	elif [ "$what_fedora_variant_name" == "workstation" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
+			echo "${bold}${green}Running Fedora Workstation 38.${normal}"
+		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
+			echo "Version: $what_linux_flavor"
+			echo
+			sleep 30
+		else
+			echo "This message shouldn't be visible to determine Fedora type (Workstation)."
+		fi
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
@@ -6136,7 +6171,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# sudo certbot --nginx -d example.com -d www.example.com
 			# sudo certbot --nginx --test-cert
 			echo
-			sudo apt install certbot 
+			#sudo apt install certbot
+			sudo $package_install_program certbot
 			app_does_not_exist=0
 			app_installed=0
 			app_not_installed=0
@@ -10462,7 +10498,7 @@ EOF
 
 		function install_or_update_nodejs () {
 			echo
-			echo "Running apt update and apt upgrade"
+			echo "Running package update and upgrade"
 			echo
 			# Node must be version 14 or higher, has version 12 by default on latest version of Rasbpian...
 			# https://pimylifeup.com/raspberry-pi-nodejs/
@@ -10494,7 +10530,9 @@ EOF
 				echo
 				if [ "$pi_zero_nodejs" == "yes" ] || [ "$pi_zero_nodejs" == "YES" ] || [ "$pi_zero_nodejs" == "Yes" ] ; then
 					# update system
-					sudo apt update && sudo apt upgrade
+					# sudo apt update && sudo apt upgrade
+					sudo $packages_update_program
+					sudo $packages_system_upgrade
 					#
 					# uninstall old node (v10?)
 					sudo apt remove nodejs npm -y
