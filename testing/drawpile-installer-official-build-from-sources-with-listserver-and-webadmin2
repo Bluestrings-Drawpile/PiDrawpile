@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960001
+drawpilescriptversion=2.9960002
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -848,38 +848,175 @@ fi
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 
+function read_stored_config_value_query_function () {
+	read_stored_config_value_query_null_check=0
+	read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	
+	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
+		read_stored_config_value_query_null_check=1
+		# If variable cannot be found in drawpile configuration values file, check app installation status. Only when value is null or = sign.
+		read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	fi
+	
+	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
+		if [ "$read_stored_config_value_query_null_check" = "0" ]; then
+			echo "No value read from file: $drawpile_configuration_values_file"
+			echo
+		elif [ "$read_stored_config_value_query_null_check" = "1" ]; then
+			echo "No value read from files: $drawpile_configuration_values_file"
+			echo "                          $app_installation_status_file"
+			echo
+		else
+			echo "This message should not be visible for: read_stored_config_value_query_null_check"
+		fi
+		# Force user to insert proper data this way without having to check for null variable.
+		maybe_use_config_value=no
+	else
+		echo "${green}Value located:${normal} $read_stored_config_value_query_1"
+		echo
+		[ -z "$value_description_1" ] || echo "$value_description_1"
+		[ -z "$value_description_2" ] || echo "$value_description_2"
+		[ -z "$value_description_3" ] || echo "$value_description_3"
+		[ -z "$value_description_4" ] || echo "$value_description_4"
+		[ -z "$value_description_5" ] || echo "$value_description_5"
+		[ -z "$value_description_6" ] || echo "$value_description_6"
+		[ -z "$value_description_7" ] || echo "$value_description_7"
+		[ -z "$value_description_8" ] || echo "$value_description_8"
+		[ -z "$value_description_9" ] || echo "$value_description_9"
+		[ -z "$value_description_10" ] || echo "$value_description_10"
+		[ -z "$value_description_11" ] || echo "$value_description_11"
+		[ -z "$value_description_12" ] || echo "$value_description_12"
+		[ -z "$value_description_13" ] || echo "$value_description_13"
+		[ -z "$value_description_14" ] || echo "$value_description_14"
+		[ -z "$value_description_15" ] || echo "$value_description_15"
+		[ -z "$value_description_16" ] || echo "$value_description_16"
+		[ -z "$value_description_17" ] || echo "$value_description_17"
+		[ -z "$value_description_18" ] || echo "$value_description_18"
+		[ -z "$value_description_19" ] || echo "$value_description_19"
+		[ -z "$value_description_20" ] || echo "$value_description_20"
+		[ -z "$value_description_1" ] || echo
+		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
+		[ -z "$variable_to_read_2" ] || echo
+		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
+		[ -z "$variable_to_read_3" ] || echo
+		while :; do
+			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
+			echo
+			if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ] || [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+	fi
+	variable_to_read_2=""
+	variable_to_read_3=""
+	
+	value_description_1=""
+	value_description_2=""
+	value_description_3=""
+	value_description_4=""
+	value_description_5=""
+	value_description_6=""
+	value_description_7=""
+	value_description_8=""
+	value_description_9=""
+	value_description_10=""
+	value_description_11=""
+	value_description_12=""
+	value_description_13=""
+	value_description_14=""
+	value_description_15=""
+	value_description_16=""
+	value_description_17=""
+	value_description_18=""
+	value_description_19=""
+	value_description_20=""
+}
+
+<<comment_EOF
+variable_to_read_1="freeDNS_input"
+variable_to_read_2=""
+variable_to_read_3=""
+read_stored_config_value_query_function
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	freeDNS_input_1=$read_stored_config_value_query_1
+	freeDNS_input_2=$read_stored_config_value_query_2
+	freeDNS_input_3=$read_stored_config_value_query_3
+	drawpile_build_configuration_number_desc=$read_stored_config_value_query_2
+	drawpile_build_configuration_settings=$read_stored_config_value_query_3
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo "Not using value. Please insert new value."
+else
+	echo "This message should not be visible."
+fi
+
+echo "derp $freeDNS_input VALUE"
+comment_EOF
+
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+
 function select_non_root_account () {
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
-	echo
-	echo "When running script with sudo or su, please specify your user account name"
-	echo "with a valid user directory indicated below." 
-	echo
-	echo "${bold}${cyan}Note:${normal} Portions of the script do require some things to run without root access."
-	echo "     Also, if you are running a graphical user interface with your setup,"
-	echo "     prefer YOUR user account over selecting drawpileuser or root. This"
-	echo "     enables shortcut creation on your desktop for server tools."
-	echo
-	echo "${bold}${underline}Generating list of system users (may take up to a minute or so):${normal}"
-	id -nu 0
-	eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
-	echo
-	echo "${bold}${underline}Here are a list of folders in the home directory:${normal}"
-	ls -d /home/*/
-	echo
-	read -r -p "${bold}${cyan}Enter ONLY the username:${normal} " current_username
-	echo
-	while [[ ! -e "/home/$current_username" ]]
-	do
-		echo '--------------------------------------------------------------------------------'
+	variable_to_read_1="current_username"
+	variable_to_read_2=""
+	variable_to_read_3=""
+
+	value_description_1="When running script with sudo or su, your user account should be specified"
+	value_description_2="because portions of the script require things to run without root access,"
+	value_description_3="adds your user to be able to read Drawpile files, and/or creates shortcuts"
+	value_description_4="if you have a desktop environment."
+	value_description_5=""
+
+	read_stored_config_value_query_function
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Storing value and moving on."
+		current_username=$read_stored_config_value_query_1
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		echo
-		echo "${bold}${red}Invalid user name entered (no matching home directory). Please ${normal}"
-		echo "${bold}${red}enter a valid user name with a user directory indicated below:${normal}"
+		echo "When running script with sudo or su, please specify your user account name"
+		echo "with a valid user directory indicated below." 
+		echo
+		echo "${bold}${cyan}Note:${normal} Portions of the script do require some things to run without root access."
+		echo "     Also, if you are running a graphical user interface with your setup,"
+		echo "     prefer YOUR user account over selecting drawpileuser or root. This"
+		echo "     enables shortcut creation on your desktop for server tools."
+		echo
+		echo "${bold}${underline}Generating list of system users (may take up to a minute or so):${normal}"
+		id -nu 0
+		eval getent passwd {$(awk '/^UID_MIN/ {print $2}' /etc/login.defs)..$(awk '/^UID_MAX/ {print $2}' /etc/login.defs)} | cut -d: -f1
+		echo
+		echo "${bold}${underline}Here are a list of folders in the home directory:${normal}"
 		ls -d /home/*/
 		echo
-		read -r -p "${bold}${cyan}Enter user name:${normal} " current_username
+		read -r -p "${bold}${cyan}Enter ONLY the username:${normal} " current_username
 		echo
-	done
+		while [[ ! -e "/home/$current_username" ]]
+		do
+			echo '--------------------------------------------------------------------------------'
+			echo
+			echo "${bold}${red}Invalid user name entered (no matching home directory). Please ${normal}"
+			echo "${bold}${red}enter a valid user name with a user directory indicated below:${normal}"
+			ls -d /home/*/
+			echo
+			read -r -p "${bold}${cyan}Enter user name:${normal} " current_username
+			echo
+		done
+		sudo sed -i '\!^current_username =!{h;s!=.*!= '"$current_username"'!};${x;\!^$!{s!!current_username = '"$current_username"'!;H};x}' $drawpile_configuration_values_file
+	else
+		echo "This message should not be visible."
+	fi
 }
 
 # Prompt for user name change if root detected, first attempting Pi (and verifying), 
@@ -1103,124 +1240,6 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
-
-function read_stored_config_value_query_function () {
-	read_stored_config_value_query_null_check=0
-	read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	
-	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
-		read_stored_config_value_query_null_check=1
-		# If variable cannot be found in drawpile configuration values file, check app installation status. Only when value is null or = sign.
-		read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-	fi
-	
-	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
-		if [ "$read_stored_config_value_query_null_check" = "0" ]; then
-			echo "No value read from file: $drawpile_configuration_values_file"
-			echo
-		elif [ "$read_stored_config_value_query_null_check" = "1" ]; then
-			echo "No value read from files: $drawpile_configuration_values_file"
-			echo "                          $app_installation_status_file"
-			echo
-		else
-			echo "This message should not be visible for: read_stored_config_value_query_null_check"
-		fi
-		# Force user to insert proper data this way without having to check for null variable.
-		maybe_use_config_value=no
-	else
-		echo "${green}Value located:${normal} $read_stored_config_value_query_1"
-		echo
-		[ -z "$value_description_1" ] || echo "$value_description_1"
-		[ -z "$value_description_2" ] || echo "$value_description_2"
-		[ -z "$value_description_3" ] || echo "$value_description_3"
-		[ -z "$value_description_4" ] || echo "$value_description_4"
-		[ -z "$value_description_5" ] || echo "$value_description_5"
-		[ -z "$value_description_6" ] || echo "$value_description_6"
-		[ -z "$value_description_7" ] || echo "$value_description_7"
-		[ -z "$value_description_8" ] || echo "$value_description_8"
-		[ -z "$value_description_9" ] || echo "$value_description_9"
-		[ -z "$value_description_10" ] || echo "$value_description_10"
-		[ -z "$value_description_11" ] || echo "$value_description_11"
-		[ -z "$value_description_12" ] || echo "$value_description_12"
-		[ -z "$value_description_13" ] || echo "$value_description_13"
-		[ -z "$value_description_14" ] || echo "$value_description_14"
-		[ -z "$value_description_15" ] || echo "$value_description_15"
-		[ -z "$value_description_16" ] || echo "$value_description_16"
-		[ -z "$value_description_17" ] || echo "$value_description_17"
-		[ -z "$value_description_18" ] || echo "$value_description_18"
-		[ -z "$value_description_19" ] || echo "$value_description_19"
-		[ -z "$value_description_20" ] || echo "$value_description_20"
-		[ -z "$value_description_1" ] || echo
-		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
-		[ -z "$variable_to_read_2" ] || echo
-		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
-		[ -z "$variable_to_read_3" ] || echo
-		while :; do
-			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
-			echo
-			if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ] || [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				break
-			else
-				echo
-				echo "${bold}${red}Invalid input selection, try again.${normal}"
-				echo
-				echo ----------------------------------------------------------------------------------
-				echo
-			fi
-		done
-	fi
-	variable_to_read_2=""
-	variable_to_read_3=""
-	
-	value_description_1=""
-	value_description_2=""
-	value_description_3=""
-	value_description_4=""
-	value_description_5=""
-	value_description_6=""
-	value_description_7=""
-	value_description_8=""
-	value_description_9=""
-	value_description_10=""
-	value_description_11=""
-	value_description_12=""
-	value_description_13=""
-	value_description_14=""
-	value_description_15=""
-	value_description_16=""
-	value_description_17=""
-	value_description_18=""
-	value_description_19=""
-	value_description_20=""
-}
-
-<<comment_EOF
-variable_to_read_1="freeDNS_input"
-variable_to_read_2=""
-variable_to_read_3=""
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	freeDNS_input_1=$read_stored_config_value_query_1
-	freeDNS_input_2=$read_stored_config_value_query_2
-	freeDNS_input_3=$read_stored_config_value_query_3
-	drawpile_build_configuration_number_desc=$read_stored_config_value_query_2
-	drawpile_build_configuration_settings=$read_stored_config_value_query_3
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-	echo "Not using value. Please insert new value."
-else
-	echo "This message should not be visible."
-fi
-
-echo "derp $freeDNS_input VALUE"
-comment_EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
 
 function version_test_by_distro_function () {
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] ; then
