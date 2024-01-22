@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960005
+drawpilescriptversion=2.9960008
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -161,7 +161,7 @@ function drawpile_credits_function () {
 function drawpile_credits_urls_functions () {
 	echo "Script Ver.	--> ${bold}$drawpile_script_version${normal}"
 	echo "Google Doc 	--> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
-	echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
+	echo "GitHub 		--> ${underline}https://github.com/$github_account_name/$github_project_name.git ${normal}"
 }
 echo
 drawpile_credits_function
@@ -394,7 +394,7 @@ function dnf_function () {
 }
 
 function yum_function () {
-	package_install_program="yum install"
+	package_install_program="yum install -q -y"
 	packages_update_program="yum check-update"
 	packages_system_upgrade="yum upgrade"
 	packages_clean_program="echo ${invis} Skipping 'yum clean dbcache' ${normal}"
@@ -1935,7 +1935,7 @@ if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Availab
 		echo "the script being used is up to date. You may experience"
 		echo "problems installing Drawpile if not up to date."
 		echo
-		echo "https://github.com/Wade821/PiDrawpile"
+		echo "https://github.com/$github_account_name/$github_project_name"
 		echo 
 		echo "Continuing script in 30 seconds."
 		echo
@@ -1953,7 +1953,7 @@ if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Availab
 		echo "used is up to date. You may experience problems installing"
 		echo "Drawpile if not up to date."
 		echo
-		echo "https://github.com/Wade821/PiDrawpile"
+		echo "https://github.com/$github_account_name/$github_project_name"
 		echo 
 		echo "Continuing script in 30 seconds."
 		echo
@@ -1990,7 +1990,7 @@ elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
 		echo "used is up to date. You may experience problems installing"
 		echo "Drawpile if not up to date."
 		echo
-		echo "https://github.com/Wade821/PiDrawpile"
+		echo "https://github.com/$github_account_name/$github_project_name"
 		echo 
 		echo "Continuing script in 30 seconds."
 		echo
@@ -5540,6 +5540,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				echo
 				echo "${bold}${red}You have the option to skip the DNS check, however, if the hostname is incorrect,${normal}"
 				echo "${bold}${red}the script will need to be re-ran fresh, things will not work properly!${normal}"
+				echo "${bold}${red}Also if you choose to use Let's Encrypt, the check may fail!${normal}"
 				echo
 				while :; do
 					read -r -p "Would you like to skip DNS verification? (Y)es or (n)o? : " hostname_dns_verification_skip
@@ -6189,18 +6190,18 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		version_test_by_distro_function
 		# if [[ "$version_certbot" = "(none)" ]]; then
 		if [[ "$test_installation_status" = "Not Installed" ]]; then
-			echo "${bold}${cyan}***** Installing packages certbot and python3-certbot-nginx. . . *****${normal}"
+			echo "${bold}${cyan}***** Installing package certbot. . . *****${normal}"
 			# https://phoenixnap.com/kb/letsencrypt-nginx
 			# sudo certbot --nginx -d example.com -d www.example.com
 			# sudo certbot --nginx --test-cert
 			echo
 			#sudo apt install certbot
-			sudo $package_install_program certbot
 			app_does_not_exist=0
 			app_installed=0
 			app_not_installed=0
-			progs=(certbot python3-certbot-nginx);
+			progs=(certbot);
 			package_install_status_check_function
+			sudo $package_install_program certbot
 			echo
 		else
 			echo "${bold}${green}Package certbot already installed.${normal}"
@@ -6221,6 +6222,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		else
 			echo "${bold}${green}Package python3-certbot-nginx already installed.${normal}"
 		fi
+		echo
 		ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
 		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
 		ssl_fullchain_certificate=/etc/letsencrypt/live/$hostname/fullchain.pem
@@ -6249,7 +6251,19 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				echo
 				echo 'Press 9 to revoke keys and generate self signed certs'
 				echo
-				read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " lets_encrypt_config
+				while :; do
+					read -r -p "${bold}${cyan}Enter a number and hit enter to continue: ${normal} " lets_encrypt_config
+					[[ $lets_encrypt_config =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+					if (( $lets_encrypt_config >= 1 && $lets_encrypt_config <= 2 || $lets_encrypt_config == 9 )); then
+						break
+					else
+						echo
+						echo "Invalid number selection, try again."
+						echo
+						echo '--------------------------------------------------------------------------------'
+						echo
+					fi
+				done
 				echo
 				if [ "$lets_encrypt_config" == "1" ]; then
 					echo Continuing script . . .
@@ -6276,7 +6290,19 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				echo
 				echo 'Press 9 to revoke keys and generate self signed certs'
 				echo
-				read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " lets_encrypt_config
+				while :; do
+					read -r -p "${bold}${cyan}Enter a number and hit enter to continue: ${normal} " lets_encrypt_config
+					[[ $lets_encrypt_config =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+					if (( $lets_encrypt_config >= 1 && $lets_encrypt_config <= 2 || $lets_encrypt_config == 9 )); then
+						break
+					else
+						echo
+						echo "Invalid number selection, try again."
+						echo
+						echo '--------------------------------------------------------------------------------'
+						echo
+					fi
+				done
 
 				echo
 				if [ "$lets_encrypt_config" == "1" ]; then
@@ -6307,7 +6333,19 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo 'Press 2 to redownload cert that was not previously revoked, revoke all'
 			echo '        certs, and set up new Lets Encrypt Certs with certbot.'
 			echo
-			read -r -p "${bold}${cyan}Enter a number and hit enter to continue: ${normal}" lets_encrypt_config
+			while :; do
+				read -r -p "${bold}${cyan}Enter a number and hit enter to continue: ${normal} " lets_encrypt_config
+				[[ $lets_encrypt_config =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+				if (( $lets_encrypt_config >= 1 && $lets_encrypt_config <= 2)); then
+					break
+				else
+					echo
+					echo "Invalid number selection, try again."
+					echo
+					echo '--------------------------------------------------------------------------------'
+					echo
+				fi
+			done
 			echo
 			if [ "$lets_encrypt_config" == "1" ]; then
 				generate_lets_encrypt_ssl
@@ -6646,13 +6684,34 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				drawpile_abuse_report_status="not_loaded"
 				echo "The $service_name_to_check_04 is not yet loaded. No action required."
 			fi
+			
+			
+			python_version=$( python --version | awk '{ print $2 }' | perl -0777 -ne '/([0-9]+\.[0-9]+)/; print $1' )
+			# python_3_11=$( ls -l /usr/bin/python* | grep "3.11" | awk '{ print $9 }' | grep "3.11" )
+			# Sample Output: /usr/bin/python3.11
+			# python_3_12=$( ls -l /usr/bin/python* | grep "3.12" | awk '{ print $9 }' | grep "3.12" )
+			# Sample Output: /usr/bin/python3.12
+			if [ "$python_version" == "3.12" ]; then
+				if [ -e "/usr/bin/python3.11" ]; then
+					python_command="python3.11"
+				else
+					sudo $package_install_program python3.11
+					if [ -e "/usr/bin/python3.11" ]; then
+						python_command="python3.11"
+					else
+						python_command="python"
+					fi
+				fi
+			else
+				python_command="python"
+			fi
 			echo
 			echo '--------------------------------------------------------------------------------'
-			echo "Running command: python -m venv env"
+			echo "Running command: $python_command -m venv env"
 			echo '--------------------------------------------------------------------------------'
-			if ! python -m venv env; then
+			if ! $python_command -m venv env; then
 				sudo sed -i '\!^drawpile_abuse_report_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_abuse_report_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-				command_die "${bold}${red}Command 'python -m venv env' failed.${normal}"
+				command_die "${bold}${red}Command \"$python_command -m venv env\" failed.${normal}"
 			else
 				sudo sed -i '\!^drawpile_abuse_report_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_abuse_report_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 			fi
@@ -7788,6 +7847,13 @@ if cat /etc/nginx/passwords | grep -iox "$nginx_username_1:.*" > /dev/null 2>&1;
 fi
 comment_server_management_script_later
 
+if [ ! -e "/etc/nginx/nginx-original.conf.bak" ]; then
+	sudo cp "/etc/nginx/nginx.conf" "/etc/nginx/nginx-original.conf.bak"
+fi
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/config/Fedora/nginx/nginx.conf -O "/etc/nginx/nginx.conf"
+fi
+
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
 
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "admin"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
@@ -7946,12 +8012,32 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					echo
 				fi
 				
+				python_version=$( python --version | awk '{ print $2 }' | perl -0777 -ne '/([0-9]+\.[0-9]+)/; print $1' )
+				# python_3_11=$( ls -l /usr/bin/python* | grep "3.11" | awk '{ print $9 }' | grep "3.11" )
+				# Sample Output: /usr/bin/python3.11
+				# python_3_12=$( ls -l /usr/bin/python* | grep "3.12" | awk '{ print $9 }' | grep "3.12" )
+				# Sample Output: /usr/bin/python3.12
+				if [ "$python_version" == "3.12" ]; then
+					if [ -e "/usr/bin/python3.11" ]; then
+						python_command="python3.11"
+					else
+						sudo $package_install_program python3.11
+						if [ -e "/usr/bin/python3.11" ]; then
+							python_command="python3.11"
+						else
+							python_command="python"
+						fi
+					fi
+				else
+					python_command="python"
+				fi
+
 				echo '--------------------------------------------------------------------------------'
-				echo "Running command: python -m venv env"
+				echo "Running command: $python_command -m venv env"
 				echo '--------------------------------------------------------------------------------'
-				if ! python -m venv env; then
+				if ! $python_command -m venv env; then
 					sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"no"'!;H};x}' $drawpile_completed_successfully_values_file
-					command_die "${bold}${red}Command 'python -m venv env' failed.${normal}"
+					command_die "${bold}${red}Command \"$python_command -m venv env\" failed.${normal}"
 				else
 					sudo sed -i '\!^drawpile_monitor_installation_status =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_monitor_installation_status = '"yes"'!;H};x}' $drawpile_completed_successfully_values_file
 				fi
@@ -9936,7 +10022,7 @@ server {
 		if (\$http_origin != "https://web.drawpile.net") {
 			return 403;
 		}
-		proxy_pass http://localhost:27751;
+		proxy_pass http://127.0.0.1:27751;
 		proxy_http_version 1.1;
 		proxy_set_header Upgrade \$http_upgrade;
 		proxy_set_header Connection "upgrade";
@@ -10232,7 +10318,7 @@ server {
 		if (\$http_origin != "https://web.drawpile.net") {
 			return 403;
 		}
-		proxy_pass http://localhost:27751;
+		proxy_pass http://127.0.0.1:27751;
 		proxy_http_version 1.1;
 		proxy_set_header Upgrade \$http_upgrade;
 		proxy_set_header Connection "upgrade";
