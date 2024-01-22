@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960004
+drawpilescriptversion=2.9960005
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -6188,7 +6188,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		package_name=certbot
 		version_test_by_distro_function
 		# if [[ "$version_certbot" = "(none)" ]]; then
-		if [[ "$installation_status" = "Not Installed" ]]; then
+		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "${bold}${cyan}***** Installing packages certbot and python3-certbot-nginx. . . *****${normal}"
 			# https://phoenixnap.com/kb/letsencrypt-nginx
 			# sudo certbot --nginx -d example.com -d www.example.com
@@ -6208,7 +6208,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		package_name=python3-certbot-nginx
 		version_test_by_distro_function
 		# if [[ "$version_certbot" = "(none)" ]]; then
-		if [[ "$installation_status" = "Not Installed" ]]; then
+		if [[ "$test_installation_status" = "Not Installed" ]]; then
 			echo "${bold}${cyan}***** Installing package python3-certbot-nginx. . . *****${normal}"
 			echo
 			app_does_not_exist=0
