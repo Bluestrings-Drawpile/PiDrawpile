@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960003
+drawpilescriptversion=2.9960004
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -6201,10 +6201,25 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			app_not_installed=0
 			progs=(certbot python3-certbot-nginx);
 			package_install_status_check_function
-			sudo $package_install_program certbot python3-certbot-nginx # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 			echo
 		else
 			echo "${bold}${green}Package certbot already installed.${normal}"
+		fi
+		package_name=python3-certbot-nginx
+		version_test_by_distro_function
+		# if [[ "$version_certbot" = "(none)" ]]; then
+		if [[ "$installation_status" = "Not Installed" ]]; then
+			echo "${bold}${cyan}***** Installing package python3-certbot-nginx. . . *****${normal}"
+			echo
+			app_does_not_exist=0
+			app_installed=0
+			app_not_installed=0
+			progs=(python3-certbot-nginx);
+			package_install_status_check_function
+			sudo $package_install_program python3-certbot-nginx
+			echo
+		else
+			echo "${bold}${green}Package python3-certbot-nginx already installed.${normal}"
 		fi
 		ssl_cert_pem=/etc/letsencrypt/live/$hostname/cert.pem
 		ssl_chain_pem=/etc/letsencrypt/live/$hostname/chain.pem
