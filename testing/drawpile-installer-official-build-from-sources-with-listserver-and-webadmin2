@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960008
+drawpilescriptversion=2.9960011
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -7857,7 +7857,6 @@ fi
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
 
 sudo sed -i.bak 's/^	include \/etc\/nginx\/sites-enabled\/\*\;$/&\n	\n	server {\n		listen 8081\;\n		\n		location \/ {\n			proxy_pass http:\/\/127.0.0.1:27780\/api\/\;\n			proxy_redirect default\;\n			auth_basic "admin"\;\n			auth_basic_user_file \/etc\/nginx\/passwords\;\n		}\n	}\n/' /etc/nginx/nginx.conf
-sudo nginx -s reload
 
 
 if [[ "$nginx_username_and_password_reuse_test_condition" == "false" ]]; then
@@ -8857,7 +8856,6 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	# sudo nginx -s reload
 	# sudo /etc/init.d/nginx restart
 
-	sudo nginx -s reload
 	sudo systemctl restart nginx
 	wait $!
 fi
@@ -8981,14 +8979,21 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		package_name=golang
 		version_test_by_distro_function
-		echo "Go Version: $test_version_simple"
-		if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
+		
+		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\.?/ && $1 >= 1.16 ? 0 : 1)'; then
 			go install 'github.com/drawpile/listserver@latest'
-		elif [[ "$test_version_simple" < "1.16" ]]; then
-			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
 		else
-			echo "This message for golang's version ($test_version_simple) should not be visible."
+			# go get github.com/drawpile/listserver
+			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
 		fi
+		echo "Go Version: $test_version_simple"
+		# if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
+		# 	go install 'github.com/drawpile/listserver@latest'
+		# elif [[ "$test_version_simple" < "1.16" ]]; then
+		# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+		# else
+		# 	echo "This message for golang's version ($test_version_simple) should not be visible."
+		# fi
 	fi
 	# package_name=golang
 	# version_test_by_distro_function
@@ -10451,13 +10456,19 @@ EOF
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
-	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
-	sudo systemctl daemon-reload
-	sudo systemctl restart systemd-modules-load
-	sudo nginx -s reload
-	sudo systemctl restart nginx.service
-	systemctl status nginx.service --no-pager
-	wait $!
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
+		echo "${bold}${cyan}NGINX is enabled in Fedora, no action required.${normal}"
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "disabled" ]; then
+		echo "${bold}${cyan}Skipping starting NGINX until server has completed web admin setup.${normal}"
+	else
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		sudo nginx -s reload
+		sudo systemctl restart nginx.service
+		systemctl status nginx.service --no-pager
+		wait $!
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -10576,16 +10587,27 @@ EOF
 		echo
 		echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
 		echo
-		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "disabled" ]; then
 			sudo systemctl enable nginx.service
+		fi
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
+			sudo systemctl stop --now nginx.service
 		fi
 		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
-		sudo nginx -s reload
 		sudo systemctl restart nginx.service
 		systemctl status nginx.service --no-pager
 		wait $!
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
+			echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
+			echo "${bold}${yellow}Hoping this fixes it! I'm not sure what causes this state,${normal}"
+			echo "${bold}${yellow}so until then, this should work.${normal}"
+			echo
+			sudo pkill -f nginx & wait $!
+			sudo systemctl start nginx
+			systemctl status nginx.service
+		fi
 	elif [ "$select_web_build_or_prebuilt" == "2" ]; then
 		# Build web admin
 		echo "${bold}${cyan}*****Checking for Node.JS installation and version . . . (Install 1 of 2) *****${normal}"
@@ -11080,16 +11102,27 @@ EOF
 			echo
 			echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 6 of 6)*****${normal}"
 			echo
-			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "disabled" ]; then
 				sudo systemctl enable nginx.service
+			fi
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
+				sudo systemctl stop --now nginx.service
 			fi
 			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
-			sudo nginx -s reload
 			sudo systemctl restart nginx.service
 			systemctl status nginx.service --no-pager
 			wait $!
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
+				echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
+				echo "${bold}${yellow}Hoping this fixes it! I'm not sure what causes this state,${normal}"
+				echo "${bold}${yellow}so until then, this should work.${normal}"
+				echo
+				sudo pkill -f nginx & wait $!
+				sudo systemctl start nginx
+				systemctl status nginx.service
+			fi
 		else
 			echo "${bold}${green}Web Admin interface is up to date, skipping step 2 through 6.${normal}"
 		fi
@@ -11228,16 +11261,27 @@ comment_EOF_delete
 			echo
 			echo "${bold}${cyan}*****Reloading NGINX to see new data files . . . (Step 4 of 4)*****${normal}"
 			echo
-			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "disabled" ]; then
 				sudo systemctl enable nginx.service
+			fi
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
+				sudo systemctl stop --now nginx.service
 			fi
 			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
-			sudo nginx -s reload
 			sudo systemctl restart nginx.service
 			systemctl status nginx.service --no-pager
 			wait $!
+			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
+				echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
+				echo "${bold}${yellow}Hoping this fixes it! I'm not sure what causes this state,${normal}"
+				echo "${bold}${yellow}so until then, this should work.${normal}"
+				echo
+				sudo pkill -f nginx & wait $!
+				sudo systemctl start nginx
+				systemctl status nginx.service
+			fi
 		else
 			echo "${bold}${green}New Web Admin interface is up to date, skipping step 2 through 4.${normal}"
 		fi
