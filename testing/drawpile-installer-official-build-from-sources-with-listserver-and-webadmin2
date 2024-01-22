@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960002
+drawpilescriptversion=2.9960003
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -967,8 +967,10 @@ comment_EOF
 # --------------------------------------------------------------------------------
 
 function select_non_root_account () {
+	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
+	echo
 	variable_to_read_1="current_username"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -984,7 +986,6 @@ function select_non_root_account () {
 		echo "Storing value and moving on."
 		current_username=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		echo
 		echo "When running script with sudo or su, please specify your user account name"
 		echo "with a valid user directory indicated below." 
 		echo
@@ -6182,9 +6183,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [ "$ssl_encryption_config" == "1" ]; then
 		generate_self_signed_ssl
 	elif [ "$ssl_encryption_config" == "2" ]; then
-		version_certbot=$( apt-cache policy certbot | grep "Installed:" | cut -c 14-21 )
-		minimum_versioncertbot=1.12.0-2
-		if [[ "$version_certbot" = "(none)" ]]; then
+		# version_certbot=$( apt-cache policy certbot | grep "Installed:" | cut -c 14-21 )
+		# minimum_versioncertbot=1.12.0-2
+		package_name=certbot
+		version_test_by_distro_function
+		# if [[ "$version_certbot" = "(none)" ]]; then
+		if [[ "$installation_status" = "Not Installed" ]]; then
 			echo "${bold}${cyan}***** Installing packages certbot and python3-certbot-nginx. . . *****${normal}"
 			# https://phoenixnap.com/kb/letsencrypt-nginx
 			# sudo certbot --nginx -d example.com -d www.example.com
