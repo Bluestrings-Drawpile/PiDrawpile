@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960013
+drawpilescriptversion=2.9960014
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -525,8 +525,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	check_root_or_sudo_access_function
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 39.${normal}"
-			echo "Currently undergoing testing for support."
+			echo "${bold}${green}Running Fedora Server 39.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
 			# fedora_end_of_life_function
