@@ -14428,7 +14428,7 @@ https://$hostname/listing/admin/"
 	fi
 	
 	if [[ "$ssl_encryption_config" != "3" ]]; then
-		display_dp_admin_gui_warning_with_web_admin"**** (For EMERGENCY USE ONLY, messes with web admin) ****"
+		display_dp_admin_gui_warning_with_web_admin="**** (For EMERGENCY USE ONLY, messes with web admin) ****"
 	fi
 	#---------------------------------------------------------------------------------------------------------------------------------
 	if [[ "$ssl_encryption_config" = "1" ]]; then 
