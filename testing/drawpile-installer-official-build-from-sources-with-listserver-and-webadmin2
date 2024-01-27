@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960014
+drawpilescriptversion=2.9960015
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5504,7 +5504,9 @@ read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	hostname=$read_stored_config_value_query_1
+	reused_hostname_selection=yes
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	reused_hostname_selection=no
 	if ! host -V > /dev/null 2>&1; then
 		echo "Package bind9-host used with hostname verification."
 		echo "Not installed, so installing package now ..."
@@ -5729,20 +5731,20 @@ function generate_self_signed_ssl () {
 
 	read_stored_config_value_query_function
 	if [ "$hostname" != "no_value_selected" ]; then
-		hostname_space_padded="$hostname "
+		hostname_ssl_organization="$hostname Drawpile Server"
 	else
-		hostname_space_padded=""
+		hostname_ssl_organization="Drawpile Server"
 	fi
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		ssl_organization=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p "Organization Name (e.g., company) [$hostname Drawpile Server]: " ssl_organization
+		read -r -p "Organization Name (e.g., company) [$hostname_ssl_organization]: " ssl_organization
 		if [ "$ssl_organization" != "" ]; then
 			echo
 			echo "Selected: $ssl_organization"
 		else
-			ssl_organization="$hostname_space_paddedDrawpile Server"
+			ssl_organization="$hostname_ssl_organization"
 		fi
 	else
 		echo "This message should not be visible."
@@ -6137,6 +6139,7 @@ read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	ssl_encryption_config=$read_stored_config_value_query_1
+	reused_ssl_encryption_config=yes
 	if [ "$ssl_encryption_config" == "1" ]; then
 		ssl_certificate=/etc/nginx/ssl/drawpile/cert.pem
 		ssl_private_cert_key=/etc/nginx/ssl/drawpile/key.pem
@@ -6154,6 +6157,7 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 		echo "${invis}No SSL being used.${normal}"
 	fi
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	reused_ssl_encryption_config=no
 	echo "${bold}${underline}Self Signed Certificate${normal}"
 	echo "${bold}${green}Pros:${normal}"
 	echo "  * No registration"
@@ -6531,7 +6535,9 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	abuse_report_port=8200
 	abuse_report_auth_token=$read_stored_config_value_query_2
 	discord_webhook_URL=$read_stored_config_value_query_3
+	reused_drawpile_abuse_report_installation_status=yes
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	reused_drawpile_abuse_report_installation_status=no
 	echo "This is so when a user goes into Drawpile's 'Session' menu,"
 	echo " 'Moderation', 'Report...', that a message is sent to a Discord"
 	echo " server and channel of your choosing, in order to notify about"
@@ -6856,7 +6862,6 @@ cd Drawpile-Srv-Files
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 
-drawpile_srv_crypt_key_status=no
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -6876,7 +6881,9 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		drawpile_srv_crypt_key=$read_stored_config_value_query_1
+		reused_drawpile_srv_crypt_key_status=yes
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+		reused_drawpile_srv_crypt_key_status=no
 		echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
 		echo " ban lists. Unless multiple servers share the same encryption key, this"
 		echo " means that only the server the session was hosted on can utilize the"
@@ -6946,6 +6953,7 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 			else
 				echo "This message should not be visible, either key gets imported or created."
 			fi
+			
 		elif [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
 			echo "Skipping setup of encrypted key."
 		else
@@ -6956,6 +6964,7 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 		echo "This message should not be visible."
 	fi
 elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
+	reused_drawpile_srv_crypt_key_status="not available"
 	echo "Drawpile server is version 2.1.20 or older."
 	echo "Incompatible with setting for server encrypted ban list."
 	echo "Skipping configuration."
@@ -7359,23 +7368,41 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 
 echo "${bold}${cyan}***** Drawpile Server Start Up Options . . .*****${normal}"
 echo
-variable_to_read_1="systemd_selection"
-variable_to_read_2="systemd_selection_text"
-variable_to_read_3="systemd_configuration"
 
-value_description_1="This value corresponds to server related startup settings: "
-value_description_2=" "
-value_description_3="${bold}${red}Note:${normal} If you changed the encrypted ban export key, say no to this question."
-value_description_4=""
-value_description_5=""
+# if [[ "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || ( "$reused_drawpile_srv_crypt_key_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) ]]; then
+if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then	
+	# elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]] then
+	echo
+	echo "${bold}${red}Changes detected that require re-running drawpile-srv startup options.${normal}"
+	echo
+	maybe_use_config_value=n
+	sleep 5
+else
+	# if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]]; then
+	# Script hasn't completed a successful run, need to generate config regardless.
+	# if [[ "$reused_drawpile_abuse_report_installation_status" == "yes" && "$reused_drawpile_srv_crypt_key_status" == "yes" ]]; then
+	# Regeneration is not mandatory if data was reused.
+	variable_to_read_1="systemd_selection"
+	variable_to_read_2="systemd_selection_text"
+	variable_to_read_3="systemd_configuration"
 
-read_stored_config_value_query_function
+	value_description_1="This value corresponds to server related startup settings: "
+	value_description_2=" "
+	value_description_3="${bold}${red}Note:${normal} If you changed the encrypted ban export key, say no to this question."
+	value_description_4=""
+	value_description_5=""
+
+	read_stored_config_value_query_function
+fi
+	
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	systemd_selection=$read_stored_config_value_query_1
 	systemd_selection_text=$read_stored_config_value_query_2
 	systemd_configuration=$read_stored_config_value_query_3
+	reused_systemd_selection=yes
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	reused_systemd_selection=no
 	systemd_options_definitions_function
 	if [ "$ssl_encryption_config" == "1" ] || [ "$ssl_encryption_config" == "2" ]; then
 		# echo 'Press 1 for Self Signed Certificates'. Numbers 1, 2, 3, 4, 6, 8, 11, and else option use SSL. 
@@ -7492,48 +7519,55 @@ User=drawpileuser
 WantedBy=multi-user.target
 EOF
 
-sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
-sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
-sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service"
-sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service"
-
-echo 'Copying files drawpile-srv.service and drawpile-srv.socket to make systemd work.'
-sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
-sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" /etc/systemd/system/
-sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" /etc/systemd/system/
-echo
-echo 'Reloading systemctl and systemd.'
-sudo systemctl daemon-reload
-sudo systemctl restart systemd-modules-load
-wait $!
-# This specific step ensures a database file is generated and permissions assigned to it
-# so drawpileuser can access it.
-sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
-wait $!
-# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
-sudo systemctl daemon-reload
-sudo systemctl restart systemd-modules-load
-wait $!
-if [ "`systemctl is-enabled drawpile-srv.service`" = "disabled" ]; then
-	# sudo systemctl start --now drawpile-srv.service && sleep 1
-	sudo systemctl start --now drawpile-srv.service
-	wait $!
-	sleep 5
-	sudo chmod 770 /home/drawpileuser/server.db
-	sudo chown drawpileuser /home/drawpileuser/server.db
-	sudo systemctl stop --now drawpile-srv.service
-	wait $!
-elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile-monitor.service`" = "active" ]]; then
-	sudo systemctl stop --now drawpile-monitor.service
-	sudo systemctl restart --now drawpile-srv.service
-	sudo systemctl start --now drawpile-monitor.service
-elif [ "`systemctl is-active drawpile-srv.service`" = "active" ]; then
-	# This should account for using sockets or service file to start it. Other status result is "inactive"
-	sudo systemctl restart --now drawpile-srv.service
+if [[ "$reused_hostname_selection" == "yes" && "$reused_ssl_encryption_config" == "yes" && "$reused_drawpile_abuse_report_installation_status" == "yes" && ( "$reused_drawpile_srv_crypt_key_status" == "yes" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) && "$reused_systemd_selection" == "yes" ]]; then
+	echo "${bold}${green}Skipping copying files drawpile-srv.service and drawpile-srv.socket, no changes made.${normal}"
+	echo
+	echo "${bold}${green}Skipping reloading systemctl and systemd.${normal}"
 else
-	:
-	# Do nothing as no error was detected.
-	# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.	
+	# elif [[ "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" || "$reused_systemd_selection" == "no" ]]; then
+	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
+	sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
+	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service"
+	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service"
+
+	echo "${bold}${yellow}Copying files drawpile-srv.service and drawpile-srv.socket to make systemd work.${normal}"
+	sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
+	sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" /etc/systemd/system/
+	sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" /etc/systemd/system/
+	echo
+	echo "${bold}${yellow}Reloading systemctl and systemd.${normal}"
+	sudo systemctl daemon-reload
+	sudo systemctl restart systemd-modules-load
+	wait $!
+	# This specific step ensures a database file is generated and permissions assigned to it
+	# so drawpileuser can access it.
+	sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
+	wait $!
+	# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load
+	sudo systemctl daemon-reload
+	sudo systemctl restart systemd-modules-load
+	wait $!
+	if [ "`systemctl is-enabled drawpile-srv.service`" = "disabled" ]; then
+		# sudo systemctl start --now drawpile-srv.service && sleep 1
+		sudo systemctl start --now drawpile-srv.service
+		wait $!
+		sleep 5
+		sudo chmod 770 /home/drawpileuser/server.db
+		sudo chown drawpileuser /home/drawpileuser/server.db
+		sudo systemctl stop --now drawpile-srv.service
+		wait $!
+	elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile-monitor.service`" = "active" ]]; then
+		sudo systemctl stop --now drawpile-monitor.service
+		sudo systemctl restart --now drawpile-srv.service
+		sudo systemctl start --now drawpile-monitor.service
+	elif [ "`systemctl is-active drawpile-srv.service`" = "active" ]; then
+		# This should account for using sockets or service file to start it. Other status result is "inactive"
+		sudo systemctl restart --now drawpile-srv.service
+	else
+		:
+		# Do nothing as no error was detected.
+		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.	
+	fi
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -9156,7 +9190,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	function generate_list_server_config_filename () {
 		echo "${bold}${cyan}***** Configuring settings for List Server . . . *****${normal}"
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_database_connection_string_num
 			variable_to_read_2=listserver_database_connection_string
@@ -9165,8 +9199,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			value_description_1="This is the list server operation mode."
 			value_description_2=" "
 			value_description_3="1 - none      - listserver will be in read-only mode (includeservers must be set by script)"
-			value_description_4="2 - memory    - sessions will be lost if server is restarted, but no database needed"
-			value_description_5="3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
+			value_description_4="                This means other servers cannot list their session on your server."
+			value_description_5="2 - memory    - sessions will be lost if server is restarted, but no database needed."
+			value_description_6="3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
 
 			read_stored_config_value_query_function
 		else
@@ -9177,13 +9212,14 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			list_server_database_connection_string_num=$read_stored_config_value_query_1
 			listserver_database_connection_string=$read_stored_config_value_query_2
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 1 of 12${normal}"
+			echo "${bold}${yellow}Setting 1 of 11${normal}"
 			echo
 			echo "Please configure how you want the list server to function by selecting the number desired ..."
 			echo
 			echo Possible values:
-			echo "1 - none      - listserver will be in read-only mode (includeservers is set by script)"
-			echo "2 - memory    - sessions will be lost if server is restarted, but no database needed"
+			echo "1 - none      - listserver will be in read-only mode (includeservers is set by script)."
+			echo "                This means other servers cannot list their session on your server."
+			echo "2 - memory    - sessions will be lost if server is restarted, but no database needed."
 			echo "3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
 			echo
 
@@ -9230,7 +9266,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_favicon_location_entry
 			variable_to_read_2=list_server_favicon_toggle
@@ -9252,7 +9288,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			list_server_favicon_toggle=$read_stored_config_value_query_2
 			list_server_favicon_location=$read_stored_config_value_query_3
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 2 of 12${normal}"
+			echo "${bold}${yellow}Setting 2 of 11${normal}"
 			echo
 			echo "${bold}${yellow}Optional setting:${normal} Use the default location by typing 1 and hitting enter, leave"
 			echo "blank to disable the favicon, or Advanced Users may enter a local location for"
@@ -9373,7 +9409,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_short_name
 			variable_to_read_2=""
@@ -9393,7 +9429,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "Storing value and moving on."
 			list_server_short_name=$read_stored_config_value_query_1
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 3 of 12${normal}"
+			echo "${bold}${yellow}Setting 3 of 11${normal}"
 			echo
 			echo "Enter short name for this server, which a user will see when they choose their"
 			echo "list server option when hosting their session."
@@ -9419,7 +9455,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_description
 			variable_to_read_2=""
@@ -9439,7 +9475,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "Storing value and moving on."
 			list_server_description=$read_stored_config_value_query_1
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 4 of 12${normal}"
+			echo "${bold}${yellow}Setting 4 of 11${normal}"
 			echo
 			echo "Enter a description for the server a user will see when joining the server"
 			echo "directly in the Drawpile client, by typing the server name at the bottom"
@@ -9467,7 +9503,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_welcome_msg
 			variable_to_read_2=""
@@ -9487,7 +9523,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "Storing value and moving on."
 			list_server_welcome_msg=$read_stored_config_value_query_1
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 5 of 12${normal}"
+			echo "${bold}${yellow}Setting 5 of 11${normal}"
 			echo
 			echo "${bold}${yellow}Optional setting:${normal} Enter a welcome message for listing the session"
 			echo
@@ -9508,7 +9544,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 			# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 			variable_to_read_1=list_server_nsfm_words_list
 			variable_to_read_2=""
@@ -9528,7 +9564,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "Storing value and moving on."
 			list_server_nsfm_words_list=$read_stored_config_value_query_1
 		elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-			echo "${bold}${yellow}Setting 6 of 12${normal}"
+			echo "${bold}${yellow}Setting 6 of 11${normal}"
 			echo
 			echo "${bold}${yellow}Optional setting:${normal} Configure not safe for work auto-flag sessions"
 			echo
@@ -9557,79 +9593,16 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			sudo sed -i '\!^list_server_nsfm_words_list =!{h;s!=.*!= '"$list_server_nsfm_words_list"'!};${x;\!^$!{s!!list_server_nsfm_words_list = '"$list_server_nsfm_words_list"'!;H};x}' $drawpile_configuration_values_file
 		else
 			echo "This message should not be visible."
-		fi
+		fi	
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [ "$list_server_database_connection_string_num" == "1" ]; then
-			echo "${bold}${cyan} Configured in read only mode, setting for public listing is false. ${normal} "
-			list_server_public_listing_toggle="public = false"
-		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
-				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
-				variable_to_read_1=list_server_public_listing
-				variable_to_read_2=list_server_public_listing_toggle
-				variable_to_read_3=""
-
-				value_description_1="${bold}${yellow}Optional setting:${normal} Configure public listings from other servers."
-				value_description_2=" "
-				value_description_3="Allow or disallow other servers to list sessions on your list server."
-				value_description_4=""
-				value_description_5=""
-
-				read_stored_config_value_query_function
-			else
-				maybe_use_config_value=n
-			fi
-			if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-				echo "Storing value and moving on."
-				list_server_public_listing=$read_stored_config_value_query_1
-				list_server_public_listing_toggle=$read_stored_config_value_query_2
-			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 7 of 12${normal}"
-				echo
-				echo "${bold}${yellow}Optional setting:${normal} Configure public listings from other servers."
-				echo
-				echo "Do you want to allow other servers to list sessions on your list server?"
-				echo "Leaving it blank will assume it is not allowed."
-				echo
-				while :; do
-					read -r -p "${bold}Please make your selection now by entering y or n:${normal} " list_server_public_listing
-					if [ "$list_server_public_listing" == "y" ] || [ "$list_server_public_listing" == "Y" ] || [ "$list_server_public_listing" == "yes" ] || [ "$list_server_public_listing" == "YES" ] || [ "$list_server_public_listing" == "Yes" ] || [ "$list_server_public_listing" == "n" ] || [ "$list_server_public_listing" == "N" ] || [ "$list_server_public_listing" == "no" ] || [ "$list_server_public_listing" == "NO" ] || [ "$list_server_public_listing" == "No" ]; then
-						break
-					elif [ "$list_server_public_listing" == "" ]; then
-						break
-					else
-						echo
-						echo "Invalid input selection, try again."
-						echo
-						continue
-					fi
-				done
-				echo
-				if [ "$list_server_public_listing" == "y" ] || [ "$list_server_public_listing" == "Y" ] || [ "$list_server_public_listing" == "yes" ] || [ "$list_server_public_listing" == "YES" ] || [ "$list_server_public_listing" == "Yes" ]; then
-					list_server_public_listing_toggle="public = true"
-					echo "${bold}${cyan}Other servers are allowed to list sessions.${normal}"
-				else
-					# elif [ "$list_server_public_listing" == "n" ] || [ "$list_server_public_listing" == "N" ] || [ "$list_server_public_listing" == "no" ] || [ "$list_server_public_listing" == "NO" ] || [ "$list_server_public_listing" == "No" ]; then
-					list_server_public_listing_toggle="public = false"
-					echo "${bold}${cyan}Other servers are not allowed to list sessions.${normal}"
-				fi
-				sudo sed -i '\!^list_server_public_listing =!{h;s!=.*!= '"$list_server_public_listing"'!};${x;\!^$!{s!!list_server_public_listing = '"$list_server_public_listing"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^list_server_public_listing_toggle =!{h;s!=.*!= '"$list_server_public_listing_toggle"'!};${x;\!^$!{s!!list_server_public_listing_toggle = '"$list_server_public_listing_toggle"'!;H};x}' $drawpile_configuration_values_file
-			else
-				echo "This message should not be visible."
-			fi
-		fi
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		if [[ ( "$list_server_database_connection_string_num" == "1" ) || ( "$list_server_public_listing" == "n" || "$list_server_public_listing" == "N" || "$list_server_public_listing" == "no" || "$list_server_public_listing" == "NO" || "$list_server_public_listing" == "No" ) ]]; then
+		if [[ "$list_server_database_connection_string_num" == "1" ]]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per ${normal} "
 			echo "${bold}${cyan}  external host. ${normal} "
 			list_server_max_sessions_per_host_toggle="# maxSessionsPerHost"
 		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
+			if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 				variable_to_read_1=list_server_max_sessions_per_host
 				variable_to_read_2=list_server_max_sessions_per_host_toggle
@@ -9650,7 +9623,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				list_server_max_sessions_per_host=$read_stored_config_value_query_1
 				list_server_max_sessions_per_host_toggle=$read_stored_config_value_query_2
 			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 8 of 12${normal}"
+				echo "${bold}${yellow}Setting 7 of 11${normal}"
 				echo
 				echo "${bold}${yellow}Optional setting:${normal} Configure the max number of listings for other unspecified servers."
 				echo
@@ -9688,11 +9661,11 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [[ ( "$list_server_database_connection_string_num" == "1" ) || ( "$list_server_public_listing" == "n" || "$list_server_public_listing" == "N" || "$list_server_public_listing" == "no" || "$list_server_public_listing" == "NO" || "$list_server_public_listing" == "No" ) ]]; then
+		if [[ "$list_server_database_connection_string_num" == "1" ]]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for max listings per named host. ${normal} "
 			max_sessions_per_named_host_toggle="# maxSessionsPerNamedHost"
 		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
+			if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 				variable_to_read_1=max_sessions_per_named_host
 				variable_to_read_2=max_sessions_per_named_host_toggle
@@ -9713,7 +9686,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				max_sessions_per_named_host=$read_stored_config_value_query_1
 				max_sessions_per_named_host_toggle=$read_stored_config_value_query_2
 			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 9 of 12${normal}"
+				echo "${bold}${yellow}Setting 8 of 11${normal}"
 				echo
 				echo "${bold}${yellow}Optional setting:${normal} Configure the max number of listings for other named servers."
 				echo
@@ -9750,11 +9723,11 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [[ ( "$list_server_database_connection_string_num" == "1" ) || ( "$list_server_public_listing" == "n" || "$list_server_public_listing" == "N" || "$list_server_public_listing" == "no" || "$list_server_public_listing" == "NO" || "$list_server_public_listing" == "No" ) ]]; then
+		if [[ "$list_server_database_connection_string_num" == "1" ]]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for server listing limitation. ${normal} "
 			trusted_list_hosts_toggle="# trustedHosts"
 		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
+			if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 				variable_to_read_1=trusted_list_hosts
 				variable_to_read_2=trusted_list_hosts_toggle
@@ -9775,7 +9748,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				trusted_list_hosts=$read_stored_config_value_query_1
 				trusted_list_hosts_toggle=$read_stored_config_value_query_2
 			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 10 of 12${normal}"
+				echo "${bold}${yellow}Setting 9 of 11${normal}"
 				echo
 				echo "${bold}${yellow}Optional setting:${normal} Configure servers which are exempt from listing limitations"
 				echo
@@ -9813,11 +9786,11 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [[ ( "$list_server_database_connection_string_num" == "1" ) || ( "$list_server_public_listing" == "n" || "$list_server_public_listing" == "N" || "$list_server_public_listing" == "no" || "$list_server_public_listing" == "NO" || "$list_server_public_listing" == "No" ) ]]; then
+		if [[ "$list_server_database_connection_string_num" == "1" ]]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for servers banned from listing. ${normal} "
 			list_server_banned_hosts_toggle="# bannedHosts"
 		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
+			if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 				variable_to_read_1=banned_list_hosts
 				variable_to_read_2=list_server_banned_hosts_toggle
@@ -9838,7 +9811,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				banned_list_hosts=$read_stored_config_value_query_1
 				list_server_banned_hosts_toggle=$read_stored_config_value_query_2
 			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 11 of 12${normal}"
+				echo "${bold}${yellow}Setting 10 of 11${normal}"
 				echo
 				echo "${bold}${yellow}Optional setting:${normal} Configure servers that are banned from listing sessions"
 				echo
@@ -9875,12 +9848,12 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		if [[ ( "$list_server_database_connection_string_num" == "1" ) || ( "$list_server_public_listing" == "n" || "$list_server_public_listing" == "N" || "$list_server_public_listing" == "no" || "$list_server_public_listing" == "NO" || "$list_server_public_listing" == "No" ) ]]; then
+		if [[ "$list_server_database_connection_string_num" == "1" ]]; then
 			echo "${bold}${cyan} Configured in read only mode, skipping setting for minutes passed before ${normal}"
 			echo "${bold}${cyan}  session de-listed and use default. ${normal}"
 			list_server_delist_time="10"
 		else
-			if [ "$list_server_config_read_values_completed" == "yes" ]; then
+			if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" ]]; then
 				# This is because I recorded some list server values and not others. To ensure all are recorded, this test must pass to check previously stored data.
 				variable_to_read_1=list_server_delist_time
 				variable_to_read_2=""
@@ -9900,7 +9873,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				echo "Storing value and moving on."
 				list_server_delist_time=$read_stored_config_value_query_1
 			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-				echo "${bold}${yellow}Setting 12 of 12${normal}"
+				echo "${bold}${yellow}Setting 11 of 11${normal}"
 				echo
 				echo "${bold}${yellow}Optional setting:${normal} Number of minutes after which a session is automatically de-listed unless refreshed"
 				echo "A good example is that a server went offline due to loss of power or internet connection. Or that all"
@@ -9948,6 +9921,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "No messages should show up in this section."
 		echo
 		sudo sed -i '\!^list_server_config_read_values_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!list_server_config_read_values_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^list_server_config_read_values_completed_02 =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!list_server_config_read_values_completed_02 = '"yes"'!;H};x}' $drawpile_configuration_values_file
 		list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_encoded_1:$nginx_htpasswd_encoded_1@localhost:27780/api/\"]"
 		# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
 
@@ -10057,8 +10031,10 @@ $list_server_banned_hosts_toggle = [ $banned_list_hosts ]
 # warnIpv6 = true
 warnIpv6 = true
 
-# Allow public session listings
-$list_server_public_listing_toggle
+# Allow public session listings 
+# Notes -- It doesn't show the server if public listings is off. So that means list servers have to turn that always on to be compatible.
+#          Used for room codes kinda thing, the client won't show that room list if set to false.
+public = true
 
 # Enable room code generation (private sessions)
 # roomcodes = true
@@ -10096,6 +10072,14 @@ EOF
 		if [ -z "$list_server_config_read_values_completed" ] || [ "$list_server_config_read_values_completed" = "=" ]; then
 			list_server_config_read_values_completed="no"
 		fi
+		
+		list_server_config_read_values_completed_02=$( grep -m 1 "list_server_config_read_values_completed_02 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		wait $!
+		if [ -z "$list_server_config_read_values_completed_02" ] || [ "$list_server_config_read_values_completed_02" = "=" ]; then
+			list_server_config_read_values_completed_02="no"
+		fi
+		
+		
 		function regenerate_list_server_config_entry_function () {
 			while :; do
 				read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " list_server_config
@@ -10117,16 +10101,16 @@ EOF
 		echo 'You should regenerate the configuration if you set up a'
 		echo 'different username or password for web admin.'
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ] && [ "$nginx_username_and_password_reuse" != "2" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" && "$nginx_username_and_password_reuse" != "2" ]]; then
 			# Choose to change or update it, no problems detected.
 			echo "Press 1 to use this existing configuration"
 			echo "Press 2 to re-generate configuration for List Server"
-		elif [ "$list_server_config_read_values_completed" == "yes" ] && [ "$nginx_username_and_password_reuse" == "2" ]; then
+		elif [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" && "$nginx_username_and_password_reuse" == "2" ]]; then
 			# Change it because otherwise the includeservers value will not work and auto-list sessions.
 			echo "Press 1 to use this existing configuration"
 			echo "Press 2 to re-generate configuration for List Server ${bold}${cyan}(Recommended)${normal}"
 			echo "     ${bold}${cyan}Note:${normal} List server won't include sessions if not updated."
-		elif [ "$list_server_config_read_values_completed" == "no" ]; then
+		elif [[ "$list_server_config_read_values_completed" == "no" || "$list_server_config_read_values_completed_02" == "no" ]]; then
 			# Assume not completed, regenerating list server config is highly recommended. 
 			echo "Press 1 to use this existing configuration"
 			echo "Press 2 to re-generate configuration for List Server ${bold}${cyan}(Recommended)${normal}"
@@ -10137,15 +10121,15 @@ EOF
 			echo "Press 2 to re-generate configuration for List Server"
 		fi
 		echo
-		if [ "$list_server_config_read_values_completed" == "yes" ] && [ "$nginx_username_and_password_reuse" != "2" ]; then
+		if [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" && "$nginx_username_and_password_reuse" != "2" ]]; then
 			# Choose to change or update it, no problems detected.
 			regenerate_list_server_config_entry_function
-		elif [ "$list_server_config_read_values_completed" == "yes" ] && [ "$nginx_username_and_password_reuse" == "2" ]; then
+		elif [[ "$list_server_config_read_values_completed" == "yes" && "$list_server_config_read_values_completed_02" == "yes" && "$nginx_username_and_password_reuse" == "2" ]]; then
 			# Change it because otherwise the includeservers value will not work and auto-list sessions.
 			echo "${bold}${red}Change is required to ensure the ListServer works as intended.${normal}"
 			echo
 			list_server_config=2
-		elif [ "$list_server_config_read_values_completed" == "no" ]; then
+		elif [[ "$list_server_config_read_values_completed" == "no" || "$list_server_config_read_values_completed_02" == "no" ]]; then
 			# Assume not completed, regenerating list server config is highly recommended. 
 			echo "${bold}${red}Change is required to ensure the ListServer works as intended.${normal}"
 			echo
