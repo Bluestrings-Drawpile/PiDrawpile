@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960015
+drawpilescriptversion=2.9960016
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -611,10 +611,10 @@ function no_swap_function () {
 	# 																https://cdn.discordapp.com/attachments/556300450228338740/1147000402424893570/image.png?ex=6514e9de&is=6513985e&hm=6c4be23be022eacfb1a53526014de22aeadd6f3b3fd4510c4c8be47d7676ac0b&
 	# Check Swap File to Prevent npm install From Being Killed	--> https://codentrick.com/check-swap-file-to-prevent-npm-install-can-be-killed/
 	# Understanding vm.swappiness 								--> https://linuxhint.com/understanding_vm_swappiness/
-	echo "It appears the system memory is less than 512 MB and that your system does"
-	echo "not have enough memory to set up certain parts of the script. However, here"
-	echo "are some configuration commands which should help, as it permanently"
-	echo "increases swap to 1024MB of space."
+	echo "However, you can create a swap memory file so it works. Here are some"
+	echo "configuration commands which should help, as it permanently increases"
+	echo "swap to 1024MB of space."
+	echo
 	echo
 	echo "Creates a swap file of the designated size:"
 	echo "     sudo fallocate -l 1G /swapfile"
@@ -641,8 +641,9 @@ function no_swap_function () {
 	echo
 	echo "Changes can be made manually with: sudo nano /etc/fstab"
 	echo
-	echo "Would you like to attempt this fix automatically?"
-	echo "Script will exit otherwise."
+	echo
+	echo "${bold}${red}Would you like to attempt this fix automatically?${normal}"
+	echo "${bold}${red}Script will exit otherwise!!${normal}"
 	echo
 	while :; do
 		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " ubuntu_pagefile_fix
@@ -690,7 +691,7 @@ EOF
 		echo "Operations complete."
 	else
 		echo
-		echo "${bold}${red}Exiting Script in 30 seconds . . . ${normal}"
+		echo "${bold}${red}Exiting Script in 30 seconds. . . ${normal}"
 		sleep 30
 		exit
 	fi
@@ -703,17 +704,19 @@ if (( "$swap_total" == "0" )) && (( "$mem_total" <= "512" )); then
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "It appears the system memory is less than 512 MB and that your system does"
-	echo "not have a swap file. This will probably cause issues with generating"
-	echo "Listserver with 'go install'."
+	echo "${bold}${red}It appears the system memory is less than 512 MB and that your system does${normal}"
+	echo "${bold}${red}     not have a swap file.${normal}"
 	echo
-	echo "Sample Problem this attempts to address:"
-	echo '--------------------------------------------------------------------------------'
-	echo "apt-get -q -y install golang"
-	echo "go install 'github.com/drawpile/listserver@latest'"
-	echo "crawshaw.io/sqlite"
-	echo "gcc: fatal error: Killed signal terminated program cc1"
-	echo "Compilation terminated."
+	echo "${bold}${red}This will probably cause issues with generating Listserver with 'go install'${normal}"
+	echo "${bold}${red}     and building web admin interfaces from scratch (rather than use prebuilt).${normal}"
+	echo
+	echo "${bold}${white}${underline}Sample Problem this attempts to address:${normal}"
+	echo
+	echo " apt-get -q -y install golang"
+	echo " go install 'github.com/drawpile/listserver@latest'"
+	echo " crawshaw.io/sqlite"
+	echo " gcc: fatal error: Killed signal terminated program cc1"
+	echo " Compilation terminated."
 	echo '--------------------------------------------------------------------------------'
 	echo
 	if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
@@ -6738,6 +6741,20 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			else
 				python_command="python"
 			fi
+			
+			# For more info on the -O condition
+			#     https://www.pluralsight.com/resources/blog/cloud/conditions-in-bash-scripting-if-statements
+			
+			if [[ -O "/home/drawpileuser/abusereport" ]]; then
+				# echo "owner"
+				# Otherwise this step seems to fail on re-runs.  Needs testing.
+				sudo chown $current_username:$current_username "/home/drawpileuser/abusereport" -R
+			else
+				# echo "no owner"
+				# No action required.
+				:
+			fi
+
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo "Running command: $python_command -m venv env"
@@ -10361,6 +10378,34 @@ EOF
 			fi
 		fi
 		
+		if [[ -e  "$dp_install_loc/favicon.ico" ]]; then
+			sudo cp $dp_install_loc/favicon.ico /var/www/html/drawpile/favicon.ico
+		elif [[ -e  "$script_directory/favicon.ico" ]]; then
+			sudo cp $script_directory/favicon.ico /var/www/html/drawpile/favicon.ico
+		elif [[ -d "$list_server_favicon_location_entry/favicon.ico" ]]; then
+			sudo cp "$list_server_favicon_location_entry/favicon.ico" /var/www/html/drawpile/favicon.ico
+		else
+			echo "No favicon.ico file detected, skipping copying to web directory."
+			# favicon_instructions_function
+			# echo
+			# echo "Once ready with the file below, press any key to continue."
+			# echo '64x64      / favicon.ico'
+			# echo
+			# pause
+			# if [[ -e  "$dp_install_loc/favicon.ico" ]]; then
+			# 	sudo cp $dp_install_loc/favicon.ico /var/www/html/drawpile/favicon.ico
+			# elif [[ -e  "$script_directory/favicon.ico" ]]; then
+			# 	sudo cp $script_directory/favicon.ico /var/www/html/drawpile/favicon.ico
+			# elif [[ -d "$list_server_favicon_location_entry/favicon.ico" ]]; then
+			# 	sudo cp "$list_server_favicon_location_entry/favicon.ico" /var/www/html/drawpile/favicon.ico
+			# else
+			# 	echo "Ok, fine, find out what happens when you don't read instructions."
+			# 	echo "Exiting script."
+			# 	pause
+			# 	exit
+			# fi
+		fi
+		
 		sudo chmod 754 /var/www/html/drawpile/16.png
 		sudo chmod 754 /var/www/html/drawpile/32.png
 		sudo chmod 754 /var/www/html/drawpile/48.png
@@ -10404,7 +10449,7 @@ EOF
 			
 			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<p>To install a cert in Chrome, click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files(\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>/g" /var/www/html/drawpile/index.html
 
-			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
 		fi
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
