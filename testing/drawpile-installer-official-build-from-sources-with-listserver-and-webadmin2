@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960016
+drawpilescriptversion=2.9960017
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1043,7 +1043,11 @@ if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; t
 	fi
 else
 	current_username=$USER
+	echo "Current user: $current_username"
 fi
+
+drawpileuser_username_id="$( id -u drawpileuser )"
+current_username_id="$( id -u $current_username )"
 
 if [ "$drawpileread_test" == "yes" ]; then
 	# Do nothing, no action required
@@ -6742,19 +6746,20 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				python_command="python"
 			fi
 			
+			owner_id_test=$(find "/home/drawpileuser/abusereport" -prune -printf %U)
+			
 			# For more info on the -O condition
 			#     https://www.pluralsight.com/resources/blog/cloud/conditions-in-bash-scripting-if-statements
 			
-			if [[ -O "/home/drawpileuser/abusereport" ]]; then
+			if [[ -O "/home/drawpileuser/abusereport" ]] || [[ "$current_username_id" != "$owner_id_test" ]]; then
 				# echo "owner"
-				# Otherwise this step seems to fail on re-runs.  Needs testing.
 				sudo chown $current_username:$current_username "/home/drawpileuser/abusereport" -R
 			else
 				# echo "no owner"
 				# No action required.
 				:
 			fi
-
+			
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo "Running command: $python_command -m venv env"
@@ -7389,8 +7394,14 @@ echo
 # if [[ "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || ( "$reused_drawpile_srv_crypt_key_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) ]]; then
 if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then	
 	# elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]] then
+	systemd_selection=$( grep -m 1 "systemd_selection = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	systemd_selection_text=$( grep -m 1 "systemd_selection_text = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	echo
 	echo "${bold}${red}Changes detected that require re-running drawpile-srv startup options.${normal}"
+	echo
+	echo "${bold}${red}Value previously selected:${normal}          $systemd_selection"
+	echo
+	echo "${bold}${red}Text value of previously selected:${normal}  $systemd_selection_text"
 	echo
 	maybe_use_config_value=n
 	sleep 5
@@ -8159,6 +8170,17 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				else
 					python_command="python"
 				fi
+				
+				owner_id_test=$(find "/home/drawpileuser/drawpile-monitor" -prune -printf %U)
+				
+				if [[ -O "/home/drawpileuser/drawpile-monitor" ]] || [[ "$current_username_id" != "$owner_id_test" ]]; then
+					# echo "owner"
+					sudo chown $current_username:$current_username "/home/drawpileuser/drawpile-monitor" -R
+				else
+					# echo "no owner"
+					# No action required.
+					:
+				fi
 
 				echo '--------------------------------------------------------------------------------'
 				echo "Running command: $python_command -m venv env"
@@ -8174,6 +8196,11 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo "Running command: . env/bin/activate"
 				echo '--------------------------------------------------------------------------------'
 				. env/bin/activate
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo "Running command: pip install wheel"
+				echo '--------------------------------------------------------------------------------'
+				pip install wheel
 				echo
 				echo '--------------------------------------------------------------------------------'
 				echo "Running command: pip install -r requirements.txt"
