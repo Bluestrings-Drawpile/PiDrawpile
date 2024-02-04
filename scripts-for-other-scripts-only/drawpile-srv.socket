@@ -6,6 +6,8 @@ After=network.target
 ListenStream=27750
 # Adding a second port activates the web admin API:
 ListenStream=27780
+# Adding a third port activates the web client:
+ListenStream=27751
 
 [Install]
 WantedBy=sockets.target
