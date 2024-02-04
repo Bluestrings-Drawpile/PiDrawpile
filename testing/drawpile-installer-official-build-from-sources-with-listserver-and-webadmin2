@@ -14390,8 +14390,7 @@ elif [[ ! -d "$option_loc_2" ]]; then
 	echo "${bold}${cyan}Creating file in script directory with server info:${normal}"
 	echo "     $my_server_information"
 	echo
-	echo "${bold}${cyan}Please save this somewhere securely, then delete the file.${normal}"
-	echo
+	
 	#---------------------------------------------------------------------------------------------------------------------------------
 	#---------------------------------------------------------------------------------------------------------------------------------
 	# This section is for generating info to save into the file on the server, rather than append to it forever.
@@ -14615,6 +14614,11 @@ EOF
 	my_server_information_store=$( echo "
 	$my_server_information_store" | sed -e ':L;N;s/^\n$//;t L' )
 	echo "$my_server_information_store" | sudo tee "$my_server_information" >/dev/null
+	
+	echo "${bold}${cyan}Please save this somewhere securely, then delete the file.${normal}"
+	echo "${cyan}     Script will continue in 10 seconds.${normal}"
+	echo
+	sleep 10
 else
 	echo "This message for Desktop Icons or Text file should not be visible."
 fi
@@ -14840,6 +14844,12 @@ echo
 echo "${bold}${cyan}***********************************************************************${normal}"
 echo "${bold}${cyan}******************** End   - My Server Information ********************${normal}"
 echo "${bold}${cyan}***********************************************************************${normal}"
+echo
+echo "${cyan}Please note the information above regarding your server before${normal}"
+echo "${cyan}     wrapping up the script. When you are ready, press any key${normal}"
+echo "${cyan}     to continue.${normal}"
+echo
+pause
 echo
 server_ipv4=$( hostname -I | awk '{ print $1 }' )
 server_ipv6=$( hostname -I | awk '{ print $2 }' )
