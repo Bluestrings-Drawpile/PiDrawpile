@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960018
+drawpilescriptversion=2.9960019
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -837,13 +837,13 @@ if ! id -u drawpileuser > /dev/null 2>&1; then
 	sudo chmod 770 /home/drawpileuser/ -R
 	sudo chmod 777 /home/drawpileuser/
 	# find /home/drawpileuser/ -type d -exec chmod 755 {} \;
-	# sudo chown drawpileuser /home/drawpileuser/ -R
+	# sudo chown drawpileuser:drawpileread /home/drawpileuser/ -R
 	stored_data_creation_files_function
 	# echo "drawpilescriptversion = $drawpilescriptversion" | sudo tee -a $app_installation_status_file > /dev/null 2>&1
 	sudo sed -i '\!^drawpileuser =!{h;s!=.*!= no!};${x;\!^$!{s!!drawpileuser = no!;H};x}' $app_installation_status_file
 else
 	sudo chmod 777 /home/drawpileuser/ -R
-	# sudo chown drawpileuser /home/drawpileuser/ -R
+	# sudo chown drawpileuser:drawpileread /home/drawpileuser/ -R
 	sudo chmod 777 /home/drawpileuser/
 	# Clears up an empty line that appears in the file at the beginning.
 	sudo sed -i '/^$/d' $app_installation_status_file
@@ -1759,6 +1759,15 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			break
 		elif (( "$dp_install_loc" >= "1" && "$dp_install_loc" <= "6" )) ; then
 			if [[ -d "$option_loc_1" ]] || [[ -d "$option_loc_2" ]] || [[ -d "$option_loc_3" ]] || [[ -d "$option_loc_4" ]] || [[ -d "$option_loc_5" ]] || [[ -d "$option_loc_6" ]]; then
+				if [[ "$dp_install_loc" != "6" ]]; then
+					sudo chown :drawpileread "/home/$current_username"
+					sudo chmod 770 "/home/$current_username"
+					if [[ "$dp_install_loc" = "1" ]]; then sudo chown :drawpileread "$option_loc_1"; sudo chmod 770 "$option_loc_1"; fi
+					if [[ "$dp_install_loc" = "2" ]]; then sudo chown :drawpileread "$option_loc_2"; sudo chmod 770 "$option_loc_2"; fi
+					if [[ "$dp_install_loc" = "3" ]]; then sudo chown :drawpileread "$option_loc_3"; sudo chmod 770 "$option_loc_3"; fi
+					if [[ "$dp_install_loc" = "4" ]]; then sudo chown :drawpileread "$option_loc_4"; sudo chmod 770 "$option_loc_4"; fi
+					if [[ "$dp_install_loc" = "5" ]]; then sudo chown :drawpileread "$option_loc_5"; sudo chmod 770 "$option_loc_5"; fi
+				fi
 				sudo sed -i '\!^option_loc_num =!{h;s!=.*!= '"$dp_install_loc"'!};${x;\!^$!{s!!option_loc_num = '"$dp_install_loc"'!;H};x}' $drawpile_configuration_values_file
 				break
 			else
@@ -1852,6 +1861,7 @@ echo "${bold}${cyan}*****Auto Verifying if Script is Up to Date . . .*****${norm
 echo
 function script_update_check_function () {
 	sudo mkdir -p -v "$dp_install_loc/Programs"
+	sudo chown :drawpileread "$dp_install_loc/Programs"
 	cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
 	sudo chmod 777 "$dp_install_loc/Programs" -R
@@ -3717,13 +3727,13 @@ function start_drawpile_srv_if_updated_function () {
 			echo "sudo systemctl start --now $service_name_to_check_01"
 			sudo systemctl start --now $service_name_to_check_01
 			echo
-			sudo systemctl status $service_name_to_check_01 --no-pager
-			sudo systemctl status $service_name_to_check_02 --no-pager
+			sudo systemctl status $service_name_to_check_01 --no-pager -l
+			sudo systemctl status $service_name_to_check_02 --no-pager -l
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && ( "$drawpile_srv_service_status" == "(running)" || "$drawpile_srv_service_status" != "(running)" ) ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_02"
 			sudo systemctl start --now $service_name_to_check_02
 			echo
-			sudo systemctl status $service_name_to_check_02 --no-pager
+			sudo systemctl status $service_name_to_check_02 --no-pager -l
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
 		else
@@ -5441,7 +5451,7 @@ fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
 	sudo systemctl enable crond.service
 	sudo systemctl start --now crond.service
-	sudo systemctl status crond.service --no-pager
+	sudo systemctl status crond.service --no-pager -l
 fi
 
 <<comment_EOF
@@ -5863,8 +5873,8 @@ comment_EOF
 
 sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
 # sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=\$ssl_country/ST=\$ssl_state/L=\$ssl_locality/O=\$ssl_organization/OU=\$ssl_unitname/CN=\$hostname/emailAddress=\$ssl_email"
-sudo chown drawpileuser $ssl_certificate
-sudo chown drawpileuser $ssl_private_cert_key
+sudo chown drawpileuser:drawpileread $ssl_certificate
+sudo chown drawpileuser:drawpileread $ssl_private_cert_key
 sudo nginx -s reload
 echo
 sudo chmod 770 /home/drawpileuser/ -R
@@ -5947,7 +5957,7 @@ EOF
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		sudo systemctl enable crond.service
 		sudo systemctl start --now crond.service
-		sudo systemctl status crond.service --no-pager
+		sudo systemctl status crond.service --no-pager -l
 	fi
 	sudo sed -i '\!^ssl_current_minute =!{h;s!=.*!= '"$current_minute"'!};${x;\!^$!{s!!ssl_current_minute = '"$current_minute"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_current_hour =!{h;s!=.*!= '"$current_hour"'!};${x;\!^$!{s!!ssl_current_hour = '"$current_hour"'!;H};x}' $drawpile_configuration_values_file
@@ -5969,11 +5979,11 @@ function permissions_lets_encrypt_ssl () {
 	# echo
 	# pause
 	# echo
-	# sudo chown drawpileuser "/etc/letsencrypt/"
-	# # sudo chown drawpileuser "/etc/letsencrypt/archive"
-	# # sudo chown drawpileuser "/etc/letsencrypt/archive/$hostname" -R
-	# sudo chown drawpileuser "/etc/letsencrypt/live"
-	# sudo chown drawpileuser "/etc/letsencrypt/live/$hostname" -R
+	# sudo chown drawpileuser:drawpileread "/etc/letsencrypt/"
+	# # sudo chown drawpileuser:drawpileread "/etc/letsencrypt/archive"
+	# # sudo chown drawpileuser:drawpileread "/etc/letsencrypt/archive/$hostname" -R
+	# sudo chown drawpileuser:drawpileread "/etc/letsencrypt/live"
+	# sudo chown drawpileuser:drawpileread "/etc/letsencrypt/live/$hostname" -R
 	
 	echo
 	echo "${bold}Warning.${normal} In order for drawpile-srv to use the SSL files generated"
@@ -6804,7 +6814,7 @@ cd /home/drawpileuser/abusereport
 . env/bin/activate
 exec gunicorn report_relay.main:App --bind "localhost:\$PORT" --worker-class aiohttp.GunicornWebWorker
 EOF
-		sudo chown drawpileuser "/usr/local/bin/./drawpile_abuse_report"
+		sudo chown drawpileuser:drawpileread "/usr/local/bin/./drawpile_abuse_report"
 		sudo chmod 755 "/usr/local/bin/./drawpile_abuse_report"
 		cat <<EOF | sudo tee /etc/systemd/system/drawpile-abuse-report.service >/dev/null
 [Unit]
@@ -6829,7 +6839,7 @@ EOF
 		sudo systemctl enable drawpile-abuse-report.service
 		sudo systemctl start --now drawpile-abuse-report.service
 		wait $!
-		sudo systemctl status drawpile-abuse-report.service --no-pager
+		sudo systemctl status drawpile-abuse-report.service --no-pager -l
 		wait $!
 
 		# (Re)start drawpile-srv with --report-url http://localhost:8200/ (or whatever port you used) 
@@ -6862,11 +6872,28 @@ if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" ]]; t
 	echo
 fi
 
-if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
+if [[ -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		sudo sed -i -e "s/^# ListenStream=27751/ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	else
+		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	fi
+elif [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
 	echo "Did not find drawpile-srv.socket file sample. Downloading and setting up."
 	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
 	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
 	echo
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		# No changes need to be made to drawpile-srv.socket
+		:
+	else
+		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	fi
+else
+	echo "This message should not be visible. The file 'drawpile-srv.socket' either exists or it does not."
 fi
 
 sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
@@ -6878,11 +6905,11 @@ sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
 cd "$dp_install_loc"
 sudo chmod 777 "$dp_install_loc" -R
 cd "$dp_install_loc/Programs"
-sudo chown drawpileuser "$dp_install_loc/Programs/" -R
+sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/" -R
 sudo mkdir -p -v Drawpile-Srv-Files
 cd Drawpile-Srv-Files
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
-sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
+sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
@@ -7013,19 +7040,19 @@ echo
 function sessions_folder_function () {
 	sudo mkdir -p -v sessions
 	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
-	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
+	sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/sessions" -R
 }
 
 function sessions_record_folder_function () {
 	sudo mkdir -p -v session-record
 	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
-	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
+	sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/session-record" -R
 }
 
 function template_folder_function () {
 	sudo mkdir -p -v templates
 	sudo chmod 775 "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
-	sudo chown drawpileuser "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
+	sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/templates" -R
 }
 #---------------------------------------------------------------------------------------------------------------------------------
 #
@@ -7581,7 +7608,7 @@ else
 		wait $!
 		sleep 5
 		sudo chmod 770 /home/drawpileuser/server.db
-		sudo chown drawpileuser /home/drawpileuser/server.db
+		sudo chown drawpileuser:drawpileread /home/drawpileuser/server.db
 		sudo systemctl stop --now drawpile-srv.service
 		wait $!
 	elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile-monitor.service`" = "active" ]]; then
@@ -8289,7 +8316,7 @@ export DRAWPILE_MONITOR_PASS='$nginx_htpasswd_1'
 ./drawpile-monitor.py --interval=20 --jitter=40
 EOF
 			# ----------------------------------------------------------------------------------
-			sudo chown drawpileuser "/usr/local/bin/./drawpile_monitor_report"
+			sudo chown drawpileuser:drawpileread "/usr/local/bin/./drawpile_monitor_report"
 			sudo chmod 775 "/usr/local/bin/./drawpile_monitor_report"
 
 			cat <<EOF | sudo tee /etc/systemd/system/drawpile-monitor.service >/dev/null
@@ -9301,9 +9328,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 					invalid_list_server_database_connection_string
 				fi
 			done
-			sudo sed -i '\!^list_server_database_connection_string_num =!{h;s!=.*!= '"$list_server_database_connection_string_num"'!};${x;\!^$!{s!!list_server_database_connection_string_num = '"$list_server_database_connection_string_num"'!;H};x}' $drawpile_configuration_values_file
-			sudo sed -i '\!^listserver_database_connection_string =!{h;s!=.*!= '"$listserver_database_connection_string"'!};${x;\!^$!{s!!listserver_database_connection_string = '"$listserver_database_connection_string"'!;H};x}' $drawpile_configuration_values_file
-			wait $!
+			# sudo sed -i '\!^list_server_database_connection_string_num =!{h;s!=.*!= '"$list_server_database_connection_string_num"'!};${x;\!^$!{s!!list_server_database_connection_string_num = '"$list_server_database_connection_string_num"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^listserver_database_connection_string =!{h;s!=.*!= '"$listserver_database_connection_string"'!};${x;\!^$!{s!!listserver_database_connection_string = '"$listserver_database_connection_string"'!;H};x}' $drawpile_configuration_values_file
+			# wait $!
 		else
 			echo "This message should not be visible."
 		fi
@@ -9442,9 +9469,9 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				list_server_favicon_location="\"$list_server_favicon_location_entry\""
 				echo "${bold}${cyan}Selected:${normal} $list_server_favicon_location"
 			fi
-			sudo sed -i '\!^list_server_favicon_location_entry =!{h;s!=.*!= '"$list_server_favicon_location_entry"'!};${x;\!^$!{s!!list_server_favicon_location_entry = '"$list_server_favicon_location_entry"'!;H};x}' $drawpile_configuration_values_file
-			sudo sed -i '\!^list_server_favicon_toggle =!{h;s!=.*!= '"$list_server_favicon_toggle"'!};${x;\!^$!{s!!list_server_favicon_toggle = '"$list_server_favicon_toggle"'!;H};x}' $drawpile_configuration_values_file
-			sudo sed -i '\!^list_server_favicon_location =!{h;s!=.*!= '"$list_server_favicon_location"'!};${x;\!^$!{s!!list_server_favicon_location = '"$list_server_favicon_location"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_favicon_location_entry =!{h;s!=.*!= '"$list_server_favicon_location_entry"'!};${x;\!^$!{s!!list_server_favicon_location_entry = '"$list_server_favicon_location_entry"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_favicon_toggle =!{h;s!=.*!= '"$list_server_favicon_toggle"'!};${x;\!^$!{s!!list_server_favicon_toggle = '"$list_server_favicon_toggle"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_favicon_location =!{h;s!=.*!= '"$list_server_favicon_location"'!};${x;\!^$!{s!!list_server_favicon_location = '"$list_server_favicon_location"'!;H};x}' $drawpile_configuration_values_file
 		else
 			echo "This message should not be visible."
 		fi
@@ -9540,7 +9567,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			else
 				echo "${bold}${cyan}Selected:${normal} $list_server_description"
 			fi
-			sudo sed -i '\!^list_server_description =!{h;s!=.*!= '"$list_server_description"'!};${x;\!^$!{s!!list_server_description = '"$list_server_description"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_description =!{h;s!=.*!= '"$list_server_description"'!};${x;\!^$!{s!!list_server_description = '"$list_server_description"'!;H};x}' $drawpile_configuration_values_file
 		else
 			echo "This message should not be visible."
 		fi
@@ -9581,7 +9608,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			else
 				echo "${bold}${cyan}Selected:${normal} $list_server_welcome_msg"
 			fi
-			sudo sed -i '\!^list_server_welcome_msg =!{h;s!=.*!= '"$list_server_welcome_msg"'!};${x;\!^$!{s!!list_server_welcome_msg = '"$list_server_welcome_msg"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_welcome_msg =!{h;s!=.*!= '"$list_server_welcome_msg"'!};${x;\!^$!{s!!list_server_welcome_msg = '"$list_server_welcome_msg"'!;H};x}' $drawpile_configuration_values_file
 		else
 			echo "This message should not be visible."
 		fi
@@ -9634,7 +9661,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 					echo
 				fi
 			done
-			sudo sed -i '\!^list_server_nsfm_words_list =!{h;s!=.*!= '"$list_server_nsfm_words_list"'!};${x;\!^$!{s!!list_server_nsfm_words_list = '"$list_server_nsfm_words_list"'!;H};x}' $drawpile_configuration_values_file
+			# sudo sed -i '\!^list_server_nsfm_words_list =!{h;s!=.*!= '"$list_server_nsfm_words_list"'!};${x;\!^$!{s!!list_server_nsfm_words_list = '"$list_server_nsfm_words_list"'!;H};x}' $drawpile_configuration_values_file
 		else
 			echo "This message should not be visible."
 		fi	
@@ -9695,8 +9722,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 					list_server_max_sessions_per_host_toggle="maxSessionsPerHost"
 					echo "${bold}${cyan}Selected:${normal} $list_server_max_sessions_per_host"
 				fi
-				sudo sed -i '\!^list_server_max_sessions_per_host =!{h;s!=.*!= '"$list_server_max_sessions_per_host"'!};${x;\!^$!{s!!list_server_max_sessions_per_host = '"$list_server_max_sessions_per_host"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^list_server_max_sessions_per_host_toggle =!{h;s!=.*!= '"$list_server_max_sessions_per_host_toggle"'!};${x;\!^$!{s!!list_server_max_sessions_per_host_toggle = '"$list_server_max_sessions_per_host_toggle"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^list_server_max_sessions_per_host =!{h;s!=.*!= '"$list_server_max_sessions_per_host"'!};${x;\!^$!{s!!list_server_max_sessions_per_host = '"$list_server_max_sessions_per_host"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^list_server_max_sessions_per_host_toggle =!{h;s!=.*!= '"$list_server_max_sessions_per_host_toggle"'!};${x;\!^$!{s!!list_server_max_sessions_per_host_toggle = '"$list_server_max_sessions_per_host_toggle"'!;H};x}' $drawpile_configuration_values_file
 			
 			else
 				echo "This message should not be visible."
@@ -9758,8 +9785,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 					max_sessions_per_named_host_toggle="maxSessionsPerNamedHost"
 					echo "${bold}${cyan}Selected:${normal} $max_sessions_per_named_host"
 				fi
-				sudo sed -i '\!^max_sessions_per_named_host =!{h;s!=.*!= '"$max_sessions_per_named_host"'!};${x;\!^$!{s!!max_sessions_per_named_host = '"$max_sessions_per_named_host"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^max_sessions_per_named_host_toggle =!{h;s!=.*!= '"$max_sessions_per_named_host_toggle"'!};${x;\!^$!{s!!max_sessions_per_named_host_toggle = '"$max_sessions_per_named_host_toggle"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^max_sessions_per_named_host =!{h;s!=.*!= '"$max_sessions_per_named_host"'!};${x;\!^$!{s!!max_sessions_per_named_host = '"$max_sessions_per_named_host"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^max_sessions_per_named_host_toggle =!{h;s!=.*!= '"$max_sessions_per_named_host_toggle"'!};${x;\!^$!{s!!max_sessions_per_named_host_toggle = '"$max_sessions_per_named_host_toggle"'!;H};x}' $drawpile_configuration_values_file
 			else
 				echo "This message should not be visible."
 			fi
@@ -9821,8 +9848,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 						echo
 					fi
 				done
-				sudo sed -i '\!^trusted_list_hosts =!{h;s!=.*!= '"$trusted_list_hosts"'!};${x;\!^$!{s!!trusted_list_hosts = '"$trusted_list_hosts"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^trusted_list_hosts_toggle =!{h;s!=.*!= '"$trusted_list_hosts_toggle"'!};${x;\!^$!{s!!trusted_list_hosts_toggle = '"$trusted_list_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^trusted_list_hosts =!{h;s!=.*!= '"$trusted_list_hosts"'!};${x;\!^$!{s!!trusted_list_hosts = '"$trusted_list_hosts"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^trusted_list_hosts_toggle =!{h;s!=.*!= '"$trusted_list_hosts_toggle"'!};${x;\!^$!{s!!trusted_list_hosts_toggle = '"$trusted_list_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
 			else
 				echo "This message should not be visible."
 			fi
@@ -9883,8 +9910,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 						echo
 					fi
 				done
-				sudo sed -i '\!^banned_list_hosts =!{h;s!=.*!= '"$banned_list_hosts"'!};${x;\!^$!{s!!banned_list_hosts = '"$banned_list_hosts"'!;H};x}' $drawpile_configuration_values_file
-				sudo sed -i '\!^list_server_banned_hosts_toggle =!{h;s!=.*!= '"$list_server_banned_hosts_toggle"'!};${x;\!^$!{s!!list_server_banned_hosts_toggle = '"$list_server_banned_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^banned_list_hosts =!{h;s!=.*!= '"$banned_list_hosts"'!};${x;\!^$!{s!!banned_list_hosts = '"$banned_list_hosts"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^list_server_banned_hosts_toggle =!{h;s!=.*!= '"$list_server_banned_hosts_toggle"'!};${x;\!^$!{s!!list_server_banned_hosts_toggle = '"$list_server_banned_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
 			else
 				echo "This message should not be visible."
 			fi
@@ -9952,7 +9979,7 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 						echo
 					fi
 				done
-				sudo sed -i '\!^list_server_delist_time =!{h;s!=.*!= '"$list_server_delist_time"'!};${x;\!^$!{s!!list_server_delist_time = '"$list_server_delist_time"'!;H};x}' $drawpile_configuration_values_file
+				# sudo sed -i '\!^list_server_delist_time =!{h;s!=.*!= '"$list_server_delist_time"'!};${x;\!^$!{s!!list_server_delist_time = '"$list_server_delist_time"'!;H};x}' $drawpile_configuration_values_file
 			else
 				echo "This message should not be visible."
 			fi
@@ -9963,9 +9990,52 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		echo "${bold}${cyan}***** Creating List Server Configuration . . . *****${normal}"
 		echo
 		echo "No messages should show up in this section."
-		echo
+		echo		
+		# --------------------------------------------------------------------------------
+		sudo sed -i '\!^list_server_database_connection_string_num =!{h;s!=.*!= '"$list_server_database_connection_string_num"'!};${x;\!^$!{s!!list_server_database_connection_string_num = '"$list_server_database_connection_string_num"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^listserver_database_connection_string =!{h;s!=.*!= '"$listserver_database_connection_string"'!};${x;\!^$!{s!!listserver_database_connection_string = '"$listserver_database_connection_string"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		sudo sed -i '\!^list_server_favicon_location_entry =!{h;s!=.*!= '"$list_server_favicon_location_entry"'!};${x;\!^$!{s!!list_server_favicon_location_entry = '"$list_server_favicon_location_entry"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^list_server_favicon_toggle =!{h;s!=.*!= '"$list_server_favicon_toggle"'!};${x;\!^$!{s!!list_server_favicon_toggle = '"$list_server_favicon_toggle"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^list_server_favicon_location =!{h;s!=.*!= '"$list_server_favicon_location"'!};${x;\!^$!{s!!list_server_favicon_location = '"$list_server_favicon_location"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		sudo sed -i '\!^list_server_description =!{h;s!=.*!= '"$list_server_description"'!};${x;\!^$!{s!!list_server_description = '"$list_server_description"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		# Enter a welcome message for listing the session
+		sudo sed -i '\!^list_server_welcome_msg =!{h;s!=.*!= '"$list_server_welcome_msg"'!};${x;\!^$!{s!!list_server_welcome_msg = '"$list_server_welcome_msg"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		# Configure not safe for work auto-flag sessions.
+		sudo sed -i '\!^list_server_nsfm_words_list =!{h;s!=.*!= '"$list_server_nsfm_words_list"'!};${x;\!^$!{s!!list_server_nsfm_words_list = '"$list_server_nsfm_words_list"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		if [[ "$list_server_database_connection_string_num" != "1" ]]; then
+			# If list_server_database_connection_string_num = 1, skip settings because these wouldn't be recorded/entered by user. 
+			# If list_server_database_connection_string_num != 1, record manually entered settings.
+			# --------------------------------------------------------------------------------
+			# Configure the max number of listings for other unspecified servers.
+			sudo sed -i '\!^list_server_max_sessions_per_host =!{h;s!=.*!= '"$list_server_max_sessions_per_host"'!};${x;\!^$!{s!!list_server_max_sessions_per_host = '"$list_server_max_sessions_per_host"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^list_server_max_sessions_per_host_toggle =!{h;s!=.*!= '"$list_server_max_sessions_per_host_toggle"'!};${x;\!^$!{s!!list_server_max_sessions_per_host_toggle = '"$list_server_max_sessions_per_host_toggle"'!;H};x}' $drawpile_configuration_values_file
+			# --------------------------------------------------------------------------------
+			# Configure the max number of listings for other named servers.
+			sudo sed -i '\!^max_sessions_per_named_host =!{h;s!=.*!= '"$max_sessions_per_named_host"'!};${x;\!^$!{s!!max_sessions_per_named_host = '"$max_sessions_per_named_host"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^max_sessions_per_named_host_toggle =!{h;s!=.*!= '"$max_sessions_per_named_host_toggle"'!};${x;\!^$!{s!!max_sessions_per_named_host_toggle = '"$max_sessions_per_named_host_toggle"'!;H};x}' $drawpile_configuration_values_file
+			# --------------------------------------------------------------------------------
+			# Configure servers which are exempt from listing limitations
+			sudo sed -i '\!^trusted_list_hosts =!{h;s!=.*!= '"$trusted_list_hosts"'!};${x;\!^$!{s!!trusted_list_hosts = '"$trusted_list_hosts"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^trusted_list_hosts_toggle =!{h;s!=.*!= '"$trusted_list_hosts_toggle"'!};${x;\!^$!{s!!trusted_list_hosts_toggle = '"$trusted_list_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
+			# --------------------------------------------------------------------------------
+			# Configure servers that are banned from listing sessions
+			sudo sed -i '\!^banned_list_hosts =!{h;s!=.*!= '"$banned_list_hosts"'!};${x;\!^$!{s!!banned_list_hosts = '"$banned_list_hosts"'!;H};x}' $drawpile_configuration_values_file
+			sudo sed -i '\!^list_server_banned_hosts_toggle =!{h;s!=.*!= '"$list_server_banned_hosts_toggle"'!};${x;\!^$!{s!!list_server_banned_hosts_toggle = '"$list_server_banned_hosts_toggle"'!;H};x}' $drawpile_configuration_values_file
+			# --------------------------------------------------------------------------------
+			# Number of minutes after which a session is automatically de-listed unless refreshed
+			sudo sed -i '\!^list_server_delist_time =!{h;s!=.*!= '"$list_server_delist_time"'!};${x;\!^$!{s!!list_server_delist_time = '"$list_server_delist_time"'!;H};x}' $drawpile_configuration_values_file
+		fi
+		# --------------------------------------------------------------------------------
+		# --------------------------------------------------------------------------------
 		sudo sed -i '\!^list_server_config_read_values_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!list_server_config_read_values_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^list_server_config_read_values_completed_02 =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!list_server_config_read_values_completed_02 = '"yes"'!;H};x}' $drawpile_configuration_values_file
+		# --------------------------------------------------------------------------------
+		# --------------------------------------------------------------------------------
 		list_server_include_servers_username_and_pass="includeservers=[\"http://$nginx_username_encoded_1:$nginx_htpasswd_encoded_1@localhost:27780/api/\"]"
 		# list_server_include_servers_username_and_pass="$nginx_username_1:$nginx_htpasswd_1"
 
@@ -10266,7 +10336,7 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Displaying Drawpile List Server Status . . .*****${normal}"
 	echo
-	systemctl status drawpile-listserver.service --no-pager
+	systemctl status drawpile-listserver.service --no-pager -l
 	wait $!
 	echo
 	pause
@@ -10476,7 +10546,7 @@ EOF
 			
 			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<p>To install a cert in Chrome, click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files(\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>/g" /var/www/html/drawpile/index.html
 
-			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari or Firefox\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<br><br>\n\nIn Firefox, you may need to confirm the certificate by dragging the certificate to the Keychain Access App ( <a href=\"https:\/\/support.apple.com\/guide\/keychain-access\/add-certificates-to-a-keychain-kyca2431\/mac\" target=\"mac-keychain\">Add certificates to a keychain using Keychain Access on Mac<\/a> ). To do this you will need to visit the website and accept the risk to continue, you can go into the keychain to find the certificate under \"All items\", \"Local items\". Find the website, double click it and enter your keychain password. Reload the web page, you should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
 		fi
 
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
@@ -11049,9 +11119,9 @@ EOF
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	# sudo systemctl restart drawpile-listserver.service && systemctl status drawpile-listserver.service --no-pager
+	# sudo systemctl restart drawpile-listserver.service && systemctl status drawpile-listserver.service --no-pager -l
 	sudo systemctl restart drawpile-listserver.service
-	systemctl status drawpile-listserver.service --no-pager
+	systemctl status drawpile-listserver.service --no-pager -l
 	wait $!
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -11061,12 +11131,12 @@ EOF
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "disabled" ]; then
 		echo "${bold}${cyan}Skipping starting NGINX until server has completed web admin setup.${normal}"
 	else
-		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager -l
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		sudo nginx -s reload
 		sudo systemctl restart nginx.service
-		systemctl status nginx.service --no-pager
+		systemctl status nginx.service --no-pager -l
 		wait $!
 	fi
 	echo
@@ -11193,11 +11263,11 @@ EOF
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
 			sudo systemctl stop --now nginx.service
 		fi
-		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+		# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager -l
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		sudo systemctl restart nginx.service
-		systemctl status nginx.service --no-pager
+		systemctl status nginx.service --no-pager -l
 		wait $!
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
 			echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
@@ -11726,11 +11796,11 @@ EOF
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
 				sudo systemctl stop --now nginx.service
 			fi
-			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager -l
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
 			sudo systemctl restart nginx.service
-			systemctl status nginx.service --no-pager
+			systemctl status nginx.service --no-pager -l
 			wait $!
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
 				echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
@@ -11885,11 +11955,11 @@ comment_EOF_delete
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-enabled nginx.service`" = "enabled" ]; then
 				sudo systemctl stop --now nginx.service
 			fi
-			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager
+			# sudo systemctl daemon-reload && sudo systemctl restart systemd-modules-load && sudo nginx -s reload && sudo systemctl restart nginx.service && systemctl status nginx.service --no-pager -l
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
 			sudo systemctl restart nginx.service
-			systemctl status nginx.service --no-pager
+			systemctl status nginx.service --no-pager -l
 			wait $!
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
 				echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
@@ -12163,7 +12233,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo systemctl enable drawpile-monitor.service
 		sudo systemctl start --now drawpile-monitor.service 
 		wait $!
-		sudo systemctl status drawpile-monitor.service  --no-pager
+		sudo systemctl status drawpile-monitor.service  --no-pager -l
 		wait $!
 	fi
 else
@@ -12493,7 +12563,7 @@ function nginx_username_and_password_pihole_function () {
 			sudo systemctl restart systemd-modules-load
 			sudo nginx -s reload
 			sudo systemctl restart nginx.service
-			systemctl status nginx.service --no-pager
+			systemctl status nginx.service --no-pager -l
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
@@ -14189,7 +14259,7 @@ if [[ -d "$option_loc_2" ]]; then
 		server_web_admin_shortcut_png=$server_shortcut_png
 		list_server_shortcut_png=$server_shortcut_png
 		sudo chmod 754 $server_shortcut_png
-		sudo chown drawpileuser drawpileread $server_shortcut_png
+		sudo chown drawpileuser:drawpileread $server_shortcut_png
 	else
 		echo "Invalid option selected. Assuming option 1 intended."
 		drawpile_shortcut_icon_preference=1
@@ -14421,29 +14491,29 @@ New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
 	#---------------------------------------------------------------------------------------------------------------------------------
 	if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
 		display_drawpile_abuse_report="
-systemctl status drawpile-abuse-report.service --no-pager"
+systemctl status drawpile-abuse-report.service --no-pager -l"
 	else
 		display_drawpile_abuse_report=""
 	fi
 	
 	if [[ "$ssl_encryption_config" != "3" ]]; then
-		display_drawpile_listserver="systemctl status drawpile-listserver.service --no-pager"
+		display_drawpile_listserver="systemctl status drawpile-listserver.service --no-pager -l"
 	else
 		display_drawpile_listserver=""
 	fi
 
 	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-		display_drawpile_monitor="systemctl status drawpile-monitor.service --no-pager"
+		display_drawpile_monitor="systemctl status drawpile-monitor.service --no-pager -l"
 	else
 		display_drawpile_monitor=""
 	fi
 	if [ "$dp_srv_startup" == "1" ]; then
 		# 1 - Socket Activation
-		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager
-systemctl status drawpile-srv.socket --no-pager"
+		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager -l
+systemctl status drawpile-srv.socket --no-pager -l"
 	else
 		# 2 - Always on Service
-		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager"
+		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager -l"
 	fi
 	if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fail2ban_status" == "Yes" ] || [ "$fail2ban_status" == "Y" ] || [ "$fail2ban_status" == "y" ]; then
 		display_fail2ban="
@@ -14452,26 +14522,26 @@ systemctl status fail2ban.service"
 	if [ "$ssl_encryption_config" == "2" ]; then
 		display_lets_encrypt="
 Let's Encrypt Services for SSL Cert Renewal
-     systemctl status certbot.service --no-pager
-     systemctl status certbot.timer --no-pager"
+     systemctl status certbot.service --no-pager -l
+     systemctl status certbot.timer --no-pager -l"
 	fi
 	if [[ "$ssl_encryption_config" != "3" ]]; then
-		display_nginx="systemctl status nginx.service --no-pager"
+		display_nginx="systemctl status nginx.service --no-pager -l"
 	else
 		display_nginx=""
 	fi
 	if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
 		display_pihole="
 Pi-Hole Service
-     systemctl status pihole-FTL.service --no-pager"
+     systemctl status pihole-FTL.service --no-pager -l"
 	fi
 	if [ "$RPi_Monitor_Status" == "1" ]; then
-		display_rpimonitor="service rpimonitor status --no-pager"
+		display_rpimonitor="service rpimonitor status --no-pager -l"
 	fi
 	if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
 		display_samba_status="Samba - Local Network File Sharing
-     systemctl status nmbd.service --no-pager
-     systemctl status smbd.service --no-pager"
+     systemctl status nmbd.service --no-pager -l
+     systemctl status smbd.service --no-pager -l"
 	fi
 	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
 		display_new_web_admin_url="Note: Eventually will be used in the new web admin UI, to administer
@@ -14632,7 +14702,7 @@ echo
 echo "${bold}${green}If socket activation is enabled, it will say enabled on the line starting with${normal}"
 echo "${bold}${green}\"Loaded:\" and it should be running. Ignore the part after vendor preset.${normal}"
 echo
-systemctl status drawpile-srv.socket --no-pager
+systemctl status drawpile-srv.socket --no-pager -l
 wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -14640,7 +14710,7 @@ echo
 echo "${bold}${green}If start up on Pi power up is enabled, it will say enabled on the line starting${normal}"
 echo "${bold}${green}with \"Loaded:\" and it should be running. Ignore the part after vendor preset.${normal}"
 echo
-systemctl status drawpile-srv.service --no-pager
+systemctl status drawpile-srv.service --no-pager -l
 wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -14717,24 +14787,24 @@ echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo
 echo "${bold}${cyan}****  Drawpile Related Services  ****${normal}"
 if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
-	echo "systemctl status drawpile-abuse-report.service --no-pager"
+	echo "systemctl status drawpile-abuse-report.service --no-pager -l"
 fi
 if [[ "$ssl_encryption_config" != "3" ]]; then
-	echo "systemctl status drawpile-listserver.service --no-pager"
+	echo "systemctl status drawpile-listserver.service --no-pager -l"
 fi
 if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
-	echo "systemctl status drawpile-monitor.service --no-pager"
+	echo "systemctl status drawpile-monitor.service --no-pager -l"
 fi
 if [ "$dp_srv_startup" == "1" ]; then
 	# 1 - Socket Activation
-	echo "systemctl status drawpile-srv.service --no-pager"
-	echo "systemctl status drawpile-srv.socket --no-pager"
+	echo "systemctl status drawpile-srv.service --no-pager -l"
+	echo "systemctl status drawpile-srv.socket --no-pager -l"
 elif [ "$dp_srv_startup" == "2" ]; then
 	# 2 - Always on Service
-	echo "systemctl status drawpile-srv.service --no-pager"
+	echo "systemctl status drawpile-srv.service --no-pager -l"
 else
 	echo "This message should not be visible for showing services for Drawpile-srv."
-	echo "systemctl status drawpile-srv.service --no-pager"
+	echo "systemctl status drawpile-srv.service --no-pager -l"
 fi
 echo
 echo "${bold}${cyan}**** Services that help Drawpile function  ****${normal}"
@@ -14743,23 +14813,23 @@ if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fai
 fi
 if [ "$ssl_encryption_config" == "2" ]; then
 	echo "${cyan}Let's Encrypt Services for SSL Cert Renewal${normal}"
-	echo "     systemctl status certbot.service --no-pager"
-	echo "     systemctl status certbot.timer --no-pager"
+	echo "     systemctl status certbot.service --no-pager -l"
+	echo "     systemctl status certbot.timer --no-pager -l"
 fi
 if [[ "$ssl_encryption_config" != "3" ]]; then
-	echo "systemctl status nginx.service --no-pager"
+	echo "systemctl status nginx.service --no-pager -l"
 fi
 if [[ "$Pi_Hole_Status" == "yes" || "$Pi_Hole_Status" == "YES" || "$Pi_Hole_Status" == "Yes" ]]; then
 	echo "${cyan}Pi-Hole Service${normal}"
-	echo "     systemctl status pihole-FTL.service --no-pager"
+	echo "     systemctl status pihole-FTL.service --no-pager -l"
 fi
 if [ "$RPi_Monitor_Status" == "1" ]; then
-	echo "service rpimonitor status --no-pager"
+	echo "service rpimonitor status --no-pager -l"
 fi
 if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
 	echo "${cyan}Samba - Local Network File Sharing${normal}"
-	echo "     systemctl status nmbd.service --no-pager"
-	echo "     systemctl status smbd.service --no-pager"
+	echo "     systemctl status nmbd.service --no-pager -l"
+	echo "     systemctl status smbd.service --no-pager -l"
 fi
 echo
 echo "${bold}${cyan}**** Drawpile New Admin Web URLs ****${normal}"
