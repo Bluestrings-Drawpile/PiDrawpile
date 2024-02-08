@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960019
+drawpilescriptversion=2.9960020
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5521,9 +5521,19 @@ read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	hostname=$read_stored_config_value_query_1
+	hostname_old=$read_stored_config_value_query_1
+	hostname_new=hostname_new
 	reused_hostname_selection=yes
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	reused_hostname_selection=no
+	
+	read_stored_config_value_query_hostname_1=$( grep -m 1 "hostname = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	if [ -z "$read_stored_config_value_query_hostname_1" ] || [ "$read_stored_config_value_query_hostname_1" = "=" ]; then
+		hostname_old=hostname_old
+	else
+		hostname_old=$read_stored_config_value_query_hostname_1
+	fi
+
 	if ! host -V > /dev/null 2>&1; then
 		echo "Package bind9-host used with hostname verification."
 		echo "Not installed, so installing package now ..."
@@ -5634,7 +5644,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			dns_ip_check
 		fi	
 	done
-	#
 
 	if [[ $hostname_1 = $hostname_2 ]] && [[ "$hostname_1" = "" ]] && [[ "$hostname_2" = "" ]]; then
 		hostname=no_value_selected
@@ -5652,6 +5661,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo 'public IP address.'
 		sudo sed -i '\!^hostname =!{h;s!=.*!= '"$hostname"'!};${x;\!^$!{s!!hostname = '"$hostname"'!;H};x}' $drawpile_configuration_values_file
 	fi
+	
+	hostname_new=$hostname
 else
 	echo "This message should not be visible."
 fi
