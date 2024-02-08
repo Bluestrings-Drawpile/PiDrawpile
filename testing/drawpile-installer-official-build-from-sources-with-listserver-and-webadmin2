@@ -10010,10 +10010,12 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		sudo sed -i '\!^list_server_favicon_toggle =!{h;s!=.*!= '"$list_server_favicon_toggle"'!};${x;\!^$!{s!!list_server_favicon_toggle = '"$list_server_favicon_toggle"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^list_server_favicon_location =!{h;s!=.*!= '"$list_server_favicon_location"'!};${x;\!^$!{s!!list_server_favicon_location = '"$list_server_favicon_location"'!;H};x}' $drawpile_configuration_values_file
 		# --------------------------------------------------------------------------------
-		sudo sed -i '\!^list_server_description =!{h;s!=.*!= '"$list_server_description"'!};${x;\!^$!{s!!list_server_description = '"$list_server_description"'!;H};x}' $drawpile_configuration_values_file
+		# sudo sed -i '\!^list_server_description =!{h;s!=.*!= '"$list_server_description"'!};${x;\!^$!{s!!list_server_description = '"$list_server_description"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\|^list_server_description =|{h;s|=.*|= '"$list_server_description"'|};${x;\|^$|{s||list_server_description = '"$list_server_welcome_msg"'|;H};x}' $drawpile_configuration_values_file
 		# --------------------------------------------------------------------------------
 		# Enter a welcome message for listing the session
-		sudo sed -i '\!^list_server_welcome_msg =!{h;s!=.*!= '"$list_server_welcome_msg"'!};${x;\!^$!{s!!list_server_welcome_msg = '"$list_server_welcome_msg"'!;H};x}' $drawpile_configuration_values_file
+		# sudo sed -i '\!^list_server_welcome_msg =!{h;s!=.*!= '"$list_server_welcome_msg"'!};${x;\!^$!{s!!list_server_welcome_msg = '"$list_server_welcome_msg"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\|^list_server_welcome_msg =|{h;s|=.*|= '"$list_server_welcome_msg"'|};${x;\|^$|{s||list_server_welcome_msg = '"$list_server_welcome_msg"'|;H};x}' $drawpile_configuration_values_file
 		# --------------------------------------------------------------------------------
 		# Configure not safe for work auto-flag sessions.
 		sudo sed -i '\!^list_server_nsfm_words_list =!{h;s!=.*!= '"$list_server_nsfm_words_list"'!};${x;\!^$!{s!!list_server_nsfm_words_list = '"$list_server_nsfm_words_list"'!;H};x}' $drawpile_configuration_values_file
