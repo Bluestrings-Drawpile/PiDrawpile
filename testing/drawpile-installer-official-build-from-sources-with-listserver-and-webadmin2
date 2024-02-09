@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960020
+drawpilescriptversion=2.9960021
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1258,7 +1258,8 @@ echo
 
 function version_test_by_distro_function () {
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] ; then
-		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" = "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ "$what_linux_name" == "NAME=\"Ubuntu\"" ]]; then
+		# if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" = "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" ]] || [[ "$what_linux_name" == "NAME=\"Ubuntu\"" ]]; then
+		if [[ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]] || [[ "$what_linux_name" == "NAME=\"Ubuntu\"" ]]; then
 			apt-cache show $package_name > /dev/null 2>&1
 			not_available_check=$?
 			# 0 equals exists, 100 equals does not exist.
@@ -6248,7 +6249,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		package_name=certbot
 		version_test_by_distro_function
 		# if [[ "$version_certbot" = "(none)" ]]; then
-		if [[ "$test_installation_status" = "Not Installed" ]]; then
+		if [[ "$test_installation_status" = "Not Installed" ]] || [[ "$test_installation_status" = "Installed and not up to date" ]]; then
 			echo "${bold}${cyan}***** Installing package certbot. . . *****${normal}"
 			# https://phoenixnap.com/kb/letsencrypt-nginx
 			# sudo certbot --nginx -d example.com -d www.example.com
@@ -6268,7 +6269,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		package_name=python3-certbot-nginx
 		version_test_by_distro_function
 		# if [[ "$version_certbot" = "(none)" ]]; then
-		if [[ "$test_installation_status" = "Not Installed" ]]; then
+		if [[ "$test_installation_status" = "Not Installed" ]] || [[ "$test_installation_status" = "Installed and not up to date" ]]; then
 			echo "${bold}${cyan}***** Installing package python3-certbot-nginx. . . *****${normal}"
 			echo
 			app_does_not_exist=0
@@ -6885,7 +6886,11 @@ fi
 
 if [[ -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
 	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-		sudo sed -i -e "s/^# ListenStream=27751/ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+		if grep 'ListenStream=27751' "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" > /dev/null; then
+			sudo sed -i -e "s/^# ListenStream=27751/ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+		else
+			sudo sed -i -e "s/^ListenStream=27780/ListenStream=27780\n\# Adding a third port activates the web client for 2.2.0 and above.\nListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+		fi
 	else
 		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
 		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
@@ -12761,6 +12766,9 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 					echo
 				fi
 			done
+			
+			sudo sed -i '\!^RPi_Monitor_Dark_Mode =!{h;s!=.*!= '"$RPi_Monitor_Dark_Mode"'!};${x;\!^$!{s!!RPi_Monitor_Dark_Mode = '"$RPi_Monitor_Dark_Mode"'!;H};x}' $app_installation_status_file
+			
 			if [ "$RPi_Monitor_Dark_Mode" == "2" ] || [ "$RPi_Monitor_Dark_Mode" = "3" ] || [ "$RPi_Monitor_Dark_Mode" != "1" ]; then
 				# Light Mode - https://xavierberger.github.io/RPi-Monitor-docs/31_configuration_examples.html
 				# Original colors are #f2f2f2 and #e9e9e9
@@ -12875,11 +12883,11 @@ select:hover {
 /* -- DARK MODE -- */
 /*--- -- --- -- ---*/
 EOF
-			# Dark Mode
-			sudo service rpimonitor restart
-			echo
-			echo If changes do not display immediately, clear cached history in Chrome.
-			sleep 5
+				# Dark Mode
+				sudo service rpimonitor restart
+				echo
+				echo If changes do not display immediately, clear cached history in Chrome.
+				sleep 5
 			elif [ "$RPi_Monitor_Dark_Mode" == "2" ]; then
 				echo Skipping Dark Mode setup of RPi-Monitor.
 			elif [ "$RPi_Monitor_Dark_Mode" == "3" ]; then
@@ -12911,7 +12919,6 @@ EOF
 				sudo cp /etc/rpimonitor/template/wlan.conf /etc/rpimonitor/template/wlan.conf.bak
 			fi
 			# sudo wget -q --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/develop/src/etc/rpimonitor/template/network.conf -O /etc/rpimonitor/template/network.conf
-			sudo sed -i '\!^RPi_Monitor_Dark_Mode =!{h;s!=.*!= '"$RPi_Monitor_Dark_Mode"'!};${x;\!^$!{s!!RPi_Monitor_Dark_Mode = '"$RPi_Monitor_Dark_Mode"'!;H};x}' $app_installation_status_file
 			cat <<EOF | sudo tee /etc/rpimonitor/template/network.conf >/dev/null
 ########################################################################
 # Extract Network information
@@ -13634,7 +13641,7 @@ function testing_config_for_certbot_function () {
 	echo
 	echo "${bold}${cyan}***** Reconfiguring Lets Encrypt Certs now that setup is complete . . . *****${normal}"
 	echo
-	echo 1 | certbot --nginx -d $hostname
+	echo 1 | sudo certbot --nginx -d $hostname
 	echo
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
 	echo "${bold}${cyan}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
