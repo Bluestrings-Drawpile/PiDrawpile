@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960022
+drawpilescriptversion=2.9960023
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -13968,7 +13968,9 @@ read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	journalctl_log_limit=$read_stored_config_value_query_1
+	journalctl_log_limit_read_from_file=yes
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	journalctl_log_limit_read_from_file=no
 	echo
 	echo "${bold}${cyan}Current Disk Usage:${normal}"
 	df -h
@@ -15051,7 +15053,7 @@ sleep 5
 sudo chmod 770 $app_installation_status_file
 sudo chmod 770 $drawpile_configuration_values_file
 
-if [ "$journalctl_log_limit" != "9" ]; then
+if [ "$journalctl_log_limit" != "9" ] && [ "$journalctl_log_limit_read_from_file" != "yes" ]; then
 	echo
 	echo "Journalctl was modified."
 	echo 
