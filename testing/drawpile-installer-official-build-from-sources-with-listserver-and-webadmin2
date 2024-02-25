@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960024
+drawpilescriptversion=2.9960025
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -13830,7 +13830,7 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo
 	echo 'Drawpile now supports saved username logins. To enable this feature, you'
-	echo 'must login to the server using the remote administration feature and then'
+	echo 'must login to the server using the web admin page (or remote GUI admin) and then'
 	echo "you must copy in the following line into the ${underline}Validation key:${normal}"
 	echo
 	echo '     9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='
@@ -13840,9 +13840,16 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "the ${underline}Permit guest logins when ext-auth server is unreachable${normal} is checked and"
 	echo "${underline}Allow ext-auth moderators${normal} is unchecked."
 	echo
+	echo "${underline}User group:${normal} should be blank, unless you're part of the Drawpile community"
+	echo "page ( https://drawpile.net/communities/ ). In which case, the part to "
+	echo "type in will be after 'communities/' and the final forward slash /. Such"
+	echo "as 'your-community-name' in the following hyperlink: "
+	echo "     https://drawpile.net/communities/your-community-name/"
+	echo
 	echo "To read more on ${bold}External authentication${normal}, go to this link"
 	echo "and find that header on the website."
 	echo "     https://drawpile.net/help/server/"
+	echo "     https://docs.drawpile.net/help/server/serverconfig#external-authentication-user-group"
 	echo
 	echo
 	echo "Please note: any accounts you create on your server will override any"
