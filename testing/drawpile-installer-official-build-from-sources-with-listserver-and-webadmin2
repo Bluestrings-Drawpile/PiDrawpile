@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960025
+drawpilescriptversion=2.9960026
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -11273,8 +11273,8 @@ EOF
 		# Pre-built web admin
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.4.0
-		web_admin_release_filename=dpwebadmin-0.4.0.tar.gz
+		web_admin_release=0.5.0
+		web_admin_release_filename=dpwebadmin-0.5.0.tar.gz
 		
 		if [[ "$web_admin_release_test" == "$web_admin_release" ]]; then
 			echo "Skipping download and setup, web admin is up to date."
