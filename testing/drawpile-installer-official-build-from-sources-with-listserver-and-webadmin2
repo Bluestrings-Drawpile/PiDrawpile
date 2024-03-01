@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960026
+drawpilescriptversion=2.9960027
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -36,6 +36,7 @@ github_account_name=Wade821
 github_project_name=PiDrawpile
 # When no path being used, should look like github_sub_folder_path=""
 github_main_script_only_sub_folder_path=testing/
+login_credentials_length_minimum="14"
 # Normal line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # Example line
@@ -7786,7 +7787,7 @@ function nginx_username_and_password_function () {
 	echo "     moderate sessions, usernames, and session aliases. This will only"
 	echo "     be stored for this one should you choose to utilize this feature."
 	echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
-	login_credentials_length_minimum="14"
+	# login_credentials_length_minimum="14"
 	echo
 	echo "${bold}${green}This will be your username and login for web administration of the server.${normal}"
 	echo
@@ -7914,7 +7915,7 @@ function nginx_username_and_password_admin_ui_function () {
 	echo "${bold}${red}times within a short period, you will be locked out until the${normal}"
 	echo "${bold}${red}configured duration expires.${normal}"
 	echo
-	login_credentials_length_minimum="14"
+	# login_credentials_length_minimum="14"
 	while :; do
 		read -r -p "Enter username                    : " nginx_username_admin_ui_1
 		read -r -p "Enter username again              : " nginx_username_admin_ui_2
@@ -12530,7 +12531,7 @@ function nginx_username_and_password_pihole_function () {
 	echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
 	echo 'can be any password you like to use without spaces.'
 	echo
-	login_credentials_length_minimum="14"
+	# login_credentials_length_minimum="14"
 	while :; do
 		read -r -p "Enter username                    : " nginx_username_pihole_1
 		read -r -p "Enter username again              : " nginx_username_pihole_2
