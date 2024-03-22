@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960027
+drawpilescriptversion=2.9960028
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -13768,7 +13768,26 @@ comment_EOF_delete
 	#Files are located here: /usr/lib/systemd/system/
 	# sudo systemctl enable --now /usr/lib/systemd/system/certbot.service
 	# sudo systemctl enable --now certbot.service
-	sudo systemctl enable --now certbot.timer
+	
+	if [ "`systemctl is-enabled certbot.timer`" = "enabled" ]; then
+		echo "${bold}${green}Service certbot.timer is already enabled. No action required.${normal}"
+	elif [ "`systemctl is-enabled certbot.timer`" = "disabled" ]; then
+		echo "${bold}${red}Service certbot.timer is not enabled. Enabling service.${normal}"
+		echo
+		sudo systemctl enable --now certbot.timer
+		echo
+		sudo systemctl status certbot.timer --no-pager -l
+	elif [ "`systemctl is-enabled certbot-renew.timer`" = "enabled" ]; then
+		echo "${bold}${green}Service certbot-renew.timer is already enabled. No action required.${normal}"
+	elif [ "`systemctl is-enabled certbot-renew.timer`" = "disabled" ]; then
+		echo "Service certbot-renew.timer is not enabled. Enabling service."
+		echo
+		sudo systemctl enable --now certbot-renew.timer
+		echo
+		sudo systemctl status certbot-renew.timer --no-pager -l
+	else
+		echo "${bold}${red}Error: Could not locate certbot timer service.${normal}"
+	fi
 	wait $!
 }
 
@@ -14611,10 +14630,20 @@ systemctl status drawpile-srv.socket --no-pager -l"
 systemctl status fail2ban.service"
 	fi
 	if [ "$ssl_encryption_config" == "2" ]; then
-		display_lets_encrypt="
+		if [ "`systemctl is-enabled certbot.service`" = "static" ] && [ "`systemctl is-enabled certbot.timer`" = "enabled" ]; then
+			display_lets_encrypt="
 Let's Encrypt Services for SSL Cert Renewal
      systemctl status certbot.service --no-pager -l
      systemctl status certbot.timer --no-pager -l"
+		elif [ "`systemctl is-enabled certbot-renew.service`" = "static" ] && [ "`systemctl is-enabled certbot-renew.timer`" = "enabled" ]; then
+			display_lets_encrypt="
+Let's Encrypt Services for SSL Cert Renewal
+     systemctl status certbot-renew.service --no-pager -l
+     systemctl status certbot-renew.timer --no-pager -l"
+		else
+			display_lets_encrypt="This message should not be visible for - Let's Encrypt Services for SSL Cert Renewal"
+			echo "This message should not be visible for - Let's Encrypt Services for SSL Cert Renewal"
+		fi	 
 	fi
 	if [[ "$ssl_encryption_config" != "3" ]]; then
 		display_nginx="systemctl status nginx.service --no-pager -l"
@@ -14903,9 +14932,17 @@ if [ "$fail2ban_status" == "yes" ] || [ "$fail2ban_status" == "YES" ] || [ "$fai
 	echo "systemctl status fail2ban.service"
 fi
 if [ "$ssl_encryption_config" == "2" ]; then
-	echo "${cyan}Let's Encrypt Services for SSL Cert Renewal${normal}"
-	echo "     systemctl status certbot.service --no-pager -l"
-	echo "     systemctl status certbot.timer --no-pager -l"
+	if [ "`systemctl is-enabled certbot.service`" = "static" ] && [ "`systemctl is-enabled certbot.timer`" = "enabled" ]; then
+		echo "${cyan}Let's Encrypt Services for SSL Cert Renewal${normal}"
+		echo "     systemctl status certbot.service --no-pager -l"
+		echo "     systemctl status certbot.timer --no-pager -l"
+	elif [ "`systemctl is-enabled certbot-renew.service`" = "static" ] && [ "`systemctl is-enabled certbot-renew.timer`" = "enabled" ]; then
+		echo "${cyan}Let's Encrypt Services for SSL Cert Renewal${normal}"
+		echo "     systemctl status certbot-renew.service --no-pager -l"
+		echo "     systemctl status certbot-renew.timer --no-pager -l"
+	else
+		echo "This message should not be visible for - Let's Encrypt Services for SSL Cert Renewal"
+	fi
 fi
 if [[ "$ssl_encryption_config" != "3" ]]; then
 	echo "systemctl status nginx.service --no-pager -l"
