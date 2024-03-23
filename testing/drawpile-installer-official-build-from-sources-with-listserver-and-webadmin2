@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960028
+drawpilescriptversion=2.9960029
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5644,6 +5644,13 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				hostname_same_attempt=1
 				echo
 				echo "${bold}${red}Hostnames entered do not match!${normal}"
+				echo
+				read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
+				read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2
+			elif [[ $hostname_1 != *.* ]]; then
+				echo
+				echo "${bold}${red}Hostnames entered do not contain a proper suffix!${normal}"
+				echo "${bold}${red}     e.g. .com, .net, .art, and so forth${normal}"
 				echo
 				read -r -p "${bold}${cyan}Enter hostname:${normal} " hostname_1
 				read -r -p "${bold}${cyan}Enter hostname again:${normal} " hostname_2
