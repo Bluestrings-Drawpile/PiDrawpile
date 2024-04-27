@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960029
+drawpilescriptversion=2.9960030
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -8125,11 +8125,11 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 	variable_to_read_1="drawpile_monitor_installation_status"
 	variable_to_read_2=""
 	variable_to_read_3=""
-	value_description_1="Drawpile-Monitor: Used for SFW servers, monitoring"
-	value_description_2="for NSFW session names, usernames, and aliases."
-	value_description_3="Violations result in renames and/or kicks."
-	value_description_4="Reports are sent to Discord channel via webhook."
-	value_description_5=""
+	value_description_1="Drawpile-Monitor: Used for monitoring servers for NSFW"
+	value_description_2="session names, usernames, and aliases. Violations result"
+	value_description_3="in rename, kick, and/or termination. Reports are sent to"
+	value_description_4="Discord channel via webhook. Can configure custom word "
+	value_description_5="list monitoring for NSFM sessions."
 
 	maybe_use_config_value=n
 	read_stored_config_value_query_function
@@ -8143,8 +8143,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 		echo "Inappropriate sessions are automatically renamed. Inappropriate"
 		echo "usernames or room alias results in disconnect. A notification"
 		echo "will be sent via Discord webhook to report the incident."
-		echo
-		echo "${bold}${cyan}Note: this should be used on SFW ONLY servers only.${normal}"
+		echo "It can be configured to handle NSFM sessions differently also."
 		echo
 		echo "${bold}For more information, check it out on GitHub:${normal}"
 		echo "     https://github.com/drawpile/drawpile-monitor"
@@ -8156,8 +8155,16 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 		echo
 		echo "${bold}Custom words or phrases can be added by editing the following file${normal}"
 		echo "${bold}and then restart the systemd service used to run the script.${normal}"
-		echo "     nano /home/drawpileuser/drawpile-monitor-custom-list.txt"
+		echo "     nano /home/drawpileuser/drawpile-monitor-custom-banned-words-list.txt"
+		echo "     nano /home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt"
+		echo "     nano /home/drawpileuser/drawpile-monitor-allowed-words-list.txt"
+		echo "     nano /home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt"
+		echo
 		echo "     sudo systemctl restart drawpile-monitor.service"
+		echo
+		echo "${bold}Related important files:${normal}"
+		echo "     /home/drawpileuser/drawpile-monitor.db"
+		echo "     /home/drawpileuser/drawpile-monitor/config.ini"
 		echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to enable the drawpile-monitor service:${normal} " drawpile_monitor_installation_status
@@ -8208,7 +8215,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo
 				cd "/home/drawpileuser/drawpile-monitor"
 			fi
-			echo
+			
 			read_stored_completed_status_value_query=$( grep -m 1 "drawpile_monitor_installation_status = " "$drawpile_completed_successfully_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 			if [[ "$git_repo_status" == "out_of_date" || ( "$read_stored_completed_status_value_query" == "no" || "$read_stored_completed_status_value_query" == "" ) ]] ; then
 				if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) || "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
@@ -8324,12 +8331,910 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 			echo '--------------------------------------------------------------------------------'
 			echo
 			echo "${bold}${cyan}***** Preparing Drawpile-Monitor for Automatic Startup *****${normal}"
-
+			echo
 			# Not needed, should be copied/left in a directory writeable to the user running it, drawpileuser
 			# sudo cp -R "$dp_install_loc/Programs/drawpile-monitor" "/usr/local/bin/drawpile-monitor"
 
-			touch /home/drawpileuser/drawpile-monitor-custom-list.txt
+			function discord_developer_mode_instructions_function () {
+				echo "You will need to temporarily enable developer mode in Discord. Go to the gear"
+				echo "     near your username, Advanced, Developer Mode. Then you will need to find"
+				echo "     the appropriate user or group (in the server role list) to right click"
+				echo "     in order to 'Copy User ID' or 'Copy Role ID'."
+			}
+			# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			echo "Silent reports - notify moderators via discord in the event of immediate moderation"
+			echo "     is required. Such examples might include references to illegal content."
+			echo
+			echo "For silent reports, would you like your bot to @ a particular user or group in Discord?"
+			echo
+			while :; do
+				read -r -p "${bold}${cyan}Enter (Y)es or (N)o, and hit enter to continue:${normal} " drawpile_monitor_silent_user_and_role_mentions_query
+				echo
+				if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ]; then
+				echo
+				while :; do
+					read -r -p "${bold}${cyan}Would you like to set it for specific users to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_user_mentions_query
+					echo
+					if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+
+				if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ]; then
+					discord_developer_mode_instructions_function
+					echo
+					while :; do
+						read -r -p "${bold}${cyan}Enter the User ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_user_mentions
+						echo
+						if echo "$discord_silent_user_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
+							# echo 'Valid string'
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					
+				elif [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
+					discord_silent_user_mentions=""
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+				echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				while :; do
+					echo
+					read -r -p "${bold}${cyan}Would you like to set it for specific roles to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_role_mentions_query
+					echo
+					if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+
+				if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ]; then
+					discord_developer_mode_instructions_function
+					echo
+					while :; do
+						read -r -p "${bold}${cyan}Enter the Role ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_role_mentions
+						echo
+						if echo "$discord_silent_role_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
+							# echo 'Valid string'
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+				elif [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
+					discord_silent_role_mentions=""
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			elif [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
+				echo
+				echo "Not utilizing user or group specific pings."
+				discord_silent_user_mentions=""
+				discord_silent_role_mentions=""
+			else
+				echo "This message should not be visible for silent user and/or role mentions on Discord."
+			fi
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${cyan}This setting controls how Drawpile-Monitor handles checking sessions with the${normal}"
+			echo "${bold}${cyan}NSFM flag set. The configurable options are as follows:${normal}"
+			echo " - ${underline}full:${normal} values used to check SFW sessions are also used for NSFM sessions."
+			echo " - ${underline}relaxed:${normal} disable regular profanity checks, only check for stuff given in"
+			echo "        nsfm_wordlist_path, which is as follows:"
+			echo "        /home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt"
+			echo
+			echo "${underline}You can choose either the number or the word typed out for this query.${normal}"
+			echo " 1 - full"
+			echo " 2 - relaxed"
+			while :; do
+				echo
+				read -r -p "${bold}${cyan}Would you like to do a full check or relaxed check?:${normal} " drawpile_monitor_handle_nsfm_query
+				if [ "$drawpile_monitor_handle_nsfm_query" == "1" ] || [ "$drawpile_monitor_handle_nsfm_query" == "FULL" ] || [ "$drawpile_monitor_handle_nsfm_query" == "Full" ] || [ "$drawpile_monitor_handle_nsfm_query" == "full" ] || [ "$drawpile_monitor_handle_nsfm_query" == "2" ] || [ "$drawpile_monitor_handle_nsfm_query" == "RELAXED" ] || [ "$drawpile_monitor_handle_nsfm_query" == "Relaxed" ] || [ "$drawpile_monitor_handle_nsfm_query" == "relaxed" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+
+			if [ "$drawpile_monitor_handle_nsfm_query" == "1" ] || [ "$drawpile_monitor_handle_nsfm_query" == "FULL" ] || [ "$drawpile_monitor_handle_nsfm_query" == "Full" ] || [ "$drawpile_monitor_handle_nsfm_query" == "full" ]; then
+				drawpile_monitor_handle_nsfm=full
+			elif [ "$drawpile_monitor_handle_nsfm_query" == "2" ] || [ "$drawpile_monitor_handle_nsfm_query" == "RELAXED" ] || [ "$drawpile_monitor_handle_nsfm_query" == "Relaxed" ] || [ "$drawpile_monitor_handle_nsfm_query" == "relaxed" ]; then
+				drawpile_monitor_handle_nsfm=relaxed
+			else
+				echo "This message for how Drawpile-Monitor handles NSFM checking should not be visible."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${cyan}This setting controls if Drawpile-Monitor checks for old versions of Drawpile${normal}"
+			echo "${bold}${cyan}to update. Currently this only checks for Drawpile 2.1 and 2.2 betas.${normal}"
+			echo
+			echo "${underline}You can choose either the number or the word typed out for this query.${normal}"
+			echo " 1 - true"
+			echo " 2 - false"
+			while :; do
+				echo
+				read -r -p "${bold}${cyan}Would you like to check for outdated clients?:${normal} " drawpile_monitor_warn_outdated_sessions_query
+				echo
+				if [ "$drawpile_monitor_warn_outdated_sessions_query" == "1" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "TRUE" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "True" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "true" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "2" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "FALSE" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "False" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "false" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+
+			if [ "$drawpile_monitor_warn_outdated_sessions_query" == "1" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "TRUE" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "True" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "true" ]; then
+				drawpile_monitor_warn_outdated_sessions=true
+			elif [ "$drawpile_monitor_warn_outdated_sessions_query" == "2" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "FALSE" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "False" ] || [ "$drawpile_monitor_warn_outdated_sessions_query" == "false" ]; then
+				drawpile_monitor_warn_outdated_sessions=false
+			else
+				echo "This message for how Drawpile-Monitor handles NSFM checking should not be visible."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			function drawpile_monitor_warning_messages_default_function () {
+				drawpile_monitor_msg_session_name_first_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_second_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_terminate="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				drawpile_monitor_msg_session_name_first_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_second_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_terminate_nsfm="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				drawpile_monitor_msg_session_alias_terminate="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_alias_terminate_nsfm="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				drawpile_monitor_msg_session_founder_terminate="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_founder_terminate_nsfm="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_user_kick="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_user_kick_nsfm="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				drawpile_monitor_msg_session_outdated="AUTOMOD - Your session is hosted with an outdated version of Drawpile. Support for this version will be removed in the future. Go to https://drawpile.net/ to download and install the latest version."
+			}
+			drawpile_monitor_warning_messages_default_function
+			# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			function drawpile_monitor_warning_messages_custom_function () {
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo ----------------------------------------------------------------------------------
+				echo
+				drawpile_monitor_warning_messages_default_function
+				echo "Entering custom message editing mode. Will display messages one at a time."
+				echo "You will be given the option to use the default or customize the message."
+				echo
+				echo "Note: You can manually modify the configuration also..."
+				echo "     /home/drawpileuser/drawpile-monitor/config.ini"
+				echo
+				echo "${bold}${cyan}Session name - First Warning:${normal}"
+				echo $drawpile_monitor_msg_session_name_first_warning
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 1 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session name - Second Warning:${normal}"
+				echo $drawpile_monitor_msg_session_name_second_warning
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session Name - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 2 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session name - Terminate Session:${normal}"
+				echo $drawpile_monitor_msg_session_name_terminate
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session Name - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 3 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session name - NSFM - First Warning:${normal}"
+				echo $drawpile_monitor_msg_session_name_first_warning_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - NSFM - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 1 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session name - NSFM - Second Warning:${normal}"
+				echo $drawpile_monitor_msg_session_name_second_warning_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 2 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session name - NSFM - Terminate Session:${normal}"
+				echo $drawpile_monitor_msg_session_name_terminate_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 3 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session alias termination:${normal}"
+				echo $drawpile_monitor_msg_session_alias_terminate
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session alias termination:${normal} " drawpile_monitor_msg_session_alias_terminate
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 4 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Session alias NSFM termination:${normal}"
+				echo $drawpile_monitor_msg_session_alias_terminate_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Session alias NSFM termination:${normal} " drawpile_monitor_msg_session_alias_terminate_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 4 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Username - Session Founder - Terminate Session:${normal}"
+				echo $drawpile_monitor_msg_session_founder_terminate
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Username - Session Founder - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 5 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Username - Session Founder - NSFM - Terminate Session:${normal}"
+				echo $drawpile_monitor_msg_session_founder_terminate_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Username - Session Founder - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 5 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Username - User kicked for offensive name:${normal}"
+				echo $drawpile_monitor_msg_user_kick
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Username - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 6 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Username - NSFM - User kicked for offensive name:${normal}"
+				echo $drawpile_monitor_msg_user_kick_nsfm
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Username - NSFM - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick_nsfm
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 6 NSFM Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${cyan}Out of Date warning:${normal}"
+				echo $drawpile_monitor_msg_session_outdated
+				echo
+				while :; do
+					echo "1 - Default"
+					echo "2 - Customize"
+					echo
+					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+					:
+					# Do nothing as no error was detected.
+					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+					read -r -p "${bold}${cyan}Customize - Out of Date warning:${normal} " drawpile_monitor_msg_session_outdated
+				else
+					echo "This message should not be visible for Drawpile-Monitor Message 7 Customization."
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			}
+			
+			echo "${bold}${cyan}${underline}Default list of warning messages:${normal}"
+			echo
+			echo
+			echo "${bold}${cyan}Session name warnings:${normal}"
+			echo "${underline}First warning:${normal}"
+			echo $drawpile_monitor_msg_session_name_first_warning
+			echo
+			echo "${underline}Second warning:${normal}"
+			echo $drawpile_monitor_msg_session_name_second_warning
+			echo
+			echo "${underline}Terminate Session:${normal}"
+			echo $drawpile_monitor_msg_session_name_terminate
+			echo
+			echo "${underline}NSFM - First warning:${normal}"
+			echo $drawpile_monitor_msg_session_name_first_warning_nsfm
+			echo
+			echo "${underline}NSFM - Second warning:${normal}"
+			echo $drawpile_monitor_msg_session_name_second_warning_nsfm
+			echo
+			echo "${underline}NSFM - Terminate Session:${normal}"
+			echo $drawpile_monitor_msg_session_name_terminate_nsfm
+			echo
+			echo "${bold}${cyan}Session alias termination:${normal}"
+			echo $drawpile_monitor_msg_session_alias_terminate
+			echo
+			echo "${bold}${cyan}Session alias NSFM termination:${normal}"
+			echo $drawpile_monitor_msg_session_alias_terminate_nsfm
+			echo
+			echo "${bold}${cyan}Username warnings:${normal}"
+			echo "${underline}Session Founder - Terminate Session:${normal}"
+			echo $drawpile_monitor_msg_session_founder_terminate
+			echo
+			echo "${underline}Session Founder - NSFM - Terminate Session:${normal}"
+			echo $drawpile_monitor_msg_session_founder_terminate_nsfm
+			echo
+			echo "${underline}User kicked for offensive name:${normal}"
+			echo $drawpile_monitor_msg_user_kick
+			echo
+			echo "${underline}User (NSFM) kicked for offensive name:${normal}"
+			echo $drawpile_monitor_msg_user_kick_nsfm
+			echo
+			echo "${bold}${cyan}Out of Date warning:${normal}"
+			echo $drawpile_monitor_msg_session_outdated
+			echo
+			echo
+			echo "(Y)es - Use default messages"
+			echo "(N)o  - Use custom messages"
+			echo
+			while :; do
+				read -r -p "${bold}${cyan}Would you like to use the default (yes) or custom messages (no):${normal} " drawpile_monitor_warning_messages_query
+				echo
+				if [ "$drawpile_monitor_warning_messages_query" == "y" ] || [ "$drawpile_monitor_warning_messages_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_query" == "Yes" ] || [ "$drawpile_monitor_warning_messages_query" == "n" ] || [ "$drawpile_monitor_warning_messages_query" == "N" ] || [ "$drawpile_monitor_warning_messages_query" == "no" ] || [ "$drawpile_monitor_warning_messages_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_query" == "No" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			if [ "$drawpile_monitor_warning_messages_query" == "y" ] || [ "$drawpile_monitor_warning_messages_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_query" == "Yes" ]; then
+				echo
+				echo "Using default messages."
+			elif [ "$drawpile_monitor_warning_messages_query" == "n" ] || [ "$drawpile_monitor_warning_messages_query" == "N" ] || [ "$drawpile_monitor_warning_messages_query" == "no" ] || [ "$drawpile_monitor_warning_messages_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_query" == "No" ]; then
+				drawpile_monitor_warning_messages_custom_function
+				while :; do
+					echo
+					echo "${bold}${cyan}${underline}Updated Drawpile-Monitor Warnings:${normal}"
+					echo
+					echo "${bold}${cyan}Session name warnings:${normal}"
+					echo "${underline}First warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_first_warning
+					echo
+					echo "${underline}Second warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_second_warning
+					echo
+					echo "${underline}Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_name_terminate
+					echo
+					echo "${underline}NSFM - First warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_first_warning_nsfm
+					echo
+					echo "${underline}NSFM - Second warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_second_warning_nsfm
+					echo
+					echo "${underline}NSFM - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_name_terminate_nsfm
+					echo
+					echo "${bold}${cyan}Session alias termination:${normal}"
+					echo $drawpile_monitor_msg_session_alias_terminate
+					echo
+					echo "${bold}${cyan}Session alias NSFM termination:${normal}"
+					echo $drawpile_monitor_msg_session_alias_terminate_nsfm
+					echo
+					echo "${bold}${cyan}Username warnings:${normal}"
+					echo "${underline}Session Founder - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_founder_terminate
+					echo
+					echo "${underline}Session Founder - NSFM - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_founder_terminate_nsfm
+					echo
+					echo "${underline}User kicked for offensive name:${normal}"
+					echo $drawpile_monitor_msg_user_kick
+					echo
+					echo "${underline}User (NSFM) kicked for offensive name:${normal}"
+					echo $drawpile_monitor_msg_user_kick_nsfm
+					echo
+					echo "${bold}${cyan}Out of Date warning:${normal}"
+					echo $drawpile_monitor_msg_session_outdated
+					echo				
+					echo
+					echo "Are these updated messages acceptable?"
+					echo "(Y)es"
+					echo "(N)o"
+					echo
+					read -r -p "${bold}${cyan}Please enter (Y)es or (N)o:${normal} " drawpile_monitor_warning_messages_edit_query
+					echo
+					if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+						break
+					elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+						drawpile_monitor_warning_messages_custom_function
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+			else
+				echo "This message should not be visible list of warning messages."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			function drawpile_monitor_edit_wordlist_suggestion_function () {
+				echo "If you want to edit this file later, you'll have to open it in a text"
+				echo "     editor that is in use by your system."
+				echo "     "
+				echo "${underline}${bold}Examples that may work for you:${normal}"
+				echo "     sudo nano $drawpile_monitor_filename_and_path"
+				echo "     sudo vi $drawpile_monitor_filename_and_path"
+				echo
+			}
 			# ----------------------------------------------------------------------------------
+			function drawpile_monitor_wordlist_add_query_function () {
+				echo 'Would you like to set a custom word list now?'
+				echo
+				echo 'y for yes'
+				echo 'n for no'
+				echo
+				while :; do
+					read -r -p "${bold}${cyan}Enter a letter and hit enter to continue:${normal} " drawpile_monitor_wordlist_add_query
+					echo
+					if [ "$drawpile_monitor_wordlist_add_query" == "y" ] || [ "$drawpile_monitor_wordlist_add_query" == "Y" ] || [ "$drawpile_monitor_wordlist_add_query" == "yes" ] || [ "$drawpile_monitor_wordlist_add_query" == "YES" ] || [ "$drawpile_monitor_wordlist_add_query" == "Yes" ] || [ "$drawpile_monitor_wordlist_add_query" == "n" ] || [ "$drawpile_monitor_wordlist_add_query" == "N" ] || [ "$drawpile_monitor_wordlist_add_query" == "no" ] || [ "$drawpile_monitor_wordlist_add_query" == "NO" ] || [ "$drawpile_monitor_wordlist_add_query" == "No" ]; then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+			}
+			# ----------------------------------------------------------------------------------
+			function drawpile_monitor_wordlist_add_function () {
+				echo "If you enter the same word twice, it will be removed"
+				echo "     and the file sorted alphabetically."
+				echo
+				read -a array -p "${bold}${cyan}Enter the list of words, separated by spaces:${normal} "
+				for n in ${array[*]};
+				do
+					echo "$n" | sudo tee -a $drawpile_monitor_filename_and_path >>/dev/null
+				done
+
+				# The sort command used at the end sorts the list alphabetically.
+				sudo sort $drawpile_monitor_filename_and_path -o $drawpile_monitor_filename_and_path
+				# This removes any duplicates that may exist in the file
+				perl -i -ne 'print if ! $a{$_}++' $drawpile_monitor_filename_and_path
+			}
+			# ----------------------------------------------------------------------------------
+			# ----------------------------------------------------------------------------------
+			drawpile_monitor_filepath=/home/drawpileuser
+			drawpile_monitor_filename=drawpile-monitor-custom-banned-words-list.txt
+			drawpile_monitor_filename_and_path=$drawpile_monitor_filepath/$drawpile_monitor_filename
+			if [ -e "/home/drawpileuser/drawpile-monitor-custom-list.txt" ]; then
+				sudo mv "/home/drawpileuser/drawpile-monitor-custom-list.txt" "$drawpile_monitor_filename_and_path"
+				echo "Custom banned word list, applies to all sessions (NSFM and SFW)."
+				echo "Renamed file  : /home/drawpileuser/drawpile-monitor-custom-list.txt"
+				echo "New file name : $drawpile_monitor_filename_and_path"
+			elif [[ ! -e "/home/drawpileuser/drawpile-monitor-custom-list.txt" && ! -e "$drawpile_monitor_filename_and_path" ]]; then
+				touch $drawpile_monitor_filename_and_path
+				echo "Custom banned word list, applies to all sessions (NSFM and SFW)."
+				echo "Created file: $drawpile_monitor_filename_and_path"
+			else
+				echo "File $drawpile_monitor_filename already exists. Skipping."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			drawpile_monitor_filename=drawpile-monitor-custom-nsfm-banned-words-list.txt
+			drawpile_monitor_filename_and_path=$drawpile_monitor_filepath/$drawpile_monitor_filename
+			if [[ ! -e "$drawpile_monitor_filename_and_path" ]]; then
+				touch $drawpile_monitor_filename_and_path
+				echo "${bold}${cyan}The file:${normal} $drawpile_monitor_filename_and_path"
+				echo
+				echo "${bold}${cyan}Contains an additional list of words to ban by Drawpile-monitor.${normal}"
+				echo "${bold}${cyan}Primarily for monitoring NSFM sessions, so this list must be ${normal}"
+				echo "${bold}${cyan}manually configured. Sessions that are not NSFM will also use${normal}"
+				echo "${bold}${cyan}content from this list.${normal}"
+				echo
+				drawpile_monitor_edit_wordlist_suggestion_function
+				drawpile_monitor_wordlist_add_query_function
+
+				if [ "$drawpile_monitor_wordlist_add_query" == "y" ] || [ "$drawpile_monitor_wordlist_add_query" == "Y" ] || [ "$drawpile_monitor_wordlist_add_query" == "yes" ] || [ "$drawpile_monitor_wordlist_add_query" == "YES" ] || [ "$drawpile_monitor_wordlist_add_query" == "Yes" ] ; then
+					drawpile_monitor_wordlist_add_function
+				else
+					echo 'Not adding any words to this file.'
+				fi
+			else
+				echo "File $drawpile_monitor_filename already exists. Skipping."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			drawpile_monitor_filename=drawpile-monitor-allowed-words-list.txt
+			drawpile_monitor_filename_and_path=$drawpile_monitor_filepath/$drawpile_monitor_filename
+			if [[ ! -e "$drawpile_monitor_filename_and_path" ]]; then
+				touch $drawpile_monitor_filename_and_path
+				echo "${bold}${cyan}The file:${normal} $drawpile_monitor_filename_and_path"
+				echo
+				echo "${bold}${cyan}Contains a list of words to be excluded by Drawpile-monitor.${normal}"
+				echo
+				drawpile_monitor_edit_wordlist_suggestion_function
+				drawpile_monitor_wordlist_add_query_function
+
+				if [ "$drawpile_monitor_wordlist_add_query" == "y" ] || [ "$drawpile_monitor_wordlist_add_query" == "Y" ] || [ "$drawpile_monitor_wordlist_add_query" == "yes" ] || [ "$drawpile_monitor_wordlist_add_query" == "YES" ] || [ "$drawpile_monitor_wordlist_add_query" == "Yes" ] ; then
+					drawpile_monitor_wordlist_add_function
+				else
+					echo 'Not adding any words to this file.'
+				fi
+			else
+				echo "File $drawpile_monitor_filename already exists. Skipping."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			drawpile_monitor_filename=drawpile-monitor-silent-notify-words-list.txt
+			drawpile_monitor_filename_and_path=$drawpile_monitor_filepath/$drawpile_monitor_filename
+			if [[ ! -e "$drawpile_monitor_filename_and_path" ]]; then
+				touch $drawpile_monitor_filename_and_path
+				
+				echo "${bold}${cyan}Contains a list of words that should trigger a report, but not notify${normal}"
+				echo "${bold}${cyan}the offending session or user about that infraction. This is for${normal}"
+				echo "${bold}${cyan}session names which may require immediate moderation by a user.${normal}"
+				echo
+				echo "${underline}Examples:${normal}"
+				echo "     MAP, Shota, Shotacon, Loli, Lolicon, Cub, etc ..."
+				echo
+				drawpile_monitor_edit_wordlist_suggestion_function
+				drawpile_monitor_wordlist_add_query_function
+
+				if [ "$drawpile_monitor_wordlist_add_query" == "y" ] || [ "$drawpile_monitor_wordlist_add_query" == "Y" ] || [ "$drawpile_monitor_wordlist_add_query" == "yes" ] || [ "$drawpile_monitor_wordlist_add_query" == "YES" ] || [ "$drawpile_monitor_wordlist_add_query" == "Yes" ] ; then
+					drawpile_monitor_wordlist_add_function
+				else
+					echo 'Not adding any words to this file.'
+				fi
+			else
+				echo "File $drawpile_monitor_filename already exists. Skipping."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			# --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 			cat <<EOF | sudo tee /home/drawpileuser/drawpile-monitor/config.ini >/dev/null
 # This is a template configuration file. Copy it to config.ini and fill it in.
 
@@ -8345,11 +9250,46 @@ base_url=http://127.0.0.1:27780
 discord_webhook_url=$discord_webhook_URL
 
 # Where to store the script's database. If left empty, this will use
-# "drawpile-monitor.db" in the scripts directory.
+# "drawpile-monitor.db" in the script's directory.
 database_path=/home/drawpileuser/drawpile-monitor.db
 
-# Path to a file that contains additional banned words, one per line
-wordlist_path=/home/drawpileuser/drawpile-monitor-custom-list.txt
+# Path to a file that contains additional banned words, one per line.
+# Old Value for script
+# 	wordlist_path=/home/drawpileuser/drawpile-monitor-custom-list.txt
+wordlist_path=/home/drawpileuser/drawpile-monitor-custom-banned-words-list.txt
+
+# Path to a file that contains banned words even for NSFM sessions, one per
+# line. For non-NSFM sessions, this will be merged with wordlist_path.
+nsfm_wordlist_path=/home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt
+
+# Path to a file containing explicitly allowed words, one per line. These words
+# will be removed from consideration when checking for profanity.
+allowlist_path=/home/drawpileuser/drawpile-monitor-allowed-words-list.txt
+
+# Path to a file containing words that should trigger a report, but not notify
+# the offending session or user about that infraction. This feature requires
+# discord_webhook_url to be set so that it can actually notify someone.
+silent_wordlist_path=/home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt
+
+# Users/roles to mention in silent notifications as a list of comma-separated
+# ids. Use Discord's developer mode to copy the user/role ids.
+silent_user_mentions=$discord_silent_user_mentions
+silent_role_mentions=$discord_silent_role_mentions
+
+# Minimum probability required for something to count as offensive, in percent.
+# Too low values may end up classifying stuff like "silly" as offensive. Too
+# high values may miss stuff. 0 turns off the probablistic checking and only
+# uses the word list checker. If this is not given, it defaults to 90.
+min_offensive_probability=90
+
+# How to handle checking for sessions with the NSFM flag. One of:
+# - full: same criteria applies.
+# - relaxed: disable regular profanity checks, only check for stuff given in
+#            nsfm_wordlist_path.
+# If no value is given, this defaults to "full".
+# Default script
+#      handle_nsfm=relaxed
+handle_nsfm=$drawpile_monitor_handle_nsfm
 
 # How many runs in a row can have errors before sending a report to the Discord
 # webhook. So, for example, if you set it to 3, it will be quiet the first 3
@@ -8357,15 +9297,48 @@ wordlist_path=/home/drawpileuser/drawpile-monitor-custom-list.txt
 # good run again afterwards, it will report that everything is well again.
 max_error_streak_before_report=4
 
+# Whether to warn sessions that are on an old version of Drawpile to update.
+# Currently, this only checks for Drawpile 2.1 and 2.2 betas. If no value is
+# given, this defaults to false.
+# Default script
+#      warn_outdated_sessions=true
+warn_outdated_sessions=$drawpile_monitor_warn_outdated_sessions
+
 [messages]
 # Messages that will be sent into the chat. Personalize them and maybe replace
-# the link. As of Drawpile 2.1, the client doesn't actually make links in server
-# messages clickable, which is a annoying, but I can't change the past (yet.)
-session_name_first_warning=Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/drawpile.net/ccg/
-session_name_second_warning=Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
-session_name_terminate=Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
-session_alias_terminate=Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
-user_kick=Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/drawpile.net/ccg/
+# the link. You can append "_nsfm" to most of these messages to have a
+# different message sent to sessions marked NSFM.
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#      session_name_first_warning=Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/
+session_name_first_warning=$drawpile_monitor_msg_session_name_first_warning
+#      session_name_second_warning=Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/
+session_name_second_warning=$drawpile_monitor_msg_session_name_second_warning
+#      session_name_terminate=Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/
+session_name_terminate=$drawpile_monitor_msg_session_name_terminate
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#      session_name_first_warning_nsfm=Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/
+session_name_first_warning_nsfm=$drawpile_monitor_msg_session_name_first_warning_nsfm
+#      session_name_second_warning_nsfm=Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/
+session_name_second_warning_nsfm=$drawpile_monitor_msg_session_name_second_warning_nsfm
+#      session_name_terminate_nsfm=Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/
+session_name_terminate_nsfm=$drawpile_monitor_msg_session_name_terminate_nsfm
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#      session_alias_terminate=Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/
+session_alias_terminate=$drawpile_monitor_msg_session_alias_terminate
+#      session_alias_terminate_nsfm=Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/
+session_alias_terminate_nsfm=$drawpile_monitor_msg_session_alias_terminate_nsfm
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#      session_founder_terminate=Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/
+session_founder_terminate=$drawpile_monitor_msg_session_founder_terminate
+#      session_founder_terminate_nsfm=Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/
+session_founder_terminate_nsfm=$drawpile_monitor_msg_session_founder_terminate_nsfm
+#      user_kick=Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/
+user_kick=$drawpile_monitor_msg_user_kick
+#      user_kick_nsfm=Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/
+user_kick_nsfm=$drawpile_monitor_msg_user_kick_nsfm
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#      session_outdated=Your session is hosted with an outdated version of Drawpile. Support for this version will be removed in the future. Go to https://drawpile.net/ to download and install the latest version.
+session_outdated=$drawpile_monitor_msg_session_outdated
 EOF
 			sudo chown drawpileuser:drawpileread "/home/drawpileuser/drawpile-monitor/config.ini"
 			sudo chmod 775 "/home/drawpileuser/drawpile-monitor/config.ini"
@@ -14713,7 +15686,10 @@ Type this into address bar of file explorer to check contents of local server.
 	#---------------------------------------------------------------------------------------------------------------------------------	
 	if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
 		display_drawpile_monitor_files="/home/drawpileuser/drawpile-monitor.db
-/home/drawpileuser/drawpile-monitor-custom-list.txt"
+/home/drawpileuser/drawpile-monitor-custom-banned-words-list.txt
+/home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt
+/home/drawpileuser/drawpile-monitor-allowed-words-list.txt
+/home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt"
 	fi
 	if [ -e "/home/drawpileuser/ListServerDB.db" ]; then
 		display_listserver_file="/home/drawpileuser/ListServerDB.db"
@@ -15030,7 +16006,10 @@ echo "$dp_install_loc/Programs/Drawpile-Srv-Files"
 echo "/home/drawpileuser/Drawpile_Configuration_Values.txt"
 if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
 	echo "/home/drawpileuser/drawpile-monitor.db"
-	echo "/home/drawpileuser/drawpile-monitor-custom-list.txt"
+	echo "/home/drawpileuser/drawpile-monitor-custom-banned-words-list.txt"
+	echo "/home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt"
+	echo "/home/drawpileuser/drawpile-monitor-allowed-words-list.txt"
+	echo "/home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt"
 fi
 if [ -e "$list_server_config_file_location" ]; then
 	echo "$list_server_config_file_location"
