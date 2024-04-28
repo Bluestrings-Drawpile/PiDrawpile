@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960030
+drawpilescriptversion=2.9960031
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5000,16 +5000,26 @@ function selinux_adjustments_function () {
 	# sudo ausearch -m avc -ts today | audit2allow
 	# sudo cat /var/log/nginx/error.log
 	
-	# Needed so NGINX can access the directory
+	echo "${bold}${cyan}Needed so NGINX can access the directory${normal}"
 	echo 'sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/(/.*)?"'
 	sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/(/.*)?"
 	echo
+	echo "${bold}${cyan}Used for Drawpile-srv${normal}"
 	echo "sudo semanage port -a -t http_port_t -p tcp 27750"
 	sudo semanage port -a -t http_port_t -p tcp 27750
+	
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		echo
+		echo "${bold}${cyan}Used for Drawpile-srv to allow web version${normal}"
+		echo "sudo semanage port -a -t http_port_t -p tcp 27751"
+		sudo semanage port -a -t http_port_t -p tcp 27751
+	fi
 	echo
+	echo "${bold}${cyan}Used for Drawpile-srv for web admin.${normal}"
 	echo "sudo semanage port -a -t http_port_t -p tcp 27780"
 	sudo semanage port -a -t http_port_t -p tcp 27780
 	echo
+	echo "${bold}${cyan}Believe it is used for accessing data on local host.${normal}"
 	echo "sudo setsebool -P httpd_can_network_relay 1"
 	sudo setsebool -P httpd_can_network_relay 1
 }
@@ -5183,7 +5193,7 @@ value_description_1="This value is for keeping your hostname and IP address sync
 value_description_2=" "
 value_description_3="1 for freeDNS.afraid.org"
 value_description_4="2 for No-IP"
-value_description_5="3 for DuckDNS."
+value_description_5="3 for DuckDNS"
 value_description_6=" "
 value_description_7="9 for no DNS update service."
 
@@ -5628,7 +5638,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo "Option ${underline}6 - Change all startup options.${normal} via the script"
 	echo 'drawpile-server.sh later on.'
 	echo
-	read -r -p "${bold}${cyan}Please enter your hostname now:${normal} " hostname_1
+	read -r -p "${bold}${cyan}Please enter your hostname now:${normal}  " hostname_1
 	read -r -p "${bold}${cyan}Please enter your hostname again:${normal} " hostname_2
 	dns_ip_check
 
@@ -5757,13 +5767,25 @@ function generate_self_signed_ssl () {
 		echo "Storing ssl_country value and moving on."
 		ssl_country=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'Country Name (2 letter code) [AU]: ' ssl_country
-		if [ "$ssl_country" != "" ]; then
-			echo
-			echo "Selected: $ssl_country"
-		else
-			ssl_country="AU"
-		fi
+		while :; do
+			read -r -p 'Country Name (2 letter code) [AU]: ' ssl_country
+			
+			if [ "$ssl_country" == "" ]; then
+				ssl_country="AU"
+				break
+			elif echo "$ssl_country" | perl -0777 -ne 'exit(/\A\s*[A-Z]{2}\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_country"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5780,13 +5802,25 @@ function generate_self_signed_ssl () {
 		echo "Storing ssl_state value and moving on."
 		ssl_state=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'State or Province Name (full name) [Some-State]: ' ssl_state
-		if [ "$ssl_state" != "" ]; then
-			echo
-			echo "Selected: $ssl_state"
-		else
-			ssl_state="Some-State"
-		fi
+		while :; do
+			read -r -p 'State or Province Name (full name) [Some-State]: ' ssl_state
+
+			if [ "$ssl_state" == "" ]; then
+				ssl_state="Some-State"
+				break
+			elif echo "$ssl_state" | perl -0777 -ne 'exit(/\A\s*[^\/"]*\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_state"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5803,13 +5837,25 @@ function generate_self_signed_ssl () {
 		echo "Storing ssl_locality value and moving on."
 		ssl_locality=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'Locality name (e.g., city) [Some-City]: ' ssl_locality
-		if [ "$ssl_locality" != "" ]; then
-			echo
-			echo "Selected: $ssl_locality"
-		else
-			ssl_locality="Some-City"
-		fi
+		while :; do
+			read -r -p 'Locality name (e.g., city) [Some-City]: ' ssl_locality
+
+			if [ "$ssl_locality" == "" ]; then
+				ssl_locality="Some-City"
+				break
+			elif echo "$ssl_locality" | perl -0777 -ne 'exit(/\A\s*[^\/"]*\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_locality"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5832,13 +5878,25 @@ function generate_self_signed_ssl () {
 		echo "Storing value and moving on."
 		ssl_organization=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p "Organization Name (e.g., company) [$hostname_ssl_organization]: " ssl_organization
-		if [ "$ssl_organization" != "" ]; then
-			echo
-			echo "Selected: $ssl_organization"
-		else
-			ssl_organization="$hostname_ssl_organization"
-		fi
+		while :; do
+			read -r -p "Organization Name (e.g., company) [$hostname_ssl_organization]: " ssl_organization
+
+			if [ "$ssl_organization" == "" ]; then
+				ssl_organization="$hostname_ssl_organization"
+				break
+			elif echo "$ssl_organization" | perl -0777 -ne 'exit(/\A\s*[^\/"]*\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_organization"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5856,13 +5914,25 @@ function generate_self_signed_ssl () {
 		echo "Storing value and moving on."
 		ssl_unitname=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'Organizational Unit Name (e.g., section) [Collaborating Artists]: ' ssl_unitname
-		if [ "$ssl_unitname" != "" ]; then
-			echo
-			echo "Selected: $ssl_unitname"
-		else
-			ssl_unitname="Collaborating Artists"
-		fi
+		while :; do
+			read -r -p 'Organizational Unit Name (e.g., section) [Collaborating Artists]: ' ssl_unitname
+
+			if [ "$ssl_unitname" == "" ]; then
+				ssl_unitname="Collaborating Artists"
+				break
+			elif echo "$ssl_unitname" | perl -0777 -ne 'exit(/\A\s*[^\/"]*\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_unitname"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5879,13 +5949,25 @@ function generate_self_signed_ssl () {
 		echo "Storing value and moving on."
 		ssl_email=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		read -r -p 'Email Address [noemail@noemail.com]: ' ssl_email
-		if [ "$ssl_email" != "" ]; then
-			echo
-			echo "Selected: $ssl_email"
-		else
-			ssl_email="noemail@noemail.com"
-		fi
+		while :; do
+			read -r -p 'Email Address [noemail@noemail.com]: ' ssl_email
+
+			if [ "$ssl_email" == "" ]; then
+				ssl_email="noemail@noemail.com"
+				break
+			elif echo "$ssl_email" | perl -0777 -ne 'exit(/\A\s*[^\/"]*\s*\z/ ? 0 : 1)'; then
+				# echo 'Valid string'
+				echo
+				echo "Selected: $ssl_email"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
 	else
 		echo "This message should not be visible."
 	fi
@@ -5899,8 +5981,8 @@ function generate_self_signed_ssl () {
 	echo '--------------------------------------------------------------------------------'
 	echo
 	sudo mkdir -p -v "/etc/nginx/ssl/drawpile"
-	ssl_certificate=/etc/nginx/ssl/drawpile/cert.pem
 	ssl_private_cert_key=/etc/nginx/ssl/drawpile/key.pem
+	ssl_certificate=/etc/nginx/ssl/drawpile/cert.pem
 	
 	sudo sed -i '\!^ssl_certificate =!{h;s!=.*!= '"$ssl_certificate"'!};${x;\!^$!{s!!ssl_certificate = '"$ssl_certificate"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^ssl_private_cert_key =!{h;s!=.*!= '"$ssl_private_cert_key"'!};${x;\!^$!{s!!ssl_private_cert_key = '"$ssl_private_cert_key"'!;H};x}' $drawpile_configuration_values_file
@@ -7014,9 +7096,14 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		reused_drawpile_srv_crypt_key_status=no
 		echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
-		echo " ban lists. Unless multiple servers share the same encryption key, this"
-		echo " means that only the server the session was hosted on can utilize the"
-		echo " exported data file."
+		echo " ban lists. This only concerns sessions that may wish to keep specific"
+		echo " users from their sessions that are not banned server wide."
+		echo
+		echo "Note: Unless multiple servers share the same encryption key, this"
+		echo "     means that only the server the session was hosted on can"
+		echo "     utilize the exported data file. Moderators can export an"
+		echo "     unencrypted copy of this list to manually upload to another"
+		echo "     server on a user's request if desired."
 		echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to enable this feature?${normal} " drawpile_srv_crypt_key_status
@@ -10343,6 +10430,16 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo Possible values:
 			echo "1 - none      - listserver will be in read-only mode (includeservers is set by script)."
 			echo "                This means other servers cannot list their session on your server."
+			echo "                     "
+			echo "                     https://$hostname/admin_ui/"
+			echo "                     "
+			echo "                     This page will not allow login, as the 'new web admin'"
+			echo "                     username and password will work to load the page, but"
+			echo "                     you'll receive a 404 error with the 'web admin' username"
+			echo "                     and password. This is by design since a read only list"
+			echo "                     server has nothing to administrate. This is being left"
+			echo "                     here as eventually it will be used for administrating"
+			echo "                     Drawpile-srv and list server."
 			echo "2 - memory    - sessions will be lost if server is restarted, but no database needed."
 			echo "3 - filename  - keep sessions in a SQLite database. You will be prompted to enter name."
 			echo
@@ -12252,10 +12349,11 @@ EOF
 	
 	if [ "$select_web_build_or_prebuilt" == "1" ]; then
 		# Pre-built web admin
+		# Link --> https://github.com/drawpile/dpwebadmin/releases/download/0.5.1/dpwebadmin-0.5.1.tar.gz
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.5.0
-		web_admin_release_filename=dpwebadmin-0.5.0.tar.gz
+		web_admin_release=0.5.1
+		web_admin_release_filename=dpwebadmin-0.5.1.tar.gz
 		
 		if [[ "$web_admin_release_test" == "$web_admin_release" ]]; then
 			echo "Skipping download and setup, web admin is up to date."
@@ -15567,13 +15665,32 @@ Web Admin Password      = $nginx_htpasswd_1"
 	fi
 	#---------------------------------------------------------------------------------------------------------------------------------
 	if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]]; then 
-		display_drawpile__new_admin_web_page="https://$hostname/admin_ui/
+		if [[ "$list_server_database_connection_string_num" == "1" || "$listserver_database_connection_string" == "none" ]]; then
+			display_drawpile__new_admin_web_page="https://$hostname/admin_ui/
 		
 **** Drawpile New Web Admin Page Login Information ****
 Note: Can share with users to gain access to moderation interface
       and they have a user account set up to limit their access.
 New Web Admin Username  = $nginx_username_admin_ui_1
-New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
+New Web Admin Password  = $nginx_htpasswd_admin_ui_1
+			
+Note: List Server in Read Only Mode.
+      This page will not allow login, as the 'new web admin'
+      username and password will work to load the page, but
+      you'll receive a 404 error with the 'web admin' username
+      and password. This is by design since a read only list
+      server has nothing to administrate. This is being left
+      here as eventually it will be used for administrating
+      Drawpile-srv and list server."
+		else
+			display_drawpile__new_admin_web_page="https://$hostname/admin_ui/
+		
+**** Drawpile New Web Admin Page Login Information ****
+Note: Can share with users to gain access to moderation interface
+      and they have a user account set up to limit their access.
+New Web Admin Username  = $nginx_username_admin_ui_1
+New Web Admin Password  = $nginx_htpasswd_admin_ui_1"		
+		fi
 	else
 		# [[ "$ssl_encryption_config" = "3" ]]; then 
 		display_drawpile__new_admin_web_page="Not Available without SSL enabled"
@@ -15881,6 +15998,16 @@ if [[ "$ssl_encryption_config" = "1" ]] || [[ "$ssl_encryption_config" = "2" ]];
 	echo "      ${cyan}and they have a user account set up to limit their access.${normal}"
 	echo "New Web Admin Username  = $nginx_username_admin_ui_1"
 	echo "New Web Admin Password  = $nginx_htpasswd_admin_ui_1"
+	if [[ "$list_server_database_connection_string_num" == "1" || "$listserver_database_connection_string" == "none" ]]; then
+		echo "${bold}${red}Note: List Server in Read Only Mode.${normal}"
+		echo "      This page will not allow login, as the 'new web admin'"
+		echo "      username and password will work to load the page, but"
+		echo "      you'll receive a 404 error with the 'web admin' username"
+		echo "      and password. This is by design since a read only list"
+		echo "      server has nothing to administrate. This is being left"
+		echo "      here as eventually it will be used for administrating"
+		echo "      Drawpile-srv and list server."
+	fi
 else
 	# [[ "$ssl_encryption_config" = "3" ]]; then 
 	echo "Not Available without SSL enabled"
