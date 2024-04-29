@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960033
+drawpilescriptversion=2.9960034
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3603,7 +3603,7 @@ function drawpile_srv_reboot_warn_function () {
 				# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
 				echo
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
-				echo "Server Announcement: Server will be rebooted soon! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."
+				echo "Server Announcement: Server will be rebooted in a few seconds! Boards set to persist without users will be restored when the server is back online. Other boards that are not persistent should save their work to be safe. Should only be down for a minute at most."
 				echo 
 				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
@@ -3614,7 +3614,7 @@ function drawpile_srv_reboot_warn_function () {
 				# echo "Wasn't able to determine if file-backed sessions are in use."
 				echo
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
-				echo "Server Announcement: Server will be rebooted soon! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
+				echo "Server Announcement: Server will be rebooted in a few seconds! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
 				echo 
 				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
