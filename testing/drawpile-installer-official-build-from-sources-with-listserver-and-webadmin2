@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960031
+drawpilescriptversion=2.9960032
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3578,6 +3578,52 @@ if [[ "$git_clone_dp_checkout" = "1" ]]; then drawpile_version_script_check=$dra
 if [[ "$git_clone_dp_checkout" = "2" ]]; then drawpile_version_script_check=$drawpile_program_version_release_on_website; fi
 if [[ "$git_clone_dp_checkout" = "3" ]]; then drawpile_version_script_check=$drawpile_version_manual_type_for_script; fi
 
+function drawpile_srv_reboot_warn_function () {
+	# Server auto-announcement message for brief restart
+	ssl_encryption_config=$( grep -m 1 "ssl_encryption_config = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+
+	if [[ -e "/etc/nginx/passwords" && "$ssl_encryption_config" != "3" ]]; then
+		nginx_username_encoded_1=$( grep -m 1 "nginx_username_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		nginx_htpasswd_encoded_1=$( grep -m 1 "nginx_htpasswd_encoded_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+		if [ -z "$nginx_username_encoded_1" ] || [ -z "$nginx_htpasswd_encoded_1" ]; then
+			# echo "${bold}${red}Wasn't able to read username and/or password from:${normal} $drawpile_configuration_values_file"
+			:
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		else
+			#Value not null, proceeding.
+			nginx_username_1="$(echo "$nginx_username_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			nginx_htpasswd_1="$(echo "$nginx_htpasswd_encoded_1" | python -c 'import sys; from urllib.parse import unquote; print(unquote(sys.stdin.readline().strip()))')"
+			
+			hostname=$( grep -m 1 "hostname = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			systemd_selection=$( grep -m 1 "systemd_selection = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			
+			if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
+				# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
+				echo
+				echo "${bold}${red}Sending warning message to all sessions:${normal}"
+				echo "Server Announcement: Server will be rebooted soon! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."
+				echo 
+				curl -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
+				sleep 5
+			else
+				# elif [[ "$systemd_selection" == "3" || "$systemd_selection" == "6" || "$systemd_selection" == "7" || "$systemd_selection" == "8" || "$systemd_selection" == "10" || "$systemd_selection" == "11" || "$systemd_selection" == "12" || "$systemd_selection" == "13" || "$systemd_selection" == "16" || "$systemd_selection" == "18" || "$systemd_selection" == "19" "$systemd_selection" == "20" ]]; then
+				# Does not Support Session backed Files 3, 6, 7, 8, 10, 11, 12, 13, 16, 18, 19, 20
+				#
+				# echo "Wasn't able to determine if file-backed sessions are in use."
+				echo
+				echo "${bold}${red}Sending warning message to all sessions:${normal}"
+				echo "Server Announcement: Server will be rebooted soon! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
+				echo 
+				curl -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
+				sleep 5
+			fi
+		fi
+	fi
+	# Server auto-announcement message for brief restart
+}
+
 function stop_drawpile_srv_if_running_function () {
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -3699,11 +3745,14 @@ function stop_drawpile_srv_if_running_function () {
 	# Stop the server if necessary. 
 	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+			drawpile_srv_reboot_warn_function
 			sudo systemctl stop --now $service_name_to_check_01
 			if [[ "$drawpile_srv_service_status" == "(running)" ]]; then
+				drawpile_srv_reboot_warn_function
 				sudo systemctl stop --now $service_name_to_check_02
 			fi
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			drawpile_srv_reboot_warn_function
 			sudo systemctl stop --now $service_name_to_check_02
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
@@ -9430,6 +9479,82 @@ EOF
 			sudo chown drawpileuser:drawpileread "/home/drawpileuser/drawpile-monitor/config.ini"
 			sudo chmod 775 "/home/drawpileuser/drawpile-monitor/config.ini"
 			# ----------------------------------------------------------------------------------
+			echo "${underline}${red}Choose the number for the mode to run Drawpile monitor.${normal}"
+			echo "     The purpose of dry run mode is to see what changes need"
+			echo "     to be made to work with your desired moderation methods."
+			echo
+			echo "     Running it in dry mode won't warn users, but may miss"
+			echo "     reporting on sessions that are shorter than the period"
+			echo "     to check for violations. Shorter durations will create"
+			echo "     more messages to read through to fine-tune the script."
+			echo "     When testing Drawpile-monitor, busy servers with lots of"
+			echo "     users should use longer intervals (30 or 60 minutes), and"
+			echo "     servers that are less busy can use shorter intervals if"
+			echo "     desired. How many reports depends on the total number of"
+			echo "     rooms in use and users connecting to the server."
+			echo
+			echo "     ${red}${bold}To change the status later, you will need to modify${normal}"
+			echo "     ${red}${bold}the service file and then restart the service.${normal}"
+			echo
+			echo "     nano /usr/local/bin/drawpile_monitor_report"
+			echo "     sudo systemctl restart drawpile-monitor.service"
+			echo
+			echo "${bold}${cyan} 1 - activated - check randomly between 20 to 60 seconds${normal}"
+			echo
+			echo "${bold}${cyan} 2 - dry run mode - check every 5 minutes${normal}"
+			echo "     reports per session in 24 hrs - 288"
+			echo "${bold}${cyan} 3 - dry run mode - check every 10 minutes${normal}"
+			echo "     reports per session in 24 hrs - 144"
+			echo "${bold}${cyan} 4 - dry run mode - check every 20 minutes${normal}"
+			echo "     reports per session in 24 hrs - 72"
+			echo "${bold}${cyan} 5 - dry run mode - check every 30 minutes${normal}"
+			echo "     reports per session in 24 hrs - 48"
+			echo "${bold}${cyan} 6 - dry run mode - check every 60 minutes${normal}"
+			echo "     reports per session in 24 hrs - 24"
+
+			while :; do
+				echo
+				read -r -p "${bold}${cyan}Please select a number:${normal} " drawpile_monitor_run_type_query
+				if (( "$drawpile_monitor_run_type_query" >= "1" && "$drawpile_monitor_run_type_query" <= "6" )) ; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			echo
+			if [ "$drawpile_monitor_run_type_query" == "1" ]; then
+				echo "Setting run type: Active"
+				echo "     ./drawpile-monitor.py --interval=20 --jitter=40"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40"
+			elif [ "$drawpile_monitor_run_type_query" == "2" ]; then
+				echo "Setting run type: Dry Run 5 minute intervals"
+				echo "     ./drawpile-monitor.py --interval=300"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=300"
+			elif [ "$drawpile_monitor_run_type_query" == "3" ]; then
+				echo "Setting run type: Dry Run 10 minute intervals"
+				echo "     ./drawpile-monitor.py --interval=600"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=600"
+			elif [ "$drawpile_monitor_run_type_query" == "4" ]; then
+				echo "Setting run type: Dry Run 20 minute intervals"
+				echo "     ./drawpile-monitor.py --interval=1200"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=12000"
+			elif [ "$drawpile_monitor_run_type_query" == "5" ]; then
+				echo "Setting run type: Dry Run 30 minute intervals"
+				echo "     ./drawpile-monitor.py --interval=1800"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=1800"
+			elif [ "$drawpile_monitor_run_type_query" == "6" ]; then
+				echo "Setting run type: Dry Run 60 minute intervals"
+				echo "     ./drawpile-monitor.py --interval=3600"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=3600"
+			else
+				echo "This message should not be visible for configuring Drawpile-Monitor run type."
+			fi
+				
+			
 			cat <<EOF | sudo tee /usr/local/bin/drawpile_monitor_report >/dev/null
 #!/bin/sh
 cd /home/drawpileuser/drawpile-monitor
@@ -9443,17 +9568,39 @@ export DRAWPILE_MONITOR_PASS='$nginx_htpasswd_1'
 # nginx_username_encoded_1
 # nginx_htpasswd_encoded_1
 
+# Active mode, see examples below for configuration.
+$drawpile_monitor_run_type
+
+# ----------------------------------------------------------------------------------
+# ------------------------------------ Examples ------------------------------------
+# ----------------------------------------------------------------------------------
 # To do a dry-run (makes checks and reports to Discord, but does not act):
 # ./drawpile-monitor.py --dryrun
 
+# Dry run every 5 minutes. Reports per session in 24 hrs - 288
+# ./drawpile-monitor.py --interval=300
+
+# Dry run every 10 minutes. Reports per session in 24 hrs - 144
+# ./drawpile-monitor.py --interval=600
+
+# Dry run every 20 minutes. Reports per session in 24 hrs - 72
+# ./drawpile-monitor.py --interval=1200
+
+# Dry run every 30 minutes. Reports per session in 24 hrs - 48
+# ./drawpile-monitor.py --interval=1800
+
+# Dry run every 60 minutes. Reports per session in 24 hrs - 24
+# ./drawpile-monitor.py --interval=3600
+# ----------------------------------------------------------------------------------
 # To run it once:
 # ./drawpile-monitor.py
-
+# ----------------------------------------------------------------------------------
 # To check every 10 seconds:
 # ./drawpile-monitor.py --interval=10
 
 # To check randomly between 20 and 60 seconds (to avoid counter-scripting)
-./drawpile-monitor.py --interval=20 --jitter=40
+# ./drawpile-monitor.py --interval=20 --jitter=40
+# ----------------------------------------------------------------------------------
 EOF
 			# ----------------------------------------------------------------------------------
 			sudo chown drawpileuser:drawpileread "/usr/local/bin/./drawpile_monitor_report"
@@ -11459,6 +11606,25 @@ EOF
 	else
 		list_server_config_read_values_completed="no"
 		generate_list_server_config_filename
+	fi
+	
+	if [[ ( -z "$list_server_database_connection_string_num" || "$list_server_database_connection_string_num" = "=" ) || ( -z "$listserver_database_connection_string" || "$listserver_database_connection_string" = "=" ) ]]; then
+		echo 
+		echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
+		echo "listserver_database_connection_string      = $listserver_database_connection_string <-- Blah"
+		echo
+		echo "Variables 'list_server_database_connection_string_num' and/or 'listserver_database_connection_string'"
+		echo "are null or the '=' sign. Reading from file to make sure data is populated."
+		echo
+		echo "${bold}${green}This message is here to validate if it works. No action needed.${normal}"
+		echo
+		list_server_database_connection_string_num=$( grep -m 1 "list_server_database_connection_string_num = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		listserver_database_connection_string=$( grep -m 1 "listserver_database_connection_string = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		echo 
+		echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
+		echo "listserver_database_connection_string      = $listserver_database_connection_string <-- Blah"
+		echo
+		sleep 10
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
