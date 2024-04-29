@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960032
+drawpilescriptversion=2.9960033
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3605,7 +3605,7 @@ function drawpile_srv_reboot_warn_function () {
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
 				echo "Server Announcement: Server will be rebooted soon! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."
 				echo 
-				curl -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
+				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
 			else
 				# elif [[ "$systemd_selection" == "3" || "$systemd_selection" == "6" || "$systemd_selection" == "7" || "$systemd_selection" == "8" || "$systemd_selection" == "10" || "$systemd_selection" == "11" || "$systemd_selection" == "12" || "$systemd_selection" == "13" || "$systemd_selection" == "16" || "$systemd_selection" == "18" || "$systemd_selection" == "19" "$systemd_selection" == "20" ]]; then
@@ -3616,7 +3616,7 @@ function drawpile_srv_reboot_warn_function () {
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
 				echo "Server Announcement: Server will be rebooted soon! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
 				echo 
-				curl -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
+				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
 			fi
 		fi
