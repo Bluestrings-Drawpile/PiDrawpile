@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960034
+drawpilescriptversion=2.9960035
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -438,8 +438,8 @@ function useradd_and_groupadd_function () {
 }
 
 function fedora_end_of_life_function () {
-	fedora_release_recommended=38
-	fedora_release_minimum=37
+	fedora_release_recommended=39
+	fedora_release_minimum=38
 	
 	echo "${bold}${red}It is not recommended to continue without updating${normal}"
 	echo "${bold}${red}to a new, supported version ($fedora_release_minimum or higher).${normal}"
@@ -454,12 +454,12 @@ function fedora_end_of_life_function () {
 	echo
 	echo
 	echo "${bold}${yellow}Use these commands to prep upgrade:${normal}"
-	echo "     dnf --refresh upgrade"
+	echo "     sudo dnf --refresh upgrade"
 	echo "     sudo dnf install -y -q dnf-plugin-system-upgrade"
 	echo "     sudo dnf system-upgrade download --releasever=$fedora_release_recommended" # echo "     sudo dnf system-upgrade download --releasever=32"
 	echo
 	echo "${bold}${yellow}Use this command to start upgrade:${normal}"
-	echo "     dnf system-upgrade reboot"
+	echo "     sudo dnf system-upgrade reboot"
 	echo
 	echo "${bold}${yellow}Remove cached metadata and transaction:${normal}"
 	echo "     dnf system-upgrade clean"
@@ -476,6 +476,8 @@ function fedora_end_of_life_function () {
 	sleep 30
 }
 # ----------------------------------------------------------------------------------
+wget_or_wget2_quiet_progress="wget -q --show-progress"
+
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
@@ -523,13 +525,22 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	# dnf_function
 	yum_function
 	useradd_and_groupadd_function
-	check_root_or_sudo_access_function
+	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
-			echo "${bold}${green}Running Fedora Server 39.${normal}"
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+			
+			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
+			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
+			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
+			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
+			wget_or_wget2_quiet_progress="wget -q --force-progress"
+			
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
+			echo "${bold}${green}Running Fedora Server 39.${normal}"  && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
-			# fedora_end_of_life_function
+			fedora_end_of_life_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 37 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 37.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2023-11-14.${normal}"
 			fedora_end_of_life_function
@@ -1865,7 +1876,7 @@ function script_update_check_function () {
 	sudo mkdir -p -v "$dp_install_loc/Programs"
 	sudo chown :drawpileread "$dp_install_loc/Programs"
 	cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name" || { echo "${bold}${red}If the server cannot reach the web, then this script will fail to run.${normal}"; echo ""; echo "Terminating script in 30 seconds."; echo ""; sleep 30; exit; }
 	sudo chmod 777 "$dp_install_loc/Programs" -R
 	# --------------------------------------------------------------------------------
 	# The purpose of this check is for compatibility with older version of the scripts. 
@@ -1938,108 +1949,111 @@ function script_update_check_function () {
 		echo "${bold}${red}Unable to determine script version, proceeding with script.${normal}"
 	fi
 }
-# ----------------------------------------------------------------------------------
-# Verify wget is installed.
-# ----------------------------------------------------------------------------------
 
-if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
-fi
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info wget | sed -n '2 p' )
-	# Installed Packages
-	# Available Packages
-	# Error: No matching Packages to list
-fi
-minimum_version_wget=1.18-5
+if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
+	# ----------------------------------------------------------------------------------
+	# Verify wget is installed.
+	# ----------------------------------------------------------------------------------
 
-if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
-	echo "Package ${bold}wget${normal} is not installed."
-	echo "Installing package, used for verifying script is"
-	echo "up to date."
-	echo
-	sudo $packages_update_program
-	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
-	echo
-	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
-		echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
+	fi
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info wget | sed -n '2 p' )
+		# Installed Packages
+		# Available Packages
+		# Error: No matching Packages to list
+	fi
+	minimum_version_wget=1.18-5
+
+	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
+		echo "Package ${bold}wget${normal} is not installed."
+		echo "Installing package, used for verifying script is"
+		echo "up to date."
 		echo
-		echo "This is an optional package used to verify that the script"
-		echo "is up to date. You must manually check GitHub to verify"
-		echo "the script being used is up to date. You may experience"
-		echo "problems installing Drawpile if not up to date."
+		sudo $packages_update_program
+		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 		echo
-		echo "https://github.com/$github_account_name/$github_project_name"
-		echo 
-		echo "Continuing script in 30 seconds."
-		echo
-		echo
-		sleep 30
+		if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
+			echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
+			echo
+			echo "This is an optional package used to verify that the script"
+			echo "is up to date. You must manually check GitHub to verify"
+			echo "the script being used is up to date. You may experience"
+			echo "problems installing Drawpile if not up to date."
+			echo
+			echo "https://github.com/$github_account_name/$github_project_name"
+			echo 
+			echo "Continuing script in 30 seconds."
+			echo
+			echo
+			sleep 30
+		elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+			script_update_check_function
+		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+			echo
+			echo "This is an optional package used to verify that the script"
+			echo "is up to date. Script may not work as intended."
+			echo
+			echo "You should manually check GitHub to verify the script being"
+			echo "used is up to date. You may experience problems installing"
+			echo "Drawpile if not up to date."
+			echo
+			echo "https://github.com/$github_account_name/$github_project_name"
+			echo 
+			echo "Continuing script in 30 seconds."
+			echo
+			echo
+			sleep 30
+			echo
+			script_update_check_function
+		else
+			echo "Unable to make a determination of which version of wget is installed."
+			echo "This message should not be visible."
+		fi
 	elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
 		script_update_check_function
 	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
 		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
 		echo
 		echo "This is an optional package used to verify that the script"
-		echo "is up to date. Script may not work as intended."
+		echo "is up to date. Attempting to update."
 		echo
-		echo "You should manually check GitHub to verify the script being"
-		echo "used is up to date. You may experience problems installing"
-		echo "Drawpile if not up to date."
+		sudo $packages_update_program
+		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 		echo
-		echo "https://github.com/$github_account_name/$github_project_name"
-		echo 
-		echo "Continuing script in 30 seconds."
-		echo
-		echo
-		sleep 30
-		echo
-		script_update_check_function
+		if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+			echo
+			script_update_check_function
+		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+			echo
+			echo "This is an optional package used to verify that the script"
+			echo "is up to date. Script may not work as intended since updated"
+			echo "version is not available for install."
+			echo
+			echo "You should manually check GitHub to verify the script being"
+			echo "used is up to date. You may experience problems installing"
+			echo "Drawpile if not up to date."
+			echo
+			echo "https://github.com/$github_account_name/$github_project_name"
+			echo 
+			echo "Continuing script in 30 seconds."
+			echo
+			echo
+			sleep 30
+			echo
+			script_update_check_function
+		else
+			echo "Unable to make a determination of which version of wget is installed."
+			echo "This message should not be visible."
+		fi
 	else
 		echo "Unable to make a determination of which version of wget is installed."
 		echo "This message should not be visible."
 	fi
-elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-	script_update_check_function
-elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-	echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-	echo
-	echo "This is an optional package used to verify that the script"
-	echo "is up to date. Attempting to update."
-	echo
-	sudo $packages_update_program
-	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
-	echo
-	if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-		echo
-		script_update_check_function
-	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-		echo
-		echo "This is an optional package used to verify that the script"
-		echo "is up to date. Script may not work as intended since updated"
-		echo "version is not available for install."
-		echo
-		echo "You should manually check GitHub to verify the script being"
-		echo "used is up to date. You may experience problems installing"
-		echo "Drawpile if not up to date."
-		echo
-		echo "https://github.com/$github_account_name/$github_project_name"
-		echo 
-		echo "Continuing script in 30 seconds."
-		echo
-		echo
-		sleep 30
-		echo
-		script_update_check_function
-	else
-		echo "Unable to make a determination of which version of wget is installed."
-		echo "This message should not be visible."
-	fi
-else
-	echo "Unable to make a determination of which version of wget is installed."
-	echo "This message should not be visible."
 fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
@@ -3603,7 +3617,7 @@ function drawpile_srv_reboot_warn_function () {
 				# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
 				echo
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
-				echo "Server Announcement: Server will be rebooted in a few seconds! Boards set to persist without users will be restored when the server is back online. Other boards that are not persistent should save their work to be safe. Should only be down for a minute at most."
+				echo "Server Announcement: Server will be rebooted nows! Boards set to persist without users will be restored when the server is back online. Other boards that are not persistent should save their work to be safe. Should only be down for a minute at most."
 				echo 
 				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
@@ -3614,7 +3628,7 @@ function drawpile_srv_reboot_warn_function () {
 				# echo "Wasn't able to determine if file-backed sessions are in use."
 				echo
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
-				echo "Server Announcement: Server will be rebooted in a few seconds! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
+				echo "Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."
 				echo 
 				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Please save your drawings, the boards will be gone when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
 				sleep 5
@@ -3836,7 +3850,7 @@ function wacom_explanation_function () {
 function drawpile_client_shortcut_function () {
 	if (( "$drawpile_build_configuration" >= "3" && "$drawpile_build_configuration" <= "8" )) ; then
 		mkdir -p -v "$option_loc_4/drawpile_icons"
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_4/drawpile_icons/drawpile-icon.png"
+		sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/Drawpile%20Icon.png -O "$option_loc_4/drawpile_icons/drawpile-icon.png"
 		drawpile_client_shortcut_png="$option_loc_4/drawpile_icons/drawpile-icon.png"
 		echo
 		
@@ -4399,8 +4413,8 @@ function drawpile_build_and_compile_function () {
 		sudo sed -i -e 's/currentSecsSinceEpoch()/currentMSecsSinceEpoch() \/ 1000/g' "$dp_install_loc/Programs/Drawpile/src/desktop/dialogs/joindialog.cpp"
 		echo '--------------------------------------------------------------------------------'
 		cd "$dp_install_loc/Programs/Drawpile"
-		sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer.patch"
-		sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
+		sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer.patch"
+		sudo $wget_or_wget2_quiet_progress"https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
 		echo '--------------------------------------------------------------------------------'
 		patch -p1 < elapsed-timer.patch
 		echo '--------------------------------------------------------------------------------'
@@ -5409,7 +5423,7 @@ $freeDNS_input #Drawpile Hostname") | sudo crontab -u root -
 		cd "$dp_install_loc/Programs" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
 		sudo mkdir -p -v noip
 		cd "$dp_install_loc/Programs/noip" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
-		sudo wget -q --show-progress https://www.noip.com/client/linux/noip-duc-linux.tar.gz
+		sudo $wget_or_wget2_quiet_progress https://www.noip.com/client/linux/noip-duc-linux.tar.gz
 		sudo tar vzxf noip-duc-linux.tar.gz
 		cd noip-2.1.9-1
 		cd "$dp_install_loc/Programs/noip/noip-2.1.9-1" || { echo "Failure to change directory, exiting script in 30 seconds."; sleep 30; exit 1; }
@@ -7075,7 +7089,7 @@ echo
 if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" ]]; then
 	echo "Did not find drawpile-srv.service file sample. Downloading and setting up."
 	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.service" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.service" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
 	echo
 fi
 
@@ -7093,7 +7107,7 @@ if [[ -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
 elif [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
 	echo "Did not find drawpile-srv.socket file sample. Downloading and setting up."
 	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
-	sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
 	echo
 	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
@@ -8234,7 +8248,7 @@ if [ ! -e "/etc/nginx/nginx-original.conf.bak" ]; then
 	sudo cp "/etc/nginx/nginx.conf" "/etc/nginx/nginx-original.conf.bak"
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/config/Fedora/nginx/nginx.conf -O "/etc/nginx/nginx.conf"
+	sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/config/Fedora/nginx/nginx.conf -O "/etc/nginx/nginx.conf"
 fi
 
 sudo sed -i -e 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g' /etc/nginx/nginx.conf
@@ -12541,7 +12555,7 @@ EOF
 			# 	web_admin_release=wip-webclient
 			#	web_admin_release_filename=dpwebadmin-wip-webclient.tar.gz
 			
-			sudo wget -q --show-progress https://github.com/drawpile/dpwebadmin/releases/download/$web_admin_release/$web_admin_release_filename
+			sudo $wget_or_wget2_quiet_progress https://github.com/drawpile/dpwebadmin/releases/download/$web_admin_release/$web_admin_release_filename
 			sudo sed -i '\!^web_admin_release =!{h;s!=.*!= '"$web_admin_release"'!};${x;\!^$!{s!!web_admin_release = '"$web_admin_release"'!;H};x}' $drawpile_configuration_values_file
 			echo
 			echo '--------------------------------------------------------------------------------'
@@ -12590,7 +12604,7 @@ EOF
 			echo
 			# The prebuilt version uses /listing/admin as the root for the list server admin API. If you put it somewhere else, edit index.html to point it at the correct path.
 			pwd
-			sudo wget -q --show-progress https://github.com/drawpile/drawpile-admin-webui/releases/download/$web_and_list_server_admin_release/$web_and_list_server_admin_release_filename
+			sudo $wget_or_wget2_quiet_progress https://github.com/drawpile/drawpile-admin-webui/releases/download/$web_and_list_server_admin_release/$web_and_list_server_admin_release_filename
 			sudo sed -i '\!^web_and_list_server_admin_release =!{h;s!=.*!= '"$web_and_list_server_admin_release"'!};${x;\!^$!{s!!web_and_list_server_admin_release = '"$web_and_list_server_admin_release"'!;H};x}' $drawpile_configuration_values_file
 			echo
 			echo '--------------------------------------------------------------------------------'
@@ -14197,7 +14211,7 @@ EOF
 			elif [ "$RPi_Monitor_Dark_Mode" == "2" ]; then
 				echo Skipping Dark Mode setup of RPi-Monitor.
 			elif [ "$RPi_Monitor_Dark_Mode" == "3" ]; then
-				sudo wget -q --show-progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/master/src/usr/share/rpimonitor/web/css/rpimonitor.css -O /usr/share/rpimonitor/web/css/rpimonitor.css
+				sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/XavierBerger/RPi-Monitor/master/src/usr/share/rpimonitor/web/css/rpimonitor.css -O /usr/share/rpimonitor/web/css/rpimonitor.css
 				if [[ -e "/usr/share/rpimonitor/web/css/rpimonitor.css.bak" ]]; then
 					echo Removing backup of original file.
 					echo /usr/share/rpimonitor/web/css/rpimonitor.css.bak
@@ -14862,7 +14876,7 @@ comment_EOF
 			if [[ ! -e "$option_loc_4/drawpile_icons/rpi-logo-img.png" ]]; then
 				echo Downloading image to use for RPi-Monitor Shortcut.
 				echo
-				sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O $option_loc_4/drawpile_icons/rpi-logo-img.png
+				sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/rpi-logo-img.png -O $option_loc_4/drawpile_icons/rpi-logo-img.png
 			else
 				echo Image already downloaded to use for RPi-Monitor Shortcut.
 			fi
@@ -15508,7 +15522,7 @@ function drawpile_custom_shortcut_icon_preference () {
 		sudo cp "$dp_install_loc/drawpile_list_server.png" "$option_loc_4/drawpile_icons/drawpile_list_server.png"
 		list_server_shortcut_png=$option_loc_4/drawpile_icons/drawpile_list_server.png
 	else
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $option_loc_4/drawpile_icons/drawpile_list_server.png
+		sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_list_server.png -O $option_loc_4/drawpile_icons/drawpile_list_server.png
 		list_server_shortcut_png=$option_loc_4/drawpile_icons/drawpile_list_server.png
 	fi
 
@@ -15519,7 +15533,7 @@ function drawpile_custom_shortcut_icon_preference () {
 		sudo cp "$dp_install_loc/drawpile_web_admin.png" "$option_loc_4/drawpile_icons/drawpile_web_admin.png"
 		server_web_admin_shortcut_png=$option_loc_4/drawpile_icons/drawpile_web_admin.png
 	else
-		sudo wget -q --show-progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $option_loc_4/drawpile_icons/drawpile_web_admin.png
+		sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/images/drawpile_web_admin.png -O $option_loc_4/drawpile_icons/drawpile_web_admin.png
 		server_web_admin_shortcut_png=$option_loc_4/drawpile_icons/drawpile_web_admin.png
 	fi
 	
