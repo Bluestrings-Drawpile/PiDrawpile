@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960035
+drawpilescriptversion=2.9960036
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -571,7 +571,9 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 39.${normal}"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
@@ -9546,24 +9548,24 @@ EOF
 				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40"
 			elif [ "$drawpile_monitor_run_type_query" == "2" ]; then
 				echo "Setting run type: Dry Run 5 minute intervals"
-				echo "     ./drawpile-monitor.py --interval=300"
-				drawpile_monitor_run_type="./drawpile-monitor.py --interval=300"
+				echo "     ./drawpile-monitor.py --dryrun --interval=300"
+				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=300"
 			elif [ "$drawpile_monitor_run_type_query" == "3" ]; then
 				echo "Setting run type: Dry Run 10 minute intervals"
-				echo "     ./drawpile-monitor.py --interval=600"
-				drawpile_monitor_run_type="./drawpile-monitor.py --interval=600"
+				echo "     ./drawpile-monitor.py --dryrun --interval=600"
+				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=600"
 			elif [ "$drawpile_monitor_run_type_query" == "4" ]; then
 				echo "Setting run type: Dry Run 20 minute intervals"
-				echo "     ./drawpile-monitor.py --interval=1200"
-				drawpile_monitor_run_type="./drawpile-monitor.py --interval=12000"
+				echo "     ./drawpile-monitor.py --dryrun --interval=1200"
+				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=12000"
 			elif [ "$drawpile_monitor_run_type_query" == "5" ]; then
 				echo "Setting run type: Dry Run 30 minute intervals"
-				echo "     ./drawpile-monitor.py --interval=1800"
-				drawpile_monitor_run_type="./drawpile-monitor.py --interval=1800"
+				echo "     ./drawpile-monitor.py --dryrun --interval=1800"
+				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=1800"
 			elif [ "$drawpile_monitor_run_type_query" == "6" ]; then
 				echo "Setting run type: Dry Run 60 minute intervals"
-				echo "     ./drawpile-monitor.py --interval=3600"
-				drawpile_monitor_run_type="./drawpile-monitor.py --interval=3600"
+				echo "     ./drawpile-monitor.py --dryrun --interval=3600"
+				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=3600"
 			else
 				echo "This message should not be visible for configuring Drawpile-Monitor run type."
 			fi
@@ -9592,19 +9594,19 @@ $drawpile_monitor_run_type
 # ./drawpile-monitor.py --dryrun
 
 # Dry run every 5 minutes. Reports per session in 24 hrs - 288
-# ./drawpile-monitor.py --interval=300
+# ./drawpile-monitor.py --dryrun --interval=300
 
 # Dry run every 10 minutes. Reports per session in 24 hrs - 144
-# ./drawpile-monitor.py --interval=600
+# ./drawpile-monitor.py --dryrun --interval=600
 
 # Dry run every 20 minutes. Reports per session in 24 hrs - 72
-# ./drawpile-monitor.py --interval=1200
+# ./drawpile-monitor.py --dryrun --interval=1200
 
 # Dry run every 30 minutes. Reports per session in 24 hrs - 48
-# ./drawpile-monitor.py --interval=1800
+# ./drawpile-monitor.py --dryrun --interval=1800
 
 # Dry run every 60 minutes. Reports per session in 24 hrs - 24
-# ./drawpile-monitor.py --interval=3600
+# ./drawpile-monitor.py --dryrun --interval=3600
 # ----------------------------------------------------------------------------------
 # To run it once:
 # ./drawpile-monitor.py
@@ -16115,6 +16117,7 @@ wait $!
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+pause
 echo
 if [[ ( -d "$option_loc_2" && "$running_as_root_check" == "true" ) && (( "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ) || "$what_linux_name" == "NAME=\"Ubuntu\"" || ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" )) ]]; then
 	if [[ "$ssl_encryption_config" != "3" ]]; then
