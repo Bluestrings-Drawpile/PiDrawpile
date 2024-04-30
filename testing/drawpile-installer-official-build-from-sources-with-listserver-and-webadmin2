@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960038
+drawpilescriptversion=2.996003900
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2056,6 +2056,8 @@ if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" 
 		echo "Unable to make a determination of which version of wget is installed."
 		echo "This message should not be visible."
 	fi
+else
+	script_update_check_function
 fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
