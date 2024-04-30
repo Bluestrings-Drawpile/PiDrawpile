@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.9960037
+drawpilescriptversion=2.9960038
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3292,7 +3292,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]]; then
 	package_name=zlib-devel
 	package_version_length=14-20
 	version_apt_or_dnf_function
@@ -3305,6 +3305,10 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	package_description_5=
 	install_package_set="no"
 	package_version_check_and_update_function
+fi
+
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]]; then
+	echo "Placeholder for Fedora 40 and Zlib."
 fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
