@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003901
+drawpilescriptversion=2.996003902
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2730,7 +2730,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
 
 	# Full List Unsorted
