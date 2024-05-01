@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003900
+drawpilescriptversion=2.996003901
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2730,8 +2730,8 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel"
-	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel"
+	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
 
 	# Full List Unsorted
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
