@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1402
+drawpilescriptversion=0.1403
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1085,7 +1085,7 @@ NumberOfSessionTextFiles_active=$(printf '%s\n' "$SessionTextFiles_active" | wc 
 NumberOfSessionTextFiles_archived=$(printf '%s\n' "$SessionTextFiles_archived" | wc -l)
 number_of_session_recordings=$(printf '%s\n' "$session_recordings" | wc -l)
 
-disk_sessions_size=$( du -hs "$path_to_delete_parameter" | awk '{ print $1 }'| sed 's/ //g' )
+disk_sessions_size=$( du -hs "$dp_install_loc_sessions" | awk '{ print $1 }'| sed 's/ //g' )
 
 # Requires another search and slows down script
 # sudo find "$dp_install_loc_sessions" -name "*.sessio*" | wc -l
