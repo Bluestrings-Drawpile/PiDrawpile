@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1401
+drawpilescriptversion=0.1402
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1085,9 +1085,14 @@ NumberOfSessionTextFiles_active=$(printf '%s\n' "$SessionTextFiles_active" | wc 
 NumberOfSessionTextFiles_archived=$(printf '%s\n' "$SessionTextFiles_archived" | wc -l)
 number_of_session_recordings=$(printf '%s\n' "$session_recordings" | wc -l)
 
+disk_sessions_size=$( du -hs "$path_to_delete_parameter" | awk '{ print $1 }'| sed 's/ //g' )
+
 # Requires another search and slows down script
 # sudo find "$dp_install_loc_sessions" -name "*.sessio*" | wc -l
 # --------------------------------------------------------------------------------
+echo "${bold}${cyan}Current Size of file-backed sessions folder:${normal}"
+echo "                $disk_sessions_size"
+echo
 echo "Total Active Session Files         : $NumberOfSessionTextFiles_active"
 echo "Total Archived Session Files       : $NumberOfSessionTextFiles_archived"
 echo "Total DPREC Recordings             : $number_of_session_recordings"
@@ -1501,7 +1506,6 @@ elif [ "$search_query_type" == "8" ]; then
 	disk_in_use=$( df -H --output=used / | awk ' NR==2 ' | sed 's/ //g' )
 	disk_available=$( df -H --output=avail / | awk ' NR==2 ' | sed 's/ //g' )
 	disk_pcent=$( df -H --output=pcent / | awk ' NR==2 '| sed 's/ //g' )
-	disk_sessions_size=$( du -hs "$path_to_delete_parameter" | awk '{ print $1 }'| sed 's/ //g' )
 
 	echo
 	echo "${bold}${cyan}Current Disk Info: df -H${normal}"
