@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1404
+drawpilescriptversion=0.1405
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1730,10 +1730,6 @@ elif [ "$search_query_type" == "8" ]; then
 			echo
 		fi
 	done
-	echo "${bold}${green}Cleanup operations completed.${normal}"
-	echo
-	echo ----------------------------------------------------------------------------------
-	echo
 	echo "${bold}${cyan}Previous Disk Values:${normal}"
 	echo "${bold}Blocks        :${normal} $disk_blocks"
 	echo "${bold}Used          :${normal} $disk_in_use"
@@ -1763,6 +1759,10 @@ elif [ "$search_query_type" == "8" ]; then
 	echo
 	echo "${bold}${cyan}Current Size of file-backed sessions folder:${normal}"
 	echo "                $disk_sessions_size"
+	echo
+	echo ----------------------------------------------------------------------------------
+	echo
+	echo "${bold}${green}Cleanup operations completed.${normal}"
 	echo
 elif [ "$search_query_type" == "9" ]; then
 	echo "Exiting script."
