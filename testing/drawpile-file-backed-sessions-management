@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1405
+drawpilescriptversion=0.1406
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1074,15 +1074,18 @@ echo
 # Session files are either .session or .sesssion.archived.
 # The actual recordings are .dprec or .dprec.archived.
 SessionTextFiles=$(sudo find "$dp_install_loc_sessions" -name "*.sessio*")
-
 SessionTextFiles_active=$(sudo find "$dp_install_loc_sessions" -name "*.session")
 SessionTextFiles_archived=$(sudo find "$dp_install_loc_sessions" -name "*.session.archived")
+
+session_recordings_archived=$(sudo find "$dp_install_loc_sessions" -name "*.dprec.archived")
 session_recordings=$(sudo find "$dp_install_loc_sessions" -name "*.dpre*")
 
 # Uses stored info from variable and prints in nicer looking manner
 NumberOfSessionTextFiles=$(printf '%s\n' "$SessionTextFiles" | wc -l)
 NumberOfSessionTextFiles_active=$(printf '%s\n' "$SessionTextFiles_active" | wc -l)
 NumberOfSessionTextFiles_archived=$(printf '%s\n' "$SessionTextFiles_archived" | wc -l)
+
+number_of_session_recordings_archived=$(printf '%s\n' "$session_recordings_archived" | wc -l)
 number_of_session_recordings=$(printf '%s\n' "$session_recordings" | wc -l)
 
 disk_sessions_size=$( du -hs "$dp_install_loc_sessions" | awk '{ print $1 }'| sed 's/ //g' )
@@ -1093,9 +1096,11 @@ disk_sessions_size=$( du -hs "$dp_install_loc_sessions" | awk '{ print $1 }'| se
 echo "${bold}${cyan}Current Size of file-backed sessions folder:${normal}"
 echo "                $disk_sessions_size"
 echo
+echo "Total Archived DPREC Recordings    : $number_of_session_recordings_archived"
+echo "Total DPREC Recordings             : $number_of_session_recordings"
+
 echo "Total Active Session Files         : $NumberOfSessionTextFiles_active"
 echo "Total Archived Session Files       : $NumberOfSessionTextFiles_archived"
-echo "Total DPREC Recordings             : $number_of_session_recordings"
 echo "Total Session Text Files to search : $NumberOfSessionTextFiles" 
 echo "     Displaying 10 at max . . ."
 echo
