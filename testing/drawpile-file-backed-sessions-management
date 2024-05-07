@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.12
+drawpilescriptversion=0.13
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
