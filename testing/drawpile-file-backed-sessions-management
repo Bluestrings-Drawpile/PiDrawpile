@@ -1628,7 +1628,8 @@ elif [ "$search_query_type" == "8" ]; then
 				# echo No crontab, sadge. Adding in crontab jerb.
 			fi
 			echo "${bold}${cyan}Would you like to create a timed job that runs once per day?${normal}"
-			echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
+			echo "${bold}${cyan}The job runs 12:00 AM, age check followed by size check.${normal}"
+			# echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
 			echo
 			echo "1 - Yes"
 			echo "2 - No"
