@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1
+drawpilescriptversion=0.11
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1034,6 +1034,8 @@ else
 	script_update_check_function
 fi
 
+{ # this ensures the entire script is downloaded, other part is at very end of script #
+
 # Version 1.0 - https://github.com/drawpile/Drawpile/commit/8974436285d5692bfc469c4ce4f77a3d0e87f98d
 # Version 1.1 - https://github.com/drawpile/Drawpile/commit/f77dd391080d0c1d6a37048cb72e8ccbf7166a8c
 purge_sessions_current_version=1.1
@@ -1763,3 +1765,5 @@ elif [ "$search_query_type" == "9" ]; then
 else
 	echo "This message should not be visible for selecting search method."
 fi
+
+} # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #
