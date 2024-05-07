@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003902
+drawpilescriptversion=2.996003903
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -9677,6 +9677,283 @@ elif [ "$drawpile_abuse_report_installation_status" == "n" ] || [ "$drawpile_abu
 else
 	"This message should not be visible for Drawpile Monitor."
 fi
+
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}*****Drawpile AFK Kick Bot . . .*****${normal}"
+echo
+variable_to_read_1="drawpile_afk_kick_installation_status"
+variable_to_read_2=""
+variable_to_read_3=""
+value_description_1="Used to kick AFK users in general, or can be used to help"
+value_description_2="open user slots on user-limited boards."
+
+read_stored_config_value_query_function
+
+if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	echo "Storing value and moving on."
+	drawpile_afk_kick_installation_status=$read_stored_config_value_query_1
+elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+	echo "This is a bot to kick AFK users from the server adapted from"
+	echo "from user NotFood's gist on github."
+	echo
+	echo "${underline}https://gist.github.com/notfood/b8d93250c706f1d5b5faee99c111126f ${normal}"
+	echo
+	echo "This script can help keep boards with limited user slots available"
+	echo "free by kicking inactive users. This will not apply to room"
+	echo "operators or moderators in the session. The script checks every 15"
+	echo "minutes based on the current hour."
+	echo " e.g. 12:00, 12:15, 12:30, 12:45, 1:00, 1:15, etc..."
+	echo
+	echo "The script can configure the following values:"
+	echo " - Minimum number of free slots to begin AFK KICK"
+	echo " - Number of AFK users to KICK"
+	echo " - Minutes to be considered AFK"
+	echo
+	echo "The script will not modify these values:"
+	echo " - Message to be given before KICK"
+	echo "     USERNAME, you have been AFK kicked by the administrator for"
+	echo "        being HOURS:MINUTES hours away."
+	echo " - Logging kicks to the console."
+	echo
+	echo "Would you like to enable this service?"
+	echo ""
+	while :; do
+		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " drawpile_afk_kick_query
+		echo
+		if [ "$drawpile_afk_kick_query" == "y" ] || [ "$drawpile_afk_kick_query" == "Y" ] || [ "$drawpile_afk_kick_query" == "yes" ] || [ "$drawpile_afk_kick_query" == "YES" ] || [ "$drawpile_afk_kick_query" == "Yes" ] || [ "$drawpile_afk_kick_query" == "n" ] || [ "$drawpile_afk_kick_query" == "N" ] || [ "$drawpile_afk_kick_query" == "no" ] || [ "$drawpile_afk_kick_query" == "NO" ] || [ "$drawpile_afk_kick_query" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	echo
+	echo ----------------------------------------------------------------------------------
+	echo
+	if [ "$drawpile_afk_kick_query" == "yes" ] || [ "$drawpile_afk_kick_query" == "YES" ] || [ "$drawpile_afk_kick_query" == "Yes" ] || [ "$drawpile_afk_kick_query" == "Y" ] || [ "$drawpile_afk_kick_query" == "y" ] ; then
+		drawpile_afk_kick_installation_status="yes"
+		echo "What should be the minimum number of user slots available to begin"
+		echo "     AFK kick? If left blank, defaults to 3. If you want it to just"
+		echo "     kick inactive users regardless of slots available, set to 254."
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Enter any number from 0 to 254:${normal} " drawpile_afk_kick_minimum_slots
+			echo
+			if [ "$drawpile_afk_kick_minimum_slots" == "" ]; then
+					drawpile_afk_kick_minimum_slots="3"
+					break		
+			elif (( "$drawpile_afk_kick_minimum_slots" >= "0" && "$drawpile_afk_kick_minimum_slots" <= "254" )) ; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		echo ----------------------------------------------------------------------------------
+		echo
+		echo "What number of AFK users should be kicked? If left blank, defaults"
+		echo "     to 5 users. If you want it to kick all AFK users, set to 254."
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Enter any number from 0 to 254:${normal} " drawpile_afk_kick_number
+			echo
+			if [ "$drawpile_afk_kick_number" == "" ]; then
+					drawpile_afk_kick_number="5"
+					break	
+			elif (( "$drawpile_afk_kick_number" >= "0" && "$drawpile_afk_kick_number" <= "254" )) ; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		echo ----------------------------------------------------------------------------------
+		echo
+		echo "How many minutes should a user be away to be considered AFK? Blank"
+		echo "     defaults to 60 minutes."
+		echo
+		echo "  NOTE: Remember, the script checks once every 15 minutes, so if"
+		echo "     you pick 60 minutes the user might be kicked after 61 to 74"
+		echo "     minutes of inactivity."
+		echo
+		echo "  Examples of auto kick after 60 minutes:"
+		echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
+		echo "      Next kick time check is 1:15 PM. 74 minutes of being inactive."
+		echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
+		echo "      Next kick time check is 1:00 PM. 61 minutes of being inactive."
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Enter any number from 1 to 1440:${normal} " drawpile_afk_kick_timer
+			echo
+			if [ "$drawpile_afk_kick_timer" == "" ]; then
+					drawpile_afk_kick_timer="60"
+					break	
+			elif (( "$drawpile_afk_kick_timer" >= "0" && "$drawpile_afk_kick_timer" <= "1440" )) ; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+
+		sudo $package_install_program jq
+		mkdir -p -v /home/drawpileuser/drawpile-afk
+		cat <<EOF | sudo tee /home/drawpileuser/drawpile-afk/drawpile-afk-kick >/dev/null
+#!/bin/bash
+
+# Drawpile Admin API URL. Alternatively use pubsrvproxy for safety.
+API=http://localhost:27780/api
+
+# Minimun free slots to begin AFK KICK
+MINSLOTS=$drawpile_afk_kick_minimum_slots
+
+# Number of AFK users to KICK
+NUM2KICK=$drawpile_afk_kick_number
+
+# Minutes to be considered AFK
+MINAFK=$drawpile_afk_kick_timer
+
+# Message to be given before KICK format(name, seconds afk)
+MESSAGE="%s, you have been AFK kicked by the administrator for being %(%H:%M)T hours away."
+
+# Should we log the kicks to console?
+LOG=1
+
+
+# Get the session ids with almost no slots for only public boards
+sessions=\$(curl -s \$API/sessions | jq -c '[.[]
+  | select(.hasPassword == false and .maxUserCount - .userCount < '\$MINSLOTS')
+  | .id]')
+
+
+# Exit if there is no sessions full
+if [ "\$sessions" = "[]" ]; then
+        exit
+fi
+
+
+# Don't overwhelm Admin
+sleep .5
+
+
+# Pick top non mod non op AFK
+users=\$(curl -s \$API/users | jq '.
+  | map(.afk = (.lastActive | now - fromdate))
+  | sort_by(-.afk)
+  |
+  [ .[]
+    | select(.session | IN('\${sessions:1:-1}'))
+    | select(.mod == false and .op == false and .afk > 60*'\$MINAFK')
+    | [.id, .session, .name, .afk]
+    | join("|")
+  ] [:'\$NUM2KICK'] []' )
+
+
+# Avoid any action if the above failed
+if [ \$? -ne 0 ]; then
+    exit 1;
+fi
+
+# If no users to kick, notify
+if [ "\$users" = "" ]; then
+    if [ "\$LOG" -ne "0" ]; then
+        printf "FULL without AFK\n"
+    fi
+    exit
+fi
+
+
+# Notify and Kick
+while IFS=\$'\n' read line; do
+  IFS='|' read -r id session name afk <<<"\${line:1:-1}"
+
+  afk=\${afk%.*}
+  
+  # Output for logging
+  if [ "\$LOG" -ne "0" ]; then
+          printf "KICK %s/%s\t%s\t%(%HH:%MM:%SS)T\t%s\n" "\$session" "\$id" "\$afk" "\$afk" "\$name"
+  fi
+
+  url="\$API/sessions/\$session/\$id"
+  msg=\$(printf "\$MESSAGE" "\$name" "\$afk")
+  curl -s -H 'Content-Type: application/json' -X PUT -d '{"message":"'"\$msg"'"}' "\$url" -o /dev/null
+  sleep .5
+  curl -s -X DELETE "\$url" -o /dev/null
+  sleep 1
+
+done <<<"\$users"
+EOF
+		sudo chmod 775 /home/drawpileuser/drawpile-afk/drawpile-afk-kick
+		cat <<EOF | sudo tee /etc/systemd/system/drawpile-afk-kick.service >/dev/null
+[Unit]
+Description=Drawpile afk users kick service
+
+[Service]
+Type=oneshot
+ExecStart=/home/drawpileuser/drawpile-afk/drawpile-afk-kick
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+		cat <<EOF | sudo tee /etc/systemd/system/drawpile-afk-kick.timer >/dev/null
+[Timer]
+OnCalendar=*:0/15
+# https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html
+# Checks every minute
+# OnCalendar=*:0/1
+# Checks every 5 minutes
+# OnCalendar=*:0/5
+
+[Install]
+WantedBy=timers.target
+EOF
+
+		if [ "`systemctl is-enabled drawpile-afk-kick.timer`" = "enabled" ]; then
+			echo
+			echo "${bold}${yellow}Detected drawpile-afk-kick.timer is active. Restarting service.${normal}"
+			echo
+			sudo systemctl daemon-reload
+			sudo systemctl stop --now drawpile-afk-kick.service
+			sudo systemctl restart drawpile-afk-kick.timer
+		else
+			sudo systemctl enable drawpile-afk-kick.timer
+			sudo systemctl start --now drawpile-afk-kick.timer
+		fi
+	else
+		drawpile_afk_kick_installation_status="no"
+		echo "Skipping addition of drawpile-afk-kick."
+		if [ "`systemctl is-enabled drawpile-afk-kick.timer`" = "enabled" ]; then
+			echo
+			echo "${bold}${yellow}Detected drawpile-afk-kick.timer is active. Disabling service.${normal}"
+			echo
+			sudo systemctl enable drawpile-afk-kick.timer
+			sudo systemctl stop --now drawpile-afk-kick.timer
+			sudo systemctl stop --now drawpile-afk-kick.service
+		fi
+	fi
+else
+	"This message should not be visible for Drawpile AFK Kick Bot."
+fi
+
+sudo sed -i '\!^drawpile_afk_kick_installation_status =!{h;s!=.*!= '"$drawpile_afk_kick_installation_status"'!};${x;\!^$!{s!!drawpile_afk_kick_installation_status = '"$drawpile_afk_kick_installation_status"'!;H};x}' 
+
 if [ "$local_or_remote" == "Local" ]; then
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -15433,6 +15710,16 @@ echo "${bold}${cyan}*****Scripts to be downloaded for managing server. . . .****
 echo "${bold}${red}*****     (To be completed at a later date)             *****${normal}"
 
 sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
+
+if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
+	# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
+	echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
+	echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc_server/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+fi
+
+
+
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
