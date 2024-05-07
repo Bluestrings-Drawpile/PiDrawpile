@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1406
+drawpilescriptversion=0.1407
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1098,8 +1098,8 @@ echo "                $disk_sessions_size"
 echo
 echo "Total Archived DPREC Recordings    : $number_of_session_recordings_archived"
 echo "Total DPREC Recordings             : $number_of_session_recordings"
-
-echo "Total Active Session Files         : $NumberOfSessionTextFiles_active"
+echo
+echo "Total Active Session & DPREC Files : $NumberOfSessionTextFiles_active"
 echo "Total Archived Session Files       : $NumberOfSessionTextFiles_archived"
 echo "Total Session Text Files to search : $NumberOfSessionTextFiles" 
 echo "     Displaying 10 at max . . ."
