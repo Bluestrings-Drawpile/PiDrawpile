@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003905
+drawpilescriptversion=2.996003906
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -7028,7 +7028,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			
 			if [[ -O "/home/drawpileuser/abusereport" ]] || [[ "$current_username_id" != "$owner_id_test" ]]; then
 				# echo "owner"
-				sudo chown $current_username:$current_username "/home/drawpileuser/abusereport" -R
+				sudo chown $current_username:drawpileread "/home/drawpileuser/abusereport" -R
 			else
 				# echo "no owner"
 				# No action required.
@@ -8483,7 +8483,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				
 				if [[ -O "/home/drawpileuser/drawpile-monitor" ]] || [[ "$current_username_id" != "$owner_id_test" ]]; then
 					# echo "owner"
-					sudo chown $current_username:$current_username "/home/drawpileuser/drawpile-monitor" -R
+					sudo chown $current_username:drawpileread "/home/drawpileuser/drawpile-monitor" -R
 				else
 					# echo "no owner"
 					# No action required.
@@ -9785,12 +9785,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo "     to 5 users. If you want it to kick all AFK users, set to 254."
 		echo
 		while :; do
-			read -r -p "${bold}${cyan}Enter any number from 0 to 254:${normal} " drawpile_afk_kick_number
+			read -r -p "${bold}${cyan}Enter any number from 1 to 254:${normal} " drawpile_afk_kick_number
 			echo
 			if [ "$drawpile_afk_kick_number" == "" ]; then
 					drawpile_afk_kick_number="5"
 					break	
-			elif (( "$drawpile_afk_kick_number" >= "0" && "$drawpile_afk_kick_number" <= "254" )) ; then
+			elif (( "$drawpile_afk_kick_number" >= "1" && "$drawpile_afk_kick_number" <= "254" )) ; then
 				break
 			else
 				echo
@@ -9821,7 +9821,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			if [ "$drawpile_afk_kick_timer" == "" ]; then
 					drawpile_afk_kick_timer="60"
 					break	
-			elif (( "$drawpile_afk_kick_timer" >= "0" && "$drawpile_afk_kick_timer" <= "1440" )) ; then
+			elif (( "$drawpile_afk_kick_timer" >= "1" && "$drawpile_afk_kick_timer" <= "1440" )) ; then
 				break
 			else
 				echo
@@ -15783,7 +15783,7 @@ sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 
 if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
 	# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
-	
+	echo
 	if [ ! -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
 		echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
 		echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
