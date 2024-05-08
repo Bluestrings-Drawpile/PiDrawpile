@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003903
+drawpilescriptversion=2.996003904
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -922,6 +922,16 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_18" ] || echo "$value_description_18"
 		[ -z "$value_description_19" ] || echo "$value_description_19"
 		[ -z "$value_description_20" ] || echo "$value_description_20"
+		[ -z "$value_description_21" ] || echo "$value_description_21"
+		[ -z "$value_description_22" ] || echo "$value_description_22"
+		[ -z "$value_description_23" ] || echo "$value_description_23"
+		[ -z "$value_description_24" ] || echo "$value_description_24"
+		[ -z "$value_description_25" ] || echo "$value_description_25"
+		[ -z "$value_description_26" ] || echo "$value_description_26"
+		[ -z "$value_description_27" ] || echo "$value_description_27"
+		[ -z "$value_description_28" ] || echo "$value_description_28"
+		[ -z "$value_description_29" ] || echo "$value_description_29"
+		[ -z "$value_description_30" ] || echo "$value_description_30"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
@@ -964,6 +974,16 @@ function read_stored_config_value_query_function () {
 	value_description_18=""
 	value_description_19=""
 	value_description_20=""
+	value_description_21=""
+	value_description_22=""
+	value_description_23=""
+	value_description_24=""
+	value_description_25=""
+	value_description_26=""
+	value_description_27=""
+	value_description_28=""
+	value_description_29=""
+	value_description_30=""
 }
 
 <<comment_EOF
@@ -5597,15 +5617,16 @@ EOF
 		sudo sed -i '\!^NoIP =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!NoIP = '"no"'!;H};x}' $app_installation_status_file
 		sudo sed -i '\!^DuckDNS =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!DuckDNS = '"no"'!;H};x}' $app_installation_status_file
 	fi
+	
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
+		sudo systemctl enable crond.service
+		sudo systemctl start --now crond.service
+		sudo systemctl status crond.service --no-pager -l
+	fi
+	
 	sudo sed -i '\!^dns_choice =!{h;s!=.*!= '"$dns_choice"'!};${x;\!^$!{s!!dns_choice = '"$dns_choice"'!;H};x}' $drawpile_configuration_values_file
 else
 	echo "This message should not be visible."
-fi
-
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$dns_choice" == "1" || "$dns_choice" == "3" ]]; then
-	sudo systemctl enable crond.service
-	sudo systemctl start --now crond.service
-	sudo systemctl status crond.service --no-pager -l
 fi
 
 <<comment_EOF
@@ -9912,6 +9933,9 @@ WantedBy=multi-user.target
 EOF
 
 		cat <<EOF | sudo tee /etc/systemd/system/drawpile-afk-kick.timer >/dev/null
+[Unit]
+Description=Drawpile afk users kick timer check
+
 [Timer]
 OnCalendar=*:0/15
 # https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
@@ -9948,11 +9972,10 @@ EOF
 			sudo systemctl stop --now drawpile-afk-kick.service
 		fi
 	fi
+	sudo sed -i '\!^drawpile_afk_kick_installation_status =!{h;s!=.*!= '"$drawpile_afk_kick_installation_status"'!};${x;\!^$!{s!!drawpile_afk_kick_installation_status = '"$drawpile_afk_kick_installation_status"'!;H};x}'  $drawpile_configuration_values_file
 else
 	"This message should not be visible for Drawpile AFK Kick Bot."
 fi
-
-sudo sed -i '\!^drawpile_afk_kick_installation_status =!{h;s!=.*!= '"$drawpile_afk_kick_installation_status"'!};${x;\!^$!{s!!drawpile_afk_kick_installation_status = '"$drawpile_afk_kick_installation_status"'!;H};x}' 
 
 if [ "$local_or_remote" == "Local" ]; then
 	echo
@@ -11923,22 +11946,19 @@ EOF
 	fi
 	
 	if [[ ( -z "$list_server_database_connection_string_num" || "$list_server_database_connection_string_num" = "=" ) || ( -z "$listserver_database_connection_string" || "$listserver_database_connection_string" = "=" ) ]]; then
-		echo 
-		echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
-		echo "listserver_database_connection_string      = $listserver_database_connection_string <-- Blah"
+		# echo 
+		# echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
+		# echo "listserver_database_connection_string      = $listserver_database_connection_string <-- Blah"
+		# echo
+		# echo "Variables 'list_server_database_connection_string_num' and/or 'listserver_database_connection_string'"
+		# echo "are null or the '=' sign. Reading from file to make sure data is populated."
 		echo
-		echo "Variables 'list_server_database_connection_string_num' and/or 'listserver_database_connection_string'"
-		echo "are null or the '=' sign. Reading from file to make sure data is populated."
-		echo
-		echo "${bold}${green}This message is here to validate if it works. No action needed.${normal}"
-		echo
+		echo "${invis}This message is here to validate if it works. No action needed.${normal}"
 		list_server_database_connection_string_num=$( grep -m 1 "list_server_database_connection_string_num = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		listserver_database_connection_string=$( grep -m 1 "listserver_database_connection_string = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		echo 
-		echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
-		echo "listserver_database_connection_string      = $listserver_database_connection_string <-- Blah"
-		echo
-		sleep 10
+		echo "${invis}list_server_database_connection_string_num = $list_server_database_connection_string_num ${normal}"
+		echo "${invis}listserver_database_connection_string      = $listserver_database_connection_string ${normal}"
 	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
@@ -14414,7 +14434,7 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 				else
 					echo This message should not be visible.
 				fi
-				cat <<EOF | sudo tee -a /usr/share/rpimonitor/web/css/rpimonitor.css >/dev/null
+				cat <<EOF | sudo tee /usr/share/rpimonitor/web/css/rpimonitor.css >/dev/null
 /*--- -- --- -- ---*/
 /* -- DARK MODE -- */
 /*--- -- --- -- ---*/
@@ -14672,6 +14692,53 @@ EOF
 				services_conf_contents_abuse_report_02=""
 			fi
 			
+			#---------------------------------------------------------------------------------------------------------------------------------
+			# Optional - Drawpile AFK Kick Bot
+			# - /etc/rpimonitor/template/services.conf  service rpimonitor restart
+			if [ "$drawpile_afk_kick_installation_status" == "yes" ]; then
+				DYN_AFK_BOT_01=$(($rpi_start))
+				DYN_AFK_BOT_02=$(($rpi_start+1))
+				DYN_AFK_BOT_03=$(($rpi_start+2))
+				DYN_AFK_BOT_04=$(($rpi_start+3))
+				DYN_AFK_BOT_05=$(($rpi_start+4))
+				DYN_AFK_BOT_06=$(($rpi_start+5))
+
+				services_conf_contents_afk_bot_01=$(cat << EOF
+				
+dynamic.$DYN_AFK_BOT_01.name=afk_kick_service_desc
+dynamic.$DYN_AFK_BOT_01.source=systemctl status drawpile-afk-kick.service | grep "drawpile-afk-kick.service -"
+dynamic.$DYN_AFK_BOT_01.regexp=- (.*)
+dynamic.$DYN_AFK_BOT_02.name=afk_kick_service_act
+dynamic.$DYN_AFK_BOT_02.source=systemctl status drawpile-afk-kick.service | grep "Active: "
+dynamic.$DYN_AFK_BOT_02.regexp=(\(.*\))
+dynamic.$DYN_AFK_BOT_03.name=afk_kick_service_runtime
+dynamic.$DYN_AFK_BOT_03.source=systemctl status drawpile-afk-kick.service | grep "Active: "
+dynamic.$DYN_AFK_BOT_03.regexp=; (.*)
+
+dynamic.$DYN_AFK_BOT_04.name=afk_kick_timer_desc
+dynamic.$DYN_AFK_BOT_04.source=systemctl status drawpile-afk-kick.timer | grep "drawpile-afk-kick.timer -"
+dynamic.$DYN_AFK_BOT_04.regexp=- (.*)
+dynamic.$DYN_AFK_BOT_05.name=afk_kick_timer_act
+dynamic.$DYN_AFK_BOT_05.source=systemctl status drawpile-afk-kick.timer | grep "Active: "
+dynamic.$DYN_AFK_BOT_05.regexp=(\(.*\))
+dynamic.$DYN_AFK_BOT_06.name=afk_kick_timer_runtime
+dynamic.$DYN_AFK_BOT_06.source=systemctl status drawpile-afk-kick.timer | grep "Active: "
+dynamic.$DYN_AFK_BOT_06.regexp=; (.*)
+EOF
+)
+
+
+				services_conf_contents_afk_bot_02=$(cat << EOF
+<tr><td>"+Label(data.afk_kick_service_act,"=='(dead)'","OK","success")+Label(data.afk_kick_service_act,"=='(result: exit-code)'","KO","danger")+"</td><td><b>Drawpile AFK Kick Service</b></td><td>" + data.afk_kick_service_desc + "</td><td>"+Label(data.afk_kick_service_act,"=='(dead)'",data.afk_kick_service_runtime,"default")+Label(data.afk_kick_service_act,"!='(dead)'","-","default")+"</td></tr><tr><td>"+Label(data.afk_kick_timer_act,"=='(waiting)'","OK","success")+Label(data.afk_kick_timer_act,"!='(waiting)'","KO","danger")+"</td><td><b>Drawpile AFK Kick Timer</b></td><td>" + data.afk_kick_timer_desc + "</td><td>"+Label(data.afk_kick_timer_act,"=='(waiting)'",data.afk_kick_timer_runtime,"default")+Label(data.afk_kick_timer_act,"!='(waiting)'","-","default")+"</td></tr>
+EOF
+)
+				rpi_increment=6
+				rpi_start=$(($rpi_start + $rpi_increment))
+			else
+				# Does not increment value, continues from last. 
+				services_conf_contents_afk_bot_01=""
+				services_conf_contents_afk_bot_02=""
+			fi		
 			#---------------------------------------------------------------------------------------------------------------------------------
 			# Always shown - drawpile-listserver.service
 			
@@ -15032,6 +15099,7 @@ EOF
 			if [ "$rpi_monitor_test_output" == "y" ]; then
 				echo "
 $services_conf_contents_abuse_report_01
+$services_conf_contents_afk_bot_01
 $services_conf_contents_listserver_01
 $services_conf_contents_drawpile_monitor_01
 $services_conf_contents_drawpile_srv_01
@@ -15058,6 +15126,7 @@ $services_conf_contents_samba_choice_01" | sed -e ':L;N;s/^\n$//;t L'
 #  - mysql port (3306) - yes - no
 ########################################################################
 $services_conf_contents_abuse_report_01
+$services_conf_contents_afk_bot_01
 $services_conf_contents_listserver_01
 $services_conf_contents_drawpile_monitor_01
 $services_conf_contents_drawpile_srv_01
@@ -15071,7 +15140,7 @@ $services_conf_contents_samba_choice_01
 
 web.status.1.content.11.name=Services
 web.status.1.content.11.icon=daemons.png
-web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr>$services_conf_contents_abuse_report_02$services_conf_contents_listserver_02$services_conf_contents_drawpile_monitor_02$services_conf_contents_drawpile_srv_02$services_conf_contents_drawpile_srv_socket_02$services_conf_contents_fail2ban_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_nginx_02$services_conf_contents_PiHole_02$services_conf_contents_rpi_monitor_02$services_conf_contents_samba_choice_02</table>"
+web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr>$services_conf_contents_abuse_report_02$services_conf_contents_afk_bot_02$services_conf_contents_listserver_02$services_conf_contents_drawpile_monitor_02$services_conf_contents_drawpile_srv_02$services_conf_contents_drawpile_srv_socket_02$services_conf_contents_fail2ban_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_nginx_02$services_conf_contents_PiHole_02$services_conf_contents_rpi_monitor_02$services_conf_contents_samba_choice_02</table>"
 EOF
 )
 services_conf_contents=$( echo "
@@ -15708,17 +15777,44 @@ echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo
 echo "${bold}${cyan}*****Scripts to be downloaded for managing server. . . .*****${normal}"
 echo "${bold}${red}*****     (To be completed at a later date)             *****${normal}"
+echo
 
 sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 
 if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
 	# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
-	echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
-	echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
-	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc_server/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+	
+	if [ -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
+		echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
+		echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
+		echo
+		sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+		echo
+		echo "This script can be used to search the text files and download them for"
+		echo "easy retrieval of session recordings with WinSCP (or other methods)."
+		echo
+		echo "If you intend to enable 'Archive Terminated Sessions' in web admin, this"
+		echo "script should be run soon after the server is set up. Those files can be"
+		echo "searched to use as emergency backups to restore data, but if the server"
+		echo "fills up it will stop working completely. You can configure an automated"
+		echo "cleanup with the following instructions (make a brief note just in case):"
+		echo " - Run the script first, of course."
+		echo "     $dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+		echo " - Option 8 to 'Delete old session archives.'"
+		echo " - Set a number of days and file size according to the instructions."
+		echo " - You will then have a chance to make the job run daily at 12:00 AM."
+		echo ""
+		echo "When you've made your notes and you're ready to continue, press any key."
+		echo
+		pause
+		# sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+	else
+		echo "${bold}${cyan}File backed sessions in use, script already downloaded to find content ${normal}"
+		echo "${bold}${cyan}      for recovery and delete old backups.  ${normal}"
+		echo
+		echo "Run script directly for updates to the script."
+	fi
 fi
-
-
 
 sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
 echo
@@ -16204,6 +16300,10 @@ systemctl status drawpile-abuse-report.service --no-pager -l"
 	else
 		display_drawpile_monitor=""
 	fi
+	if [ "$drawpile_afk_kick_installation_status" == "yes" ]; then
+		display_drawpile_afk_kick="systemctl status drawpile-afk-kick.service --no-pager -l
+systemctl status drawpile-afk-kick.timer --no-pager -l"
+	fi
 	if [ "$dp_srv_startup" == "1" ]; then
 		# 1 - Socket Activation
 		display_drawpile_srv_status="systemctl status drawpile-srv.service --no-pager -l
@@ -16298,6 +16398,9 @@ Type this into address bar of file explorer to check contents of local server.
 /home/drawpileuser/drawpile-monitor-allowed-words-list.txt
 /home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt"
 	fi
+	if [ "$drawpile_afk_kick_installation_status" == "yes" ]; then
+		display_drawpile_afk_kick_files="/home/drawpileuser/drawpile-afk/drawpile-afk-kick"
+	fi
 	if [ -e "/home/drawpileuser/ListServerDB.db" ]; then
 		display_listserver_file="/home/drawpileuser/ListServerDB.db"
 	fi
@@ -16342,6 +16445,7 @@ $display_drawpile__new_admin_web_page
 ****  Drawpile Related Services  ****$display_drawpile_abuse_report
 $display_drawpile_listserver
 $display_drawpile_monitor
+display_drawpile_afk_kick
 $display_drawpile_srv_status
 
 **** Services that help Drawpile function  ****$display_fail2ban$display_lets_encrypt
@@ -16381,6 +16485,7 @@ be wiped and start over.
 $dp_install_loc/Programs/Drawpile-Srv-Files
 /home/drawpileuser/Drawpile_Configuration_Values.txt
 $display_drawpile_monitor_files
+$display_drawpile_afk_kick_files
 $display_listserver_config_file
 $display_listserver_file
 /home/drawpileuser/server.db$display_drawpile_srv_crypt_key_status
@@ -16516,6 +16621,10 @@ fi
 if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_installation_status" == "Y" ] || [ "$drawpile_monitor_installation_status" == "yes" ] || [ "$drawpile_monitor_installation_status" == "YES" ] || [ "$drawpile_monitor_installation_status" == "Yes" ]; then
 	echo "systemctl status drawpile-monitor.service --no-pager -l"
 fi
+if [ "$drawpile_afk_kick_installation_status" == "yes" ]; then
+	echo "systemctl status drawpile-afk-kick.service --no-pager -l"
+	echo "systemctl status drawpile-afk-kick.timer --no-pager -l"
+fi
 if [ "$dp_srv_startup" == "1" ]; then
 	# 1 - Socket Activation
 	echo "systemctl status drawpile-srv.service --no-pager -l"
@@ -16628,6 +16737,9 @@ if [ "$drawpile_monitor_installation_status" == "y" ] || [ "$drawpile_monitor_in
 	echo "/home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt"
 	echo "/home/drawpileuser/drawpile-monitor-allowed-words-list.txt"
 	echo "/home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt"
+fi
+if [ "$drawpile_afk_kick_installation_status" == "yes" ]; then
+	echo "/home/drawpileuser/drawpile-afk/drawpile-afk-kick"
 fi
 if [ -e "$list_server_config_file_location" ]; then
 	echo "$list_server_config_file_location"
