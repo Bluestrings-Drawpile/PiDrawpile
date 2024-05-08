@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1409
+drawpilescriptversion=0.1410
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -81,7 +81,15 @@ TICK=$( printf '\u2714\n' )
 CROSS=$( printf '\u274c\n' )
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
+app_installation_status_file=/home/drawpileuser/App-Installation-Status.txt
+app_installation_status_file_bak=/home/drawpileuser/App-Installation-Status_bak.txt
+# See the section below for the creation of the file in script.
+# Cannot use sed on an empty file containing no characters or new lines. 
 drawpile_configuration_values_file=/home/drawpileuser/Drawpile_Configuration_Values.txt
+drawpile_configuration_values_file_bak=/home/drawpileuser/Drawpile_Configuration_Values_bak.txt
+
+drawpile_completed_successfully_values_file=/home/drawpileuser/Drawpile_Completed_Values.txt
+drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Completed_Values_bak.txt
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 function pause(){
@@ -115,6 +123,9 @@ drawpile_credits_urls_functions
 echo
 pause
 echo
+
+sudo chmod 777 $app_installation_status_file
+sudo chmod 777 $drawpile_configuration_values_file
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 function language_check_and_verify_not_null_function () {
@@ -398,8 +409,8 @@ function fedora_end_of_life_function () {
 wget_or_wget2_quiet_progress="wget -q --show-progress"
 
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
-	# apt_get_function
-	# adduser_and_addgroup_function
+	apt_get_function
+	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Debian GNU/Linux 9 (stretch)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Raspbian GNU/Linux 9 (stretch)\"" ]; then
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 9 (stretch)${normal}"
@@ -419,8 +430,8 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 		exit
 	fi
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
-	# apt_get_function
-	# adduser_and_addgroup_function
+	apt_get_function
+	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
@@ -441,9 +452,9 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	#
 	what_fedora_variant_name=$( cat /etc/*-release | grep -i "^VARIANT_ID" | cut -d "=" -f2 )
-	# # dnf_function
-	# yum_function
-	# useradd_and_groupadd_function
+	# dnf_function
+	yum_function
+	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
@@ -584,6 +595,16 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_18" ] || echo "$value_description_18"
 		[ -z "$value_description_19" ] || echo "$value_description_19"
 		[ -z "$value_description_20" ] || echo "$value_description_20"
+		[ -z "$value_description_21" ] || echo "$value_description_21"
+		[ -z "$value_description_22" ] || echo "$value_description_22"
+		[ -z "$value_description_23" ] || echo "$value_description_23"
+		[ -z "$value_description_24" ] || echo "$value_description_24"
+		[ -z "$value_description_25" ] || echo "$value_description_25"
+		[ -z "$value_description_26" ] || echo "$value_description_26"
+		[ -z "$value_description_27" ] || echo "$value_description_27"
+		[ -z "$value_description_28" ] || echo "$value_description_28"
+		[ -z "$value_description_29" ] || echo "$value_description_29"
+		[ -z "$value_description_30" ] || echo "$value_description_30"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
@@ -626,6 +647,16 @@ function read_stored_config_value_query_function () {
 	value_description_18=""
 	value_description_19=""
 	value_description_20=""
+	value_description_21=""
+	value_description_22=""
+	value_description_23=""
+	value_description_24=""
+	value_description_25=""
+	value_description_26=""
+	value_description_27=""
+	value_description_28=""
+	value_description_29=""
+	value_description_30=""
 }
 
 # ----------------------------------------------------------------------------------
@@ -766,7 +797,7 @@ function DisplayLocationSelectionOptions {
 	echo '        use double or single quotes as the script will not work if you do.'
 	echo '        This directory must already exist.'
 	echo
-	echo "      ${underline}Acceptable Example:${normal} /home/$USERNAME/Desktop/My Drawpile Server/sessions"
+	echo "      ${underline}Acceptable Example:${normal} /home/$current_username/Desktop/My Drawpile Server/sessions"
 	echo "	${underline}Note:${normal} This location is an example and may not exist on your computer."
 	echo
 }
@@ -1041,16 +1072,21 @@ fi
 purge_sessions_current_version=1.1
 if [[ ! -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
 	sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
-	sudo chmod 775 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
+	sudo chmod 777 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 	purge_sessions_version="$purge_sessions_current_version"
 	sudo sed -i '\!^purge_sessions_version =!{h;s!=.*!= '"$purge_sessions_version"'!};${x;\!^$!{s!!purge_sessions_version = '"$purge_sessions_version"'!;H};x}' $drawpile_configuration_values_file
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		echo "Package perl-JSON-PP needed to run script for deleting old archives..."
+		sleep 5
+		sudo $package_install_program perl-JSON-PP
+	fi
 else
 	if [[ -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
 		purge_sessions_version=$( grep -m 1 "purge_sessions_version = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		if [[ "$purge_sessions_version" < "$purge_sessions_current_version" ]]; then
 			echo "The ./purge-sessions script is not up to date. Redownloading."
 			sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
-			sudo chmod 775 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
+			sudo chmod 777 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 			purge_sessions_version="$purge_sessions_current_version"
 			sudo sed -i '\!^purge_sessions_version =!{h;s!=.*!= '"$purge_sessions_version"'!};${x;\!^$!{s!!purge_sessions_version = '"$purge_sessions_version"'!;H};x}' $drawpile_configuration_values_file
 		elif [[ "$purge_sessions_version" = "$purge_sessions_current_version" ]]; then
@@ -1261,7 +1297,7 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 	echo
 	SaveSearchResults=$script_directory/$SearchQuery
 
-	echo These files and $SearchQueryNumber related DPREC files will be copied to 
+	echo "The session file, and $SearchQueryNumber DPREC files will be copied to "
 	echo "     $SaveSearchResults"
 	echo
 	echo Sessions will be placed into folders by date, time, and session title.
@@ -1273,7 +1309,7 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 	pause
 	echo
 	sudo mkdir -p -v "$SaveSearchResults"
-	sudo chown $USERNAME "$SaveSearchResults" -R
+	sudo chown $current_username "$SaveSearchResults" -R
 	sudo chmod 777 "$SaveSearchResults" -R
 	echo
 	if [[ -e  "/usr/local/bin/drawpile-cmd" ]]; then
@@ -1340,7 +1376,7 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 			fi
 		done
 		# --------------------------------------------------------------------------------
-		sudo chown $USERNAME "$SaveSearchResults/$NewName" -R
+		sudo chown $current_username "$SaveSearchResults/$NewName" -R
 		sudo chmod 777 "$SaveSearchResults/$NewName" -R
 		echo
 		if test -n "$(find . -name '*.session.archived' | sed 'p;s/session.archived/session/')"; then
@@ -1494,12 +1530,16 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 		echo "${bold}${cyan}Final step ... changing permissions to allow all${normal}"
 		echo "${bold}${cyan}     to modify and access...${normal}"
 		echo
-		sudo chown $USERNAME "$SaveSearchResults"
+		sudo chown $current_username "$SaveSearchResults"
 		sudo chmod 777 "$SaveSearchResults"
 		# sleep 5
 		cd "$SaveSearchResults"
 	echo ${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}
 	echo
+	echo
+	echo "Windows users can use WinSCP to retrieve these files."
+	echo "The files are located in this directory below: "
+	echo "     $SaveSearchResults"
 	echo
 	echo "${bold}${cyan}Operations completed.${normal}"
 	echo
@@ -1526,148 +1566,192 @@ elif [ "$search_query_type" == "8" ]; then
 	echo "                $disk_sessions_size"
 	echo
 
-	while :; do
-		echo "We need to set both a timeframe at which older files will be deleted and"
-		echo "a size limit to prevent the file backed sessions from growing too large."
-		echo "Failure to do so will prevent Drawpile-srv from working at all."
-		echo
-		echo
-		echo "${bold}${cyan}Delete archived session files where the session is older than a set limit.${normal}"
-		echo
-		echo "The newest file in the set of session files determines the age of a session,"
-		echo "so if it has a recording from last year and one from 2 seconds ago, the "
-		echo "session is considered to be 2 seconds old overall. Sessions that are still"
-		echo "running are not touched, even if they have individual recording files that"
-		echo "are older than set time frame. However, old files will be deleted if the total"
-		echo "total size of backups exceeds the limit we will set later. This ensures "
-		echo "backups are made available for retrievability."
-		echo
-		echo "Age can be configured in terms a number and a unit, such as days, hours,"
-		echo "minutes, or seconds. Only the first letter of the unit matters, so "
-		echo "the value values '10 days', '10DAY' or '10d' all mean the same thing."
-		echo
-		read -r -p "${bold}${cyan}Please set a valid timeframe unit:${normal} " age_to_delete_parameter
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo
-		echo "${bold}${cyan}Delete archived session files until the maximum given size is reached.${normal}"
-		echo
-		echo "If the total size of session files exceeds a set size, the oldest, fully"
-		echo "archived sessions will be deleted until enough space is freed. The newest"
-		echo "file in a set of session files determines the age of that session, so if"
-		echo "a session has one recording from last year and one from 2 seconds ago, it"
-		echo "will be considered 2 seconds old overall."
-		echo
-		echo "If that doesn't free enough space, archived recordings of still-running"
-		echo "sessions are deleted as well, oldest first. Active files of running "
-		echo "sessions are never touched though, so if deleting all archived files "
-		echo "still doesn't make enough room, the script just exits with an error."
-		echo
-		echo "${bold}${cyan}For reference:${normal}"
-		echo "1 TiB (Terabyte) = 1,024 GiB (Gigabytes) = 1,048,576 MiB (Megabytes) = "
-		echo "1,073,741,824 KiB (Kilobytes) = 1,099,511,627,776 Bytes = 1 TiB (Terabyte)"
-		echo
-		echo "${bold}${cyan}Recommended Size Guidelines:${normal}"
-		echo "     Should never be larger than the total disk size ( $disk_blocks )."
-		echo "     The value you should use depends on the situation."
-		echo "       - If the disk is completely full ( $disk_pcent used, consider"
-		echo "           anything between 90 to 100% for this situation ), then you"
-		echo "           should use something smaller than the size of the sessions"
-		echo "           folder ( $disk_sessions_size )."
-		echo "           Hopefully you are not experiencing this problem, space is "
-		echo "           required to do updates."
-		echo "       - If the disk is not highly used ( $disk_pcent used, consider "
-		echo "           anything under 40% for this situation ), then a value that"
-		echo "           is half the size of the available space ( $disk_available ) would be"
-		echo "           appropriate to maximize the number of backups available"
-		echo "           in the event of an art-emergency."
-		echo "       - If neither is true, then probably something similar to the current "
-		echo "           size of the sessions folder ( $disk_sessions_size ) is acceptable assuming"
-		echo "           the size is being reported in GB ( Gigabytes )."
-		echo
-		echo "Some personal judgement is required here, but hopefully the above helps."
-		echo
-		echo "Size is a number and a unit, which can be one of TiB, GiB, MiB, KiB or B."
-		echo "Only the first letter of the unit matters, so '10GiB', '10G' or "
-		echo "'10 gigabytes' all mean the same thing."
-		echo
-		read -r -p "${bold}${cyan}Please set a valid size unit:${normal} " size_to_delete_parameter
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo	
-		echo "${bold}${cyan}Testing inputs to ensure they are valid.${normal}"
-		echo		
-		if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
-			echo "${bold}${red}Failure: time input is invalid.${normal}"
-			age_to_delete_parameter_test=fail
-		else
-			echo "${bold}${green}Success: time input is valid.${normal}"
-			age_to_delete_parameter_test=pass
-		fi
-		echo
-		if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
-			echo "${bold}${red}Failure: size input is invalid.${normal}"
-			size_to_delete_parameter_test=fail
-		else
-			echo "${bold}${green}Success: size input is valid.${normal}"
-			size_to_delete_parameter_test=pass
-		fi
 
-		if [[ "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
+	variable_to_read_1="age_to_delete_parameter"
+	variable_to_read_2="size_to_delete_parameter"
+	variable_to_read_3=""	
+	
+	value_description_1="Value above is the length of time to retain archives. Older files are deleted."
+	value_description_2=" "
+	value_description_3="The newest file in the set of session files determines the age of a session,"
+	value_description_4="so if it has a recording from last year and one from 2 seconds ago, the "
+	value_description_5="session is considered to be 2 seconds old overall. Sessions that are still"
+	value_description_6="running are not touched, even if they have individual recording files that"
+	value_description_7="are older than set time frame. However, old files will be deleted if the total"
+	value_description_8="total size of backups exceeds the limit we will set later. This ensures "
+	value_description_9="backups are made available for retrievability."
+	value_description_10=" "
+	value_description_11="If the total size of session files exceeds a set size, the oldest, fully"
+	value_description_12="archived sessions will be deleted until enough space is freed. The newest"
+	value_description_13="file in a set of session files determines the age of that session, so if"
+	value_description_14="a session has one recording from last year and one from 2 seconds ago, it"
+	value_description_15="will be considered 2 seconds old overall."
+	value_description_16=" "
+	value_description_17="If that doesn't free enough space, archived recordings of still-running"
+	value_description_18="sessions are deleted as well, oldest first. Active files of running "
+	value_description_19="sessions are never touched though, so if deleting all archived files "
+	value_description_20="still doesn't make enough room, the script just exits with an error."
+	value_description_21=" "
+	value_description_22="If you need to change these values, answer no. Otherwise, answer yes."
+	value_description_23=" "
+	value_description_24="Value below represents the max size of the backups."
+
+	read_stored_config_value_query_function
+	
+	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+		echo "Storing value and moving on."
+		age_to_delete_parameter=$read_stored_config_value_query_1
+		size_to_delete_parameter=$read_stored_config_value_query_2
+	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+		while :; do
+			echo "We need to set both a timeframe at which older files will be deleted and"
+			echo "a size limit to prevent the file backed sessions from growing too large."
+			echo "Failure to do so will prevent Drawpile-srv from working at all."
+			echo
+			echo
+			echo "${bold}${cyan}Delete archived session files where the session is older than a set limit.${normal}"
+			echo
+			echo "The newest file in the set of session files determines the age of a session,"
+			echo "so if it has a recording from last year and one from 2 seconds ago, the "
+			echo "session is considered to be 2 seconds old overall. Sessions that are still"
+			echo "running are not touched, even if they have individual recording files that"
+			echo "are older than set time frame. However, old files will be deleted if the total"
+			echo "total size of backups exceeds the limit we will set later. This ensures "
+			echo "backups are made available for retrievability."
+			echo
+			echo "Age can be configured in terms a number and a unit, such as days, hours,"
+			echo "minutes, or seconds. Only the first letter of the unit matters, so "
+			echo "the value values '10 days', '10DAY' or '10d' all mean the same thing."
+			echo
+			read -r -p "${bold}${cyan}Please set a valid timeframe unit:${normal} " age_to_delete_parameter
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
-			if sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
-				echo
-				echo "${bold}${yellow}Crontab set up for Archive File Cleanup.${normal}"
-				echo "${bold}${yellow}Removing old info before adding new content.${normal}"
-				sudo crontab -u root -l | grep -v '#Drawpile Archive File Cleanup' | sudo crontab -u root -
-				echo
+			echo "${bold}${cyan}Delete archived session files until the maximum given size is reached.${normal}"
+			echo
+			echo "If the total size of session files exceeds a set size, the oldest, fully"
+			echo "archived sessions will be deleted until enough space is freed. The newest"
+			echo "file in a set of session files determines the age of that session, so if"
+			echo "a session has one recording from last year and one from 2 seconds ago, it"
+			echo "will be considered 2 seconds old overall."
+			echo
+			echo "If that doesn't free enough space, archived recordings of still-running"
+			echo "sessions are deleted as well, oldest first. Active files of running "
+			echo "sessions are never touched though, so if deleting all archived files "
+			echo "still doesn't make enough room, the script just exits with an error."
+			echo
+			echo "${bold}${cyan}For reference:${normal}"
+			echo "1 TiB (Terabyte) = 1,024 GiB (Gigabytes) = 1,048,576 MiB (Megabytes) = "
+			echo "1,073,741,824 KiB (Kilobytes) = 1,099,511,627,776 Bytes = 1 TiB (Terabyte)"
+			echo
+			echo "${bold}${cyan}Recommended Size Guidelines:${normal}"
+			echo "     Should never be larger than the total disk size ( $disk_blocks )."
+			echo "     The value you should use depends on the situation."
+			echo "       - If the disk is completely full ( $disk_pcent used, consider"
+			echo "           anything between 90 to 100% for this situation ), then you"
+			echo "           should use something smaller than the size of the sessions"
+			echo "           folder ( $disk_sessions_size )."
+			echo "           Hopefully you are not experiencing this problem, space is "
+			echo "           required to do updates."
+			echo "       - If the disk is not highly used ( $disk_pcent used, consider "
+			echo "           anything under 40% for this situation ), then a value that"
+			echo "           is half the size of the available space ( $disk_available ) would be"
+			echo "           appropriate to maximize the number of backups available"
+			echo "           in the event of an art-emergency."
+			echo "       - If neither is true, then probably something similar to the current "
+			echo "           size of the sessions folder ( $disk_sessions_size ) is acceptable assuming"
+			echo "           the size is being reported in GB ( Gigabytes )."
+			echo
+			echo "Some personal judgement is required here, but hopefully the above helps."
+			echo
+			echo "Size is a number and a unit, which can be one of TiB, GiB, MiB, KiB or B."
+			echo "Only the first letter of the unit matters, so '10GiB', '10G' or "
+			echo "'10 gigabytes' all mean the same thing."
+			echo
+			read -r -p "${bold}${cyan}Please set a valid size unit:${normal} " size_to_delete_parameter
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo	
+			echo "${bold}${cyan}Testing inputs to ensure they are valid.${normal}"
+			echo		
+			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
+				echo "${bold}${red}Failure: time input is invalid.${normal}"
+				age_to_delete_parameter_test=fail
+				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			else
-				:
-				# echo No crontab, sadge. Adding in crontab jerb.
+				echo "${bold}${green}Success: time input is valid.${normal}"
+				age_to_delete_parameter_test=pass
 			fi
-			echo "${bold}${cyan}Would you like to create a timed job that runs once per day?${normal}"
-			echo "${bold}${cyan}The job runs 12:00 AM, age check followed by size check.${normal}"
-			# echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
 			echo
-			echo "1 - Yes"
-			echo "2 - No"
-			echo
-			while :; do
-				read -r -p "${bold}${cyan}Please select one of the above options, 1 or 2:${normal} " drawpile_archive_file_cleanup_crontab
+			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
+				echo "${bold}${red}Failure: size input is invalid.${normal}"
+				size_to_delete_parameter_test=fail
+			else
+				echo "${bold}${green}Success: size input is valid.${normal}"
+				size_to_delete_parameter_test=pass
+				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+			fi
+
+			if [[ "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
 				echo
-				if (( "$drawpile_archive_file_cleanup_crontab" >= "1" && "$drawpile_archive_file_cleanup_crontab" <= "2" )); then
-					break
+				echo '--------------------------------------------------------------------------------'
+				echo
+				if sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
+					echo
+					echo "${bold}${yellow}Crontab set up for Archive File Cleanup.${normal}"
+					echo "${bold}${yellow}Removing old info before adding new content.${normal}"
+					sudo crontab -u root -l | grep -v '#Drawpile Archive File Cleanup' | sudo crontab -u root -
+					echo
 				else
-					echo
-					echo "${bold}${red}Invalid input selection, try again.${normal}"
-					echo
-					echo ----------------------------------------------------------------------------------
-					echo
+					:
+					# echo No crontab, sadge. Adding in crontab jerb.
 				fi
-			done
-			
-			if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
-				echo "Adding crontab job to auto clean files."
-				(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
-				# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
-			elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
-				echo "Skipping crontab job to be added."
+				echo "${bold}${cyan}Would you like to create a timed job that runs once per day?${normal}"
+				echo "${bold}${cyan}The job runs 12:00 AM, age check followed by size check.${normal}"
+				# echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
+				echo
+				echo "1 - Yes"
+				echo "2 - No"
+				echo
+				while :; do
+					read -r -p "${bold}${cyan}Please select one of the above options, 1 or 2:${normal} " drawpile_archive_file_cleanup_crontab
+					echo
+					if (( "$drawpile_archive_file_cleanup_crontab" >= "1" && "$drawpile_archive_file_cleanup_crontab" <= "2" )); then
+						break
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				done
+				
+				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
+					echo "Adding crontab job to auto clean files."
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
+					echo "Skipping crontab job to be added."
+				else
+					echo "This message should not be visible for Drawpile Archive File Cleanup via Crontab."
+				fi
+				
+				break
 			else
-				echo "This message should not be visible for Drawpile Archive File Cleanup via Crontab."
+				echo
+				echo "${bold}${red}Errors detected. Please try again.${normal}"
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo
+				continue
 			fi
-			
-			break
-		else
-			echo
-			echo "${bold}${red}Errors detected. Please try again.${normal}"
-			echo
-			echo '--------------------------------------------------------------------------------'
-			echo
-			continue
-		fi
-	done
+		done
+		sudo sed -i '\!^age_to_delete_parameter =!{h;s!=.*!= '"$age_to_delete_parameter"'!};${x;\!^$!{s!!age_to_delete_parameter = '"$age_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^size_to_delete_parameter =!{h;s!=.*!= '"$size_to_delete_parameter"'!};${x;\!^$!{s!!size_to_delete_parameter = '"$size_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
+	else
+		echo "This message should not be visible."
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -1775,5 +1859,9 @@ elif [ "$search_query_type" == "9" ]; then
 else
 	echo "This message should not be visible for selecting search method."
 fi
+
+
+sudo chmod 770 $app_installation_status_file
+sudo chmod 770 $drawpile_configuration_values_file
 
 } # this ensures the entire script is downloaded, the other part of this is located just after the script update and wget check. #
