@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1408
+drawpilescriptversion=0.1409
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1039,18 +1039,18 @@ fi
 # Version 1.0 - https://github.com/drawpile/Drawpile/commit/8974436285d5692bfc469c4ce4f77a3d0e87f98d
 # Version 1.1 - https://github.com/drawpile/Drawpile/commit/f77dd391080d0c1d6a37048cb72e8ccbf7166a8c
 purge_sessions_current_version=1.1
-if [[ ! -e "$dp_install_loc_server_scripts/purge-sessions" ]]; then
-	sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc_server_scripts/purge-sessions"
-	sudo chmod 775 "$dp_install_loc_server_scripts/purge-sessions"
+if [[ ! -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
+	sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
+	sudo chmod 775 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 	purge_sessions_version="$purge_sessions_current_version"
 	sudo sed -i '\!^purge_sessions_version =!{h;s!=.*!= '"$purge_sessions_version"'!};${x;\!^$!{s!!purge_sessions_version = '"$purge_sessions_version"'!;H};x}' $drawpile_configuration_values_file
 else
-	if [[ -e "$dp_install_loc_server_scripts/purge-sessions" ]]; then
+	if [[ -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
 		purge_sessions_version=$( grep -m 1 "purge_sessions_version = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		if [[ "$purge_sessions_version" < "$purge_sessions_current_version" ]]; then
 			echo "The ./purge-sessions script is not up to date. Redownloading."
-			sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc_server_scripts/purge-sessions"
-			sudo chmod 775 "$dp_install_loc_server_scripts/purge-sessions"
+			sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
+			sudo chmod 775 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 			purge_sessions_version="$purge_sessions_current_version"
 			sudo sed -i '\!^purge_sessions_version =!{h;s!=.*!= '"$purge_sessions_version"'!};${x;\!^$!{s!!purge_sessions_version = '"$purge_sessions_version"'!;H};x}' $drawpile_configuration_values_file
 		elif [[ "$purge_sessions_version" = "$purge_sessions_current_version" ]]; then
