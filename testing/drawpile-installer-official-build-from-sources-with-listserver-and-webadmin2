@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003904
+drawpilescriptversion=2.996003905
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -15784,7 +15784,7 @@ sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
 	# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
 	
-	if [ -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
+	if [ ! -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
 		echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
 		echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
 		echo
