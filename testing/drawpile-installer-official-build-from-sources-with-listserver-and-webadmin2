@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003906
+drawpilescriptversion=2.996003907
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -15798,8 +15798,10 @@ if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_se
 		echo "searched to use as emergency backups to restore data, but if the server"
 		echo "fills up it will stop working completely. You can configure an automated"
 		echo "cleanup with the following instructions (make a brief note just in case):"
-		echo " - Run the script first, of course."
-		echo "     $dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+		echo " - Load up the proper directory noted below."
+		echo "     cd $dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts"
+		echo " - Run the script with this command: "
+		echo "     ./drawpile-file-backed-sessions-management"
 		echo " - Option 8 to 'Delete old session archives.'"
 		echo " - Set a number of days and file size according to the instructions."
 		echo " - You will then have a chance to make the job run daily at 12:00 AM."
