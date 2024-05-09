@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1410
+drawpilescriptversion=0.1411
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1435,7 +1435,7 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 				clean_name3=$(echo "$clean_name4" | sed 's/;/ -/g')
 				clean_name2="$(echo "$clean_name3" | perl -pe 's/[^a-zA-Z0-9_.-]/ /g')"
 				# echo clean name $clean_name2
-				NewName2=$( echo $FileModDate2 - $clean_name2 )
+				NewName2=$( echo $FileModDate2 - $clean_name2.jpg )
 				# echo N $NewName2
 				echo
 				if [[ -e "$SaveSearchResults/$NewName/$NewName2" ]]; then
@@ -1491,7 +1491,7 @@ if (( "$search_query_type" >= "1" && "$search_query_type" <= "3" )); then
 				clean_name3=$(echo "$clean_name4" | sed 's/;/ -/g')
 				clean_name2="$(echo "$clean_name3" | perl -pe 's/[^a-zA-Z0-9_.-]/ /g')"
 				# echo clean name $clean_name2
-				NewName2=$( echo $FileModDate2 - $clean_name2 )
+				NewName2=$( echo $FileModDate2 - $clean_name2.jpg )
 				# echo N $NewName2
 				echo
 				if [[ "$LastFileOfSession" == "$line2" ]]; then
