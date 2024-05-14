@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003908
+drawpilescriptversion=2.996003909
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2817,31 +2817,6 @@ app_not_installed=0
 progs=($program_list_to_install_actual_dependencies $program_list_to_install_optional_dependencies);
 package_install_status_check_function
 
-
-if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
-	echo "Mini-HTTPD is enabled, disabling and stopping service."
-	sudo systemctl disable mini-httpd.service
-	sudo systemctl stop --now mini-httpd.service
-	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
-		echo "NGINX is running, restarting service."
-		sudo systemctl stop --now nginx.service
-		sudo systemctl start --now nginx.service
-	else
-		echo "NGINX is not currently running."
-	fi
-elif [[ "`systemctl is-active mini-httpd.service`" = "active" ]]; then
-	echo "Mini-HTTPD is not enabled but running, stopping service."
-	sudo systemctl stop --now mini-httpd.service
-	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
-		echo "NGINX is running, restarting service."
-		sudo systemctl stop --now nginx.service
-		sudo systemctl start --now nginx.service
-	else
-		echo "NGINX is not currently running."
-	fi
-else
-	echo "Mini-HTTPD is not enabled."
-fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -2913,6 +2888,32 @@ echo
 
 sudo $package_install_program $program_list_to_install_optional_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
+
+
+if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
+	echo "Mini-HTTPD is enabled, disabling and stopping service."
+	sudo systemctl disable mini-httpd.service
+	sudo systemctl stop --now mini-httpd.service
+	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
+		echo "NGINX is running, restarting service."
+		sudo systemctl stop --now nginx.service
+		sudo systemctl start --now nginx.service
+	else
+		echo "NGINX is not currently running."
+	fi
+elif [[ "`systemctl is-active mini-httpd.service`" = "active" ]]; then
+	echo "Mini-HTTPD is not enabled but running, stopping service."
+	sudo systemctl stop --now mini-httpd.service
+	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
+		echo "NGINX is running, restarting service."
+		sudo systemctl stop --now nginx.service
+		sudo systemctl start --now nginx.service
+	else
+		echo "NGINX is not currently running."
+	fi
+else
+	echo "Mini-HTTPD is not enabled."
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
