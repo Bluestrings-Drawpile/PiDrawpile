@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003909
+drawpilescriptversion=2.996003910
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2888,31 +2888,31 @@ echo
 
 sudo $package_install_program $program_list_to_install_optional_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
-
-
+echo
+echo
 if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
-	echo "Mini-HTTPD is enabled, disabling and stopping service."
+	echo "${bold}${red}Mini-HTTPD is enabled, disabling and stopping service.${normal}"
 	sudo systemctl disable mini-httpd.service
 	sudo systemctl stop --now mini-httpd.service
 	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
-		echo "NGINX is running, restarting service."
+		echo "${bold}${yellow}NGINX is running, restarting service.${normal}"
 		sudo systemctl stop --now nginx.service
 		sudo systemctl start --now nginx.service
 	else
-		echo "NGINX is not currently running."
+		echo "${bold}${yellow}NGINX is not currently running.${normal}"
 	fi
 elif [[ "`systemctl is-active mini-httpd.service`" = "active" ]]; then
-	echo "Mini-HTTPD is not enabled but running, stopping service."
+	echo "${bold}${red}Mini-HTTPD is not enabled but running, stopping service.${normal}"
 	sudo systemctl stop --now mini-httpd.service
 	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
-		echo "NGINX is running, restarting service."
+		echo "${bold}${yellow}NGINX is running, restarting service.${normal}"
 		sudo systemctl stop --now nginx.service
 		sudo systemctl start --now nginx.service
 	else
-		echo "NGINX is not currently running."
+		echo "${bold}${yellow}NGINX is not currently running.${normal}"
 	fi
 else
-	echo "Mini-HTTPD is not enabled."
+	echo "${bold}${green}Mini-HTTPD is not enabled.${normal}"
 fi
 echo
 echo '--------------------------------------------------------------------------------'
