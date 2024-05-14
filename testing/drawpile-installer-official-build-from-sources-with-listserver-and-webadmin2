@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003907
+drawpilescriptversion=2.996003908
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -502,7 +502,9 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
@@ -2814,6 +2816,32 @@ app_installed=0
 app_not_installed=0
 progs=($program_list_to_install_actual_dependencies $program_list_to_install_optional_dependencies);
 package_install_status_check_function
+
+
+if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
+	echo "Mini-HTTPD is enabled, disabling and stopping service."
+	sudo systemctl disable mini-httpd.service
+	sudo systemctl stop --now mini-httpd.service
+	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
+		echo "NGINX is running, restarting service."
+		sudo systemctl stop --now nginx.service
+		sudo systemctl start --now nginx.service
+	else
+		echo "NGINX is not currently running."
+	fi
+elif [[ "`systemctl is-active mini-httpd.service`" = "active" ]]; then
+	echo "Mini-HTTPD is not enabled but running, stopping service."
+	sudo systemctl stop --now mini-httpd.service
+	if [[ "`systemctl is-active nginx.service`" = "active" ]]; then
+		echo "NGINX is running, restarting service."
+		sudo systemctl stop --now nginx.service
+		sudo systemctl start --now nginx.service
+	else
+		echo "NGINX is not currently running."
+	fi
+else
+	echo "Mini-HTTPD is not enabled."
+fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
