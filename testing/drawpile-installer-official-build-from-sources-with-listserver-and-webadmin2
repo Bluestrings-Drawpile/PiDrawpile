@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003912
+drawpilescriptversion=2.996003913
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2894,7 +2894,7 @@ if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
 	echo "${bold}${red}Mini-HTTPD is enabled, disabling and stopping service.${normal}"
 	sudo systemctl disable mini-httpd.service
 	sudo systemctl stop --now mini-httpd.service
-	if [[ "`systemctl is-enabled nginx.service`" = "enabled" && ( "`systemctl is-active nginx.service`" = "failed" || "`systemctl is-active nginx.service`" = "inactive" )) ]]; then
+	if [[ "`systemctl is-enabled nginx.service`" = "enabled" && ( "`systemctl is-active nginx.service`" = "failed" || "`systemctl is-active nginx.service`" = "inactive" ) ]]; then
 		echo "${bold}${red}NGINX is failed and enabled, restarting service.${normal}"
 		echo "${bold}${red}Likely due to mini-httpd being enabled.${normal}"
 		sudo systemctl stop --now nginx.service
@@ -2909,7 +2909,7 @@ if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
 elif [[ "`systemctl is-active mini-httpd.service`" = "active" ]]; then
 	echo "${bold}${red}Mini-HTTPD is not enabled but running, stopping service.${normal}"
 	sudo systemctl stop --now mini-httpd.service
-	if [[ "`systemctl is-enabled nginx.service`" = "enabled" && ( "`systemctl is-active nginx.service`" = "failed" || "`systemctl is-active nginx.service`" = "inactive" )) ]]; then
+	if [[ "`systemctl is-enabled nginx.service`" = "enabled" && ( "`systemctl is-active nginx.service`" = "failed" || "`systemctl is-active nginx.service`" = "inactive" ) ]]; then
 		echo "${bold}${red}NGINX is failed and enabled, restarting service.${normal}"
 		echo "${bold}${red}Likely due to mini-httpd being enabled.${normal}"
 		sudo systemctl stop --now nginx.service
