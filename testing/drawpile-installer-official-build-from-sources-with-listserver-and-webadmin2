@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003913
+drawpilescriptversion=2.996003914
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -39,6 +39,7 @@ github_main_script_only_sub_folder_path=testing/
 login_credentials_length_minimum="14"
 # Normal line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --force-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # Example line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name"
 # ----------------------------------------------------------------------------------
@@ -504,6 +505,8 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
@@ -573,7 +576,15 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+			
+			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
+			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
+			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
+			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
+			wget_or_wget2_quiet_progress="wget -q --force-progress"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Workstation 39.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Workstation 38.${normal}"
@@ -1981,15 +1992,25 @@ if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" 
 
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
-	fi
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		minimum_version_wget=1.18-5
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+		version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
+		minimum_version_wget=2.1.0
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
 		installation_status_wget=$( dnf info wget | sed -n '2 p' )
+		minimum_version_wget=1.18-5
 		# Installed Packages
 		# Available Packages
 		# Error: No matching Packages to list
+	else
+		# Uses the same as first command, just in case.
+		# --> if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
+		minimum_version_wget=1.18-5
 	fi
-	minimum_version_wget=1.18-5
+	
 
 	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
 		echo "Package ${bold}wget${normal} is not installed."
@@ -2737,7 +2758,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
 
 	# Full List Unsorted
@@ -2745,14 +2766,14 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
 
 	# Full List Unsorted
@@ -2767,7 +2788,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List - optional dependencies are slightly different - httpd-core libmicrohttpd-devel libsodium-devel
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd libmicrohttpd libsodium libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
 	
 	# Full List unsorted
@@ -2777,7 +2798,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	# Unsorted
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
@@ -2786,7 +2807,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 
 	
@@ -2800,7 +2821,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	
 	# Unsorted
@@ -3354,7 +3375,8 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+
 	package_name=zlib-devel
 	package_version_length=14-20
 	version_apt_or_dnf_function
@@ -3369,8 +3391,35 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	package_version_check_and_update_function
 fi
 
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]]; then
-	echo "Placeholder for Fedora 40 and Zlib."
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+	echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
+	
+	package_name=zlib-ng-devel
+	package_version_length=14-20
+	version_apt_or_dnf_function
+	minimum_version=2.1.7
+	package_available_dpkg_or_dnf_function
+	package_description_1="zlib-ng-devel - contains libraries and header files for"
+	package_description_2="     developing application that use zlib-ng."
+	package_description_3=
+	package_description_4=
+	package_description_5=
+	install_package_set="no"
+	package_version_check_and_update_function
+	
+	
+	package_name=zlib-ng-compat-devel
+	package_version_length=14-20
+	version_apt_or_dnf_function
+	minimum_version=2.1.7
+	package_available_dpkg_or_dnf_function
+	package_description_1="zlib-ng-compat-devel - contains libraries and header files for"
+	package_description_2="     developing application that use zlib."
+	package_description_3=
+	package_description_4=
+	package_description_5=
+	install_package_set="no"
+	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
@@ -8576,30 +8625,31 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo "     in order to 'Copy User ID' or 'Copy Role ID'."
 			}
 			# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			echo "Silent reports - notify moderators via discord in the event of immediate moderation"
-			echo "     is required. Such examples might include references to illegal content."
-			echo
-			echo "For silent reports, would you like your bot to @ a particular user or group in Discord?"
-			echo
-			while :; do
-				read -r -p "${bold}${cyan}Enter (Y)es or (N)o, and hit enter to continue:${normal} " drawpile_monitor_silent_user_and_role_mentions_query
+			
+			variable_to_read_1="drawpile_monitor_silent_user_and_role_mentions_query"
+			variable_to_read_2="discord_silent_user_mentions"
+			variable_to_read_3="discord_silent_role_mentions"
+			
+			value_description_1="Drawpile-Monitor: Used for notifying users or specific "
+			value_description_2="roles in Discord of rule breaking, by User ID in Discord's"
+			value_description_3="Developer mode (Settings gear, Advanced, Developer Mode)."
+			value_description_4="     Users listed in value 2."
+			value_description_5="     Roles listed in value 3."
+
+			read_stored_config_value_query_function
+			if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+				echo "Storing value and moving on."
+				drawpile_monitor_silent_user_and_role_mentions_query=$read_stored_config_value_query_1
+			elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+				echo "Silent reports - notify moderators via discord in the event of immediate moderation"
+				echo "     is required. Such examples might include references to illegal content."
 				echo
-				if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
-					break
-				else
-					echo
-					echo "${bold}${red}Invalid input selection, try again.${normal}"
-					echo
-					echo ----------------------------------------------------------------------------------
-					echo
-				fi
-			done
-			if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ]; then
+				echo "For silent reports, would you like your bot to @ a particular user or group in Discord?"
 				echo
 				while :; do
-					read -r -p "${bold}${cyan}Would you like to set it for specific users to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_user_mentions_query
+					read -r -p "${bold}${cyan}Enter (Y)es or (N)o, and hit enter to continue:${normal} " drawpile_monitor_silent_user_and_role_mentions_query
 					echo
-					if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
+					if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
 						break
 					else
 						echo
@@ -8609,15 +8659,14 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 						echo
 					fi
 				done
-
-				if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ]; then
-					discord_developer_mode_instructions_function
+				sudo sed -i '\!^drawpile_monitor_silent_user_and_role_mentions_query =!{h;s!=.*!= '"$drawpile_monitor_silent_user_and_role_mentions_query"'!};${x;\!^$!{s!!drawpile_monitor_silent_user_and_role_mentions_query = '"$drawpile_monitor_silent_user_and_role_mentions_query"'!;H};x}' $drawpile_configuration_values_file
+				
+				if [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "Yes" ]; then
 					echo
 					while :; do
-						read -r -p "${bold}${cyan}Enter the User ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_user_mentions
+						read -r -p "${bold}${cyan}Would you like to set it for specific users to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_user_mentions_query
 						echo
-						if echo "$discord_silent_user_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
-							# echo 'Valid string'
+						if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
 							break
 						else
 							echo
@@ -8627,72 +8676,95 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 							echo
 						fi
 					done
-					
-				elif [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
+
+					if [ "$drawpile_monitor_silent_user_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "Yes" ]; then
+						discord_developer_mode_instructions_function
+						echo
+						while :; do
+							read -r -p "${bold}${cyan}Enter the User ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_user_mentions
+							echo
+							if echo "$discord_silent_user_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
+								# echo 'Valid string'
+								break
+							else
+								echo
+								echo "${bold}${red}Invalid input selection, try again.${normal}"
+								echo
+								echo ----------------------------------------------------------------------------------
+								echo
+							fi
+						done
+						sudo sed -i '\!^discord_silent_user_mentions =!{h;s!=.*!= '"$discord_silent_user_mentions"'!};${x;\!^$!{s!!discord_silent_user_mentions = '"$discord_silent_user_mentions"'!;H};x}' $drawpile_configuration_values_file
+						
+					elif [ "$drawpile_monitor_silent_user_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_mentions_query" == "No" ]; then
+						discord_silent_user_mentions=""
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+					echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					while :; do
+						echo
+						read -r -p "${bold}${cyan}Would you like to set it for specific roles to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_role_mentions_query
+						echo
+						if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+
+					if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ]; then
+						discord_developer_mode_instructions_function
+						echo
+						while :; do
+							read -r -p "${bold}${cyan}Enter the Role ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_role_mentions
+							echo
+							if echo "$discord_silent_role_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
+								# echo 'Valid string'
+								break
+							else
+								echo
+								echo "${bold}${red}Invalid input selection, try again.${normal}"
+								echo
+								echo ----------------------------------------------------------------------------------
+								echo
+							fi
+						done
+						sudo sed -i '\!^discord_silent_role_mentions =!{h;s!=.*!= '"$discord_silent_role_mentions"'!};${x;\!^$!{s!!discord_silent_role_mentions = '"$discord_silent_role_mentions"'!;H};x}' $drawpile_configuration_values_file
+					elif [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
+						discord_silent_role_mentions=""
+					else
+						echo
+						echo "${bold}${red}Invalid input selection, try again.${normal}"
+						echo
+						echo ----------------------------------------------------------------------------------
+						echo
+					fi
+				elif [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
+					echo
+					echo "Not utilizing user or group specific pings."
 					discord_silent_user_mentions=""
-				else
-					echo
-					echo "${bold}${red}Invalid input selection, try again.${normal}"
-					echo
-					echo ----------------------------------------------------------------------------------
-					echo
-				fi
-				echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				while :; do
-					echo
-					read -r -p "${bold}${cyan}Would you like to set it for specific roles to be mentioned? (Y)es or (N)o?:${normal} " drawpile_monitor_silent_role_mentions_query
-					echo
-					if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-
-				if [ "$drawpile_monitor_silent_role_mentions_query" == "y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Y" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "yes" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "YES" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "Yes" ]; then
-					discord_developer_mode_instructions_function
-					echo
-					while :; do
-						read -r -p "${bold}${cyan}Enter the Role ID(s), separated by commas. Do not use spaces:${normal} " discord_silent_role_mentions
-						echo
-						if echo "$discord_silent_role_mentions" | perl -0777 -ne 'exit(/\A\s*[0-9]{17,}+(?:,[0-9]{17,}+)*\s*\z/ ? 0 : 1)'; then
-							# echo 'Valid string'
-							break
-						else
-							echo
-							echo "${bold}${red}Invalid input selection, try again.${normal}"
-							echo
-							echo ----------------------------------------------------------------------------------
-							echo
-						fi
-					done
-				elif [ "$drawpile_monitor_silent_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_role_mentions_query" == "No" ]; then
 					discord_silent_role_mentions=""
 				else
-					echo
-					echo "${bold}${red}Invalid input selection, try again.${normal}"
-					echo
-					echo ----------------------------------------------------------------------------------
-					echo
-				fi
-			elif [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "n" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "N" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "no" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "NO" ] || [ "$drawpile_monitor_silent_user_and_role_mentions_query" == "No" ]; then
-				echo
-				echo "Not utilizing user or group specific pings."
-				discord_silent_user_mentions=""
-				discord_silent_role_mentions=""
+					echo "This message should not be visible for silent user and/or role mentions on Discord."
+				fi			
 			else
-				echo "This message should not be visible for silent user and/or role mentions on Discord."
+				echo "This message should not be visible."
 			fi
 			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${cyan}This setting controls how Drawpile-Monitor handles checking sessions with the${normal}"
 			echo "${bold}${cyan}NSFM flag set. The configurable options are as follows:${normal}"
-			echo " - ${underline}full:${normal} values used to check SFW sessions are also used for NSFM sessions."
+			echo " - ${underline}full   :${normal} values used to check SFW sessions are also used for NSFM sessions."
 			echo " - ${underline}relaxed:${normal} disable regular profanity checks, only check for stuff given in"
 			echo "        nsfm_wordlist_path, which is as follows:"
 			echo "        /home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt"
@@ -8723,9 +8795,48 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 			fi
 			echo
 			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${cyan}This setting controls how Drawpile-Monitor handles checking usernames in${normal}"
+			echo "${bold}${cyan}private sessions with the NSFM flag set.${normal}"
+			echo
+			echo "${bold}${cyan}The configurable options are as follows:${normal}"
+			echo " - ${underline}true  :${normal} NSFM usernames are allowed in private SFW sessions."
+			echo " - ${underline}false :${normal} NSFM usernames are not allowed in private SFW sessions."
+			echo
+			echo "${underline}You can choose either the number or the word typed out for this query.${normal}"
+			echo " 1 - true"
+			echo " 2 - false"
+			while :; do
+				echo
+				read -r -p "${bold}${cyan}Would you like to allow NSFM usernames in SFW private sessions?:${normal} " drawpile_monitor_nsfm_users_in_passworded_sessions_query
+				if [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "1" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "TRUE" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "True" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "true" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "2" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "FALSE" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "False" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "false" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input selection, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+
+			if [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "1" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "TRUE" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "True" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "true" ]; then
+				drawpile_monitor_nsfm_users_in_passworded_sessions=true
+			elif [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "2" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "FALSE" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "False" ] || [ "$drawpile_monitor_nsfm_users_in_passworded_sessions_query" == "false" ]; then
+				drawpile_monitor_nsfm_users_in_passworded_sessions=false
+			else
+				echo "This message for how Drawpile-Monitor handles NSFM usernames in private SFW sessions should not be visible."
+			fi
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${cyan}This setting controls if Drawpile-Monitor checks for old versions of Drawpile${normal}"
 			echo "${bold}${cyan}to update. Currently this only checks for Drawpile 2.1 and 2.2 betas.${normal}"
+			echo "${bold}${cyan}The purpose is to tell users to update before they can no longer access the${normal}"
+			echo "${bold}${cyan}server, since you may choose to restrict which versions can be used for${normal}"
+			echo "${bold}${cyan}moderation related purposes.${normal}"
 			echo
 			echo "${underline}You can choose either the number or the word typed out for this query.${normal}"
 			echo " 1 - true"
@@ -8788,410 +8899,764 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo "Note: You can manually modify the configuration also..."
 				echo "     /home/drawpileuser/drawpile-monitor/config.ini"
 				echo
-				echo "${bold}${cyan}Session name - First Warning:${normal}"
-				echo $drawpile_monitor_msg_session_name_first_warning
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 1 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_first_warning"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: First warning custom message."
+					value_description_2=""
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_first_warning=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session name - First Warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_first_warning
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 1 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 1 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session name - Second Warning:${normal}"
-				echo $drawpile_monitor_msg_session_name_second_warning
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session Name - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 2 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_second_warning"
+					variable_to_read_2=""
+					variable_to_read_3=""
+
+					value_description_1="Drawpile-Monitor: Second warning custom message."
+					value_description_2=""
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_second_warning=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then				
+					echo "${bold}${cyan}Session name - Second Warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_second_warning
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session Name - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 2 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 2 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session name - Terminate Session:${normal}"
-				echo $drawpile_monitor_msg_session_name_terminate
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session Name - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 3 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_terminate"
+					variable_to_read_2=""
+					variable_to_read_3=""
+
+					value_description_1="Drawpile-Monitor: Terminate session due to session "
+					value_description_2="                  name message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_terminate=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session name - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_name_terminate
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session Name - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 3 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 3 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session name - NSFM - First Warning:${normal}"
-				echo $drawpile_monitor_msg_session_name_first_warning_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - NSFM - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning_nsfm
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 1 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_first_warning_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: First NSFM warning custom message."
+					value_description_2=""
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_first_warning_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session name - NSFM - First Warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_first_warning_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - NSFM - Session Name - First Warning:${normal} " drawpile_monitor_msg_session_name_first_warning_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 1 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 1 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session name - NSFM - Second Warning:${normal}"
-				echo $drawpile_monitor_msg_session_name_second_warning_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning_nsfm
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 2 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_second_warning_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Second NSFM warning custom message. "
+					value_description_2=""
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_second_warning_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session name - NSFM - Second Warning:${normal}"
+					echo $drawpile_monitor_msg_session_name_second_warning_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Second Warning:${normal} " drawpile_monitor_msg_session_name_second_warning_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 2 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 2 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session name - NSFM - Terminate Session:${normal}"
-				echo $drawpile_monitor_msg_session_name_terminate_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate_nsfm
+				
+				
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 3 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_name_terminate_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Terminate NSFM session due to session "
+					value_description_2="                  name message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_name_terminate_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session name - NSFM - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_name_terminate_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session Name - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_name_terminate_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 3 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 3 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session alias termination:${normal}"
-				echo $drawpile_monitor_msg_session_alias_terminate
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session alias termination:${normal} " drawpile_monitor_msg_session_alias_terminate
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 4 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_alias_terminate"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Terminate session due to session alias"
+					value_description_2="                  message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_alias_terminate=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session alias termination:${normal}"
+					echo $drawpile_monitor_msg_session_alias_terminate
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session alias termination:${normal} " drawpile_monitor_msg_session_alias_terminate
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 4 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 4 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Session alias NSFM termination:${normal}"
-				echo $drawpile_monitor_msg_session_alias_terminate_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Session alias NSFM termination:${normal} " drawpile_monitor_msg_session_alias_terminate_nsfm
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 4 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_alias_terminate_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Terminate NSFM session due to session "
+					value_description_2="                  alias message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_alias_terminate_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Session alias NSFM termination:${normal}"
+					echo $drawpile_monitor_msg_session_alias_terminate_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Session alias NSFM termination:${normal} " drawpile_monitor_msg_session_alias_terminate_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 4 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 4 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Username - Session Founder - Terminate Session:${normal}"
-				echo $drawpile_monitor_msg_session_founder_terminate
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Username - Session Founder - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 5 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_founder_terminate"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Terminate session due to founder"
+					value_description_2="                  username message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_founder_terminate=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Username - Session Founder - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_founder_terminate
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Username - Session Founder - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 5 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 5 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Username - Session Founder - NSFM - Terminate Session:${normal}"
-				echo $drawpile_monitor_msg_session_founder_terminate_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Username - Session Founder - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate_nsfm
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 5 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_founder_terminate_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Terminate NSFM session due to "
+					value_description_2="                  founder username message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_founder_terminate_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Username - Session Founder - NSFM - Terminate Session:${normal}"
+					echo $drawpile_monitor_msg_session_founder_terminate_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Username - Session Founder - NSFM - Terminate Session:${normal} " drawpile_monitor_msg_session_founder_terminate_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 5 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 5 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Username - User kicked for offensive name:${normal}"
-				echo $drawpile_monitor_msg_user_kick
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Username - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 6 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_user_kick"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Kick user from SFW session due to "
+					value_description_2="                  inappropriate username message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_user_kick=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Username - User kicked for offensive name:${normal}"
+					echo $drawpile_monitor_msg_user_kick
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Username - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 6 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 6 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Username - NSFM - User kicked for offensive name:${normal}"
-				echo $drawpile_monitor_msg_user_kick_nsfm
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Username - NSFM - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick_nsfm
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 6 NSFM Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_user_kick_nsfm"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Kick user from NSFM session due to "
+					value_description_2="                  inappropriate username message."
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_user_kick_nsfm=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Username - NSFM - User kicked for offensive name:${normal}"
+					echo $drawpile_monitor_msg_user_kick_nsfm
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Username - NSFM - User kicked for offensive name:${normal} " drawpile_monitor_msg_user_kick_nsfm
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 6 NSFM Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 6 NSFM Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
-				echo "${bold}${cyan}Out of Date warning:${normal}"
-				echo $drawpile_monitor_msg_session_outdated
-				echo
-				while :; do
-					echo "1 - Default"
-					echo "2 - Customize"
-					echo
-					read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
-					echo
-					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-						break
-					else
-						echo
-						echo "${bold}${red}Invalid input selection, try again.${normal}"
-						echo
-						echo ----------------------------------------------------------------------------------
-						echo
-					fi
-				done
-				if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
-					:
-					# Do nothing as no error was detected.
-					# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-				elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
-					read -r -p "${bold}${cyan}Customize - Out of Date warning:${normal} " drawpile_monitor_msg_session_outdated
+				if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+					maybe_use_config_value=n
+					# Do nothing as no error was detected, user wishes to edit warning messages.
 				else
-					echo "This message should not be visible for Drawpile-Monitor Message 7 Customization."
+					# If "no" or null, should try to import previously stored values.
+					# elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
+					
+					variable_to_read_1="drawpile_monitor_msg_session_outdated"
+					variable_to_read_2=""
+					variable_to_read_3=""
+					
+					value_description_1="Drawpile-Monitor: Out of date client warning message. "
+					value_description_2=""
+					value_description_3=""
+					value_description_4=""
+					value_description_5=""
+					
+					read_stored_config_value_query_function
+				fi
+
+				if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+					echo "Storing value and moving on."
+					drawpile_monitor_msg_session_outdated=$read_stored_config_value_query_1
+				elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+					echo "${bold}${cyan}Out of Date warning:${normal}"
+					echo $drawpile_monitor_msg_session_outdated
+					echo
+					while :; do
+						echo "1 - Default"
+						echo "2 - Customize"
+						echo
+						read -r -p "${bold}${cyan}Would you like use the default message, or customize it:${normal} " drawpile_monitor_warning_messages_custom_query
+						echo
+						if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ] || [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					if [ "$drawpile_monitor_warning_messages_custom_query" == "1" ]; then
+						:
+						# Do nothing as no error was detected.
+						# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					elif [ "$drawpile_monitor_warning_messages_custom_query" == "2" ]; then
+						read -r -p "${bold}${cyan}Customize - Out of Date warning:${normal} " drawpile_monitor_msg_session_outdated
+					else
+						echo "This 1st message should not be visible for Drawpile-Monitor Message 7 Customization."
+					fi
+				else
+					echo "This 2nd message should not be visible for Drawpile-Monitor Message 7 Customization."
 				fi
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
 			}
+			
 			
 			echo "${bold}${cyan}${underline}Default list of warning messages:${normal}"
 			echo
@@ -9238,8 +9703,24 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 			echo $drawpile_monitor_msg_session_outdated
 			echo
 			echo
+			drawpile_monitor_warning_messages_query=$( grep -m 1 "drawpile_monitor_warning_messages_query = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+			
 			echo "(Y)es - Use default messages"
 			echo "(N)o  - Use custom messages"
+			if [ "$drawpile_monitor_warning_messages_query" == "y" ] || [ "$drawpile_monitor_warning_messages_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_query" == "Yes" ]; then
+				echo "        No previously set customized messages."
+			elif [ "$drawpile_monitor_warning_messages_query" == "n" ] || [ "$drawpile_monitor_warning_messages_query" == "N" ] || [ "$drawpile_monitor_warning_messages_query" == "no" ] || [ "$drawpile_monitor_warning_messages_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_query" == "No" ]; then
+				echo "        Will check for previously set customized messages."
+			else
+				if [ -e "/home/drawpileuser/drawpile-monitor/config.ini" ]; then
+					echo "        Will check for previously set customized messages, may not be available."	
+					echo "        Reconfigure from scratch or manually check file at this location to verify:"
+					echo "               /home/drawpileuser/drawpile-monitor/config.ini"
+				else
+					# if [ ! -e "/home/drawpileuser/drawpile-monitor/config.ini" ]; then
+					echo "        Will need to configure any custom messages from scratch."	
+				fi
+			fi
 			echo
 			while :; do
 				read -r -p "${bold}${cyan}Would you like to use the default (yes) or custom messages (no):${normal} " drawpile_monitor_warning_messages_query
@@ -9254,6 +9735,8 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					echo
 				fi
 			done
+			sudo sed -i '\!^drawpile_monitor_warning_messages_query =!{h;s!=.*!= '"$drawpile_monitor_warning_messages_query"'!};${x;\!^$!{s!!drawpile_monitor_warning_messages_query = '"$drawpile_monitor_warning_messages_query"'!;H};x}' $drawpile_configuration_values_file
+			
 			if [ "$drawpile_monitor_warning_messages_query" == "y" ] || [ "$drawpile_monitor_warning_messages_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_query" == "Yes" ]; then
 				echo
 				echo "Using default messages."
@@ -9312,6 +9795,19 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					read -r -p "${bold}${cyan}Please enter (Y)es or (N)o:${normal} " drawpile_monitor_warning_messages_edit_query
 					echo
 					if [ "$drawpile_monitor_warning_messages_edit_query" == "y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Y" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "yes" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "YES" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "Yes" ]; then
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_first_warning =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_first_warning"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_first_warning = '"$drawpile_monitor_msg_session_name_first_warning"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_second_warning =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_second_warning"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_second_warning = '"$drawpile_monitor_msg_session_name_second_warning"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_terminate =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_terminate"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_terminate = '"$drawpile_monitor_msg_session_name_terminate"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_first_warning_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_first_warning_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_first_warning_nsfm = '"$drawpile_monitor_msg_session_name_first_warning_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_second_warning_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_second_warning_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_second_warning_nsfm = '"$drawpile_monitor_msg_session_name_second_warning_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_name_terminate_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_session_name_terminate_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_name_terminate_nsfm = '"$drawpile_monitor_msg_session_name_terminate_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_alias_terminate =!{h;s!=.*!= '"$drawpile_monitor_msg_session_alias_terminate"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_alias_terminate = '"$drawpile_monitor_msg_session_alias_terminate"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_alias_terminate_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_session_alias_terminate_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_alias_terminate_nsfm = '"$drawpile_monitor_msg_session_alias_terminate_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_founder_terminate =!{h;s!=.*!= '"$drawpile_monitor_msg_session_founder_terminate"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_founder_terminate = '"$drawpile_monitor_msg_session_founder_terminate"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_founder_terminate_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_session_founder_terminate_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_founder_terminate_nsfm = '"$drawpile_monitor_msg_session_founder_terminate_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_user_kick =!{h;s!=.*!= '"$drawpile_monitor_msg_user_kick"'!};${x;\!^$!{s!!drawpile_monitor_msg_user_kick = '"$drawpile_monitor_msg_user_kick"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_user_kick_nsfm =!{h;s!=.*!= '"$drawpile_monitor_msg_user_kick_nsfm"'!};${x;\!^$!{s!!drawpile_monitor_msg_user_kick_nsfm = '"$drawpile_monitor_msg_user_kick_nsfm"'!;H};x}' $drawpile_configuration_values_file
+						sudo sed -i '\!^drawpile_monitor_msg_session_outdated =!{h;s!=.*!= '"$drawpile_monitor_msg_session_outdated"'!};${x;\!^$!{s!!drawpile_monitor_msg_session_outdated = '"$drawpile_monitor_msg_session_outdated"'!;H};x}' $drawpile_configuration_values_file
 						break
 					elif [ "$drawpile_monitor_warning_messages_edit_query" == "n" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "N" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "no" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "NO" ] || [ "$drawpile_monitor_warning_messages_edit_query" == "No" ]; then
 						drawpile_monitor_warning_messages_custom_function
@@ -9360,9 +9856,38 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				done
 			}
 			# ----------------------------------------------------------------------------------
+			function drawpile_monitor_manual_wordlist_tips_function () {
+				echo "Normally, words are only recognized in isolation. To "
+				echo "     recognize them even as part of other words, use *"
+				echo "     at the beginning and/or end, that will disable the"
+				echo "     boundary check on that side."
+				echo 
+				echo "     Session name       : testing"
+				echo
+				echo "     Bot Config sample 1:  test"
+				echo "                Result 1:  No Warning."
+				echo "     Bot Config sample 2:  test*"
+				echo "                Result 2:  Warning."
+				echo "     Bot Config sample 3:  *test"
+				echo "                Result 3:  No Warning."
+				echo "     Bot Config sample 4:  *test*"
+				echo "                Result 4:  Warning."
+				echo 
+				echo "${bold}This list is separated by spaces!${normal}"
+				echo 
+				echo "If you need the bot to recognize words with whitespace,"
+				echo "     you will need to edit the file manually. Spaces"
+				echo "     placed in the list will match zero or more "
+				echo "     whitespace, or some common punctuation marks."
+			}
+			
 			function drawpile_monitor_wordlist_add_function () {
+				# Read more
+				# https://github.com/drawpile/drawpile-monitor/blob/main/profanity/profanity_wordlist.txt
 				echo "If you enter the same word twice, it will be removed"
 				echo "     and the file sorted alphabetically."
+				echo
+				drawpile_monitor_manual_wordlist_tips_function
 				echo
 				read -a array -p "${bold}${cyan}Enter the list of words, separated by spaces:${normal} "
 				for n in ${array[*]};
@@ -9390,7 +9915,17 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				echo "Custom banned word list, applies to all sessions (NSFM and SFW)."
 				echo "Created file: $drawpile_monitor_filename_and_path"
 			else
-				echo "File $drawpile_monitor_filename already exists. Skipping."
+				echo "${bold}${green}File $drawpile_monitor_filename already exists. Skipping.${normal}"
+				echo
+				echo "${bold}${yellow}If you need to edit the file manually, consider manually${normal}"
+				echo "     ${bold}${yellow}editing the file and restart the service.${normal}"
+				echo "       nano $drawpile_monitor_filename_and_path"
+				echo "       sudo systemctl restart drawpile-monitor.service"
+				echo
+				drawpile_monitor_manual_wordlist_tips_function
+				echo
+				echo "Or consult the profanity_wordlist.txt file for details."
+				echo "     https://github.com/drawpile/drawpile-monitor/blob/main/profanity/profanity_wordlist.txt"
 			fi
 			echo
 			echo ----------------------------------------------------------------------------------
@@ -9415,7 +9950,17 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					echo 'Not adding any words to this file.'
 				fi
 			else
-				echo "File $drawpile_monitor_filename already exists. Skipping."
+				echo "${bold}${green}File $drawpile_monitor_filename already exists. Skipping.${normal}"
+				echo
+				echo "${bold}${yellow}If you need to edit the file manually, consider manually${normal}"
+				echo "     ${bold}${yellow}editing the file and restart the service.${normal}"
+				echo "       nano $drawpile_monitor_filename_and_path"
+				echo "       sudo systemctl restart drawpile-monitor.service"
+				echo
+				drawpile_monitor_manual_wordlist_tips_function
+				echo
+				echo "Or consult the profanity_wordlist.txt file for details."
+				echo "     https://github.com/drawpile/drawpile-monitor/blob/main/profanity/profanity_wordlist.txt"
 			fi
 			echo
 			echo ----------------------------------------------------------------------------------
@@ -9437,7 +9982,17 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					echo 'Not adding any words to this file.'
 				fi
 			else
-				echo "File $drawpile_monitor_filename already exists. Skipping."
+				echo "${bold}${green}File $drawpile_monitor_filename already exists. Skipping.${normal}"
+				echo
+				echo "${bold}${yellow}If you need to edit the file manually, consider manually${normal}"
+				echo "     ${bold}${yellow}editing the file and restart the service.${normal}"
+				echo "       nano $drawpile_monitor_filename_and_path"
+				echo "       sudo systemctl restart drawpile-monitor.service"
+				echo
+				drawpile_monitor_manual_wordlist_tips_function
+				echo
+				echo "Or consult the profanity_wordlist.txt file for details."
+				echo "     https://github.com/drawpile/drawpile-monitor/blob/main/profanity/profanity_wordlist.txt"
 			fi
 			echo
 			echo ----------------------------------------------------------------------------------
@@ -9463,12 +10018,23 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					echo 'Not adding any words to this file.'
 				fi
 			else
-				echo "File $drawpile_monitor_filename already exists. Skipping."
+				echo "${bold}${green}File $drawpile_monitor_filename already exists. Skipping.${normal}"
+				echo
+				echo "${bold}${yellow}If you need to edit the file manually, consider manually${normal}"
+				echo "     ${bold}${yellow}editing the file and restart the service.${normal}"
+				echo "       nano $drawpile_monitor_filename_and_path"
+				echo "       sudo systemctl restart drawpile-monitor.service"
+				echo
+				drawpile_monitor_manual_wordlist_tips_function
+				echo
+				echo "Or consult the profanity_wordlist.txt file for details."
+				echo "     https://github.com/drawpile/drawpile-monitor/blob/main/profanity/profanity_wordlist.txt"
 			fi
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			# --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			# https://github.com/drawpile/drawpile-monitor/blob/main/config.template.ini
 			cat <<EOF | sudo tee /home/drawpileuser/drawpile-monitor/config.ini >/dev/null
 # This is a template configuration file. Copy it to config.ini and fill it in.
 
@@ -9488,21 +10054,26 @@ discord_webhook_url=$discord_webhook_URL
 database_path=/home/drawpileuser/drawpile-monitor.db
 
 # Path to a file that contains additional banned words, one per line.
+# See profanity/profanity_wordlist.txt for the format of that file.
 # Old Value for script
 # 	wordlist_path=/home/drawpileuser/drawpile-monitor-custom-list.txt
 wordlist_path=/home/drawpileuser/drawpile-monitor-custom-banned-words-list.txt
 
 # Path to a file that contains banned words even for NSFM sessions, one per
 # line. For non-NSFM sessions, this will be merged with wordlist_path.
+# See profanity/profanity_wordlist.txt for the format of that file.
 nsfm_wordlist_path=/home/drawpileuser/drawpile-monitor-custom-nsfm-banned-words-list.txt
 
 # Path to a file containing explicitly allowed words, one per line. These words
 # will be removed from consideration when checking for profanity.
+# See profanity/profanity_wordlist.txt for the format of that file, but note
+# that this option does NOT handle * or spaces specially, they're verbatim!
 allowlist_path=/home/drawpileuser/drawpile-monitor-allowed-words-list.txt
 
 # Path to a file containing words that should trigger a report, but not notify
 # the offending session or user about that infraction. This feature requires
 # discord_webhook_url to be set so that it can actually notify someone.
+# See profanity/profanity_wordlist.txt for the format of that file.
 silent_wordlist_path=/home/drawpileuser/drawpile-monitor-silent-notify-words-list.txt
 
 # Users/roles to mention in silent notifications as a list of comma-separated
@@ -9524,6 +10095,13 @@ min_offensive_probability=90
 # Default script
 #      handle_nsfm=relaxed
 handle_nsfm=$drawpile_monitor_handle_nsfm
+
+# When this setting is enabled, NSFM usernames in passworded sessions are
+# allowed even if the session does not have the NSFM flag set, since those
+# usernames aren't visible publicly anyway. Defaults to false.
+# Default Script
+#      nsfm_users_in_passworded_sessions=true
+nsfm_users_in_passworded_sessions=$drawpile_monitor_nsfm_users_in_passworded_sessions
 
 # How many runs in a row can have errors before sending a report to the Discord
 # webhook. So, for example, if you set it to 3, it will be quiet the first 3
@@ -9581,15 +10159,17 @@ EOF
 			echo "     The purpose of dry run mode is to see what changes need"
 			echo "     to be made to work with your desired moderation methods."
 			echo
-			echo "     Running it in dry mode won't warn users, but may miss"
-			echo "     reporting on sessions that are shorter than the period"
-			echo "     to check for violations. Shorter durations will create"
-			echo "     more messages to read through to fine-tune the script."
-			echo "     When testing Drawpile-monitor, busy servers with lots of"
-			echo "     users should use longer intervals (30 or 60 minutes), and"
-			echo "     servers that are less busy can use shorter intervals if"
-			echo "     desired. How many reports depends on the total number of"
-			echo "     rooms in use and users connecting to the server."
+			echo "     Running it in dry mode won't warn users and messages "
+			echo "     are deduplicated to avoid spamming discord."
+			# echo "     Running it in dry mode won't warn users, but may miss"
+			# echo "     reporting on sessions that are shorter than the period"
+			# echo "     to check for violations. Shorter durations will create"
+			# echo "     more messages to read through to fine-tune the script."
+			# echo "     When testing Drawpile-monitor, busy servers with lots of"
+			# echo "     users should use longer intervals (30 or 60 minutes), and"
+			# echo "     servers that are less busy can use shorter intervals if"
+			# echo "     desired. How many reports depends on the total number of"
+			# echo "     rooms in use and users connecting to the server."
 			echo
 			echo "     ${red}${bold}To change the status later, you will need to modify${normal}"
 			echo "     ${red}${bold}the service file and then restart the service.${normal}"
@@ -9598,22 +10178,39 @@ EOF
 			echo "     sudo systemctl restart drawpile-monitor.service"
 			echo
 			echo "${bold}${cyan} 1 - activated - check randomly between 20 to 60 seconds${normal}"
+			echo "${bold}${cyan} 2 - dry run   - messages are de-duplicated so it${normal}"
+			echo "     ${bold}${cyan}should no longer spam Discord for logging purposes.${normal}"
+			echo "     ${bold}${cyan}Will still check for rooms randomly between 20 and ${normal}"
+			echo "     ${bold}${cyan}60 seconds.${normal}"
 			echo
-			echo "${bold}${cyan} 2 - dry run mode - check every 5 minutes${normal}"
-			echo "     reports per session in 24 hrs - 288"
-			echo "${bold}${cyan} 3 - dry run mode - check every 10 minutes${normal}"
-			echo "     reports per session in 24 hrs - 144"
-			echo "${bold}${cyan} 4 - dry run mode - check every 20 minutes${normal}"
-			echo "     reports per session in 24 hrs - 72"
-			echo "${bold}${cyan} 5 - dry run mode - check every 30 minutes${normal}"
-			echo "     reports per session in 24 hrs - 48"
-			echo "${bold}${cyan} 6 - dry run mode - check every 60 minutes${normal}"
-			echo "     reports per session in 24 hrs - 24"
+			echo "     ${bold}${cyan}Deduplication requires database to avoid duplicates.${normal}"
+			echo "     ${bold}${cyan}If this file gets too large, it can be safely deleted.${normal}"
+			echo "          /home/drawpileuser/drawpile-monitor.db"
+			echo 
+			echo "          ${bold}Read More from the link below:${normal}"
+			echo "          Since it doesn't store anything to the database, it would normally"
+			echo "          repeatedly report the same infraction. Those now get deduplicated"
+			echo "          so that they're only reported once, which makes test runs a bit"
+			echo "          more feasible. They still get logged each time around though."
+			echo "            https://github.com/drawpile/drawpile-monitor/commit/8883ba22252eb2b28b1f0ae7f4786e0bb5ddba87"
+			echo
+			
+			# Old Configuration Options
+			# echo "${bold}${cyan} 2 - dry run mode - check every 5 minutes${normal}"
+			# echo "     reports per session in 24 hrs - 288"
+			# echo "${bold}${cyan} 3 - dry run mode - check every 10 minutes${normal}"
+			# echo "     reports per session in 24 hrs - 144"
+			# echo "${bold}${cyan} 4 - dry run mode - check every 20 minutes${normal}"
+			# echo "     reports per session in 24 hrs - 72"
+			# echo "${bold}${cyan} 5 - dry run mode - check every 30 minutes${normal}"
+			# echo "     reports per session in 24 hrs - 48"
+			# echo "${bold}${cyan} 6 - dry run mode - check every 60 minutes${normal}"
+			# echo "     reports per session in 24 hrs - 24"
 
 			while :; do
 				echo
 				read -r -p "${bold}${cyan}Please select a number:${normal} " drawpile_monitor_run_type_query
-				if (( "$drawpile_monitor_run_type_query" >= "1" && "$drawpile_monitor_run_type_query" <= "6" )) ; then
+				if (( "$drawpile_monitor_run_type_query" >= "1" && "$drawpile_monitor_run_type_query" <= "2" )) ; then
 					break
 				else
 					echo
@@ -9629,25 +10226,9 @@ EOF
 				echo "     ./drawpile-monitor.py --interval=20 --jitter=40"
 				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40"
 			elif [ "$drawpile_monitor_run_type_query" == "2" ]; then
-				echo "Setting run type: Dry Run 5 minute intervals"
-				echo "     ./drawpile-monitor.py --dryrun --interval=300"
-				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=300"
-			elif [ "$drawpile_monitor_run_type_query" == "3" ]; then
-				echo "Setting run type: Dry Run 10 minute intervals"
-				echo "     ./drawpile-monitor.py --dryrun --interval=600"
-				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=600"
-			elif [ "$drawpile_monitor_run_type_query" == "4" ]; then
-				echo "Setting run type: Dry Run 20 minute intervals"
-				echo "     ./drawpile-monitor.py --dryrun --interval=1200"
-				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=12000"
-			elif [ "$drawpile_monitor_run_type_query" == "5" ]; then
-				echo "Setting run type: Dry Run 30 minute intervals"
-				echo "     ./drawpile-monitor.py --dryrun --interval=1800"
-				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=1800"
-			elif [ "$drawpile_monitor_run_type_query" == "6" ]; then
-				echo "Setting run type: Dry Run 60 minute intervals"
-				echo "     ./drawpile-monitor.py --dryrun --interval=3600"
-				drawpile_monitor_run_type="./drawpile-monitor.py --dryrun --interval=3600"
+				echo "Setting run type: Dry Run"
+				echo "     ./drawpile-monitor.py --dryrun"
+				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40 --dryrun"
 			else
 				echo "This message should not be visible for configuring Drawpile-Monitor run type."
 			fi
@@ -9672,6 +10253,9 @@ $drawpile_monitor_run_type
 # ----------------------------------------------------------------------------------
 # ------------------------------------ Examples ------------------------------------
 # ----------------------------------------------------------------------------------
+# No longer duplicates messages during a dry run. Information provided below is for reference only.
+# https://github.com/drawpile/drawpile-monitor/commit/8883ba22252eb2b28b1f0ae7f4786e0bb5ddba87
+
 # To do a dry-run (makes checks and reports to Discord, but does not act):
 # ./drawpile-monitor.py --dryrun
 
@@ -12232,7 +12816,7 @@ EOF
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, you must first manually install the certificate from the server (which is good for 1 year). Once installed, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, you must first manually install the certificate from the server (which is good for 1 year). Once installed, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a> If you don't want to draw with anyone else online, <a href=\"https:\/\/web.drawpile.net\" target=\"web-client\">click here to load the web client in stand alone mode from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 			
 			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 			
@@ -12542,7 +13126,7 @@ EOF
 		# sudo sed -i -e 's/list-url="\/listing\/sessions\/"/list-url="https:\/\/example.hostwebsite.com\/listing\/sessions\/"/g' /home/pi/Public/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
+			sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=$hostname\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a> If you don't want to draw with anyone else online, <a href=\"https:\/\/web.drawpile.net\" target=\"web-client\">click here to load the web client in stand alone mode from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 		fi
 		
@@ -13793,8 +14377,16 @@ EOF
 			}
 
 			if [ "$python_version" == "3.12" ]; then
-				echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Ubuntu 24.04 currently.${normal}"
-				sudo $package_install_program python3-pyinotify python3-systemd
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Fedora 40 currently.${normal}"
+					sudo $package_install_program python3-inotify python3-systemd
+				elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Ubuntu 24.04 currently.${normal}"
+					sudo $package_install_program python3-pyinotify python3-systemd
+				else
+					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues currently.${normal}"
+					sudo $package_install_program python3-pyinotify python3-systemd
+				fi
 
 				sudo mkdir -p -v "/tmp/f2b"
 				cd /tmp/f2b
@@ -13974,6 +14566,18 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+if [ ! -z "$dp_install_loc_9_custom" ] && [[ -d "$dp_install_loc_9_custom" ]]; then
+	echo "${bold}${cyan}Custom location set, action required.${normal}"
+	echo 
+	echo "${bold}${red}Changing permissions of directory to add group drawpileread.${normal}"
+	sudo chown :drawpileread "$dp_install_loc_9_custom" -R
+	echo
+	echo "${bold}${red}Setting read-write-execute (770) chmod permissions ${normal}"
+	echo "${bold}${red}for directory.${normal}"
+	sudo chmod 770 "$dp_install_loc_9_custom" -R
+	echo
+fi
+
 echo "${bold}${cyan}***** Drawpile Server Startup Configuration . . .*****${normal}"
 echo
 
