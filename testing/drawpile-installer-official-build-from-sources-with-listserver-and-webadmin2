@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003914
+drawpilescriptversion=2.996003915
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -503,7 +503,9 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
