@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003915
+drawpilescriptversion=2.996003916
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -10229,7 +10229,7 @@ EOF
 				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40"
 			elif [ "$drawpile_monitor_run_type_query" == "2" ]; then
 				echo "Setting run type: Dry Run"
-				echo "     ./drawpile-monitor.py --dryrun"
+				echo "     ./drawpile-monitor.py --interval=20 --jitter=40 --dryrun"
 				drawpile_monitor_run_type="./drawpile-monitor.py --interval=20 --jitter=40 --dryrun"
 			else
 				echo "This message should not be visible for configuring Drawpile-Monitor run type."
