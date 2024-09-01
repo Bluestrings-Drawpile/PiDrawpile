@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003916
+drawpilescriptversion=2.996003917
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -495,7 +495,13 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 12 (bookworm)${normal}"
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo "${bold}${red}Unable to identify if supported. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo "Raspbian or Debian : $verify_if_this_is_raspbian_or_debian"
+		echo "Pi Model           : $verify_pi_model"
 		echo
 		sleep 30
 		exit
@@ -517,10 +523,19 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.3 LTS.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu, version may not be supported.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
-		echo 
+		echo "${bold}${red}Unable to identify if supported. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 		exit
 	fi	
@@ -571,7 +586,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			fedora_end_of_life_function
 		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo "${bold}${yellow}Running Fedora Server, version may not be supported.${normal}"
-			echo "Version: $what_linux_flavor"
+			echo
+			echo "Linux Name         : $what_linux_name"
+			echo "Linux Flavor       : $what_linux_flavor"
+			echo "Architecture       : $what_architecture"
 			echo
 			sleep 30
 		else
@@ -592,7 +610,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
-			echo "Version: $what_linux_flavor"
+			echo
+			echo "Linux Name         : $what_linux_name"
+			echo "Linux Flavor       : $what_linux_flavor"
+			echo "Architecture       : $what_architecture"
 			echo
 			sleep 30
 		else
@@ -601,15 +622,29 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo "${bold}${red}Unable to identify if supported system. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
 		echo
 		sleep 30
 		exit
 	fi
 else
-	echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+	echo "${bold}${red}Unable to identify if supported system. Exiting script.${normal}"
+	echo
+	echo "Linux Name         : $what_linux_name"
+	echo "Linux Flavor       : $what_linux_flavor"
+	echo "Architecture       : $what_architecture"
+	echo "Raspbian or Debian : $verify_if_this_is_raspbian_or_debian"
+	echo "Pi Model           : $verify_pi_model"
 	echo
 	sleep 30
 	exit
