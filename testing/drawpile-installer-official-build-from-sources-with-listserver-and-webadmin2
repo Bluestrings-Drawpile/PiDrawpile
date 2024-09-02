@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003917
+drawpilescriptversion=2.996003918
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1926,7 +1926,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		dp_install_loc=$option_loc_6
 		echo "Install location chosen is $dp_install_loc"
 	elif [ "$dp_install_loc" == "9" ]; then
-		dp_install_loc=dp_install_loc_9_custom
+		dp_install_loc=$dp_install_loc_9_custom
 		echo "Install location chosen is $dp_install_loc"
 	else
 		sudo mkdir -p -v "$dp_install_loc"
