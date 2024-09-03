@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003920
+drawpilescriptversion=2.996003921
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1786,8 +1786,6 @@ function display_location_selection_options () {
 	echo '        desired without a / at the end. This is an advanced option and not'
 	echo '        suggested for average users. If using a path with spaces, do NOT '
 	echo '        use double or single quotes as the script will not work if you do.'
-	echo '        This directory must already exist. If not, create it manually '
-	echo '        before using this script.'
 	echo
 	echo "      ${underline}Acceptable Example:${normal} $option_loc_2/My Drawpile Server"
 	echo "	${underline}Note:${normal} This location is an example and may not exist on your computer."
@@ -1824,7 +1822,7 @@ function invalid_path_selection_01 () {
 }
 
 variable_to_read_1=dp_install_loc
-variable_to_read_2=""
+variable_to_read_2=dp_install_loc_9_custom
 variable_to_read_3=""
 
 value_description_1="Set location to download source files, server scripts, server files, etc..."
@@ -1835,6 +1833,26 @@ read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 	echo "Storing value and moving on."
 	dp_install_loc=$read_stored_config_value_query_1
+	dp_install_loc_9_custom=$read_stored_config_value_query_2
+	
+	if [[ "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]] && [ ! -z "$dp_install_loc_9_custom" ] && [[ -d "$dp_install_loc_9_custom" ]]; then
+		echo
+		echo "${bold}${cyan}Custom location set, script not yet completed fully, action required.${normal}"
+		echo 
+		echo "${bold}${red}Changing permissions of directory to add group drawpileread.${normal}"
+		sudo chown drawpileuser:drawpileread "$dp_install_loc_9_custom" -R
+		echo
+		echo "${bold}${red}Setting read-write-execute (775) chmod permissions ${normal}"
+		echo "${bold}${red}for directory.${normal}"
+		sudo chmod 775 "$dp_install_loc_9_custom" -R
+		#
+		# - https://stackoverflow.com/questions/68638028/members-of-group-cant-access-directory-in-linux
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+	fi
+	
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	display_location_selection_options
 	while :; do
@@ -14669,11 +14687,16 @@ if [ ! -z "$dp_install_loc_9_custom" ] && [[ -d "$dp_install_loc_9_custom" ]]; t
 	echo "${bold}${cyan}Custom location set, action required.${normal}"
 	echo 
 	echo "${bold}${red}Changing permissions of directory to add group drawpileread.${normal}"
-	sudo chown :drawpileread "$dp_install_loc_9_custom" -R
+	sudo chown drawpileuser:drawpileread "$dp_install_loc_9_custom" -R
 	echo
-	echo "${bold}${red}Setting read-write-execute (770) chmod permissions ${normal}"
+	echo "${bold}${red}Setting read-write-execute (775) chmod permissions ${normal}"
 	echo "${bold}${red}for directory.${normal}"
-	sudo chmod 770 "$dp_install_loc_9_custom" -R
+	sudo chmod 775 "$dp_install_loc_9_custom" -R
+	#
+	# - https://stackoverflow.com/questions/68638028/members-of-group-cant-access-directory-in-linux
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
 	echo
 fi
 
@@ -16350,30 +16373,18 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	drawpile_external_authentication=$read_stored_config_value_query_1
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo
-	echo 'Drawpile now supports saved username logins. To enable this feature, you'
-	echo 'must login to the server using the web admin page (or remote GUI admin) and then'
-	echo "you must copy in the following line into the ${underline}Validation key:${normal}"
+	echo 'Drawpile now supports saved username logins. You can choose to enable this'
+	echo 'now or do so later manually in the web admin web page.'
 	echo
+	echo "${underline}Validation key (for manual configuration:${normal}"
 	echo '     9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='
 	# 9 echo Jenga 2 tango Mary Jenga lima quebec green Sierra quebec Hotel Oscar India Kite / Green India / quebec zebra Sierra 1 4 Whiskey quebec India x-ray Hotel echo Bravo 1 India mary 5 Hotel sierra / Charlie Charlie Charlie kite =
 	echo
-	echo "${underline}External authentication${normal} must also be checked. It is highly suggested that"
-	echo "the ${underline}Permit guest logins when ext-auth server is unreachable${normal} is checked and"
-	echo "${underline}Allow ext-auth moderators${normal} is unchecked."
-	echo
-	echo "${underline}User group:${normal} should be blank, unless you're part of the Drawpile community"
-	echo "page ( https://drawpile.net/communities/ ). In which case, the part to "
-	echo "type in will be after 'communities/' and the final forward slash /. Such"
-	echo "as 'your-community-name' in the following hyperlink: "
-	echo "     https://drawpile.net/communities/your-community-name/"
-	echo
-	echo "To read more on ${bold}External authentication${normal}, go to this link"
-	echo "and find that header on the website."
-	echo "     https://drawpile.net/help/server/"
+	echo "${bold}Read more on External authentication${normal}:"
+	echo "     https://drawpile.net/help/server/  -or-  https://docs.drawpile.net/help/tech/extauth"
 	echo "     https://docs.drawpile.net/help/server/serverconfig#external-authentication-user-group"
 	echo
-	echo
-	echo "Please note: any accounts you create on your server will override any"
+	echo "${underline}Please note:${normal} any accounts you create on your server will override any"
 	echo "     externally registered accounts. Other settings will be changed as"
 	echo "     well to work with external authentication. If you dislike any of"
 	echo "     these changes, you can manually toggle it off in web admin."
@@ -16381,15 +16392,19 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo " * External Authentication option is enabled."
 	echo " * External Authentication Validation key is inserted."
 	echo " * External Authentication group is set to: NULL (aka blank, no value)"
-	echo "     - This setting is intended for official Drawpile community servers."
+	echo "     - ${underline}User group:${normal} should be blank, unless you're"
+	echo "         part of the Drawpile community page ( https://drawpile.net/communities/ ). "
+	echo "         In which case, the part to type in will be after 'communities/'"
+	echo "         and before the final forward slash /. Such as 'your-community-name'"
+	echo "         in the following hyperlink example: "
+	echo "              https://drawpile.net/communities/your-community-name/"
 	echo " * Externally Authenticated Mods are disabled."
 	echo " * Externally Authenticated Hosts are set to false."
 	echo " * Externally Authenticated Avatars are enabled."
 	echo " * Guest logins are allowed when the external authentication server"
 	echo "     cannot be contacted."
 	echo
-	echo
-	echo "If you want, the script can enable this feature automatically!"
+	echo "Would you like to enable this feature automatically?"
 	echo "     1 - Enable External Authentication."
 	echo "     2 - Do not Enable External Authentication."
 	echo
