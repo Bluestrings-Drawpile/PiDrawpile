@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003919
+drawpilescriptversion=2.996003920
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -510,11 +510,11 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
 	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
@@ -550,7 +550,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
@@ -597,7 +597,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
@@ -16374,7 +16374,20 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo
 	echo
 	echo "Please note: any accounts you create on your server will override any"
-	echo "     externally registered accounts."
+	echo "     externally registered accounts. Other settings will be changed as"
+	echo "     well to work with external authentication. If you dislike any of"
+	echo "     these changes, you can manually toggle it off in web admin."
+	echo
+	echo " * External Authentication option is enabled."
+	echo " * External Authentication Validation key is inserted."
+	echo " * External Authentication group is set to: NULL (aka blank, no value)"
+	echo "     - This setting is intended for official Drawpile community servers."
+	echo " * Externally Authenticated Mods are disabled."
+	echo " * Externally Authenticated Hosts are set to false."
+	echo " * Externally Authenticated Avatars are enabled."
+	echo " * Guest logins are allowed when the external authentication server"
+	echo "     cannot be contacted."
+	echo
 	echo
 	echo "If you want, the script can enable this feature automatically!"
 	echo "     1 - Enable External Authentication."
@@ -16401,7 +16414,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo "Inserted setting for external authentication to server"
 			echo "database."
 			echo
-			if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+			if ! eecho "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', NULL), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
 				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
 				command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
 			else
@@ -16411,8 +16424,23 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		else
 			echo "${bold}${green}External authentication token already inserted into server settings database file.${normal}"
 		fi
-	fi	
+	elif [ "$drawpile_external_authentication" == "2" ]; then		
+		echo "If values were previously inserted into database, they"
+		echo "will be removed from the database."
+		
+		echo "delete from settings where key = 'extauthkey'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extauth'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extauthgroup'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extauthmod'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extauthhost'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extAuthAvatars'" | sudo sqlite3 /home/drawpileuser/server.db
+		echo "delete from settings where key = 'extauthfallback'" | sudo sqlite3 /home/drawpileuser/server.db
+	else
+		echo "${bold}${red}This message for the external authentication token should not be visible.${normal}"
+	fi
 
+	# Useful site to check SQL Table --> https://sqliteviewer.app
+	
 	# if [ "$drawpile_external_authentication" == "1" ]; then
 	# 	# Old value below
 	# 	# echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile');" | sudo sqlite3 /home/drawpileuser/server.db
