@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003918
+drawpilescriptversion=2.996003919
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -7249,62 +7249,6 @@ EOF
 else
 	echo "This message should not be visible."
 fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}***** Making backup of drawpile-srv systemd files *****${normal}"
-echo "${bold}${cyan}*****            before modification.             *****${normal}"
-echo
-if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" ]]; then
-	echo "Did not find drawpile-srv.service file sample. Downloading and setting up."
-	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
-	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.service" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
-	echo
-fi
-
-if [[ -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
-	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-		if grep 'ListenStream=27751' "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" > /dev/null; then
-			sudo sed -i -e "s/^# ListenStream=27751/ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
-		else
-			sudo sed -i -e "s/^ListenStream=27780/ListenStream=27780\n\# Adding a third port activates the web client for 2.2.0 and above.\nListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
-		fi
-	else
-		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
-		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
-	fi
-elif [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
-	echo "Did not find drawpile-srv.socket file sample. Downloading and setting up."
-	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
-	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
-	echo
-	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
-		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
-		# No changes need to be made to drawpile-srv.socket
-		:
-	else
-		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
-		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
-	fi
-else
-	echo "This message should not be visible. The file 'drawpile-srv.socket' either exists or it does not."
-fi
-
-sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
-
-echo 'Modifying drawpile-srv.service . . .'
-
-sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
-#
-cd "$dp_install_loc"
-sudo chmod 777 "$dp_install_loc" -R
-cd "$dp_install_loc/Programs"
-sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/" -R
-sudo mkdir -p -v Drawpile-Srv-Files
-cd Drawpile-Srv-Files
-sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
-sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	echo
@@ -7314,18 +7258,42 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 	echo "${bold}${cyan}***** Enable Encrypted Ban Export for Users . . .*****${normal}"
 	echo
 	variable_to_read_1="drawpile_srv_crypt_key"
-	variable_to_read_2=""
+	variable_to_read_2="drawpile_srv_crypt_key_status"
 	variable_to_read_3=""
 
 	value_description_1="Drawpile Encrypted Ban Export Private Key."
 	value_description_2="Used to encrypt ban lists so users can export"
 	value_description_3="the data and reuse when hosting a session."
+	value_description_4=""
+	value_description_5="First value is crypt key, second is if it is enabled/disabled."
 
 	read_stored_config_value_query_function
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
 		drawpile_srv_crypt_key=$read_stored_config_value_query_1
+		drawpile_srv_crypt_key_status=$read_stored_config_value_query_2
 		reused_drawpile_srv_crypt_key_status=yes
+		
+		# This is checking for a null value because oops I might have goofed that up, and this should correct the Drawpile_Configuration_Values.txt
+		drawpile_srv_crypt_key_length=${#drawpile_srv_crypt_key}		
+		if [[ -z "$drawpile_srv_crypt_key" || "$drawpile_srv_crypt_key_length" != "44" ]] && [[ -z "$drawpile_srv_crypt_key_status" || "$drawpile_srv_crypt_key_status" = "=" ]]; then
+			# If drawpile_srv_crypt_key is null or not equal to 44 characters, then this option would be declined.
+			drawpile_srv_crypt_key_status=no
+			echo "Correcting blank value stored in Drawpile_Configuration_Values.txt"
+			echo "Variable drawpile_srv_crypt_key_status will be set to: no"
+			sudo sed -i '\!^drawpile_srv_crypt_key_status =!{h;s!=.*!= '"$drawpile_srv_crypt_key_status"'!};${x;\!^$!{s!!drawpile_srv_crypt_key_status = '"$drawpile_srv_crypt_key_status"'!;H};x}' $drawpile_configuration_values_file
+		elif [[ ! -z "$drawpile_srv_crypt_key" && "$drawpile_srv_crypt_key_length" == "44" ]] && [[ -z "$drawpile_srv_crypt_key_status" || "$drawpile_srv_crypt_key_status" = "=" ]]; then
+			# If drawpile_srv_crypt_key is not null and equal to 44 characters, then this option would be accepted.
+			drawpile_srv_crypt_key_status=yes
+			echo "Correcting blank value stored in Drawpile_Configuration_Values.txt"
+			echo "Variable drawpile_srv_crypt_key_status will be set to: yes"
+			sudo sed -i '\!^drawpile_srv_crypt_key_status =!{h;s!=.*!= '"$drawpile_srv_crypt_key_status"'!};${x;\!^$!{s!!drawpile_srv_crypt_key_status = '"$drawpile_srv_crypt_key_status"'!;H};x}' $drawpile_configuration_values_file
+		else
+			# Do nothing as no error was detected.
+			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		fi
+		
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		reused_drawpile_srv_crypt_key_status=no
 		echo "Drawpile 2.2.0 and greater now support user exported, server encrypted"
@@ -7341,6 +7309,7 @@ if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to enable this feature?${normal} " drawpile_srv_crypt_key_status
 			if [ "$drawpile_srv_crypt_key_status" == "y" ] || [ "$drawpile_srv_crypt_key_status" == "Y" ] || [ "$drawpile_srv_crypt_key_status" == "yes" ] || [ "$drawpile_srv_crypt_key_status" == "YES" ] || [ "$drawpile_srv_crypt_key_status" == "Yes" ] || [ "$drawpile_srv_crypt_key_status" == "n" ] || [ "$drawpile_srv_crypt_key_status" == "N" ] || [ "$drawpile_srv_crypt_key_status" == "no" ] || [ "$drawpile_srv_crypt_key_status" == "NO" ] || [ "$drawpile_srv_crypt_key_status" == "No" ]; then
+				sudo sed -i '\!^drawpile_srv_crypt_key_status =!{h;s!=.*!= '"$drawpile_srv_crypt_key_status"'!};${x;\!^$!{s!!drawpile_srv_crypt_key_status = '"$drawpile_srv_crypt_key_status"'!;H};x}' $drawpile_configuration_values_file
 				echo
 				echo ----------------------------------------------------------------------------------
 				echo
@@ -7420,6 +7389,62 @@ elif [[ $drawpile_srv_version_stripped < "2.2.0" ]]; then
 else
 	echo "This message should not be visible, drawpile-srv can either do ban list encryption or it cannot."
 fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}***** Making backup of drawpile-srv systemd files *****${normal}"
+echo "${bold}${cyan}*****            before modification.             *****${normal}"
+echo
+if [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" ]]; then
+	echo "Did not find drawpile-srv.service file sample. Downloading and setting up."
+	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.service" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
+	echo
+fi
+
+if [[ -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		if grep 'ListenStream=27751' "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" > /dev/null; then
+			sudo sed -i -e "s/^# ListenStream=27751/ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+		else
+			sudo sed -i -e "s/^ListenStream=27780/ListenStream=27780\n\# Adding a third port activates the web client for 2.2.0 and above.\nListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+		fi
+	else
+		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	fi
+elif [[ ! -e "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" ]]; then
+	echo "Did not find drawpile-srv.socket file sample. Downloading and setting up."
+	sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile/server"
+	sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/drawpile-srv.socket" -O "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	echo
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		# No changes need to be made to drawpile-srv.socket
+		:
+	else
+		# sudo sed -i -e "s/<title>Drawpile Public Community<\/title>/<title>$hostname Server<\/title>/g" /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/^ListenStream=27751/# ListenStream=27751/g" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket"
+	fi
+else
+	echo "This message should not be visible. The file 'drawpile-srv.socket' either exists or it does not."
+fi
+
+sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service" "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
+
+echo 'Modifying drawpile-srv.service . . .'
+
+sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
+#
+cd "$dp_install_loc"
+sudo chmod 777 "$dp_install_loc" -R
+cd "$dp_install_loc/Programs"
+sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/" -R
+sudo mkdir -p -v Drawpile-Srv-Files
+cd Drawpile-Srv-Files
+sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
+sudo chown drawpileuser:drawpileread "$dp_install_loc/Programs/Drawpile-Srv-Files/" -R
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -7908,7 +7933,6 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	sudo sed -i '\!^systemd_selection =!{h;s!=.*!= '"$systemd_selection"'!};${x;\!^$!{s!!systemd_selection = '"$systemd_selection"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_selection_text =!{h;s!=.*!= '"$systemd_selection_text"'!};${x;\!^$!{s!!systemd_selection_text = '"$systemd_selection_text"'!;H};x}' $drawpile_configuration_values_file
 	sudo sed -i '\!^systemd_configuration =!{h;s!=.*!= '"$systemd_configuration"'!};${x;\!^$!{s!!systemd_configuration = '"$systemd_configuration"'!;H};x}' $drawpile_configuration_values_file
-	sudo sed -i '\!^drawpile_srv_crypt_key_status =!{h;s!=.*!= '"$drawpile_srv_crypt_key_status"'!};${x;\!^$!{s!!drawpile_srv_crypt_key_status = '"$drawpile_srv_crypt_key_status"'!;H};x}' $drawpile_configuration_values_file
 else
 	echo "This message should not be visible."
 fi
@@ -8904,23 +8928,44 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 			echo ----------------------------------------------------------------------------------
 			echo
 			function drawpile_monitor_warning_messages_default_function () {
-				drawpile_monitor_msg_session_name_first_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_name_second_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_name_terminate="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
 				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				drawpile_monitor_msg_session_name_first_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_name_second_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_name_terminate_nsfm="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_first_warning="[Name Check Bot] This session's title was detected to be unacceptable and has been changed. If the session is supposed to be adults-only, go into Session > Settings and mark it as 'Not suitable for minors (NSFM)'. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_session_name_second_warning="[Name Check Bot] This session's title was detected to be unacceptable and has been changed again, next time it will be terminated. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_session_name_terminate="[Name Check Bot] Session keeps switching to unacceptable names, terminating it. Rules and more info: https://drawpile.net/namecheckbot/"
 				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				drawpile_monitor_msg_session_alias_terminate="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_alias_terminate_nsfm="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_name_first_warning_nsfm="[Name Check Bot] This session's title was detected to be unacceptable and has been changed. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_session_name_second_warning_nsfm=$drawpile_monitor_msg_session_name_second_warning
+				drawpile_monitor_msg_session_name_terminate_nsfm=$drawpile_monitor_msg_session_name_terminate
 				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				drawpile_monitor_msg_session_founder_terminate="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_session_founder_terminate_nsfm="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_user_kick="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
-				drawpile_monitor_msg_user_kick_nsfm="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
+				drawpile_monitor_msg_session_alias_terminate="[Name Check Bot] This session's ID alias was detected to be unacceptable, terminating it. If the session is supposed to be adults-only, mark it as 'Not suitable for minors (NSFM)' when hosting, otherwise names be clean. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_session_alias_terminate_nsfm="[Name Check Bot] This session's ID alias was detected to be unacceptable, terminating it. Rules and more info: https://drawpile.net/namecheckbot/"
 				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				drawpile_monitor_msg_session_outdated="AUTOMOD - Your session is hosted with an outdated version of Drawpile. Support for this version will be removed in the future. Go to https://drawpile.net/ to download and install the latest version."
+				drawpile_monitor_msg_session_founder_terminate="[Name Check Bot] This session's founder was detected to have an unacceptable name, terminating it. If the session is supposed to be adults-only, mark it as 'Not suitable for minors (NSFM)' when hosting, otherwise names should be clean. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_session_founder_terminate_nsfm="[Name Check Bot] This session's founder was detected to have an unacceptable name, terminating it. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_user_kick="[Name Check Bot] Username detected as unacceptable, kicking them. If the session is supposed to be adults-only, mark it as 'Not suitable for minors (NSFM)'. Rules and more info: https://drawpile.net/namecheckbot/"
+				drawpile_monitor_msg_user_kick_nsfm="[Name Check Bot] Username detected as unacceptable, kicking them. Rules and more info: https://drawpile.net/namecheckbot/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				drawpile_monitor_msg_session_outdated="This session is hosted with an old version of Drawpile. Go to https://drawpile.net/ to download the latest one. If there is a reason you can't update, check the help page and tell us why. You will longer be able to host on this server using the old version after November 31 2024."
+
+				# Old content below, retaining for notes.
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# drawpile_monitor_msg_session_name_first_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_name_second_warning="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_name_terminate="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# drawpile_monitor_msg_session_name_first_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed. Please read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_name_second_warning_nsfm="AUTOMOD - Your session's title was detected to be offensive and has been changed again. Next time it will be terminated. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_name_terminate_nsfm="AUTOMOD - Session keeps offending, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# drawpile_monitor_msg_session_alias_terminate="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_alias_terminate_nsfm="AUTOMOD - Your session's ID alias was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# drawpile_monitor_msg_session_founder_terminate="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_session_founder_terminate_nsfm="AUTOMOD - Your session's founder was detected to be offensive, terminating it. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_user_kick="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
+				# drawpile_monitor_msg_user_kick_nsfm="AUTOMOD - Kicking user because of their offensive name. Read the rules: https://drawpile.net/communities/"
+				# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				# drawpile_monitor_msg_session_outdated="AUTOMOD - Your session is hosted with an outdated version of Drawpile. Support for this version will be removed in the future. Go to https://drawpile.net/ to download and install the latest version."
 			}
 			drawpile_monitor_warning_messages_default_function
 			# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -11339,14 +11384,31 @@ fi
 
 
 if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse_report_installation_status" == "Y" ] || [ "$drawpile_abuse_report_installation_status" == "yes" ] || [ "$drawpile_abuse_report_installation_status" == "YES" ] || [ "$drawpile_abuse_report_installation_status" == "Yes" ]; then
-	# Abuse Report String
-	if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
-		echo "Report Auth token already inserted into server settings database file."
-	else
+	
+	abuse_report_token_inserted=$( grep -m 1 "abuse_report_token_inserted = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	
+	if [ "$abuse_report_token_inserted" != "yes" ]; then
+		# Abuse Report String
 		echo "Inserting value into server database file so report mechanism works."
-		echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
-		sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+		echo
+		if ! echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+			sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
+			command_die "${bold}${red}Command 'Failed to insert auth token into server database.${normal}"
+		else
+			echo "${bold}${green}Successful insertion of value into server database.${normal}"
+			sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+		fi
+	else
+		echo "${bold}${green}Report Auth token already inserted into server settings database file.${normal}"
 	fi
+
+	# if grep 'abuse_report_token_inserted = yes' $drawpile_configuration_values_file > /dev/null; then
+	# 	echo "Report Auth token already inserted into server settings database file."
+	# else
+	# 	echo "Inserting value into server database file so report mechanism works."
+	# 	echo "insert into settings values ('reporttoken', '$abuse_report_auth_token'), ('abusereport', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
+	# 	sudo sed -i '\!^abuse_report_token_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!abuse_report_token_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+	# fi
 fi
 echo
 echo '--------------------------------------------------------------------------------'
@@ -16331,18 +16393,38 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo
 		fi
 	done
+	
 	if [ "$drawpile_external_authentication" == "1" ]; then
-		# Old value below
-		# echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile');" | sudo sqlite3 /home/drawpileuser/server.db
-		echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
-		echo
-		echo "Inserted setting for external authentication to server"
-		echo "database."
-	elif [ "$drawpile_external_authentication" == "2" ]; then
-		echo "Did not add setting for external authentication to server."
-	else
-		echo "This message should not be visible for Drawpile external authentication."
-	fi
+		drawpile_external_authentication_inserted=$( grep -m 1 "drawpile_external_authentication_inserted = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+		if [ "$drawpile_external_authentication_inserted" != "yes" ]; then
+			echo "Inserted setting for external authentication to server"
+			echo "database."
+			echo
+			if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
+				command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
+			else
+				echo "${bold}${green}Successful insertion of value into server database.${normal}"
+				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+			fi
+		else
+			echo "${bold}${green}External authentication token already inserted into server settings database file.${normal}"
+		fi
+	fi	
+
+	# if [ "$drawpile_external_authentication" == "1" ]; then
+	# 	# Old value below
+	# 	# echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile');" | sudo sqlite3 /home/drawpileuser/server.db
+	# 	echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', 'drawpile'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db
+	# 	echo
+	# 	echo "Inserted setting for external authentication to server"
+	# 	echo "database."
+	# elif [ "$drawpile_external_authentication" == "2" ]; then
+	# 	echo "Did not add setting for external authentication to server."
+	# else
+	# 	echo "This message should not be visible for Drawpile external authentication."
+	# fi
 	sudo sed -i '\!^drawpile_external_authentication =!{h;s!=.*!= '"$drawpile_external_authentication"'!};${x;\!^$!{s!!drawpile_external_authentication = '"$drawpile_external_authentication"'!;H};x}' $drawpile_configuration_values_file
 	echo
 else
