@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003924
+drawpilescriptversion=2.996003925
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2165,7 +2165,7 @@ else
 	echo "This message should not be visible."
 fi
 # else
-	script_update_check_function
+#	script_update_check_function
 # fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
