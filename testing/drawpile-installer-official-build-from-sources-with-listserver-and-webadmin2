@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003923
+drawpilescriptversion=2.996003924
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2048,123 +2048,125 @@ function script_update_check_function () {
 	fi
 }
 
-if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
-	# ----------------------------------------------------------------------------------
-	# Verify wget is installed.
-	# ----------------------------------------------------------------------------------
+# if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
 
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
-		minimum_version_wget=1.18-5
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-		version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-		installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
-		minimum_version_wget=2.1.0
-	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-		installation_status_wget=$( dnf info wget | sed -n '2 p' )
-		minimum_version_wget=1.18-5
-		# Installed Packages
-		# Available Packages
-		# Error: No matching Packages to list
-	else
-		# Uses the same as first command, just in case.
-		# --> if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
-		minimum_version_wget=1.18-5
-	fi
-	
+# ----------------------------------------------------------------------------------
+# Verify wget is installed.
+# ----------------------------------------------------------------------------------
 
-	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
-		echo "Package ${bold}wget${normal} is not installed."
-		echo "Installing package, used for verifying script is"
-		echo "up to date."
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
+	minimum_version_wget=1.18-5
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+	version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
+	minimum_version_wget=2.1.0
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info wget | sed -n '2 p' )
+	minimum_version_wget=1.18-5
+	# Installed Packages
+	# Available Packages
+	# Error: No matching Packages to list
+else
+	# Uses the same as first command, just in case.
+	# --> if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
+	minimum_version_wget=1.18-5
+fi
+
+
+if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
+	echo "Package ${bold}wget${normal} is not installed."
+	echo "Installing package, used for verifying script is"
+	echo "up to date."
+	echo
+	sudo $packages_update_program
+	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+	echo
+	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
+		echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
 		echo
-		sudo $packages_update_program
-		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+		echo "This is an optional package used to verify that the script"
+		echo "is up to date. You must manually check GitHub to verify"
+		echo "the script being used is up to date. You may experience"
+		echo "problems installing Drawpile if not up to date."
 		echo
-		if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
-			echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. You must manually check GitHub to verify"
-			echo "the script being used is up to date. You may experience"
-			echo "problems installing Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-		elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-			script_update_check_function
-		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. Script may not work as intended."
-			echo
-			echo "You should manually check GitHub to verify the script being"
-			echo "used is up to date. You may experience problems installing"
-			echo "Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-			echo
-			script_update_check_function
-		else
-			echo "Unable to make a determination of which version of wget is installed."
-			echo "This message should not be visible."
-		fi
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
 	elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
 		script_update_check_function
 	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
 		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
 		echo
 		echo "This is an optional package used to verify that the script"
-		echo "is up to date. Attempting to update."
+		echo "is up to date. Script may not work as intended."
 		echo
-		sudo $packages_update_program
-		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+		echo "You should manually check GitHub to verify the script being"
+		echo "used is up to date. You may experience problems installing"
+		echo "Drawpile if not up to date."
 		echo
-		if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-			echo
-			script_update_check_function
-		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. Script may not work as intended since updated"
-			echo "version is not available for install."
-			echo
-			echo "You should manually check GitHub to verify the script being"
-			echo "used is up to date. You may experience problems installing"
-			echo "Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-			echo
-			script_update_check_function
-		else
-			echo "Unable to make a determination of which version of wget is installed."
-			echo "This message should not be visible."
-		fi
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
+		echo
+		script_update_check_function
+	else
+		echo "Unable to make a determination of which version of wget is installed."
+		echo "This message should not be visible."
+	fi
+elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+	script_update_check_function
+elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+	echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+	echo
+	echo "This is an optional package used to verify that the script"
+	echo "is up to date. Attempting to update."
+	echo
+	sudo $packages_update_program
+	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+	echo
+	if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+		echo
+		script_update_check_function
+	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+		echo
+		echo "This is an optional package used to verify that the script"
+		echo "is up to date. Script may not work as intended since updated"
+		echo "version is not available for install."
+		echo
+		echo "You should manually check GitHub to verify the script being"
+		echo "used is up to date. You may experience problems installing"
+		echo "Drawpile if not up to date."
+		echo
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
+		echo
+		script_update_check_function
 	else
 		echo "Unable to make a determination of which version of wget is installed."
 		echo "This message should not be visible."
 	fi
 else
-	script_update_check_function
+	echo "Unable to make a determination of which version of wget is installed."
+	echo "This message should not be visible."
 fi
+# else
+	script_update_check_function
+# fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
 
