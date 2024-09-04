@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003926
+drawpilescriptversion=2.996003927
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5867,7 +5867,12 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo "Package bind9-host used with hostname verification."
 		echo "Not installed, so installing package now ..."
 		echo
-		sudo $package_install_program bind9-host
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+			sudo $package_install_program bind9-host
+		else
+			# For Fedora systems.
+			sudo $package_install_program bind9-next-utils
+		fi
 		echo
 	fi	
 	echo 'This script assumes you have a hostname, and it is required for'
@@ -16439,7 +16444,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo "Inserted setting for external authentication to server"
 			echo "database."
 			echo
-			if ! eecho "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', NULL), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+			if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', NULL), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
 				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
 				command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
 			else
