@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003921
+drawpilescriptversion=2.996003922
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -549,7 +549,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
@@ -2821,7 +2821,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3446,7 +3446,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	package_version_check_and_update_function
 fi
 
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 	echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
 	
 	package_name=zlib-ng-devel
@@ -14494,7 +14494,7 @@ EOF
 			}
 
 			if [ "$python_version" == "3.12" ]; then
-				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Fedora 40 currently.${normal}"
 					sudo $package_install_program python3-inotify python3-systemd
 				elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
