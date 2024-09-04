@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003925
+drawpilescriptversion=2.996003926
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -3440,7 +3440,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 
 	package_name=zlib-devel
 	package_version_length=14-20
