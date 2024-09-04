@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003922
+drawpilescriptversion=2.996003923
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -544,6 +544,14 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	#
 	what_fedora_variant_name=$( cat /etc/*-release | grep -i "^VARIANT_ID" | cut -d "=" -f2 )
+	
+	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
+		# Values would be null because the VARIANT ID does not exist.
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+			what_fedora_variant="VARIANT_ID=server"
+			what_fedora_variant_name="server"
+		fi
+	fi
 	# dnf_function
 	yum_function
 	useradd_and_groupadd_function
