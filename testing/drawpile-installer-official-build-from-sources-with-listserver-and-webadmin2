@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003928
+drawpilescriptversion=2.996003929
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -12947,10 +12947,10 @@ EOF
 			community=valid
 			community_slug=SoFurryDrawpile
 			community_rules_page=https://drawpile.net/communities/SoFurryDrawpile/
-		# elif [[ $hostname = "test.sofurrydrawpile.net" ]]; then
-		# 	community=valid
-		# 	community_slug=drawpile
-		# 	community_rules_page=https://drawpile.net/communities/drawpile/
+		elif [[ $hostname = "test.sofurrydrawpile.net" ]]; then
+		 	community=valid
+		 	community_slug=drawpile
+		 	community_rules_page=https://drawpile.net/communities/drawpile/
 		elif [[ $hostname = "dp.sugarandspice.art" ]]; then
 			community=valid
 			community_slug=sugar-and-spice
@@ -16465,7 +16465,15 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo
 	echo " * External Authentication option is enabled."
 	echo " * External Authentication Validation key is inserted."
-	echo " * External Authentication group is set to: NULL (aka blank, no value)"
+	if [[ $community == "valid" ]]; then
+		echo " * External Authentication group is set to: $community_slug"
+	elif [[ $community == "invalid" ]]; then
+		echo " * External Authentication group is set to: NULL (aka blank, no value)"
+	else
+		echo " * External Authentication group is set to: NULL (aka blank, no value)"
+		echo "         ${bold}${red}This message should not be visible for external authentication${normal}"
+		echo "         ${bold}${red}community status.${normal}"
+	fi
 	echo "     - ${underline}User group:${normal} should be blank, unless you're"
 	echo "         part of the Drawpile community page ( https://drawpile.net/communities/ ). "
 	echo "         In which case, the part to type in will be after 'communities/'"
@@ -16499,19 +16507,38 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	if [ "$drawpile_external_authentication" == "1" ]; then
 		drawpile_external_authentication_inserted=$( grep -m 1 "drawpile_external_authentication_inserted = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		
-		if [ "$drawpile_external_authentication_inserted" != "yes" ]; then
-			echo "Inserted setting for external authentication to server"
-			echo "database."
-			echo
-			if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', NULL), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
-				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
-				command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
+		if [[ $community == "valid" ]]; then
+			if [ "$drawpile_external_authentication_inserted" != "yes" ]; then
+				echo "Inserted setting for external authentication to server"
+				echo "database."
+				echo
+				if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', '$community_slug'), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+					sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
+					command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
+				else
+					echo "${bold}${green}Successful insertion of value into server database.${normal}"
+					sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+				fi
 			else
-				echo "${bold}${green}Successful insertion of value into server database.${normal}"
-				sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+				echo "${bold}${green}External authentication token already inserted into server settings database file.${normal}"
+			fi
+		elif [[ $community == "invalid" ]]; then
+			if [ "$drawpile_external_authentication_inserted" != "yes" ]; then
+				echo "Inserted setting for external authentication to server"
+				echo "database."
+				echo
+				if ! echo "insert into settings values ('extauthkey', '9eJ2tMJlqgSqHOIK/GI/qzS14WqIxHeB1Im5Hs/CCCk='), ('extauth', 'true'), ('extauthgroup', NULL), ('extauthmod', 'false'), ('extauthhost', 'false'), ('extAuthAvatars', 'true'), ('extauthfallback', 'true');" | sudo sqlite3 /home/drawpileuser/server.db ; then
+					sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
+					command_die "${bold}${red}Command 'Failed to insert external authentication token into server database.${normal}"
+				else
+					echo "${bold}${green}Successful insertion of value into server database.${normal}"
+					sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"yes"'!;H};x}' $drawpile_configuration_values_file
+				fi
+			else
+				echo "${bold}${green}External authentication token already inserted into server settings database file.${normal}"
 			fi
 		else
-			echo "${bold}${green}External authentication token already inserted into server settings database file.${normal}"
+			echo "${bold}${red}This message should not be visible for external authentication community status.${normal}"
 		fi
 	elif [ "$drawpile_external_authentication" == "2" ]; then		
 		echo "If values were previously inserted into database, they"
