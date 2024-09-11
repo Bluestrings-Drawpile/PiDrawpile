@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003927
+drawpilescriptversion=2.996003928
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -12921,6 +12921,59 @@ EOF
 	echo
 	echo "${bold}${cyan}*****Running NGINX Configuration for List Server . . .*****${normal}"
 	echo
+	function community_server_extra_rules_insertion_function () {
+		# hostname=test.sofurrydrawpile.net
+		if [[ $hostname == "dp.morrowshore.com" ]]; then
+			community=valid
+			community_slug=academy
+			community_rules_page=https://drawpile.net/communities/academy/
+		elif [[ $hostname == "ahaven.net" ]]; then
+			community=valid
+			community_slug=ahaven
+			community_rules_page=https://drawpile.net/communities/ahaven/
+		elif [[ $hostname == "cloudywave.net" ]]; then
+			community=valid
+			community_slug=cloudywave
+			community_rules_page=https://drawpile.net/communities/cloudywave/
+		elif [[ $hostname == "list.dp.foxdice.cn" || $hostname == "bj.dp.foxdice.cn" || $hostname == "bj2.dp.foxdice.cn" || $hostname == "gz.dp.foxdice.cn" || $hostname == "osa.dp.foxdice.cn" || $hostname == "hk.dp.foxdice.cn" ]]; then
+			community=valid
+			community_slug=foxdice
+			community_rules_page=https://drawpile.net/communities/foxdice/
+		elif [[ $hostname = "serber.us" ]]; then
+			community=valid
+			community_slug=serberus
+			community_rules_page=https://drawpile.net/communities/serberus/
+		elif [[ $hostname = "sofurrydrawpile.net" ]]; then
+			community=valid
+			community_slug=SoFurryDrawpile
+			community_rules_page=https://drawpile.net/communities/SoFurryDrawpile/
+		# elif [[ $hostname = "test.sofurrydrawpile.net" ]]; then
+		# 	community=valid
+		# 	community_slug=drawpile
+		# 	community_rules_page=https://drawpile.net/communities/drawpile/
+		elif [[ $hostname = "dp.sugarandspice.art" ]]; then
+			community=valid
+			community_slug=sugar-and-spice
+			community_rules_page=https://drawpile.net/communities/sugar-and-spice/
+		elif [[ $hostname = ".net" ]]; then
+			community=valid
+			community_slug=syntheticdreams.net
+			community_rules_page=https://drawpile.net/communities/synth/
+		else
+			community=invalid
+			echo "${bold}${yellow}Not a community server, skipping extra rules setup part 1.${normal}"
+		fi
+		# --------------------------------------------------------------------------------
+		if [[ $community == "valid" ]]; then
+			echo "${bold}${yellow}Is a community server, configuring list web page with extra rules...${normal}"
+			sudo sed -i -e "s/<p>Sessions hosted (or just listed) here should abide by the <a href=\"https:\/\/drawpile.net\/communities\/drawpile.net\/ccg\/\">common community guidelines<\/a>.<\/p>/<p>Sessions hosted (or just listed) here should abide by the <a href=\"https:\/\/drawpile.net\/communities\/drawpile.net\/ccg\/\">common community guidelines<\/a>.<\/p>\n\n<p>Also, this server has <a href=\"https:\/\/drawpile.net\/communities\/$community_slug\/\">additional rules that can be found here<\/a>.<\/p>/g" /var/www/html/drawpile/index.html
+			nginx -s reload
+		elif [[ $community == "invalid" ]]; then
+			echo "${bold}${yellow}Not a community server, skipping extra rules setup part 2.${normal}"
+		else
+			echo "${bold}${red}This message should not be visible for community or non community status.${normal}"
+		fi
+	}
 	
 	if [ "$ssl_encryption_config" == "1" ]; then
 		# echo 'Press 1 for Self Signed Certificates'
@@ -12956,7 +13009,10 @@ EOF
 
 			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari or Firefox\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<br><br>\n\nIn Firefox, you may need to confirm the certificate by dragging the certificate to the Keychain Access App ( <a href=\"https:\/\/support.apple.com\/guide\/keychain-access\/add-certificates-to-a-keychain-kyca2431\/mac\" target=\"mac-keychain\">Add certificates to a keychain using Keychain Access on Mac<\/a> ). To do this you will need to visit the website and accept the risk to continue, you can go into the keychain to find the certificate under \"All items\", \"Local items\". Find the website, double click it and enter your keychain password. Reload the web page, you should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
 		fi
-
+		
+		community_server_extra_rules_insertion_function		
+		
+		echo
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
 		echo
@@ -13262,6 +13318,9 @@ EOF
 			# sudo sed -i -e "s/try not to monopolize the available space./try not to monopolize the available space. To connect to a session via the web, <a href=\"https:\/\/web.drawpile.net\/?host=pub.drawpile.net\" target=\"web-client\">click here to load the web client from the official Drawpile website.<\/a>/g" /var/www/html/drawpile/index.html
 		fi
 		
+		community_server_extra_rules_insertion_function
+		
+		echo
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
 		echo
