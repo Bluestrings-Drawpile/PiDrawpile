@@ -12947,10 +12947,10 @@ EOF
 			community=valid
 			community_slug=SoFurryDrawpile
 			community_rules_page=https://drawpile.net/communities/SoFurryDrawpile/
-		elif [[ $hostname = "test.sofurrydrawpile.net" ]]; then
-		 	community=valid
-		 	community_slug=drawpile
-		 	community_rules_page=https://drawpile.net/communities/drawpile/
+		# elif [[ $hostname = "test.sofurrydrawpile.net" ]]; then
+		#  	community=valid
+		#  	community_slug=drawpile
+		#  	community_rules_page=https://drawpile.net/communities/drawpile/
 		elif [[ $hostname = "dp.sugarandspice.art" ]]; then
 			community=valid
 			community_slug=sugar-and-spice
