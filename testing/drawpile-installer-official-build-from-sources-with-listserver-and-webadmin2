@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003929
+drawpilescriptversion=2.996003930
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -16350,8 +16350,10 @@ comment_EOF_delete
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	elif [[ $is_apache_2_installed == *.* ]]; then
+		echo "${bold}${red}*** ONLY IF ERROR ABOVE. OTHERWISE IGNORE WARNING ***${normal}"
 		echo "${bold}${red}Apache appears to be installed and will need to be manually${normal}"
 		echo "${bold}${red}configured to work with certbot if port 80 is in use.${normal}"
+		echo "${bold}${red}*** ONLY IF ERROR ABOVE. OTHERWISE IGNORE WARNING ***${normal}"
 	else
 		# Do nothing as no error was detected.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
@@ -16551,6 +16553,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		echo "delete from settings where key = 'extauthhost'" | sudo sqlite3 /home/drawpileuser/server.db
 		echo "delete from settings where key = 'extAuthAvatars'" | sudo sqlite3 /home/drawpileuser/server.db
 		echo "delete from settings where key = 'extauthfallback'" | sudo sqlite3 /home/drawpileuser/server.db
+		
+		sudo sed -i '\!^drawpile_external_authentication_inserted =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!drawpile_external_authentication_inserted = '"no"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "${bold}${red}This message for the external authentication token should not be visible.${normal}"
 	fi
