@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003930
+drawpilescriptversion=2.996003931
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1179,10 +1179,14 @@ function add_ssh_key_function () {
 	echo "${bold}${red}WARNING. AN SSH KEY DOES NOT EXIST.${normal}"
 	echo
 	echo "However, the script can add an SSH public key from PuTTYgen to securely"
-	echo "connect remotely. If you do not have PuTTYgen installed, you can get it"
-	echo "from the following website:        https://ninite.com/putty-winscp/"
+	echo "connect remotely."
+	echo 
+	echo "${bold}${cyan}Windows Users${normal}"
+	echo "If you do not have PuTTYgen installed, you can get it and WinSCP from"
+	echo " the following website:        https://ninite.com/putty-winscp/"
 	echo
-	echo "Note that this includes PuTTY and WinSCP for use with your server also."
+	echo "${bold}${cyan}Linux Users${normal}"
+	echo "Just say yes to the next prompt and follow the instructions."
 	echo 
 	while :; do
 		read -r -p "${bold}${cyan}Would you like to add an SSH key now with PuTTYgen, (Y)es or (N)o?: ${normal} " add_ssh_key_query
@@ -1197,7 +1201,24 @@ function add_ssh_key_function () {
 			echo
 		fi
 	done
-	if [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "y" ] ; then		
+	if [ "$add_ssh_key_query" == "yes" ] || [ "$add_ssh_key_query" == "YES" ] || [ "$add_ssh_key_query" == "Yes" ] || [ "$add_ssh_key_query" == "Y" ] || [ "$add_ssh_key_query" == "y" ] ; then
+		echo "${bold}${cyan}Linux Users Only${normal}"
+		echo "If you're working on a Linux box, run the following command on YOUR computer:"
+		echo "     ssh-keygen -t ed25519 -C 'root'"
+		echo "     "
+		echo "     This should prompt you for a filename (you can just press enter) and"
+		echo "     a password before it will generate a key. This will give you two"
+		echo "       files. `~/.ssh/id_ed25519` (secret, don't share) and "
+		echo "       '~/.ssh/id_ed25519.pub' (public). The '~' being your"
+		echo "       home directory, '.ssh' is a hidden directory. To output"
+		echo "       the content of your public key for use in the script,"
+		echo "       type the following: cat ~/.ssh/id_ed25519.pub"
+		echo "     "
+		echo "     You can say yes to this prompt for PuTTYgen and copy your Public key"
+		echo "       plain text data after you say yes to using PuTTYgen to save it on"
+		echo "       the server."
+		echo
+		echo "${bold}${cyan}Windows Users Only${normal}"
 		echo "Open PuTTYGen. Leaving options to the default with RSA selected, click "
 		echo " 'Generate' and move your mouse randomly over the blank area to generate "
 		echo " some randomness with the security key."
