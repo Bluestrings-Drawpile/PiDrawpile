@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1411
+drawpilescriptversion=0.1412
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1161,6 +1161,7 @@ echo "       Fastest option with one image."
 echo
 echo " 8 - Delete old session archives."
 echo "       If server storage disk fills up, Drawpile-srv stops working."
+echo "       Use this option to set up an automated cleanup task."
 echo
 echo " 9 - Exit script."
 echo
@@ -1566,7 +1567,8 @@ elif [ "$search_query_type" == "8" ]; then
 	echo "                $disk_sessions_size"
 	echo
 
-
+	echo ${bold}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}
+	
 	variable_to_read_1="age_to_delete_parameter"
 	variable_to_read_2="size_to_delete_parameter"
 	variable_to_read_3=""	
@@ -1596,7 +1598,17 @@ elif [ "$search_query_type" == "8" ]; then
 	value_description_23=" "
 	value_description_24="Value below represents the max size of the backups."
 
-	read_stored_config_value_query_function
+	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
+		echo
+		echo "A scheduled cleanup task was not found (or not yet set up)."
+		echo "Running set up to configure the task."
+		echo
+		echo
+		maybe_use_config_value=n
+	else
+		echo
+		read_stored_config_value_query_function
+	fi
 	
 	if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
 		echo "Storing value and moving on."
