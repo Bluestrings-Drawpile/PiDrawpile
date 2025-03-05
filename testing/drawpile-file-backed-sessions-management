@@ -1594,9 +1594,10 @@ elif [ "$search_query_type" == "8" ]; then
 	value_description_19="sessions are never touched though, so if deleting all archived files "
 	value_description_20="still doesn't make enough room, the script just exits with an error."
 	value_description_21=" "
-	value_description_22="If you need to change these values, answer no. Otherwise, answer yes."
-	value_description_23=" "
-	value_description_24="Value below represents the max size of the backups."
+	value_description_22="If you need to change the auto clean scheduled task or run a manual"
+	value_description_23="cleanup, answer no. Otherwise, answer yes."
+	value_description_24=" "
+	value_description_25="Value below represents the max size of the backups."
 
 	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
 		echo
