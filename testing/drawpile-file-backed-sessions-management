@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1412
+drawpilescriptversion=0.1413
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -35,11 +35,19 @@ github_account_name=Wade821
 github_project_name=PiDrawpile
 # When no path being used, should look like github_sub_folder_path=""
 github_main_script_only_sub_folder_path=testing/
-login_credentials_length_minimum="14"
+
 # Normal line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --force-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # Example line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name"
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# script_name=drawpile-file-backed-sessions-management
+# drawpile_script_overall_master_version_URL=https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/scripts-for-other-scripts-only/version.txt
+# Do not alter script_main_url... instead, include subfolder in script_name variable. 
+# See example included below for reference code.
+#		sudo wget -q "$script_main_url/$script_name" --show-progress
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 # Text Formatting
@@ -92,9 +100,53 @@ drawpile_completed_successfully_values_file=/home/drawpileuser/Drawpile_Complete
 drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Completed_Values_bak.txt
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
-function pause(){
+<<comment_VNC_EOF
+sudo apt-get -q -y install realvnc-vnc-server
+apt-cache policy realvnc-vnc-server
+comment_VNC_EOF
+# ----------------------------------------------------------------------------------
+<<comment_VMware_EOF
+If running a VM with VMWare ... 
+     https://docs.vmware.com/en/VMware-Tools/12.2.0/com.vmware.vsphere.vmwaretools.doc/GUID-C48E1F14-240D-4DD1-8D4C-25B6EBE4BB0F.html
+sudo apt-get update
+sudo apt-get -q -y install open-vm-tools-desktop
+sudo apt-get -q -y install open-vm-tools
+comment_VMware_EOF
+# ----------------------------------------------------------------------------------
+<<comment_DarkMode_EOF
+If Dark mode preferred:
+Start, Preferences, Main Menu Editor. Go to Preferences, turn on Theme and Appearance Settings. Click Ok.
+Go back to Start, Preferences, Theme and Appearance Settings. Turn on "Adwaita-Dark". 
+ 
+For the title bars, go to "Window Boarder" and select one of the following:
+Dark Options:			Artwiz-boxed, Nightmware, Nightmware-01, Nightmware-02, Nightmware-03, Onyx, Onyx-Citrus
+Preferred Options: 	Artwiz-boxed, Nightmware, Nightmware-02, Onyx
+comment_DarkMode_EOF
+# ----------------------------------------------------------------------------------
+<<comment_geany_EOF
+Enable Dark Themes for Geany Text: View, Change Color Scheme...
+
+mkdir -p -v /home/$USER/Public/Programs && cd "/home/$USER/Public/Programs"
+git clone https://github.com/codebrainz/geany-themes.git
+cd geany-themes
+./install.sh
+cp -r /home/$USER/Public/Programs/geany-themes/colorschemes ~/.config/geany/colorschemes/
+
+
+Enable Dark Themes One-liner Command for Geany Text: View, Change Color Scheme...
+
+mkdir -p -v /home/$USER/Public/Programs && cd "/home/$USER/Public/Programs" && git clone https://github.com/codebrainz/geany-themes.git && cd geany-themes && ./install.sh && cp -r /home/$USER/Public/Programs/geany-themes/colorschemes ~/.config/geany/colorschemes/
+comment_geany_EOF
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+function pause () {
 	read -s -n 1 -p "Press any key to continue . . ."
 	echo ""
+}
+
+function command_die () {
+    echo "$@" 1>&2
+    exit 1
 }
 
 function drawpile_credits_function () {
@@ -123,11 +175,9 @@ drawpile_credits_urls_functions
 echo
 pause
 echo
-
-sudo chmod 777 $app_installation_status_file
-sudo chmod 777 $drawpile_configuration_values_file
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 function language_check_and_verify_not_null_function () {
 	# If value is null, check this value.
 	lang=$( locale | grep LANGUAGE | cut -d= -f2 | cut -d_ -f1 )
@@ -203,8 +253,28 @@ verify_pi_model=$( cat /proc/cpuinfo | tr -d '\t' | grep -i "Model:" | awk '{for
 # Raspberry Pi 3 Model B
 # Raspberry Pi 4 Model B
 # ----------------------------------------------------------------------------------
+<<comment_EOF
+# NOTES ON SYSTEM PACKAGE INSTALLERS
+https://docs.fedoraproject.org/en-US/quick-docs/dnf-vs-apt/
+https://www.redhat.com/sysadmin/dnf-apt-users
+https://www.ubuntubuzz.com/2017/03/comparison-of-common-commands-ubuntu-ubuntu-apt-fedora-dnf.html
+apt-get -q -y install					dnf -q -y install
+apt-get -q -y update					dnf -q -y check-update
+apt-get -q -y upgrade					dnf -q -y upgrade
+
+https://www.techrepublic.com/article/linux-101-how-to-clean-the-dnf-and-apt-caches/
+apt-get clean							dnf clean dbcache / sudo dnf clean all
+
+Will need to edit entire queries that use this command, information is formatted differently
+apt-cache policy PACKAGENAME			dnf info PACKAGENAME
+apt-cache search PACKAGENAME			dnf search PACKAGENAME
+
+Should not need added, only for Pi
+apt-key adv --recv-keys --keyserver		
+
+comment_EOF
+# ----------------------------------------------------------------------------------
 function check_root_or_sudo_access_function () {
-	echo
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
 		# if [[ "$USER" = "root" || "$USER" = "Root" || "$USER" = "ROOT" || $EUID == 0 ]]; then
 		running_as_root_check=true
@@ -406,7 +476,17 @@ function fedora_end_of_life_function () {
 	sleep 30
 }
 # ----------------------------------------------------------------------------------
-wget_or_wget2_quiet_progress="wget -q --show-progress"
+function wget_or_wget2_non_fedora_function () {
+	wget_or_wget2_quiet_progress="wget -q --show-progress"
+	wget_or_wget2_quiet_progress_non_verbose="wget -nv"
+	wget_or_wget2_no_check_certificate="wget --no-check-certificate"
+}
+
+function wget_or_wget2_fedora_function () {
+	wget_or_wget2_quiet_progress="wget -q --force-progress"
+}
+
+wget_or_wget2_non_fedora_function
 
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	apt_get_function
@@ -424,7 +504,13 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 		debian_x86_64_vs_arm_function
 		echo "${bold}${green}Debian GNU/Linux 12 (bookworm)${normal}"
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo "${bold}${red}Unable to identify if supported. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo "Raspbian or Debian : $verify_if_this_is_raspbian_or_debian"
+		echo "Pi Model           : $verify_pi_model"
 		echo
 		sleep 30
 		exit
@@ -432,7 +518,13 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
@@ -440,10 +532,19 @@ elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.3 LTS.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu, version may not be supported.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
-		echo 
+		echo "${bold}${red}Unable to identify if supported. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 		exit
 	fi	
@@ -452,19 +553,27 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	what_fedora_variant=$( cat /etc/*-release | grep -i "^VARIANT_ID" )
 	#
 	what_fedora_variant_name=$( cat /etc/*-release | grep -i "^VARIANT_ID" | cut -d "=" -f2 )
+	
+	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
+		# Values would be null because the VARIANT ID does not exist.
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+			what_fedora_variant="VARIANT_ID=server"
+			what_fedora_variant_name="server"
+		fi
+	fi
 	# dnf_function
 	yum_function
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, support not verified.${normal}"
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
 			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
 			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
-			wget_or_wget2_quiet_progress="wget -q --force-progress"
+			wget_or_wget2_fedora_function
 			
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 39.${normal}"  && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
@@ -494,20 +603,34 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			fedora_end_of_life_function
 		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo "${bold}${yellow}Running Fedora Server, version may not be supported.${normal}"
-			echo "Version: $what_linux_flavor"
+			echo
+			echo "Linux Name         : $what_linux_name"
+			echo "Linux Flavor       : $what_linux_flavor"
+			echo "Architecture       : $what_architecture"
 			echo
 			sleep 30
 		else
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+			
+			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
+			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
+			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
+			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Workstation 39.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Workstation 38.${normal}"
 		elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
-			echo "Version: $what_linux_flavor"
+			echo
+			echo "Linux Name         : $what_linux_name"
+			echo "Linux Flavor       : $what_linux_flavor"
+			echo "Architecture       : $what_architecture"
 			echo
 			sleep 30
 		else
@@ -516,15 +639,29 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
+		echo
 		sleep 30
 	else
-		echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+		echo "${bold}${red}Unable to identify if supported system. Exiting script.${normal}"
+		echo
+		echo "Linux Name         : $what_linux_name"
+		echo "Linux Flavor       : $what_linux_flavor"
+		echo "Architecture       : $what_architecture"
 		echo
 		sleep 30
 		exit
 	fi
 else
-	echo "${bold}${red}Unable to identify. Exiting script.${normal}"
+	echo "${bold}${red}Unable to identify if supported system. Exiting script.${normal}"
+	echo
+	echo "Linux Name         : $what_linux_name"
+	echo "Linux Flavor       : $what_linux_flavor"
+	echo "Architecture       : $what_architecture"
+	echo "Raspbian or Debian : $verify_if_this_is_raspbian_or_debian"
+	echo "Pi Model           : $verify_pi_model"
 	echo
 	sleep 30
 	exit
@@ -715,6 +852,9 @@ function select_non_root_account () {
 	fi
 }
 
+# Prompt for user name change if root detected, first attempting Pi (and verifying), 
+#     and requesting user input with verification directory exists.
+
 if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; then
 	current_username=pi
 	if [[ -e "/home/$current_username" ]]; then
@@ -725,9 +865,28 @@ if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]]; t
 	fi
 else
 	current_username=$USER
-	echo
-	echo "${bold}${green}Current user:${normal} $current_username"
+	echo "Current user: $current_username"
 fi
+
+drawpileuser_username_id="$( id -u drawpileuser )"
+current_username_id="$( id -u $current_username )"
+
+if [ "$drawpileread_test" == "yes" ]; then
+	# Do nothing, no action required
+	:
+elif [ "$drawpileread_test" == "no" ]; then
+	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+		sudo $user_add_program $current_username drawpileread
+	fi
+	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		sudo usermod -a $current_username -G drawpileread
+	fi
+fi
+
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 
 InvalidPathText="${red}${bold}X - Automatic local path selection is invalid -${normal}"
 script_created_location_sessions="Programs/Drawpile-Srv-Files/sessions"
@@ -957,113 +1116,125 @@ function script_update_check_function () {
 	fi
 }
 
-if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
-	# ----------------------------------------------------------------------------------
-	# Verify wget is installed.
-	# ----------------------------------------------------------------------------------
+# if [ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]; then
 
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-		version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
-	fi
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-		installation_status_wget=$( dnf info wget | sed -n '2 p' )
-		# Installed Packages
-		# Available Packages
-		# Error: No matching Packages to list
-	fi
+# ----------------------------------------------------------------------------------
+# Verify wget is installed.
+# ----------------------------------------------------------------------------------
+
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+	version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
+	minimum_version_wget=2.1.0
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info wget | sed -n '2 p' )
+	minimum_version_wget=1.18-5
+	# Installed Packages
+	# Available Packages
+	# Error: No matching Packages to list
+else
+	# Uses the same as first command, just in case.
+	# --> if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
+	minimum_version_wget=1.18-5
+fi
 
-	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
-		echo "Package ${bold}wget${normal} is not installed."
-		echo "Installing package, used for verifying script is"
-		echo "up to date."
+
+if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
+	echo "Package ${bold}wget${normal} is not installed."
+	echo "Installing package, used for verifying script is"
+	echo "up to date."
+	echo
+	sudo $packages_update_program
+	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+	echo
+	if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
+		echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
 		echo
-		sudo $packages_update_program
-		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+		echo "This is an optional package used to verify that the script"
+		echo "is up to date. You must manually check GitHub to verify"
+		echo "the script being used is up to date. You may experience"
+		echo "problems installing Drawpile if not up to date."
 		echo
-		if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Error: No matching Packages to list" ]]; then
-			echo "${bold}${red}Package wget is not available in your distribution's repository.${normal}"
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. You must manually check GitHub to verify"
-			echo "the script being used is up to date. You may experience"
-			echo "problems installing Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-		elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-			script_update_check_function
-		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. Script may not work as intended."
-			echo
-			echo "You should manually check GitHub to verify the script being"
-			echo "used is up to date. You may experience problems installing"
-			echo "Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-			echo
-			script_update_check_function
-		else
-			echo "Unable to make a determination of which version of wget is installed."
-			echo "This message should not be visible."
-		fi
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
 	elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
 		script_update_check_function
 	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
 		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
 		echo
 		echo "This is an optional package used to verify that the script"
-		echo "is up to date. Attempting to update."
+		echo "is up to date. Script may not work as intended."
 		echo
-		sudo $packages_update_program
-		sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+		echo "You should manually check GitHub to verify the script being"
+		echo "used is up to date. You may experience problems installing"
+		echo "Drawpile if not up to date."
 		echo
-		if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
-			echo
-			script_update_check_function
-		elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
-			echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
-			echo
-			echo "This is an optional package used to verify that the script"
-			echo "is up to date. Script may not work as intended since updated"
-			echo "version is not available for install."
-			echo
-			echo "You should manually check GitHub to verify the script being"
-			echo "used is up to date. You may experience problems installing"
-			echo "Drawpile if not up to date."
-			echo
-			echo "https://github.com/$github_account_name/$github_project_name"
-			echo 
-			echo "Continuing script in 30 seconds."
-			echo
-			echo
-			sleep 30
-			echo
-			script_update_check_function
-		else
-			echo "Unable to make a determination of which version of wget is installed."
-			echo "This message should not be visible."
-		fi
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
+		echo
+		script_update_check_function
+	else
+		echo "Unable to make a determination of which version of wget is installed."
+		echo "This message should not be visible."
+	fi
+elif [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+	script_update_check_function
+elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+	echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+	echo
+	echo "This is an optional package used to verify that the script"
+	echo "is up to date. Attempting to update."
+	echo
+	sudo $packages_update_program
+	sudo $package_install_program wget # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
+	echo
+	if [[ "$version_wget" > "$minimum_version_wget" ]] || [[ "$version_wget" = "$minimum_version_wget" ]]; then
+		echo
+		script_update_check_function
+	elif [[ "$version_wget" < "$minimum_version_wget" ]]; then
+		echo "${bold}${yellow}Package wget is not the minimum version ($minimum_version_wget)${normal}."
+		echo
+		echo "This is an optional package used to verify that the script"
+		echo "is up to date. Script may not work as intended since updated"
+		echo "version is not available for install."
+		echo
+		echo "You should manually check GitHub to verify the script being"
+		echo "used is up to date. You may experience problems installing"
+		echo "Drawpile if not up to date."
+		echo
+		echo "https://github.com/$github_account_name/$github_project_name"
+		echo 
+		echo "Continuing script in 30 seconds."
+		echo
+		echo
+		sleep 30
+		echo
+		script_update_check_function
 	else
 		echo "Unable to make a determination of which version of wget is installed."
 		echo "This message should not be visible."
 	fi
 else
-	script_update_check_function
+	echo "Unable to make a determination of which version of wget is installed."
+	echo "This message should not be visible."
 fi
+# else
+#	script_update_check_function
+# fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
 
