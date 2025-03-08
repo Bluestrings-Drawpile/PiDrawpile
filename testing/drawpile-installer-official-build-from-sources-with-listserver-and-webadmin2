@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003934
+drawpilescriptversion=2.996003935
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -5540,7 +5540,11 @@ if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_che
 		echo
 		echo '-------------------------------------------'				
 		echo
+		sudo systemctl start --now firewall-cmd
+		echo
 		firewall_cmd_adjustments_function
+		echo
+		sudo systemctl stop --now firewall-cmd
 
 		sleep 10
 	fi
@@ -11865,13 +11869,15 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	fi
 	echo "This step may take a while, please be patient."
 	echo
+	# The -a being passed to install or get makes the install take longer, but also rebuilds everything...
+	# So hopefully the recompile process works every time. Otherwise it appears you can build a bad binary.
 	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 		# Version check provided by askmeaboutloom
 		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
-			go install 'github.com/drawpile/listserver@latest'
+			go install -a 'github.com/drawpile/listserver@latest'
 		else
 			# go get github.com/drawpile/listserver
-			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+			GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
 		fi
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
@@ -11879,10 +11885,10 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		version_test_by_distro_function
 		
 		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\.?/ && $1 >= 1.16 ? 0 : 1)'; then
-			go install 'github.com/drawpile/listserver@latest'
+			go install -a 'github.com/drawpile/listserver@latest'
 		else
 			# go get github.com/drawpile/listserver
-			GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+			GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
 		fi
 		echo "Go Version: $test_version_simple"
 		# if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
@@ -18305,6 +18311,82 @@ if [ "$journalctl_log_limit" != "9" ] && [ "$journalctl_log_limit_read_from_file
 		echo "${bold}${red}This message should not be visible for system reboot.${normal}"
 	fi
 fi
+
+if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [ "$install_all_packages" == "yes" ] || [ "$install_all_packages" == "YES" ] || [ "$install_all_packages" == "Yes" ] ; then
+	echo "${bold}${red}Since package updates were done earlier and the script is done, consider"
+	echo "updating your server operating system. Instructions may vary between"
+	echo "different versions or systems, be sure to read documentation carefully"
+	echo "before proceeding, as some updates have the potential to break functionality"
+	echo "functionality of the server. If your online server service provides disk "
+	echo "image backups, it's not a bad idea to make one before doing any major "
+	echo "upgrades to ensure everything works or you can go back to a previous version."
+	echo
+	echo "Updates can protect against vulnerabilities that might be exploited by bad"
+	echo "actors to use your server for their own purpose. Automated attacks with bots"
+	echo "happen all the time, like a time where I forgot to secure SSH and in a week,"
+	echo "had 12,000 or so failed login attempts. This is just one example, so it's"
+	echo "important to back up data to your local machine or online when possible."
+	echo
+	echo "The script cannot do this for you. Make notes on the required steps because "
+	echo "reboots will be required or additional prompts that the script cannot "
+	echo "possibly answer for you.${normal}"
+	echo
+	echo
+	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ]; then
+		echo "${bold}${red}Read more here:${normal}"
+		echo "     https://www.debian.org/doc/manuals/debian-faq/uptodate.en.html"
+		echo
+		echo "apt-get update"
+		echo "apt-get dist-upgrade"
+		echo "sudo reboot"
+	elif [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
+		echo "${bold}${red}Read more here:${normal}"
+		echo "     https://www.raspberrypi.com/documentation/computers/os.html"
+		echo
+		echo "apt-get update"
+		echo "sudo apt full-upgrade"
+		echo "sudo rpi-update"
+		echo "sudo reboot"
+		echo
+		echo "Upgrading the operating system itself does not appear to be recommended."
+		echo "They simply seem to encourage you to image a new microSD card and copy"
+		echo "your configuration to the new SD card."
+	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+		echo "${bold}${red}Read more here:${normal}"
+		echo "     https://documentation.ubuntu.com/server/how-to/software/upgrade-your-release/index.html"
+		echo
+		echo "sudo apt update"
+		echo "sudo apt upgrade"
+		echo "sudo do-release-upgrade"
+		echo "sudo reboot"
+	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+			echo "${bold}${red}Read more here:${normal}"
+			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
+			echo
+			echo "sudo dnf upgrade --refresh"
+			echo "sudo reboot"
+			echo "sudo dnf system-upgrade download --releasever=41"
+			echo "sudo dnf system-upgrade reboot"
+		else
+			echo "${bold}${red}Read more here:${normal}"
+			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
+			echo
+			echo "sudo dnf upgrade --refresh"
+			echo "sudo reboot"
+			echo "sudo dnf system-upgrade download --releasever=##"
+			echo "sudo dnf system-upgrade reboot"
+			echo
+			echo "Where '##' is two versions ahead of your currently installed version,"
+			echo "as upgrades are typically only supported up to two versions later from"
+			echo "your current installation."
+		fi
+	else
+		echo "${bold}${red}Unable to identify system in use for specific update instructions.${normal}"
+		echo "${bold}${red}This message should not be visible.${normal}"
+	fi
+fi
+	
 
 read -r -p 'Press [Enter] key to close window...'
 echo
