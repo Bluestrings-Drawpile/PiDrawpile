@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1413
+drawpilescriptversion=0.1414
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -518,18 +518,20 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04.2 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04.1 LTS.${normal}"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
-		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
-		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
+		echo "${bold}${green}Running Ubuntu 22.04.4 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.3 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.3 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu, version may not be supported.${normal}"
 		echo
@@ -567,7 +569,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+			echo "${bold}${green}Running Fedora Server 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
@@ -614,7 +616,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+			echo "${bold}${green}Running Fedora Workstation 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
