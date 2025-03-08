@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003933
+drawpilescriptversion=2.996003934
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -36,7 +36,27 @@ github_account_name=Wade821
 github_project_name=PiDrawpile
 # When no path being used, should look like github_sub_folder_path=""
 github_main_script_only_sub_folder_path=testing/
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# The two settings below affect the following:
+#	- Web admin interface
+#	- New web admin interface (list server admin only as of January 2025)
+#	- PiHole administration protection (if installed on Raspberry Pi only)
+
+# Refers to minimum length username and password can be used.
 login_credentials_length_minimum="14"
+
+# RECOMMENDED: If this variable below is set to disabled, 
+#      then the script will not allow reusing a username and password on different login pages.
+#      No username is allowed to match any password, nor is any password allowed to match any username.
+# NOT RECOMMENDED: If this variable below is set to enabled (or any value other than: disabled ), 
+#      then the script will allow reusing a username and password on different login pages.
+#      If you reuse a username and password for web admin as well as the new web admin, then 
+#      you cannot give the credentials out to non trusted users since that would enable them
+#      to be able to log into the new web admin with those credentials to modify access to Change
+#      server settings.
+nginx_reusing_login_and_password_status="disabled"
+# ----------------------------------------------------------------------------------
 # Normal line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # sudo wget -q --force-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
@@ -176,8 +196,9 @@ drawpile_credits_urls_functions
 echo
 pause
 echo
-# ----------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 function language_check_and_verify_not_null_function () {
 	# If value is null, check this value.
 	lang=$( locale | grep LANGUAGE | cut -d= -f2 | cut -d_ -f1 )
@@ -275,7 +296,6 @@ apt-key adv --recv-keys --keyserver
 comment_EOF
 # ----------------------------------------------------------------------------------
 function check_root_or_sudo_access_function () {
-	echo
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
 		# if [[ "$USER" = "root" || "$USER" = "Root" || "$USER" = "ROOT" || $EUID == 0 ]]; then
 		running_as_root_check=true
@@ -477,7 +497,17 @@ function fedora_end_of_life_function () {
 	sleep 30
 }
 # ----------------------------------------------------------------------------------
-wget_or_wget2_quiet_progress="wget -q --show-progress"
+function wget_or_wget2_non_fedora_function () {
+	wget_or_wget2_quiet_progress="wget -q --show-progress"
+	wget_or_wget2_quiet_progress_non_verbose="wget -nv"
+	wget_or_wget2_no_check_certificate="wget --no-check-certificate"
+}
+
+function wget_or_wget2_fedora_function () {
+	wget_or_wget2_quiet_progress="wget -q --force-progress"
+}
+
+wget_or_wget2_non_fedora_function
 
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 	apt_get_function
@@ -509,18 +539,20 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04.1 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 24.04 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04.2 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04.1 LTS.${normal}"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 24.04 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.4 LTS\"" ]; then
-		echo "${bold}${yellow}Running Ubuntu 22.04.4 LTS.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
-		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
-	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
-		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
+		echo "${bold}${green}Running Ubuntu 22.04.4 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.3 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 22.04.3 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.2 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 22.04.2 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 22.04.1 LTS\"" ]; then
+		echo "${bold}${green}Running Ubuntu 22.04.1 LTS.${normal}"
 	elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 		echo "${bold}${yellow}Running Ubuntu, version may not be supported.${normal}"
 		echo
@@ -558,13 +590,13 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+			echo "${bold}${green}Running Fedora Server 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
 			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
 			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
-			wget_or_wget2_quiet_progress="wget -q --force-progress"
+			wget_or_wget2_fedora_function
 			
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 39.${normal}"  && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
@@ -605,13 +637,13 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Workstation 40.${normal}" && echo "${bold}${yellow}Testing, but support is more or less verified.${normal}"
+			echo "${bold}${green}Running Fedora Workstation 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
 			# Developer of wget says wget2 should be used with wget, not in place of wget. Stupid idea of Fedora.
 			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
-			wget_or_wget2_quiet_progress="wget -q --force-progress"
+			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Workstation 39.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Workstation Edition)\"" ]; then
@@ -1620,11 +1652,9 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 	echo "will still work if properly configured if tech support is required and"
 	echo "does not require seeing the desktop interface."
 	echo
-	echo
 	echo "${bold}${underline}General Resources:${normal}"
 	echo " - Wayland vs Xorg"
 	echo "     https://www.secjuice.com/wayland-vs-xorg/"
-	echo
 	echo
 	echo "${bold}${underline}Additional Resources if wanting to switch to X11:${normal}"
 	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
@@ -1659,7 +1689,6 @@ if [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "wayland" ]]; then
 	echo "${bold}${yellow}or some other remote connection software.${normal}"
 	echo
 	pause
-	echo
 	if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
 		echo
 		echo "${bold}${red}***************************** IMPORTANT NOTE: *****************************${normal}"
@@ -1756,10 +1785,6 @@ comment_EOF
 		else
 			echo "This message should not be visible regarding: wayland_to_x11_query"
 		fi
-		echo
-		echo '--------------------------------------------------------------------------------'
-		echo '--------------------------------------------------------------------------------'
-		echo
 	fi
 elif [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "x11" ]]; then
 	echo "${bold}${green}Notice to the user: an FYI${normal}"
@@ -1772,17 +1797,15 @@ elif [[ -e "$option_loc_2" && "$XDG_SESSION_TYPE" == "x11" ]]; then
 	echo "device (when compared to Wayfire on Wayland on Raspbian Bookworm)."
 	echo
 	pause
-	echo
-	echo '--------------------------------------------------------------------------------'
-	echo '--------------------------------------------------------------------------------'
-	echo
 else
 	# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 	:
 fi
 
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
 echo "${bold}${cyan}*****Select a location for build and server files . . .*****${normal}"
 echo
 	
@@ -2641,7 +2664,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	elif [ "$test_installation_status" == "Installed and not up to date" ]; then
 		echo "Package $package_name is installed ($test_version) and there is an update available ($test_update_version)."
 		echo "This is required in certain places of the script."
-		echo
+		
 		sudo $package_install_program perl-interpreter # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 		sudo sed -i '\!^perl-interpreter =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!perl-interpreter = '"yes"'!;H};x}' $app_installation_status_file
 	else
@@ -2859,7 +2882,10 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
+	#QT5
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
+	# QT6
+	# program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
 
 	# Full List Unsorted
@@ -2884,7 +2910,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	# Unsorted
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
@@ -2893,12 +2919,12 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 
 	
 	# Unsorted
-	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv python3-pip libsqlite3-dev policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python3.*-venv python3-pip libsqlite3-dev policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
 	
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
 	# Unsorted
@@ -2907,11 +2933,11 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	
 	# Unsorted
-	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.10-venv python3-pip policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python3.10-venv python3-pip policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
 	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2965,10 +2991,10 @@ echo
 # zlib-devel - is a general-purpose, patent-free, lossless data compression library which is used by many different programs.						zlib-devel								*
 # libqt5websockets5-dev * This package contains the development files needed to build Qt applications using Qt 5 Web Sockets library.				qt5-qtwebsockets-devel					*
 
+echo "${bold}${cyan}Installing Dependencies . . .${normal}"
 sudo $package_install_program $program_list_to_install_actual_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
 echo
-
 # *********** Optional Dependencies ***********
 # ***** Debian Packages (* means in use) ******																										Fedora Alternates (* means in use)
 # libmicrohttpd-dev * library embedding HTTP server functionality (development, used for remote administration of drawpile server)					libmicrohttpd-devel	/ libmicrohttpd		*
@@ -2993,9 +3019,9 @@ echo
 # QtColorPicker - Not chosen for install as it is bundled, but external library is used if available												-										-
 # sqlite3 * Command line interface for SQLite 3, used by script to auto add settings so users don't have to do so.									sqlite									*
 
+echo "${bold}${cyan}Installing Optional Dependencies . . .${normal}"
 sudo $package_install_program $program_list_to_install_optional_dependencies # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "Exiting script..." && echo "" && sleep 30 && exit
 sudo $packages_clean_program
-echo
 echo
 if [ "`systemctl is-enabled mini-httpd.service`" = "enabled" ]; then
 	echo "${bold}${red}Mini-HTTPD is enabled, disabling and stopping service.${normal}"
@@ -3478,7 +3504,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 fi
 
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
-	echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
+	# echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
 	
 	package_name=zlib-ng-devel
 	package_version_length=14-20
@@ -3770,7 +3796,6 @@ echo "              Manually typed in: $drawpile_version_manual_type_for_script"
 echo
 while :; do
 	read -r -p "${bold}${cyan}Enter a number and hit enter to continue:${normal} " git_clone_dp_checkout
-	echo
 	[[ $git_clone_dp_checkout =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
 	if (( $git_clone_dp_checkout >= 1 && $git_clone_dp_checkout <= 3)); then
 		break
@@ -3835,9 +3860,10 @@ function drawpile_srv_reboot_warn_function () {
 				# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
 				echo
 				echo "${bold}${red}Sending warning message to all sessions:${normal}"
-				echo "Server Announcement: Server will be rebooted nows! Boards set to persist without users will be restored when the server is back online. Other boards that are not persistent should save their work to be safe. Should only be down for a minute at most."
+				echo "Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Other boards that are not persistent should save their work to be safe. Should only be down for a minute at most."
 				echo 
 				curl -k -u "$nginx_username_1:$nginx_htpasswd_1" -X PUT -H 'Content-Type: application/json' -d '{"alert":"Server Announcement: Server will be rebooted now! Boards set to persist without users will be restored when the server is back online. Should only be down for a minute at most."}' "https://$hostname/admin/api/sessions"
+				echo
 				sleep 5
 			else
 				# elif [[ "$systemd_selection" == "3" || "$systemd_selection" == "6" || "$systemd_selection" == "7" || "$systemd_selection" == "8" || "$systemd_selection" == "10" || "$systemd_selection" == "11" || "$systemd_selection" == "12" || "$systemd_selection" == "13" || "$systemd_selection" == "16" || "$systemd_selection" == "18" || "$systemd_selection" == "19" "$systemd_selection" == "20" ]]; then
@@ -3854,6 +3880,75 @@ function drawpile_srv_reboot_warn_function () {
 		fi
 	fi
 	# Server auto-announcement message for brief restart
+}
+
+function drawpile_srv_socket_status_function () {
+	# Display limited info on the status of running Drawpile services.
+	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+	service_name_to_check_01=drawpile-srv.socket
+	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
+		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# Check to ensure output is not blank and find it in an alternate way
+		# echo Value: $drawpile_srv_socket_loaded
+		# echo
+		if [ -z "$drawpile_srv_socket_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); preset:.*/\1/p" )
+			# echo
+		fi
+		# echo Value: $drawpile_srv_socket_loaded
+		# echo
+		if [ -z "$drawpile_srv_socket_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_socket_loaded=error
+			# echo
+		fi
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		echo "Service name : $service_name_to_check_01"
+		echo "Start on boot: $drawpile_srv_socket_loaded"
+		echo "Loaded Status: $drawpile_srv_socket_status"
+	else
+		drawpile_srv_socket_loaded="not_loaded"
+		drawpile_srv_socket_status="not_loaded"
+		echo "The $service_name_to_check_01 is not yet loaded. No action required."
+	fi
+}
+
+function drawpile_srv_service_status_function () {
+	service_name_to_check_02=drawpile-srv.service
+	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
+		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		# Check to ensure output is not blank and find it in an alternate way
+		# echo Value: $drawpile_srv_service_loaded
+		# echo
+		if [ -z "$drawpile_srv_service_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); preset:.*/\1/p" )
+			# echo
+		fi
+		# echo Value: $drawpile_srv_service_loaded
+		# echo
+		if [ -z "$drawpile_srv_service_loaded" ]; then
+			# echo Oops. Blank!
+			drawpile_srv_service_loaded=error
+			# echo
+		fi
+		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+		if [ -z "$drawpile_srv_service_status" ]; then
+			drawpile_srv_service_status=error
+		fi
+		echo "Service name : $service_name_to_check_02"
+		echo "Start on boot: $drawpile_srv_service_loaded"
+		echo "Loaded Status: $drawpile_srv_service_status"
+	else
+		drawpile_srv_service_loaded="not_loaded"
+		drawpile_srv_service_status="not_loaded"
+		echo "The $service_name_to_check_02 is not yet loaded. No action required."
+	fi
 }
 
 function stop_drawpile_srv_if_running_function () {
@@ -3905,77 +4000,15 @@ function stop_drawpile_srv_if_running_function () {
 	else
 		echo Drawpile monitor is not available.
 		echo
-	fi
+	fi	
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-	# Display limited info on the status of running Drawpile services.
-	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-	service_name_to_check_01=drawpile-srv.socket
-	if [ -e "/etc/systemd/system/drawpile-srv.socket" ]; then
-		drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p" )
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		# Check to ensure output is not blank and find it in an alternate way
-		# echo Value: $drawpile_srv_socket_loaded
-		# echo
-		if [ -z "$drawpile_srv_socket_loaded" ]; then
-			# echo Oops. Blank!
-			drawpile_srv_socket_loaded=$( systemctl status $service_name_to_check_01 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); preset:.*/\1/p" )
-			# echo
-		fi
-		# echo Value: $drawpile_srv_socket_loaded
-		# echo
-		if [ -z "$drawpile_srv_socket_loaded" ]; then
-			# echo Oops. Blank!
-			drawpile_srv_socket_loaded=error
-			# echo
-		fi
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		drawpile_srv_socket_status=$( systemctl status $service_name_to_check_01 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-		echo "Service: $service_name_to_check_01"
-		echo "Value: $drawpile_srv_socket_loaded"
-		echo "Value: $drawpile_srv_socket_status"
-	else
-		drawpile_srv_socket_loaded="not_loaded"
-		drawpile_srv_socket_status="not_loaded"
-		echo "The $service_name_to_check_01 is not yet loaded. No action required."
-	fi
+	drawpile_srv_socket_status_function
 	echo
-	service_name_to_check_02=drawpile-srv.service
-	if [ -e "/etc/systemd/system/drawpile-srv.service" ]; then
-		drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); vendor.*/\1/p" )
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		# Check to ensure output is not blank and find it in an alternate way
-		# echo Value: $drawpile_srv_service_loaded
-		# echo
-		if [ -z "$drawpile_srv_service_loaded" ]; then
-			# echo Oops. Blank!
-			drawpile_srv_service_loaded=$( systemctl status $service_name_to_check_02 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_02; (.*); preset:.*/\1/p" )
-			# echo
-		fi
-		# echo Value: $drawpile_srv_service_loaded
-		# echo
-		if [ -z "$drawpile_srv_service_loaded" ]; then
-			# echo Oops. Blank!
-			drawpile_srv_service_loaded=error
-			# echo
-		fi
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		drawpile_srv_service_status=$( systemctl status $service_name_to_check_02 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-		if [ -z "$drawpile_srv_service_status" ]; then
-			drawpile_srv_service_status=error
-		fi
-		echo "Service: $service_name_to_check_02"
-		echo "Value: $drawpile_srv_service_loaded"
-		echo "Value: $drawpile_srv_service_status"
-	else
-		drawpile_srv_service_loaded="not_loaded"
-		drawpile_srv_service_status="not_loaded"
-		echo "The $service_name_to_check_02 is not yet loaded. No action required."
-	fi
-	echo
+	drawpile_srv_service_status_function
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	# Stop the server if necessary. 
-	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+	if [[ ( -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ) || ( -e "/etc/systemd/system/drawpile-srv.service" && ! -e "/etc/systemd/system/drawpile-srv.socket" ) ]]; then
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			drawpile_srv_reboot_warn_function
 			sudo systemctl stop --now $service_name_to_check_01
@@ -4005,7 +4038,7 @@ function start_drawpile_srv_if_updated_function () {
 	echo
 	service_name_to_check_01=drawpile-srv.socket
 	service_name_to_check_02=drawpile-srv.service
-	if [[ -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ]]; then
+	if [[ ( -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ) || ( -e "/etc/systemd/system/drawpile-srv.service" && ! -e "/etc/systemd/system/drawpile-srv.socket" ) ]]; then
 		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_01"
 			sudo systemctl start --now $service_name_to_check_01
@@ -4234,8 +4267,12 @@ comment_EOF_delete
 	fi
 }
 
-function drawpile_client_compile_verification_function () {
-	drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+function drawpile_client_compile_verification_function () {	
+	if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
+		drawpile_version=$( QT_QPA_PLATFORM=offscreen "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+	else
+		drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+	fi
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
 		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
@@ -4301,12 +4338,21 @@ comment_EOF_delete
 
 function drawpile_srv_compile_verification_function () {
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
-		# echo "Provide the password for: drawpileuser"
-		drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
-		drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
+			drawpile_srv_version=$( su -c "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv -v" drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( su -c "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv -v" drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		else
+			drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		fi
 	else
-		drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
-		drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
+			drawpile_srv_version=$( "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile-srv -v | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		else
+			drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		fi
 	fi
 	if [ -z "$drawpile_srv_version_stripped" ] ; then
 		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
@@ -4316,7 +4362,7 @@ function drawpile_srv_compile_verification_function () {
 		exit
 	fi
 	
-	if [[ -e  "/usr/local/bin/drawpile-srv" ]] || [[ -e  "/usr/bin/drawpile-srv" ]]; then
+	if [[ ( -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ) || -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
 		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
 			drawpile_srv_compile_verification=1
@@ -4371,7 +4417,7 @@ function drawpile_srv_compile_verification_function () {
 			echo "${red}${bold}This message should not be visible for server compile check.${normal}"
 		fi
 comment_EOF_delete
-	elif [[ ! -e  "/usr/local/bin/drawpile-srv" && ! -e  "/usr/bin/drawpile-srv" ]]; then
+	elif [[ ! -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
 		drawpile_srv_compile_verification=0
 		echo "${red}${bold}Drawpile-srv failed to compile.${normal}"
 		if [ "$skip_build_checks" == "1" ]; then
@@ -4403,12 +4449,25 @@ comment_EOF_delete
 }
 
 function drawpile_tools_compile_verification_function () {
-	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
-	drawpile_cmd_version=$( drawpile-cmd -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
-	if [ -z $drawpile_cmd_version ]; then
-		drawpile_cmd_version=$( drawpile-cmd -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+	if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/dprectool" ]]; then
+		dprec_tool_version=$( "$dp_install_loc/Programs/Drawpile/build/bin/dprectool" -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	else
+		dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	fi	
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-cmd" ]]; then
+		drawpile_cmd_version=$( "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-cmd" -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+		if [ -z "$drawpile_cmd_version" ]; then
+			drawpile_cmd_version=$( "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-cmd" -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+		fi
+	else
+		drawpile_cmd_version=$( drawpile-cmd -platform offscreen -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+		if [ -z "$drawpile_cmd_version" ]; then
+			drawpile_cmd_version=$( drawpile-cmd -v 2> /dev/null | grep -m 1 drawpile-cmd | awk '{ print $2 }' )
+		fi
 	fi
-
+	
+	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	if [[ -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
 		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" ]] && [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version compiled successfully!${normal}"
@@ -4437,7 +4496,11 @@ function drawpile_tools_compile_verification_function () {
 }
 
 function drawpile_dprectool_compile_verification_function () {
-	dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/dprectool" ]]; then
+		dprec_tool_version=$( "$dp_install_loc/Programs/Drawpile/build/bin/dprectool" -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	else
+		dprec_tool_version=$( dprectool -v | grep -m 1 dprectool | awk '{ print $2 }' )
+	fi
 
 	if [[ "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/dprectool" ]]; then
 		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
@@ -4460,15 +4523,28 @@ function drawpile_dprectool_compile_verification_function () {
 
 function drawpile_compile_verification_function () {
 	if [[ "$USER" = "root" ]] || [[ "$USER" = "Root" ]] || [[ "$USER" = "ROOT" ]] || [[ $EUID == 0 ]]; then
-		# echo "Provide the password for: drawpileuser"
-		drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
-		drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
+			drawpile_srv_version=$( su -c "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv -v" drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( su -c "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv -v" drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		else
+			drawpile_srv_version=$( su -c 'drawpile-srv -v' drawpileuser | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( su -c 'drawpile-srv --version' drawpileuser | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		fi
 	else
-		drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
-		drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
+			drawpile_srv_version=$( "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile-srv -v | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		else
+			drawpile_srv_version=$( drawpile-srv -v | grep -m 1 drawpile-srv | awk '{ print $2 }' )
+			drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
+		fi
 	fi
-	drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
 	
+	if [[ -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile" ]]; then
+		drawpile_version=$( QT_QPA_PLATFORM=offscreen "$dp_install_loc"/Programs/Drawpile/build/bin/drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+	else
+		drawpile_version=$( QT_QPA_PLATFORM=offscreen drawpile -v 2>/dev/null | grep -m 1 drawpile | awk '{ print $2 }' )
+	fi	
 
 	if [ "$drawpile_build_configuration" == "1" ] || [ "$drawpile_build_configuration" == "2" ]; then
 		# 1 - Server - Graphical User Interface (GUI)															sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF
@@ -4991,30 +5067,52 @@ comment_EOF
 	cmake --build . -j "$thread_count"
 	# make -j "$thread_count"
 	echo
-	# echo '--------------------------------------------------------------------------------'
-	# echo '--------------------------------------------------------------------------------'
-	
-	stop_drawpile_srv_if_running_function
-	
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
 	echo
-	echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
-	echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
-	echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
-	echo
-	#Location of created executable --> /usr/local/bin/
-	sudo cmake --install .
-	wait $!
-	# sudo make install
+	if [ "$drawpile_build_configuration" == "7" ] || [ "$drawpile_build_configuration" == "8" ]; then
+		echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
+		echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
+		echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
+		echo
+		#Location of created executable --> /usr/local/bin/
+		sudo cmake --install .
+		wait $!
+		# sudo make install
+	else
+		drawpile_srv_socket_status_function
+		echo
+		drawpile_srv_service_status_function
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		# The below section handles the following:
+		# - If the server is not currently running, don't skip initial setup.
+		# - If the server is currently running, don't install to locations and do later.
+		if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			#Do nothing because now we will do this function later to stop server once (instead of twice potentially).
+			echo "${bold}${yellow}***** Skipping installation of compiled program, *****${normal}"
+			echo "${bold}${yellow}*****        libraries, and documentation        *****${normal}"
+			echo "${bold}${yellow}*****           to proper locations.             *****${normal}"
+			echo
+			echo "${bold}${yellow}   Will occur later for systemd completion/changes.${normal}"
+			echo "${bold}${yellow}   Avoids multiple drawpile-srv restarts if running.${normal}"
+		else
+			# The service is either disabled, not yet configured, or not running.  Continue as normal for installation.
+			echo "${bold}${cyan}***** Making installation of compiled program, *****${normal}"
+			echo "${bold}${cyan}*****       libraries, and documentation       *****${normal}"
+			echo "${bold}${cyan}*****           to proper locations.           *****${normal}"
+			echo
+			#Location of created executable --> /usr/local/bin/
+			sudo cmake --install .
+			wait $!
+			# sudo make install
+		fi
+	fi
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
-	echo
-	start_drawpile_srv_if_updated_function
-	
-	# echo '--------------------------------------------------------------------------------'
-	# echo '--------------------------------------------------------------------------------'
 	echo
 	echo "${bold}${cyan}*****Verifying if Drawpile Compiled Successfully . . . *****${normal}"
 	echo
@@ -5055,7 +5153,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			elif [ "$drawpile_srv_compile_verification" == "0" ]; then
 				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
-				echo
+				
 				drawpile_build_and_compile_function
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
@@ -5080,7 +5178,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			elif [ "$drawpile_srv_compile_verification" == "0" ] || [ "$drawpile_client_compile_verification" == "0" ]; then
 				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
 				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
-				echo
+				
 				drawpile_build_and_compile_function
 			else
 				echo "${bold}${red}This message should not be visible for skipping compiling check."
@@ -5128,31 +5226,29 @@ fi
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
 
-echo
 echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
 
 drawpile_srv_compile_verification_stored_result=1
 sudo sed -i '\!^drawpile_srv_compile_verification_stored_result =!{h;s!=.*!= '"$drawpile_srv_compile_verification_stored_result"'!};${x;\!^$!{s!!drawpile_srv_compile_verification_stored_result = '"$drawpile_srv_compile_verification_stored_result"'!;H};x}' $drawpile_configuration_values_file
 
-if [[ -e  "/usr/local/bin/drawpile-srv" ]]; then
-	location_created_executable_dpsrv=/usr/local/bin/drawpile-srv
-elif [[ -e  "/usr/bin/drawpile-srv" ]]; then
-	location_created_executable_dpsrv=/usr/bin/drawpile-srv
-else
-		echo "Was unable to determine location of created executable."
-		echo "This will cause issues with the script."
-		echo
-		sleep 30
-		exit
-fi
-echo
+#location_created_executable_dpsrv=$( grep -m 1 "location_created_executable_dpsrv = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+#if [ -z "$location_created_executable_dpsrv" ] || [ "$location_created_executable_dpsrv" = "=" ]; then
+	if [[ -e  "/usr/local/bin/drawpile-srv" ]]; then
+		location_created_executable_dpsrv=/usr/local/bin/drawpile-srv
+	elif [[ -e  "/usr/bin/drawpile-srv" ]]; then
+		location_created_executable_dpsrv=/usr/bin/drawpile-srv
+	else
+			echo "Was unable to determine location of created executable."
+			echo "This will cause issues with the script."
+			echo
+			sleep 30
+			exit
+	fi
+	#sudo sed -i '\!^location_created_executable_dpsrv =!{h;s!=.*!= '"$location_created_executable_dpsrv"'!};${x;\!^$!{s!!location_created_executable_dpsrv = '"$location_created_executable_dpsrv"'!;H};x}' $drawpile_configuration_values_file
+	echo
+#fi
 drawpile_client_shortcut_function
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
-echo
-echo "${bold}${cyan}***** Now setting up startup configuration . . .*****${normal}"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -5419,12 +5515,38 @@ function firewall_cmd_adjustments_function () {
 
 firewall_cmd_status=$( sudo firewall-cmd --state 2>/dev/null )
 firewall_cmd_available_check=$?
+
 # echo Check: $firewall_cmd_available_check
 
 if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_check" -eq "252" ] || [ "$firewall_cmd_available_check" -ne "1" ]; then
 	# 0 is running, 252 is not running.
 	# echo State: $firewall_cmd_status
 	echo "${bold}${yellow}Firewall-cmd installed.${normal}"
+	
+	if firewall-cmd --state >/dev/null 2>&1; then
+		echo "${bold}${yellow}Firewall-cmd is running currently.${normal}"
+		echo
+		echo "${bold}${yellow}Action required to ensure the server works.${normal}"
+		echo
+		echo '-------------------------------------------'				
+		echo
+		firewall_cmd_adjustments_function
+		echo
+		sleep 10
+	else
+		echo "${bold}${green}Firewall-cmd is not running currently.${normal}"
+		echo
+		echo "${bold}${yellow}Action required to ensure the server works if enabled.${normal}"
+		echo
+		echo '-------------------------------------------'				
+		echo
+		firewall_cmd_adjustments_function
+
+		sleep 10
+	fi
+
+<<comment_EOF_delete
+	# This section is being retired because I apparently can't be sure it'll run
 	if [ "$firewall_cmd_status" == "running" ]; then
 		echo "${bold}${yellow}Firewall-cmd is running currently.${normal}"
 		echo
@@ -5438,7 +5560,7 @@ if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_che
 	elif [ "$firewall_cmd_status" == "not running" ]; then
 		echo "${bold}${green}Firewall-cmd is not running currently.${normal}"
 		echo
-		echo "${bold}${yellow}Action required to ensure the server works.${normal}"
+		echo "${bold}${yellow}Action required to ensure the server works if enabled.${normal}"
 		echo
 		echo '-------------------------------------------'				
 		echo
@@ -5450,17 +5572,21 @@ if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_che
 		echo
 		sleep 10
 	fi
+comment_EOF_delete
+
 elif [ "$firewall_cmd_available_check" -eq "1" ]; then
 	echo "${bold}${green}Firewall_cmd is not available. No action required.${normal}"
-	echo
-	sleep 10
+	# sleep 10
 else
 	echo "${bold}${red}This message for Firewall_cmd check should not be visible.${normal}"
-	echo
 	sleep 10
 fi
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
+echo
+echo "${bold}${cyan}--------------------------------------------------------------------------------${normal}"
+echo "${bold}${cyan}--------------------------------------------------------------------------------${normal}"
+echo "              ${bold}${cyan}***** Now setting up startup configuration . . .*****${normal}"
+echo "${bold}${cyan}--------------------------------------------------------------------------------${normal}"
+echo "${bold}${cyan}--------------------------------------------------------------------------------${normal}"
 echo
 echo "${bold}${cyan}***** This stage is for setting up an easy-to-remember *****${normal}"
 echo "${bold}${cyan}*****        way to connect to your server . . .       *****${normal}"
@@ -7170,9 +7296,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 				if [ -z "$drawpile_abuse_report_status" ]; then
 					drawpile_abuse_report_status=error
 				fi
-				echo "Service: $service_name_to_check_04"
-				echo "Value: $drawpile_abuse_report_loaded"
-				echo "Value: $drawpile_abuse_report_status"
+				echo "Service name : $service_name_to_check_04"
+				echo "Start on boot: $drawpile_abuse_report_loaded"
+				echo "Loaded Status: $drawpile_abuse_report_status"
 				sudo systemctl stop --now $service_name_to_check_04
 			else
 				drawpile_abuse_report_loaded="not_loaded"
@@ -7188,13 +7314,26 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# Sample Output: /usr/bin/python3.12
 			if [ "$python_version" == "3.12" ]; then
 				if [ -e "/usr/bin/python3.11" ]; then
+					echo
+					echo "Python install is $python_version ..."
+					echo "Found Python 3.11, proceeding with this version for setup."
 					python_command="python3.11"
+					echo
 				else
+					echo
+					echo "Python install is $python_version ..."
+					echo "Attempting install of Python 3.11 ..."
 					sudo $package_install_program python3.11
+					echo
 					if [ -e "/usr/bin/python3.11" ]; then
+						echo "Found Python 3.11, proceeding with this version for setup."
 						python_command="python3.11"
+						echo
 					else
+						echo "Unable to use Python 3.11..."
+						echo "Proceeding with installed version for setup."
 						python_command="python"
+						echo
 					fi
 				fi
 			else
@@ -7277,7 +7416,7 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		sudo chmod 655 /etc/systemd/system/drawpile-abuse-report.service
+		sudo chmod 664 /etc/systemd/system/drawpile-abuse-report.service
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		wait $!
@@ -7897,9 +8036,7 @@ function systemd_options_without_ssl_without_hostname_options_function () {
 echo "${bold}${cyan}***** Drawpile Server Start Up Options . . .*****${normal}"
 echo
 
-# if [[ "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || ( "$reused_drawpile_srv_crypt_key_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) ]]; then
-if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then	
-	# elif [[ "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]] then
+if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = yes" ]]; then
 	systemd_selection=$( grep -m 1 "systemd_selection = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	systemd_selection_text=$( grep -m 1 "systemd_selection_text = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	echo
@@ -7914,15 +8051,14 @@ if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" 
 else
 	# if [[ ( "$reused_hostname_selection" == "no" || "$reused_ssl_encryption_config" == "no" || "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" ) && "$drawpile_script_completed_test" == "drawpile_script_completed = no" ]]; then
 	# Script hasn't completed a successful run, need to generate config regardless.
-	# if [[ "$reused_drawpile_abuse_report_installation_status" == "yes" && "$reused_drawpile_srv_crypt_key_status" == "yes" ]]; then
 	# Regeneration is not mandatory if data was reused.
 	variable_to_read_1="systemd_selection"
 	variable_to_read_2="systemd_selection_text"
 	variable_to_read_3="systemd_configuration"
 
 	value_description_1="This value corresponds to server related startup settings: "
-	value_description_2=" "
-	value_description_3="${bold}${red}Note:${normal} If you changed the encrypted ban export key, say no to this question."
+	value_description_2=""
+	value_description_3=""
 	value_description_4=""
 	value_description_5=""
 
@@ -7992,9 +8128,83 @@ else
 fi
 echo
 # --------------------------------------------------------------------------------
-#
-#1 - Socket Activation
-cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" >/dev/null
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+	# --------------------------------------------------------------------------------
+	#1 - Socket Activation
+	# --------------------------------------------------------------------------------
+	cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" >/dev/null
+[Unit]
+Description=Drawpile dedicated server
+Documentation=man:drawpile-srv(1)
+After=network.target
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+[Service]
+# If you are using a self-built or distribution provided version with
+#      systemd integration, use this to enable socket activation:
+Type=notify
+NotifyAccess=main
+# --------------------------------------------------------------------------------
+# Note: set this to the correct path and add -d or -c to load the right configuration file
+ExecStart=$location_created_executable_dpsrv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd_configuration
+# --------------------------------------------------------------------------------
+# Integration of Systemd watchdog, which allows restarting the service when it gets stuck. 
+#      https://github.com/drawpile/Drawpile/commit/e46dc9aea1ddf90d812bf8a60a229746a4b19fb4
+Restart=always
+WatchdogSec=60s
+# --------------------------------------------------------------------------------
+# Note: in order to use session recording and SSL safely,
+#       a dedicated user account should be created for drawpile-srv.
+User=drawpileuser
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+[Install]
+Also=drawpile-srv.socket
+WantedBy=multi-user.target
+EOF
+	# --------------------------------------------------------------------------------
+	#2 - Server starts on Raspberry Pi power up
+	# --------------------------------------------------------------------------------
+	cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" >/dev/null
+[Unit]
+Description=Drawpile dedicated server
+Documentation=man:drawpile-srv(1)
+After=network.target
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+[Service]
+# If you are using a self-built or distribution provided version with
+#      systemd integration, use this to enable socket activation:
+Type=notify
+NotifyAccess=main
+# --------------------------------------------------------------------------------
+# Note: set this to the correct path and add -d or -c to load the right configuration file
+ExecStart=$location_created_executable_dpsrv -d /home/drawpileuser/server.db --web-admin-port 27780 $systemd_configuration
+# --------------------------------------------------------------------------------
+# Integration of Systemd watchdog, which allows restarting the service when it gets stuck. 
+#      https://github.com/drawpile/Drawpile/commit/e46dc9aea1ddf90d812bf8a60a229746a4b19fb4
+Restart=always
+WatchdogSec=60s
+# --------------------------------------------------------------------------------
+# Note: in order to use session recording and SSL safely,
+#       a dedicated user account should be created for drawpile-srv.
+User=drawpileuser
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+[Install]
+Also=drawpile-srv.socket
+WantedBy=multi-user.target
+EOF
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+else
+	# --------------------------------------------------------------------------------
+	#1 - Socket Activation
+	# --------------------------------------------------------------------------------
+	cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" >/dev/null
 [Unit]
 Description=Drawpile dedicated server
 After=network.target
@@ -8021,10 +8231,10 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
-#
-#
-#2 - Server starts on Raspberry Pi power up
-cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" >/dev/null
+	# --------------------------------------------------------------------------------
+	#2 - Server starts on Raspberry Pi power up
+	# --------------------------------------------------------------------------------
+	cat <<EOF | sudo tee "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" >/dev/null
 [Unit]
 Description=Drawpile dedicated server
 After=network.target
@@ -8051,17 +8261,86 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
+	# --------------------------------------------------------------------------------
+	# --------------------------------------------------------------------------------
+fi
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 
-if [[ "$reused_hostname_selection" == "yes" && "$reused_ssl_encryption_config" == "yes" && "$reused_drawpile_abuse_report_installation_status" == "yes" && ( "$reused_drawpile_srv_crypt_key_status" == "yes" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) && "$reused_systemd_selection" == "yes" ]]; then
-	echo "${bold}${green}Skipping copying files drawpile-srv.service and drawpile-srv.socket, no changes made.${normal}"
-	echo
-	echo "${bold}${green}Skipping reloading systemctl and systemd.${normal}"
+systemd_watchdog_integration_query=$( grep -m 1 "systemd_watchdog_integration = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+wait $!
+if [ -z "$systemd_watchdog_integration_query" ] || [ "$systemd_watchdog_integration_query" = "=" ]; then
+	systemd_watchdog_integration="error"
 else
+	systemd_watchdog_integration=$systemd_watchdog_integration_query
+fi
+
+
+if [[ "$reused_hostname_selection" == "yes" && "$reused_ssl_encryption_config" == "yes" && "$reused_drawpile_abuse_report_installation_status" == "yes" && ( "$reused_drawpile_srv_crypt_key_status" == "yes" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) && "$reused_systemd_selection" == "yes" && ( ( ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) && "$systemd_watchdog_integration" == "yes" ) || ( ( $drawpile_srv_version_stripped != "2.2.0" || $drawpile_srv_version_stripped < "2.2.0" ) && "$systemd_watchdog_integration" == "no" ) ) ]]; then
+	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+		stop_drawpile_srv_if_running_function
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
+		echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
+		echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
+		echo
+		#Location of created executable --> /usr/local/bin/
+		cd "$dp_install_loc/Programs/Drawpile/build"
+		. ~/.cargo/env
+		sudo cmake --install .
+		wait $!
+		# sudo make install
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		start_drawpile_srv_if_updated_function
+	else
+		echo "${bold}${green}Skipping copying files drawpile-srv.service and drawpile-srv.socket, no changes made.${normal}"
+		echo
+		echo "${bold}${green}Skipping reloading systemctl and systemd.${normal}"
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+	fi
+else
+	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+		stop_drawpile_srv_if_running_function
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+		echo
+		echo "${bold}${cyan}*****Making installation of compiled program,*****${normal}"
+		echo "${bold}${cyan}*****      libraries, and documentation      *****${normal}"
+		echo "${bold}${cyan}*****          to proper locations.          *****${normal}"
+		echo
+		#Location of created executable --> /usr/local/bin/
+		cd "$dp_install_loc/Programs/Drawpile/build"
+		. ~/.cargo/env
+		sudo cmake --install .
+		wait $!
+		# sudo make install
+	fi
+	echo
+	echo '--------------------------------------------------------------------------------'
+	echo '--------------------------------------------------------------------------------'
+	echo
+	echo "${bold}${yellow}Copying files drawpile-srv.service and drawpile-srv.socket:${normal}"
+	echo "${bold}${yellow} * Initial server configuration.${normal}"
+	echo "${bold}${yellow} * Initial setup completed, but there's changes to the systemd files.${normal}"
+	echo "${bold}${yellow} * Requested changes to server configuration have been made.${normal}"
+	echo
+	echo "${bold}${yellow}Reloading systemctl and systemd.${normal}"
+	echo
 	# elif [[ "$reused_drawpile_abuse_report_installation_status" == "no" || "$reused_drawpile_srv_crypt_key_status" == "no" || "$reused_systemd_selection" == "no" ]]; then
-	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
-	sudo chmod 777 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
-	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service"
-	sudo chmod 655 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service"
+	sudo chmod 664 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service"
+	sudo chmod 664 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.service.backup"
+	sudo chmod 664 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service"
+	sudo chmod 664 "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service"
 
 	echo "${bold}${yellow}Copying files drawpile-srv.service and drawpile-srv.socket to make systemd work.${normal}"
 	sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
@@ -8069,6 +8348,7 @@ else
 	sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" /etc/systemd/system/
 	echo
 	echo "${bold}${yellow}Reloading systemctl and systemd.${normal}"
+	echo
 	sudo systemctl daemon-reload
 	sudo systemctl restart systemd-modules-load
 	wait $!
@@ -8089,22 +8369,31 @@ else
 		sudo chown drawpileuser:drawpileread /home/drawpileuser/server.db
 		sudo systemctl stop --now drawpile-srv.service
 		wait $!
-	elif [[ "`systemctl is-active drawpile-srv.service`" = "active" && "`systemctl is-active drawpile-monitor.service`" = "active" ]]; then
-		sudo systemctl stop --now drawpile-monitor.service
-		sudo systemctl restart --now drawpile-srv.service
-		sudo systemctl start --now drawpile-monitor.service
-	elif [ "`systemctl is-active drawpile-srv.service`" = "active" ]; then
-		# This should account for using sockets or service file to start it. Other status result is "inactive"
-		sudo systemctl restart --now drawpile-srv.service
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
+	elif [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+		echo '--------------------------------------------------------------------------------'
+		echo
+		start_drawpile_srv_if_updated_function
 	else
+		echo
+		echo '--------------------------------------------------------------------------------'
+		echo '--------------------------------------------------------------------------------'
 		:
 		# Do nothing as no error was detected.
 		# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.	
 	fi
+	
+	if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
+		# if [[ ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) && "$systemd_watchdog_integration" == "yes" ]]; then
+		sudo sed -i '\!^systemd_watchdog_integration =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!systemd_watchdog_integration = '"yes"'!;H};x}' $drawpile_configuration_values_file
+	else
+		# if [[ ( $drawpile_srv_version_stripped != "2.2.0" || $drawpile_srv_version_stripped < "2.2.0" ) && "$systemd_watchdog_integration" == "no" ]]; then
+		sudo sed -i '\!^systemd_watchdog_integration =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!systemd_watchdog_integration = '"no"'!;H};x}' $drawpile_configuration_values_file
+		
+	fi
 fi
-echo
-echo '--------------------------------------------------------------------------------'
-echo '--------------------------------------------------------------------------------'
 echo
 # This function is no longer used but was a lot of work, so keeping for notes
 function allowed_and_disallowed_characters_function () {
@@ -8230,7 +8519,7 @@ function nginx_username_and_password_function () {
 			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
 			echo "${bold}${red}Please try again.${normal}"
 			echo
-		elif [[ "$nginx_username_1" == "$nginx_htpasswd_2" ]]; then
+		elif [[ ( "$nginx_username_1" == "$nginx_htpasswd_2" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
 			echo "${bold}${red}For security reasons, the username and password${normal}"
 			echo "${bold}${red}cannot be the same. Please try again.${normal}"
 			echo
@@ -8312,12 +8601,14 @@ function nginx_username_and_password_admin_ui_function () {
 	echo "${bold}${green}password you just created above to log into the interface to ${normal}"
 	echo "${bold}${green}create roles and users to act as moderators, admins, etc. ${normal}"
 	echo 
-	echo "${bold}${red}Because of this, you can't reuse either the username or password${normal}"
-	echo "${bold}${red}created earlier.${normal}"
-	echo
-	echo "${bold}${red}This is necessary to help enforce security and prevent unauthorized${normal}"
-	echo "${bold}${red}access. If you select later to enable Fail2Ban, failing multiple ${normal}"
-	echo "${bold}${red}times within a short period, you will be locked out until the${normal}"
+	if [[ "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
+		echo "${bold}${red}Because of this, you can't reuse either the username or password${normal}"
+		echo "${bold}${red}created earlier. This is necessary to help enforce security and${normal}"
+		echo "${bold}${red}prevent unauthorized access.${normal}"
+		echo
+	fi
+	echo "${bold}${red}If you select later to enable Fail2Ban, failing multiple times ${normal}"
+	echo "${bold}${red}within a short period, you will be locked out until the${normal}"
 	echo "${bold}${red}configured duration expires.${normal}"
 	echo
 	# login_credentials_length_minimum="14"
@@ -8334,7 +8625,7 @@ function nginx_username_and_password_admin_ui_function () {
 			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
 			echo "${bold}${red}Please try again.${normal}"
 			echo
-		elif [[ "$nginx_username_admin_ui_1" == "$nginx_username_1" ]] || [[ "$nginx_username_admin_ui_1" == "$nginx_htpasswd_2" ]]; then
+		elif [[ ( "$nginx_username_admin_ui_1" == "$nginx_username_1" || "$nginx_username_admin_ui_1" == "$nginx_htpasswd_2" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
 			echo "${bold}${red}For security reasons, the username cannot be${normal}"
 			echo "${bold}${red}reused. Please try again.${normal}"
 			echo
@@ -8357,11 +8648,11 @@ function nginx_username_and_password_admin_ui_function () {
 			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
 			echo "${bold}${red}Please try again.${normal}"
 			echo
-		elif [[ "$nginx_username_admin_ui_1" == "$nginx_htpasswd_admin_ui_2" ]]; then
+		elif [[ ( "$nginx_username_admin_ui_1" == "$nginx_htpasswd_admin_ui_2" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
 			echo "${bold}${red}For security reasons, the username and password${normal}"
 			echo "${bold}${red}cannot be the same. Please try again.${normal}"
 			echo
-		elif [[ "$nginx_htpasswd_admin_ui_1" == "$nginx_username_1" ]] || [[ "$nginx_htpasswd_admin_ui_1" == "$nginx_htpasswd_2" ]]; then
+		elif [[ ( "$nginx_htpasswd_admin_ui_1" == "$nginx_username_1" || "$nginx_htpasswd_admin_ui_1" == "$nginx_htpasswd_2") && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
 			echo "${bold}${red}For security reasons, the password cannot be${normal}"
 			echo "${bold}${red}reused. Please try again.${normal}"
 			echo
@@ -8651,9 +8942,9 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 					if [ -z "$drawpile_monitor_status" ]; then
 						drawpile_monitor_status=error
 					fi
-					echo "Service: $service_name_to_check_05"
-					echo "Value: $drawpile_monitor_loaded"
-					echo "Value: $drawpile_monitor_status"
+					echo "Service name : $service_name_to_check_05"
+					echo "Start on boot: $drawpile_monitor_loaded"
+					echo "Loaded Status: $drawpile_monitor_status"
 					sudo systemctl stop --now $service_name_to_check_05
 					echo
 				else
@@ -8670,18 +8961,32 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				# Sample Output: /usr/bin/python3.12
 				if [ "$python_version" == "3.12" ]; then
 					if [ -e "/usr/bin/python3.11" ]; then
+						echo
+						echo "Python install is $python_version ..."
+						echo "Found Python 3.11, proceeding with this version for setup."
 						python_command="python3.11"
+						echo
 					else
+						echo
+						echo "Python install is $python_version ..."
+						echo "Attempting install of Python 3.11 ..."
 						sudo $package_install_program python3.11
+						echo
 						if [ -e "/usr/bin/python3.11" ]; then
+							echo "Found Python 3.11, proceeding with this version for setup."
 							python_command="python3.11"
+							echo
 						else
+							echo "Unable to use Python 3.11..."
+							echo "Proceeding with installed version for setup."
 							python_command="python"
+							echo
 						fi
 					fi
 				else
 					python_command="python"
 				fi
+
 				
 				owner_id_test=$(find "/home/drawpileuser/drawpile-monitor" -prune -printf %U)
 				
@@ -10437,7 +10742,7 @@ User=drawpileuser
 [Install]
 WantedBy=multi-user.target
 EOF
-			sudo chmod 655 /etc/systemd/system/drawpile-monitor.service 
+			sudo chmod 664 /etc/systemd/system/drawpile-monitor.service 
 			sudo systemctl daemon-reload
 			sudo systemctl restart systemd-modules-load
 			# Systemd service to be started later in the script after server is started up.
@@ -11546,10 +11851,10 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
 		if [ -z "$drawpile_listserver_status" ]; then
 			drawpile_listserver_status=error
-		fi
-		echo "Service: $service_name_to_check_03"
-		echo "Value: $drawpile_listserver_loaded"
-		echo "Value: $drawpile_listserver_status"
+		fi		
+		echo "Service name : $service_name_to_check_03"
+		echo "Start on boot: $drawpile_listserver_loaded"
+		echo "Loaded Status: $drawpile_listserver_status"
 		sudo systemctl stop --now $service_name_to_check_03
 		echo
 	else
@@ -12695,7 +13000,6 @@ EOF
 				fi
 			done
 			
-			
 			if [ "$list_server_config_contents" == "1" ]; then
 				echo Reading contents of "$list_server_config_file_location"
 				echo
@@ -12722,6 +13026,10 @@ EOF
 		generate_list_server_config_filename
 	fi
 	
+	list_server_database_connection_string_num=$( grep -m 1 "list_server_database_connection_string_num = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	listserver_database_connection_string=$( grep -m 1 "listserver_database_connection_string = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		
+<<comment_EOF_delete
 	if [[ ( -z "$list_server_database_connection_string_num" || "$list_server_database_connection_string_num" = "=" ) || ( -z "$listserver_database_connection_string" || "$listserver_database_connection_string" = "=" ) ]]; then
 		# echo 
 		# echo "list_server_database_connection_string_num = $list_server_database_connection_string_num <-- Blah"
@@ -12737,6 +13045,7 @@ EOF
 		echo "${invis}list_server_database_connection_string_num = $list_server_database_connection_string_num ${normal}"
 		echo "${invis}listserver_database_connection_string      = $listserver_database_connection_string ${normal}"
 	fi
+comment_EOF_delete
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo
@@ -12982,17 +13291,21 @@ EOF
 			community_rules_page=https://drawpile.net/communities/synth/
 		else
 			community=invalid
-			echo "${bold}${yellow}Not a community server, skipping extra rules setup part 1.${normal}"
+			# echo "${bold}${yellow}Not a community server, skipping extra rules setup part 1.${normal}"
 		fi
 		# --------------------------------------------------------------------------------
 		if [[ $community == "valid" ]]; then
 			echo "${bold}${yellow}Is a community server, configuring list web page with extra rules...${normal}"
 			sudo sed -i -e "s/<p>Sessions hosted (or just listed) here should abide by the <a href=\"https:\/\/drawpile.net\/communities\/drawpile.net\/ccg\/\">common community guidelines<\/a>.<\/p>/<p>Sessions hosted (or just listed) here should abide by the <a href=\"https:\/\/drawpile.net\/communities\/drawpile.net\/ccg\/\">common community guidelines<\/a>.<\/p>\n\n<p>Also, this server has <a href=\"https:\/\/drawpile.net\/communities\/$community_slug\/\">additional rules that can be found here<\/a>.<\/p>/g" /var/www/html/drawpile/index.html
 			nginx -s reload
+			echo
 		elif [[ $community == "invalid" ]]; then
-			echo "${bold}${yellow}Not a community server, skipping extra rules setup part 2.${normal}"
+			# echo "${bold}${yellow}Not a community server, skipping extra rules setup part 2.${normal}"
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
 		else
 			echo "${bold}${red}This message should not be visible for community or non community status.${normal}"
+			echo
 		fi
 	}
 	
@@ -13033,7 +13346,6 @@ EOF
 		
 		community_server_extra_rules_insertion_function		
 		
-		echo
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
 		echo
@@ -13179,7 +13491,11 @@ server {
 	}
 	
 	location /drawpile-web/ws {
-		if (\$http_origin != "https://web.drawpile.net") {
+		# Old Line
+		# if (\$http_origin != "https://web.drawpile.net") {
+		
+		# New line.
+		if (\$http_origin !~ "^(https://web\.(drawpile\.net|foxdice\.cn))?\$") {
 			return 403;
 		}
 		proxy_pass http://127.0.0.1:27751;
@@ -13341,7 +13657,6 @@ EOF
 		
 		community_server_extra_rules_insertion_function
 		
-		echo
 		echo "Would you like NSFM sessions to show up on the web page for the list server?"
 		echo "Leaving this blank will default to (N)o."
 		echo
@@ -13478,7 +13793,11 @@ server {
 	}
 	
 	location /drawpile-web/ws {
-		if (\$http_origin != "https://web.drawpile.net") {
+		# Old Line
+		# if (\$http_origin != "https://web.drawpile.net") {
+		
+		# New line.
+		if (\$http_origin !~ "^(https://web\.(drawpile\.net|foxdice\.cn))?\$") {
 			return 403;
 		}
 		proxy_pass http://127.0.0.1:27751;
@@ -13688,8 +14007,8 @@ EOF
 		# Link --> https://github.com/drawpile/dpwebadmin/releases/download/0.5.1/dpwebadmin-0.5.1.tar.gz
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.8.0
-		web_admin_release_filename=dpwebadmin-0.8.0.tar.gz
+		web_admin_release=0.11.0
+		web_admin_release_filename=dpwebadmin-0.11.0.tar.gz
 		
 		if [[ "$web_admin_release_test" == "$web_admin_release" ]]; then
 			echo "Skipping download and setup, web admin is up to date."
@@ -14553,7 +14872,7 @@ EOF
 		echo "This is highly recommended for use. The default configuration will ban users that"
 		echo "fail authentication 15 times for 10 minutes." 
 		echo
-		echo "Would you like to protect your server against unauthorized access attempts?"
+		echo "${bold}${cyan}Would you like to protect your server against unauthorized access attempts?${normal}"
 		while :; do
 			read -r -p "${bold}${cyan}Without quotes, type 'yes' or 'no':${normal} " fail2ban_status
 			echo
@@ -14574,21 +14893,37 @@ EOF
 			function fail2ban_typical_system_installation () {
 				sudo $package_install_program fail2ban # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 				echo
+				if [ -e "/etc/fail2ban/jail.d/defaults-debian.conf" ]; then
+					# Renaming file has effect of disabling SSDH auth checks, without a log set to be monitored
+					# the service will fail to run.
+					echo "Detected '/etc/fail2ban/jail.d/defaults-debian.conf' ..."
+					echo "Renaming to 'defaults-debian.conf.bak' to ensure service runs."
+					sudo mv /etc/fail2ban/jail.d/defaults-debian.conf /etc/fail2ban/jail.d/defaults-debian.conf.bak
+					echo
+					# Apparent file contents are:
+					# [sshd]
+					# enabled = true
+				fi
 				if [ "`systemctl is-enabled fail2ban.service`" = "disabled" ]; then
 					echo "Enabling Fail2ban service."
 					sudo systemctl enable fail2ban.service
+					echo
 				fi
-				echo
-				systemctl status fail2ban.service --no-pager -l
-				echo
 				if [ "`systemctl is-active fail2ban.service`" = "inactive" ]; then
 					echo "Starting Fail2ban service."
 					sudo systemctl start --now fail2ban.service
-					systemctl status fail2ban.service --no-pager -l
+					echo
 				fi
+				if [ "`systemctl is-failed fail2ban.service`" = "failed" ]; then
+					echo "Restarting Fail2ban service."
+					sudo systemctl restart fail2ban.service
+					echo
+				fi
+				echo
 			}
 
 			if [ "$python_version" == "3.12" ]; then
+				
 				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Fedora 40 currently.${normal}"
 					sudo $package_install_program python3-inotify python3-systemd
@@ -14599,7 +14934,7 @@ EOF
 					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues currently.${normal}"
 					sudo $package_install_program python3-pyinotify python3-systemd
 				fi
-
+				echo
 				sudo mkdir -p -v "/tmp/f2b"
 				cd /tmp/f2b
 				if [ -e "/etc/fail2ban/jail.local" ]; then
@@ -14608,7 +14943,7 @@ EOF
 					fi
 					cp "/etc/fail2ban/jail.local" "/tmp/f2b"
 				fi
-
+				echo
 				# if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 				if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04 LTS\"" ]; then
 					echo "${bold}${yellow}Executing manual install - debian based.${normal}"
@@ -14643,6 +14978,7 @@ EOF
 					# if you want to check anyway whether there are some broken packages and fix them automatically, you can run:
 					# sudo apt -f install
 					
+					echo
 					if [ -e "/tmp/f2b/jail.local" ]; then
 						mv -f "/tmp/f2b/jail.local" "/etc/fail2ban"
 					fi
@@ -14706,6 +15042,7 @@ EOF
 				fail2ban_typical_system_installation
 			fi
 			echo
+			echo "Displaying Status of Fail2ban service."
 			systemctl status fail2ban.service --no-pager -l
 			echo
 			echo
@@ -14846,7 +15183,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
 		wait $!
 		echo
-		echo 'Reloading systemctl and systemd.'
+		echo 'Startup Option 1 - Socket Activation. Reloading systemctl and systemd.'
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		wait $!
@@ -14858,7 +15195,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
 		wait $!
 		echo
-		echo 'Reloading systemctl and systemd.'
+		echo 'Startup Option 2 - Always on Service. Reloading systemctl and systemd.'
 		sudo systemctl daemon-reload
 		sudo systemctl restart systemd-modules-load
 		wait $!
@@ -15135,7 +15472,7 @@ function nginx_username_and_password_pihole_function () {
 			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
 			echo "${bold}${red}Please try again.${normal}"
 			echo
-		elif [[ "$nginx_username_pihole_1" == "$nginx_htpasswd_pihole_1" ]]; then
+		elif [[ ( "$nginx_username_pihole_1" == "$nginx_htpasswd_pihole_1" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
 			echo "${bold}${red}For security reasons, the username and password${normal}"
 			echo "${bold}${red}cannot be the same. Please try again.${normal}"
 			echo
@@ -16847,11 +17184,13 @@ sudo mkdir -p -v "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/"
 if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
 	# Support Session backed Files 1, 2, 4, 5, 9, 14, 15, 17
 	echo
-	if [ ! -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
+	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1 || [ ! -e "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management" ]; then
 		echo "${bold}${cyan}File backed sessions in use, downloading script to find content for ${normal}"
-		echo "${bold}${cyan}     recovery and delete old backups. ${normal}"
+		echo "${bold}${cyan}     recovery and delete old backups ${normal}"
+		echo "${bold}${cyan}     (or not set for automated cleanup). ${normal}"
 		echo
 		sudo $wget_or_wget2_quiet_progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+		sudo chmod 750 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
 		echo
 		echo "This script can be used to search the text files and download them for"
 		echo "easy retrieval of session recordings with WinSCP (or other methods)."
@@ -16859,8 +17198,12 @@ if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_se
 		echo "If you intend to enable 'Archive Terminated Sessions' in web admin, this"
 		echo "script should be run soon after the server is set up. Those files can be"
 		echo "searched to use as emergency backups to restore data, but if the server"
-		echo "fills up it will stop working completely. You can configure an automated"
-		echo "cleanup with the following instructions (make a brief note just in case):"
+		echo "fills up it will stop working completely."
+		echo
+		echo "You can configure an automated cleanup with the following instructions,"
+		echo "and the script can be ran now if you want. If you plan on doing it later,"
+		echo "please make a brief note for reference:"
+		echo
 		echo " - Load up the proper directory noted below."
 		echo "     cd $dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts"
 		echo " - Run the script with this command: "
@@ -16868,10 +17211,47 @@ if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_se
 		echo " - Option 8 to 'Delete old session archives.'"
 		echo " - Set a number of days and file size according to the instructions."
 		echo " - You will then have a chance to make the job run daily at 12:00 AM."
-		echo ""
-		echo "When you've made your notes and you're ready to continue, press any key."
+		echo 
+		echo 
+		echo "Would you like to run the script now?"
 		echo
-		pause
+		while :; do
+			read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " dp_file_backed_sessions_mgmt_script_run
+			echo
+			if [ "$dp_file_backed_sessions_mgmt_script_run" == "y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "yes" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "YES" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Yes" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "n" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "N" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "no" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "NO" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "No" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		
+		echo
+		
+		if [ "$dp_file_backed_sessions_mgmt_script_run" == "y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "yes" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "YES" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Yes" ]; then
+			echo "${bold}${green}Running Script to set up automated cleanup for ${normal}"
+			echo "${bold}${green}     file-backed sessions. ${normal}"
+			echo 
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~ Starting Search and Automated Cleanup Script ~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			sudo "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/./drawpile-file-backed-sessions-management"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Resuming Setup Script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+			echo "${bold}${green}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${normal}"
+		elif [ "$dp_file_backed_sessions_mgmt_script_run" == "n" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "N" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "no" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "NO" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "No" ]; then
+			echo "${bold}${red}Skipping script configuration for now. ${normal}"
+		else
+			echo "${bold}${red}This message should not be visible for: dp_file_backed_sessions_mgmt_script_run ${normal}"
+		fi
+		
 		# sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
 	else
 		echo "${bold}${cyan}File backed sessions in use, script already downloaded to find content ${normal}"
@@ -16881,7 +17261,7 @@ if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_se
 	fi
 fi
 
-sudo chmod 777 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
+sudo chmod 750 "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/" -R
 echo
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -17593,9 +17973,10 @@ echo
 systemctl status drawpile-srv.service --no-pager -l
 wait $!
 echo
-echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 pause
+echo
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
 if [[ ( -d "$option_loc_2" && "$running_as_root_check" == "true" ) && (( "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ) || "$what_linux_name" == "NAME=\"Ubuntu\"" || ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" && "$what_architecture" == "Architecture: x86-64" && "$verify_if_this_is_raspbian_or_debian" == "" )) ]]; then
 	if [[ "$ssl_encryption_config" != "3" ]]; then
@@ -17832,7 +18213,9 @@ pause
 echo
 server_ipv4=$( hostname -I | awk '{ print $1 }' )
 server_ipv6=$( hostname -I | awk '{ print $2 }' )
-echo "${bold}${green}*****Drawpile Server Installation and Setup Complete . . .*****${normal}"
+echo "${bold}${green}***********************************************************************${normal}"
+echo "${bold}${green}*****    Drawpile Server Installation and Setup Complete . . .    *****${normal}"
+echo "${bold}${green}***********************************************************************${normal}"
 echo
 drawpile_credits_urls_functions 
 echo
@@ -17864,12 +18247,16 @@ echo '     for large boards being hosted on the server. I suggest using 25 MB fo
 echo '     when remotely accessing the server to administrate the server settings.'
 echo
 
+
+if [ "$dp_file_backed_sessions_mgmt_script_run" == "y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Y" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "yes" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "YES" ] || [ "$dp_file_backed_sessions_mgmt_script_run" == "Yes" ]; then
+	sudo chmod 777 $app_installation_status_file
+fi
 # The sort command used at the end sorts the list alphabetically.
 sudo sort $app_installation_status_file -o $app_installation_status_file
 wait $!
 # This removes any duplicates that may exist in the file.
 perl -i -ne 'print if ! $a{$_}++' $app_installation_status_file
-wait $!
+
 
 # sudo sort $drawpile_configuration_values_file -o $drawpile_configuration_values_file
 sudo sed -i '\!^drawpile_script_completed =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!drawpile_script_completed = '"yes"'!;H};x}' $drawpile_configuration_values_file
@@ -17878,6 +18265,7 @@ sleep 5
 # sudo chmod 770 /home/drawpileuser/ -R
 sudo chmod 770 $app_installation_status_file
 sudo chmod 770 $drawpile_configuration_values_file
+set +x
 
 if [ "$journalctl_log_limit" != "9" ] && [ "$journalctl_log_limit_read_from_file" != "yes" ]; then
 	echo
