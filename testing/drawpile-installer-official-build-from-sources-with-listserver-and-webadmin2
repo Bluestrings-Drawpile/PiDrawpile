@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003937
+drawpilescriptversion=2.996003938
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -446,7 +446,11 @@ function dnf_function () {
 	packages_update_program="dnf -q -y check-update"
 	packages_system_upgrade="dnf -q -y upgrade"
 	packages_clean_program="echo ${invis} Skipping 'dnf clean dbcache' ${normal}"
-	package_info_program="dnf info"
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
+		package_info_program="dnf -q info"
+	else
+		package_info_program="dnf info"
+	fi
 }
 
 function yum_function () {
@@ -3519,7 +3523,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]] ) && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] || [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]] ) && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 
 	package_name=zlib-devel
 	package_version_length=14-20
@@ -5137,7 +5141,7 @@ comment_EOF
 		# The below section handles the following:
 		# - If the server is not currently running, don't skip initial setup.
 		# - If the server is currently running, don't install to locations and do later.
-		if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+		if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || ( "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ) || "$drawpile_srv_service_status" == "(running)" ]]; then
 			#Do nothing because now we will do this function later to stop server once (instead of twice potentially).
 			echo "${bold}${yellow}***** Skipping installation of compiled program, *****${normal}"
 			echo "${bold}${yellow}*****        libraries, and documentation        *****${normal}"
@@ -5157,6 +5161,8 @@ comment_EOF
 			# sudo make install
 		fi
 	fi
+	systemctl status drawpile-srv.socket | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p"
+	systemctl status drawpile-srv.service | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p"
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
@@ -8330,7 +8336,7 @@ fi
 
 
 if [[ "$reused_hostname_selection" == "yes" && "$reused_ssl_encryption_config" == "yes" && "$reused_drawpile_abuse_report_installation_status" == "yes" && ( "$reused_drawpile_srv_crypt_key_status" == "yes" || "$reused_drawpile_srv_crypt_key_status" == "not available" ) && "$reused_systemd_selection" == "yes" && ( ( ( $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ) && "$systemd_watchdog_integration" == "yes" ) || ( ( $drawpile_srv_version_stripped != "2.2.0" || $drawpile_srv_version_stripped < "2.2.0" ) && "$systemd_watchdog_integration" == "no" ) ) ]]; then
-	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || ( "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ) || "$drawpile_srv_service_status" == "(running)" ]]; then
 		stop_drawpile_srv_if_running_function
 		echo '--------------------------------------------------------------------------------'
 		echo '--------------------------------------------------------------------------------'
@@ -8360,7 +8366,7 @@ if [[ "$reused_hostname_selection" == "yes" && "$reused_ssl_encryption_config" =
 		echo
 	fi
 else
-	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+	if [[ ( "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled") || ( "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ) || "$drawpile_srv_service_status" == "(running)" ]]; then
 		stop_drawpile_srv_if_running_function
 		echo '--------------------------------------------------------------------------------'
 		echo '--------------------------------------------------------------------------------'
