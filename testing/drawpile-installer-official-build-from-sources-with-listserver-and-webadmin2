@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003936
+drawpilescriptversion=2.996003937
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2907,7 +2907,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] ); then
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3519,7 +3519,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]] ) && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 
 	package_name=zlib-devel
 	package_version_length=14-20
@@ -3535,7 +3535,7 @@ if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\""
 	package_version_check_and_update_function
 fi
 
-if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] ); then
 	# echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
 	
 	package_name=zlib-ng-devel
