@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003938
+drawpilescriptversion=2.996003939
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -313,7 +313,7 @@ https://www.techrepublic.com/article/linux-101-how-to-clean-the-dnf-and-apt-cach
 apt-get clean							dnf clean dbcache / sudo dnf clean all
 
 Will need to edit entire queries that use this command, information is formatted differently
-apt-cache policy PACKAGENAME			dnf info PACKAGENAME
+apt-cache policy PACKAGENAME			dnf -q info PACKAGENAME
 apt-cache search PACKAGENAME			dnf search PACKAGENAME
 
 Should not need added, only for Pi
@@ -446,11 +446,7 @@ function dnf_function () {
 	packages_update_program="dnf -q -y check-update"
 	packages_system_upgrade="dnf -q -y upgrade"
 	packages_clean_program="echo ${invis} Skipping 'dnf clean dbcache' ${normal}"
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
-		package_info_program="dnf -q info"
-	else
-		package_info_program="dnf info"
-	fi
+	package_info_program="dnf -q info"
 }
 
 function yum_function () {
@@ -1522,7 +1518,7 @@ function version_test_by_distro_function () {
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		# Because the line below always returns the 2nd line output, that means the package is either already installed, not installed (but could be installed), or doesn't exist.
 		# 		Installed Packages / Available Packages / Error: No matching Packages to list
-		dnf info $package_name > /dev/null 2>&1
+		dnf -q info $package_name > /dev/null 2>&1
 		not_available_check=$?
 		# 0 equals exists, 1 equals does not exist.
 		if [ "$not_available_check" == "1" ]; then
@@ -1531,15 +1527,15 @@ function version_test_by_distro_function () {
 			test_installation_status="error_01_does_not_exist"
 			# echo "Error: No matching Packages to list"
 		elif [ "$not_available_check" == "0" ]; then
-			installation_status=$( dnf info $package_name | sed -n '2 p' )
-			installation_status_candidate_check=$( dnf info $package_name | grep -i "Available Packages" )
+			installation_status=$( dnf -q info $package_name | sed -n '2 p' )
+			installation_status_candidate_check=$( dnf -q info $package_name | grep -i "Available Packages" )
 			if [ "$installation_status" == "Installed Packages" ]; then
 				if [ "$installation_status_candidate_check" == "Available Packages" ]; then
 					# Package is installed, but an update is available.
-					candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
-					candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
-					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
+					candidate_status=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+					candidate_status_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
+					version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$candidate_status-$candidate_status_02"
@@ -1547,8 +1543,8 @@ function version_test_by_distro_function () {
 					test_installation_status="Installed and not up to date"
 				elif [ "$installation_status_candidate_check" == "" ]; then
 					# Package is installed and up to date
-					version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
+					version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$version-$version_02"
@@ -1562,8 +1558,8 @@ function version_test_by_distro_function () {
 				fi
 			elif [ "$installation_status" == "Available Packages" ]; then
 				# Package is not yet installed.
-				candidate_status=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
-				candidate_status_02=$( dnf info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
+				candidate_status=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+				candidate_status_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
 				test_version="Not Installed"
 				test_update_version="$candidate_status-$candidate_status_02"
 				test_update_version_simple="$candidate_status"
@@ -2139,12 +2135,12 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	minimum_version_wget=1.18-5
 elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-	version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
+	version_wget=$( dnf -q info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf -q info wget2 | sed -n '2 p' )
 	minimum_version_wget=2.1.0
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info wget | sed -n '2 p' )
+	version_wget=$( dnf -q info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf -q info wget | sed -n '2 p' )
 	minimum_version_wget=1.18-5
 	# Installed Packages
 	# Available Packages
@@ -2444,8 +2440,8 @@ function version_apt_or_dnf_function () {
 		# candidate_status=$( apt-cache policy $package_name | grep "Candidate:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version=$( dnf info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-		installation_status=$( dnf info $package_name | sed -n '2 p' )
+		version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+		installation_status=$( dnf -q info $package_name | sed -n '2 p' )
 		# Installed Packages
 		# Available Packages
 		# Error: No matching Packages to list		
@@ -2462,7 +2458,7 @@ function package_available_dpkg_or_dnf_function () {
 		not_available_check=0
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		dnf info $package_name > /dev/null 2>&1
+		dnf -q info $package_name > /dev/null 2>&1
 		not_available_check=$?
 	fi
 }
@@ -2735,10 +2731,10 @@ function package_install_status_check_function () {
 			package_install_status_check_decision_tree_a2="(none)"
 		fi
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			package_install_status_check_decision_tree_q1=$( dnf info $p | sed -n '2 p' )
+			package_install_status_check_decision_tree_q1=$( dnf -q info $p | sed -n '2 p' )
 			package_install_status_check_decision_tree_a1="Error: No matching Packages to list"
 			package_install_status_check_decision_tree_a3="Error: No matching Packages to list"
-			package_install_status_check_decision_tree_q2=$( dnf info $p | sed -n '2 p' )
+			package_install_status_check_decision_tree_q2=$( dnf -q info $p | sed -n '2 p' )
 			package_install_status_check_decision_tree_a2="Available Packages"
 			# Installed Packages
 			# Available Packages
@@ -4677,7 +4673,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		package_name=kf5-karchive-devel
-		version=$( dnf info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+		version=$( dnf -q info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version"
 	echo
@@ -4717,7 +4713,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		package_name=qt5-qtbase-devel
-		version_qt=$( dnf info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+		version_qt=$( dnf -q info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version_qt"
 	echo
@@ -11201,11 +11197,11 @@ if [ "$local_or_remote" == "Local" ]; then
 				progs=(samba samba-common-bin);
 			fi
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				version_samba=$( dnf info samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-				installation_status_samba=$( dnf info samba | sed -n '2 p' )
+				version_samba=$( dnf -q info samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba=$( dnf -q info samba | sed -n '2 p' )
 				# minimum_version_samba=2:4.13.13
-				version_samba_common_bin=$( dnf info samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-				installation_status_samba_common_bin=$( dnf info samba-common | sed -n '2 p' )
+				version_samba_common_bin=$( dnf -q info samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba_common_bin=$( dnf -q info samba-common | sed -n '2 p' )
 				# minimum_version_samba_common_bin=2:4.13.13
 				progs=(samba samba-common);
 				# Installed Packages
@@ -11644,8 +11640,8 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	# https://www.liquidweb.com/kb/how-to-install-apache-on-fedora-21/
-	is_apache_2_installed=$( dnf info httpd | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_apache2=$( dnf info httpd | sed -n '2 p' )
+	is_apache_2_installed=$( dnf -q info httpd | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_apache2=$( dnf -q info httpd | sed -n '2 p' )
 	package_name=httpd
 	# Installed Packages
 	# Available Packages
@@ -11846,8 +11842,8 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		version_golang=$( apt-cache policy golang | grep "Installed:" | cut -c 14-21 )
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version_golang=$( dnf info golang | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-		installation_status_golang=$( dnf info golang | sed -n '2 p' )
+		version_golang=$( dnf -q info golang | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_golang=$( dnf -q info golang | sed -n '2 p' )
 		# Installed Packages
 		# Available Packages
 		# Error: No matching Packages to list
