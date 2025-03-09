@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003940
+drawpilescriptversion=2.996003939
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -123,11 +123,9 @@ drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Comp
 # ----------------------------------------------------------------------------------
 # Script accepted arguments should go here that are typed after the script name.
 dp_compile_check_bypass="$1"
-# Setting value to true, enabled, etc... will result in the check happening as normal.
 echo
 if [ -z "$dp_compile_check_bypass" ]; then
-	echo "${bold}${green}No script argument set to disable 'compile skip' after version check.${normal}"
-	echo "${bold}${green}Note this only applies to installed version compared to github version.${normal}"
+	echo "${bold}${green}No script argument set, not skipping compile step.${normal}"
 	echo "${bold}${green}Most users should not need to use this feature.${normal}"
 	echo
 	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
@@ -135,19 +133,14 @@ if [ -z "$dp_compile_check_bypass" ]; then
 	echo "${bold}${green}     For example: ./script-name d${normal}"
 	dp_compile_check_bypass="false"
 elif [[ "$dp_compile_check_bypass" == "false" || "$dp_compile_check_bypass" == "FALSE" || "$dp_compile_check_bypass" == "f" || "$dp_compile_check_bypass" == "F"  ]] || [[ "$dp_compile_check_bypass" == "disable" || "$dp_compile_check_bypass" == "disabled" || "$dp_compile_check_bypass" == "d" || "$dp_compile_check_bypass" == "DISABLE" || "$dp_compile_check_bypass" == "DISABLED" || "$dp_compile_check_bypass" == "D" ]]; then
-	echo "${bold}${yellow}Argument set to disable 'compile skip' after version check.${normal}"
-	echo "${bold}${yellow}Note this only applies to installed version compared to github version.${normal}"
+	echo "${bold}${yellow}Argument set to disable skipping the compiling step if matching versions located.${normal}"
 	dp_compile_check_bypass="false"
-elif [[ "$dp_compile_check_bypass" == "true" || "$dp_compile_check_bypass" == "TRUE" || "$dp_compile_check_bypass" == "t" || "$dp_compile_check_bypass" == "T"  ]] || [[ "$dp_compile_check_bypass" == "enable" || "$dp_compile_check_bypass" == "enabled" || "$dp_compile_check_bypass" == "e" || "$dp_compile_check_bypass" == "ENABLE" || "$dp_compile_check_bypass" == "ENABLED" || "$dp_compile_check_bypass" == "E" ]]; then
-	echo "${bold}${green}Argument set to enable 'compile skip' after version check.${normal}"
-	echo "${bold}${green}Note this only applies to installed version compared to github version.${normal}"
-	echo "${bold}${green}This is the normal behavior if no argument is set when the script is ran.${normal}"
-elif [[ "$dp_compile_check_bypass" != "false" && "$dp_compile_check_bypass" != "FALSE" && "$dp_compile_check_bypass" != "f" && "$dp_compile_check_bypass" != "F"  ]] && [[ "$dp_compile_check_bypass" != "disable" && "$dp_compile_check_bypass" != "disabled" && "$dp_compile_check_bypass" != "d" && "$dp_compile_check_bypass" != "DISABLE" && "$dp_compile_check_bypass" != "DISABLED" && "$dp_compile_check_bypass" != "D" ]]; then
-	echo "${bold}${red}Invalid Argument set for 'compile skip' after version check.${normal}"
-	echo "${bold}${red}Note this only applies to installed version compared to github version.${normal}"
+elif [[ "$dp_compile_check_bypass" != "false" ]]; then
+	echo "${bold}${red}Invalid argument set to disable skipping the compiling step if matching versions located.${normal}"
 	echo "${bold}${red}Setting dp_compile_check_bypass value to false.${normal}"
-	dp_compile_check_bypass="true"
+	dp_compile_check_bypass="false"
 else
+	echo "${bold}${yellow}Unable to determine system language!${normal}"
 	echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
 fi
 echo
@@ -4410,7 +4403,7 @@ function drawpile_srv_compile_verification_function () {
 		echo
 		sleep 30
 		exit
-	elif if [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" == "false" ]] ; then
+	elif [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" == "false" ]] ; then
 		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This may cause problems. ${normal}"
 		echo "${bold}${red}Ignoring error since compile check bypass is enabled.${normal}"
 	else
@@ -13397,9 +13390,14 @@ EOF
 		sudo sed -i -e "s/https:\/\/__DOMAIN__\/listing\//http:\/\/$hostname\/listing\//g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/https:\/\/__DOMAIN__\/listing\//http:\/\/example.hostwebsite.com\/listing\//g' /home/pi/Public/index.html
 
-		sudo sed -i -e "s/<a href=\"https:\/\/drawpile.net\/help\/hosting\/\">/<a href=\"https:\/\/docs.drawpile.net\/help\/common\/hosting\">/g" /var/www/html/drawpile/index.html
-		
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
+		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
+		To <a href=\"https://drawpile.net/help/hosting/\">host a session<\/a> here, select the <i>Remote<\/i> option in the Host dialog and enter <code>cloudywave.net<\/code> in the text box.<\/p>
+		
+
+		# Old line
+		# sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
+		#
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
