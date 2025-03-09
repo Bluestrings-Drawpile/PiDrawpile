@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003935
+drawpilescriptversion=2.996003936
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -119,6 +119,32 @@ drawpile_configuration_values_file_bak=/home/drawpileuser/Drawpile_Configuration
 
 drawpile_completed_successfully_values_file=/home/drawpileuser/Drawpile_Completed_Values.txt
 drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Completed_Values_bak.txt
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# Script accepted arguments should go here that are typed after the script name.
+dp_compile_check_bypass="$1"
+echo
+if [ -z "$dp_compile_check_bypass" ]; then
+	echo "${bold}${green}No script argument set, not skipping compile step.${normal}"
+	echo "${bold}${green}Most users should not need to use this feature.${normal}"
+	echo
+	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
+	echo "${bold}${green}false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
+	echo "${bold}${green}     For example: ./script-name d${normal}"
+	dp_compile_check_bypass="false"
+elif [[ "$dp_compile_check_bypass" == "false" || "$dp_compile_check_bypass" == "FALSE" || "$dp_compile_check_bypass" == "f" || "$dp_compile_check_bypass" == "F"  ]] || [[ "$dp_compile_check_bypass" == "disable" || "$dp_compile_check_bypass" == "disabled" || "$dp_compile_check_bypass" == "d" || "$dp_compile_check_bypass" == "DISABLE" || "$dp_compile_check_bypass" == "DISABLED" || "$dp_compile_check_bypass" == "D" ]]; then
+	echo "${bold}${yellow}Argument set to disable skipping the compiling step if matching versions located.${normal}"
+	dp_compile_check_bypass="false"
+elif [[ "$dp_compile_check_bypass" != "false" ]]; then
+	echo "${bold}${red}Invalid argument set to disable skipping the compiling step if matching versions located.${normal}"
+	echo "${bold}${red}Setting dp_compile_check_bypass value to false.${normal}"
+	dp_compile_check_bypass="false"
+else
+	echo "${bold}${yellow}Unable to determine system language!${normal}"
+	echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
+fi
+echo
+echo
 # ----------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------
 <<comment_VNC_EOF
@@ -589,7 +615,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
@@ -636,7 +665,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Workstation 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
@@ -2101,7 +2133,7 @@ function script_update_check_function () {
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
-elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
 	version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
 	installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
@@ -2875,7 +2907,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3487,7 +3519,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 
 	package_name=zlib-devel
 	package_version_length=14-20
@@ -3503,7 +3535,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	package_version_check_and_update_function
 fi
 
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# echo "${bold}${yellow}Placeholder for Fedora 40 and Zlib${normal}."
 	
 	package_name=zlib-ng-devel
@@ -4174,7 +4206,7 @@ function compile_drawpile_client_only_function () {
 	echo
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
 			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
 			echo
 			drawpile_client_shortcut_function
@@ -4194,6 +4226,11 @@ function compile_drawpile_client_only_function () {
 			echo
 			sleep 30
 			exit
+		elif [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
+			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
+			drawpile_client_compile_verification=0
+			echo
 		else
 			echo "${red}Drawpile $drawpile_version has been detected but is not${normal}"
 			echo "${red}the correct version of $drawpile_version_script_check.${normal}"
@@ -4275,9 +4312,14 @@ function drawpile_client_compile_verification_function () {
 	fi
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
 			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
 			drawpile_client_compile_verification=1
+			echo
+		elif [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
+			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
+			drawpile_client_compile_verification=0
 			echo
 		else
 			drawpile_client_compile_verification=0
@@ -4363,9 +4405,14 @@ function drawpile_srv_compile_verification_function () {
 	fi
 	
 	if [[ ( -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ) || -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
-		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
 			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
 			drawpile_srv_compile_verification=1
+			echo
+		elif [[ "$drawpile_srv_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
+			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
+			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
+			drawpile_srv_compile_verification=0
 			echo
 		else
 			drawpile_srv_compile_verification=0
@@ -18336,8 +18383,8 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 		echo "${bold}${red}Read more here:${normal}"
 		echo "     https://www.debian.org/doc/manuals/debian-faq/uptodate.en.html"
 		echo
-		echo "apt-get update"
-		echo "apt-get dist-upgrade"
+		echo "sudo apt-get update"
+		echo "sudo apt-get dist-upgrade"
 		echo "sudo reboot"
 	elif [ "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ]; then
 		echo "${bold}${red}Read more here:${normal}"
@@ -18360,11 +18407,11 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 		echo "sudo do-release-upgrade"
 		echo "sudo reboot"
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+		if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 			echo "${bold}${red}Read more here:${normal}"
 			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
 			echo
-			echo "sudo dnf upgrade --refresh"
+			echo "sudo dnf --refresh upgrade"
 			echo "sudo reboot"
 			echo "sudo dnf system-upgrade download --releasever=41"
 			echo "sudo dnf system-upgrade reboot"
@@ -18372,7 +18419,7 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 			echo "${bold}${red}Read more here:${normal}"
 			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
 			echo
-			echo "sudo dnf upgrade --refresh"
+			echo "sudo dnf --refresh upgrade"
 			echo "sudo reboot"
 			echo "sudo dnf system-upgrade download --releasever=##"
 			echo "sudo dnf system-upgrade reboot"
@@ -18385,10 +18432,11 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 		echo "${bold}${red}Unable to identify system in use for specific update instructions.${normal}"
 		echo "${bold}${red}This message should not be visible.${normal}"
 	fi
+	echo
 fi
 	
 
-read -r -p 'Press [Enter] key to close window...'
+read -r -p 'Press [Enter] key to finish script...'
 echo
 #
 # - End of Script. -
