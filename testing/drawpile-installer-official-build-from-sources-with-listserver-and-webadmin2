@@ -5161,8 +5161,6 @@ comment_EOF
 			# sudo make install
 		fi
 	fi
-	systemctl status drawpile-srv.socket | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p"
-	systemctl status drawpile-srv.service | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_01; (.*); vendor.*/\1/p"
 	echo
 	echo '--------------------------------------------------------------------------------'
 	echo '--------------------------------------------------------------------------------'
