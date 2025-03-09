@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003939
+drawpilescriptversion=2.996003940
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -123,9 +123,11 @@ drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Comp
 # ----------------------------------------------------------------------------------
 # Script accepted arguments should go here that are typed after the script name.
 dp_compile_check_bypass="$1"
+# Setting value to true, enabled, etc... will result in the check happening as normal.
 echo
 if [ -z "$dp_compile_check_bypass" ]; then
-	echo "${bold}${green}No script argument set, not skipping compile step.${normal}"
+	echo "${bold}${green}No script argument set to disable 'compile skip' after version check.${normal}"
+	echo "${bold}${green}Note this only applies to installed version compared to github version.${normal}"
 	echo "${bold}${green}Most users should not need to use this feature.${normal}"
 	echo
 	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
@@ -133,14 +135,19 @@ if [ -z "$dp_compile_check_bypass" ]; then
 	echo "${bold}${green}     For example: ./script-name d${normal}"
 	dp_compile_check_bypass="false"
 elif [[ "$dp_compile_check_bypass" == "false" || "$dp_compile_check_bypass" == "FALSE" || "$dp_compile_check_bypass" == "f" || "$dp_compile_check_bypass" == "F"  ]] || [[ "$dp_compile_check_bypass" == "disable" || "$dp_compile_check_bypass" == "disabled" || "$dp_compile_check_bypass" == "d" || "$dp_compile_check_bypass" == "DISABLE" || "$dp_compile_check_bypass" == "DISABLED" || "$dp_compile_check_bypass" == "D" ]]; then
-	echo "${bold}${yellow}Argument set to disable skipping the compiling step if matching versions located.${normal}"
+	echo "${bold}${yellow}Argument set to disable 'compile skip' after version check.${normal}"
+	echo "${bold}${yellow}Note this only applies to installed version compared to github version.${normal}"
 	dp_compile_check_bypass="false"
-elif [[ "$dp_compile_check_bypass" != "false" ]]; then
-	echo "${bold}${red}Invalid argument set to disable skipping the compiling step if matching versions located.${normal}"
+elif [[ "$dp_compile_check_bypass" == "true" || "$dp_compile_check_bypass" == "TRUE" || "$dp_compile_check_bypass" == "t" || "$dp_compile_check_bypass" == "T"  ]] || [[ "$dp_compile_check_bypass" == "enable" || "$dp_compile_check_bypass" == "enabled" || "$dp_compile_check_bypass" == "e" || "$dp_compile_check_bypass" == "ENABLE" || "$dp_compile_check_bypass" == "ENABLED" || "$dp_compile_check_bypass" == "E" ]]; then
+	echo "${bold}${green}Argument set to enable 'compile skip' after version check.${normal}"
+	echo "${bold}${green}Note this only applies to installed version compared to github version.${normal}"
+	echo "${bold}${green}This is the normal behavior if no argument is set when the script is ran.${normal}"
+elif [[ "$dp_compile_check_bypass" != "false" && "$dp_compile_check_bypass" != "FALSE" && "$dp_compile_check_bypass" != "f" && "$dp_compile_check_bypass" != "F"  ]] && [[ "$dp_compile_check_bypass" != "disable" && "$dp_compile_check_bypass" != "disabled" && "$dp_compile_check_bypass" != "d" && "$dp_compile_check_bypass" != "DISABLE" && "$dp_compile_check_bypass" != "DISABLED" && "$dp_compile_check_bypass" != "D" ]]; then
+	echo "${bold}${red}Invalid Argument set for 'compile skip' after version check.${normal}"
+	echo "${bold}${red}Note this only applies to installed version compared to github version.${normal}"
 	echo "${bold}${red}Setting dp_compile_check_bypass value to false.${normal}"
-	dp_compile_check_bypass="false"
+	dp_compile_check_bypass="true"
 else
-	echo "${bold}${yellow}Unable to determine system language!${normal}"
 	echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
 fi
 echo
@@ -1568,13 +1575,13 @@ function version_test_by_distro_function () {
 				test_version="error_02_not_found"
 				test_update_version="error_02_not_found"
 				test_installation_status="error_02_not_found"
-				echo "${bold}${red}This message for does not exist check should not be visible. (Fedora - 1)${normal}"
+				echo "${bold}${red}This message for does not exist check should not be visible. (Fedora - 1 - $package_name )${normal}"
 			fi
 		else
 			test_version="error_02_not_found"
 			test_update_version="error_02_not_found"
 			test_installation_status="error_02_not_found"
-			echo "${bold}${red}This message for does not exist check should not be visible. (Fedora - 2)${normal}"
+			echo "${bold}${red}This message for does not exist check should not be visible. (Fedora - 2 - $package_name )${normal}"
 		fi
 	fi
 }
@@ -3519,8 +3526,9 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]] || [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]] ) && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
-
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]]; then
+	# Don't check on...
+	# [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]] && [[ "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" && "$what_linux_flavor" != "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]
 	package_name=zlib-devel
 	package_version_length=14-20
 	version_apt_or_dnf_function
@@ -4396,12 +4404,17 @@ function drawpile_srv_compile_verification_function () {
 			drawpile_srv_version_stripped=$( drawpile-srv --version | perl -0777 -ne '/drawpile-srv\s+([0-9]+\.[0-9]+\.[0-9]+)/; print $1' )
 		fi
 	fi
-	if [ -z "$drawpile_srv_version_stripped" ] ; then
+	if [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" != "false" ]] ; then
 		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
 		echo "${bold}${red}Exiting script, unable to continue.${normal}"
 		echo
 		sleep 30
 		exit
+	elif if [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" == "false" ]] ; then
+		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This may cause problems. ${normal}"
+		echo "${bold}${red}Ignoring error since compile check bypass is enabled.${normal}"
+	else
+		echo "${bold}${red}This message should not be visible regarding 'remove extra information from drawpile-srv'. ${normal}"
 	fi
 	
 	if [[ ( -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ) || -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
@@ -13384,6 +13397,8 @@ EOF
 		sudo sed -i -e "s/https:\/\/__DOMAIN__\/listing\//http:\/\/$hostname\/listing\//g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/https:\/\/__DOMAIN__\/listing\//http:\/\/example.hostwebsite.com\/listing\//g' /home/pi/Public/index.html
 
+		sudo sed -i -e "s/<a href=\"https:\/\/drawpile.net\/help\/hosting\/\">/<a href=\"https:\/\/docs.drawpile.net\/help\/common\/hosting\">/g" /var/www/html/drawpile/index.html
+		
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
