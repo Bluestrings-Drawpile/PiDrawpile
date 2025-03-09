@@ -13389,15 +13389,11 @@ EOF
 
 		sudo sed -i -e "s/https:\/\/__DOMAIN__\/listing\//http:\/\/$hostname\/listing\//g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/https:\/\/__DOMAIN__\/listing\//http:\/\/example.hostwebsite.com\/listing\//g' /home/pi/Public/index.html
-
-		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
-		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
-		To <a href=\"https://drawpile.net/help/hosting/\">host a session<\/a> here, select the <i>Remote<\/i> option in the Host dialog and enter <code>cloudywave.net<\/code> in the text box.<\/p>
 		
-
-		# Old line
-		# sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
-		#
+		sudo sed -i -e "s/<a href=\"https:\/\/drawpile.net\/help\/hosting\/\">/<a href=\"https:\/\/docs.drawpile.net\/help\/common\/hosting\">/g" /var/www/html/drawpile/index.html
+		
+		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
+		
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 		
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
@@ -13709,7 +13705,9 @@ EOF
 
 		sudo sed -i -e "s/https:\/\/__DOMAIN__\/listing\//https:\/\/$hostname\/listing\//g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/https:\/\/__DOMAIN__\/listing\//https:\/\/example.hostwebsite.com\/listing\//g' /home/pi/Public/index.html
-
+		
+		sudo sed -i -e "s/<a href=\"https:\/\/drawpile.net\/help\/hosting\/\">/<a href=\"https:\/\/docs.drawpile.net\/help\/common\/hosting\">/g" /var/www/html/drawpile/index.html
+		
 		sudo sed -i -e "s/<code>pub.drawpile.net<\/code>/<code>$hostname<\/code>/g" /var/www/html/drawpile/index.html
 		# sudo sed -i -e 's/<code>pub.drawpile.net<\/code> /<code>example.hostwebsite.com<\/code>/g' /var/www/html/drawpile/index.html
 
