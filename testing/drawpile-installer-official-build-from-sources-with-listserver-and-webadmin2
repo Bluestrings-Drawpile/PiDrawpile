@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003939
+drawpilescriptversion=2.996003940
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -125,22 +125,24 @@ drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Comp
 dp_compile_check_bypass="$1"
 echo
 if [ -z "$dp_compile_check_bypass" ]; then
-	echo "${bold}${green}No script argument set, not skipping compile step.${normal}"
+	echo "${bold}${green}No script argument set, not skipping compiling step if matching versions located.${normal}"
 	echo "${bold}${green}Most users should not need to use this feature.${normal}"
 	echo
 	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
 	echo "${bold}${green}false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
 	echo "${bold}${green}     For example: ./script-name d${normal}"
-	dp_compile_check_bypass="false"
 elif [[ "$dp_compile_check_bypass" == "false" || "$dp_compile_check_bypass" == "FALSE" || "$dp_compile_check_bypass" == "f" || "$dp_compile_check_bypass" == "F"  ]] || [[ "$dp_compile_check_bypass" == "disable" || "$dp_compile_check_bypass" == "disabled" || "$dp_compile_check_bypass" == "d" || "$dp_compile_check_bypass" == "DISABLE" || "$dp_compile_check_bypass" == "DISABLED" || "$dp_compile_check_bypass" == "D" ]]; then
-	echo "${bold}${yellow}Argument set to disable skipping the compiling step if matching versions located.${normal}"
+	echo "${bold}${yellow}         DISABLED: Skip compiling step if matching versions located.${normal}"
 	dp_compile_check_bypass="false"
+elif [[ "$dp_compile_check_bypass" == "true" || "$dp_compile_check_bypass" == "TRUE" || "$dp_compile_check_bypass" == "t" || "$dp_compile_check_bypass" == "T"  ]] || [[ "$dp_compile_check_bypass" == "enable" || "$dp_compile_check_bypass" == "enabled" || "$dp_compile_check_bypass" == "e" || "$dp_compile_check_bypass" == "ENABLE" || "$dp_compile_check_bypass" == "ENABLED" || "$dp_compile_check_bypass" == "E" ]]; then
+	echo "${bold}${green}          ENABLED: Skip compiling step if matching versions located. (default behavior)${normal}"
+	dp_compile_check_bypass="true"
 elif [[ "$dp_compile_check_bypass" != "false" ]]; then
-	echo "${bold}${red}Invalid argument set to disable skipping the compiling step if matching versions located.${normal}"
-	echo "${bold}${red}Setting dp_compile_check_bypass value to false.${normal}"
-	dp_compile_check_bypass="false"
+	echo "${bold}${red} INVALID ARGUMENT: Skip compiling step if matching versions located.${normal}"
+	echo
+	echo "${bold}${red}Proceeding as if dp_compile_check_bypass was not set (will skip compiling if versions match).${normal}"
+	dp_compile_check_bypass="true"
 else
-	echo "${bold}${yellow}Unable to determine system language!${normal}"
 	echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
 fi
 echo
@@ -313,7 +315,7 @@ https://www.techrepublic.com/article/linux-101-how-to-clean-the-dnf-and-apt-cach
 apt-get clean							dnf clean dbcache / sudo dnf clean all
 
 Will need to edit entire queries that use this command, information is formatted differently
-apt-cache policy PACKAGENAME			dnf -q info PACKAGENAME
+apt-cache policy PACKAGENAME			dnf info -q PACKAGENAME
 apt-cache search PACKAGENAME			dnf search PACKAGENAME
 
 Should not need added, only for Pi
@@ -446,7 +448,7 @@ function dnf_function () {
 	packages_update_program="dnf -q -y check-update"
 	packages_system_upgrade="dnf -q -y upgrade"
 	packages_clean_program="echo ${invis} Skipping 'dnf clean dbcache' ${normal}"
-	package_info_program="dnf -q info"
+	package_info_program="dnf info -q"
 }
 
 function yum_function () {
@@ -605,11 +607,12 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	
 	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
 		# Values would be null because the VARIANT ID does not exist.
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
 			what_fedora_variant="VARIANT_ID=server"
 			what_fedora_variant_name="server"
 		fi
 	fi
+	
 	# dnf_function
 	yum_function
 	useradd_and_groupadd_function
@@ -657,6 +660,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "${bold}${yellow}Running Fedora Server, version may not be supported.${normal}"
 			echo
 			echo "Linux Name         : $what_linux_name"
+			echo "Variant Name       : $what_fedora_variant_name"
 			echo "Linux Flavor       : $what_linux_flavor"
 			echo "Architecture       : $what_architecture"
 			echo
@@ -684,6 +688,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
 			echo
 			echo "Linux Name         : $what_linux_name"
+			echo "Variant Name       : $what_fedora_variant_name"
 			echo "Linux Flavor       : $what_linux_flavor"
 			echo "Architecture       : $what_architecture"
 			echo
@@ -695,6 +700,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
 		echo "Linux Name         : $what_linux_name"
+		echo "Variant Name       : $what_fedora_variant_name"
 		echo "Linux Flavor       : $what_linux_flavor"
 		echo "Architecture       : $what_architecture"
 		echo
@@ -1518,7 +1524,7 @@ function version_test_by_distro_function () {
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		# Because the line below always returns the 2nd line output, that means the package is either already installed, not installed (but could be installed), or doesn't exist.
 		# 		Installed Packages / Available Packages / Error: No matching Packages to list
-		dnf -q info $package_name > /dev/null 2>&1
+		dnf info -q $package_name > /dev/null 2>&1
 		not_available_check=$?
 		# 0 equals exists, 1 equals does not exist.
 		if [ "$not_available_check" == "1" ]; then
@@ -1527,24 +1533,43 @@ function version_test_by_distro_function () {
 			test_installation_status="error_01_does_not_exist"
 			# echo "Error: No matching Packages to list"
 		elif [ "$not_available_check" == "0" ]; then
-			installation_status=$( dnf -q info $package_name | sed -n '2 p' )
-			installation_status_candidate_check=$( dnf -q info $package_name | grep -i "Available Packages" )
-			if [ "$installation_status" == "Installed Packages" ]; then
-				if [ "$installation_status_candidate_check" == "Available Packages" ]; then
+			installation_status=$( dnf info -q $package_name | sed -n '2 p' )
+			if [[ "${installation_status,,}" == "installed packages" || "${installation_status,,}" == "available packages" ]]; then
+				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			else
+				installation_status=$( dnf info -q $package_name | sed -n '1 p' )
+				if [[ "${installation_status,,}" == "installed packages" || "${installation_status,,}" == "available packages" ]]; then
+					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					:
+				else
+					installation_status="error"
+				fi
+			fi
+			installation_status_candidate_check=$( dnf info -q $package_name | grep -i "available packages" )
+			if [ -z "${installation_status_candidate_check,,}" ]; then
+				installation_status_candidate_check=$( dnf info -q $package_name | grep -i "installed packages" )
+				if [ -z "${installation_status_candidate_check,,}" ]; then
+					installation_status_candidate_check="error"
+				fi
+			fi
+			
+			if [ "${installation_status,,}" == "installed packages" ]; then
+				if [ "${installation_status_candidate_check,,}" == "available packages" ]; then
 					# Package is installed, but an update is available.
-					candidate_status=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
-					candidate_status_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
-					version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
+					candidate_status=$( dnf info -q $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+					candidate_status_02=$( dnf info -q $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
+					version=$( dnf info -q $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf info -q $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$candidate_status-$candidate_status_02"
 					test_update_version_simple="$candidate_status"
 					test_installation_status="Installed and not up to date"
-				elif [ "$installation_status_candidate_check" == "" ]; then
+				elif [[ "${installation_status_candidate_check,,}" == "installed packages" || "${installation_status_candidate_check,,}" == "" ]]; then
 					# Package is installed and up to date
-					version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-					version_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
+					version=$( dnf info -q $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+					version_02=$( dnf info -q $package_name | grep -i "Release" | tr -s " " | grep -i -m 1 "Release :" | tail -1 | awk '{ print $3 }' )
 					test_version="$version-$version_02"
 					test_version_simple="$version"
 					test_update_version="$version-$version_02"
@@ -1556,10 +1581,10 @@ function version_test_by_distro_function () {
 					test_installation_status="error_02_not_found"
 					echo "This not available check for Fedora should not be visible."
 				fi
-			elif [ "$installation_status" == "Available Packages" ]; then
+			elif [ "${installation_status,,}" == "available packages" ]; then
 				# Package is not yet installed.
-				candidate_status=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
-				candidate_status_02=$( dnf -q info $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
+				candidate_status=$( dnf info -q $package_name | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+				candidate_status_02=$( dnf info -q $package_name | grep -i "Release" | tr -s " " | grep -i "Release :" | tail -1 | awk '{ print $3 }' )
 				test_version="Not Installed"
 				test_update_version="$candidate_status-$candidate_status_02"
 				test_update_version_simple="$candidate_status"
@@ -2135,12 +2160,36 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 	minimum_version_wget=1.18-5
 elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-	version_wget=$( dnf -q info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf -q info wget2 | sed -n '2 p' )
+	version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_wget="error"
+		fi
+	fi
 	minimum_version_wget=2.1.0
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf -q info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf -q info wget | sed -n '2 p' )
+	version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_wget="error"
+		fi
+	fi
 	minimum_version_wget=1.18-5
 	# Installed Packages
 	# Available Packages
@@ -2440,8 +2489,20 @@ function version_apt_or_dnf_function () {
 		# candidate_status=$( apt-cache policy $package_name | grep "Candidate:" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}' )
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version=$( dnf -q info $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
-		installation_status=$( dnf -q info $package_name | sed -n '2 p' )
+		version=$( dnf info -q $package_name | grep -i "Version" | tr -s " " | grep -i -m 1 "Version :" | tail -1 | awk '{ print $3 }' )
+		installation_status=$( dnf info -q $package_name | sed -n '2 p' )
+		if [[ "${installation_status,,}" == "installed packages" || "${installation_status,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status=$( dnf info -q $package_name | sed -n '1 p' )
+			if [[ "${installation_status,,}" == "installed packages" || "${installation_status,,}" == "available packages" ]]; then
+				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			else
+				installation_status="error"
+			fi
+		fi
 		# Installed Packages
 		# Available Packages
 		# Error: No matching Packages to list		
@@ -2458,7 +2519,7 @@ function package_available_dpkg_or_dnf_function () {
 		not_available_check=0
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		dnf -q info $package_name > /dev/null 2>&1
+		dnf info -q $package_name > /dev/null 2>&1
 		not_available_check=$?
 	fi
 }
@@ -2731,16 +2792,43 @@ function package_install_status_check_function () {
 			package_install_status_check_decision_tree_a2="(none)"
 		fi
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			package_install_status_check_decision_tree_q1=$( dnf -q info $p | sed -n '2 p' )
+			package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '2 p' )
+			if [[ "${package_install_status_check_decision_tree_q1,,}" == "installed packages" || "${package_install_status_check_decision_tree_q1,,}" == "available packages" ]]; then
+				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			else
+				package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '1 p' )
+				if [[ "${package_install_status_check_decision_tree_q1,,}" == "installed packages" || "${package_install_status_check_decision_tree_q1,,}" == "available packages" ]]; then
+					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					:
+				else
+					package_install_status_check_decision_tree_q1="error"
+				fi
+			fi
+			
 			package_install_status_check_decision_tree_a1="Error: No matching Packages to list"
 			package_install_status_check_decision_tree_a3="Error: No matching Packages to list"
-			package_install_status_check_decision_tree_q2=$( dnf -q info $p | sed -n '2 p' )
+			
+			package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '2 p' )
+			if [[ "${package_install_status_check_decision_tree_q2,,}" == "installed packages" || "${package_install_status_check_decision_tree_q2,,}" == "available packages" ]]; then
+				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			else
+				package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '1 p' )
+				if [[ "${package_install_status_check_decision_tree_q2,,}" == "installed packages" || "${package_install_status_check_decision_tree_q2,,}" == "available packages" ]]; then
+					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					:
+				else
+					package_install_status_check_decision_tree_q2="error"
+				fi
+			fi
+			
 			package_install_status_check_decision_tree_a2="Available Packages"
 			# Installed Packages
 			# Available Packages
 			# Error: No matching Packages to list
 		fi
-		if [[ "$package_install_status_check_decision_tree_q1" != "$package_install_status_check_decision_tree_a1" ]] && [[ "$package_install_status_check_decision_tree_q2" != "$package_install_status_check_decision_tree_a2" ]]; then
+		if [[ "${package_install_status_check_decision_tree_q1,,}" != "${package_install_status_check_decision_tree_a1,,}" ]] && [[ "${package_install_status_check_decision_tree_q2,,}" != "${package_install_status_check_decision_tree_a2,,}" ]]; then
 			# Verifies if app exists in repository and is installed.
 			if grep -qw "$p" $app_installation_status_file; then
 				echo "Entry already made for $p, skipping entry for App Installation Status."
@@ -2762,7 +2850,7 @@ function package_install_status_check_function () {
 				# sudo sed -i '\!^$p =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!$p = '"yes"'!;H};x}' $app_installation_status_file
 			fi
 			let app_installed++
-		elif [[ "$package_install_status_check_decision_tree_q2" = "$package_install_status_check_decision_tree_a2" ]]; then
+		elif [[ "${package_install_status_check_decision_tree_q2,,}" = "${package_install_status_check_decision_tree_a2,,}" ]]; then
 			# Verifies if app exists in repository but is not installed.
 			if grep -qw "$p" $app_installation_status_file; then
 				echo "Entry already made for $p, skipping entry for App Installation Status."
@@ -2771,7 +2859,7 @@ function package_install_status_check_function () {
 				# sudo sed -i '\!^$p =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!$p = '"no"'!;H};x}' $app_installation_status_file
 			fi
 			let app_not_installed++
-		elif [[ "$package_install_status_check_decision_tree_q1" = "$package_install_status_check_decision_tree_a3" ]]; then
+		elif [[ "${package_install_status_check_decision_tree_q1,,}" = "${package_install_status_check_decision_tree_a3,,}" ]]; then
 			# Verifies if app does not exist in repository.
 			echo "$p does not exist."
 			if grep -qw "$p" $app_installation_status_file; then
@@ -4052,6 +4140,9 @@ function stop_drawpile_srv_if_running_function () {
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
 			drawpile_srv_reboot_warn_function
 			sudo systemctl stop --now $service_name_to_check_02
+		elif [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_service_loaded" == "enabled" && "$drawpile_srv_service_status" == "(running)" ]]; then
+			drawpile_srv_reboot_warn_function
+			sudo systemctl stop --now $service_name_to_check_02
 		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
 			echo "Drawpile server startup is not yet configured. No action required."
 		elif [[ "$drawpile_srv_socket_loaded" == "error" || "$drawpile_srv_socket_status" == "error" || "$drawpile_srv_service_loaded" == "error" || "$drawpile_srv_service_status" == "error" ]]; then
@@ -4207,7 +4298,7 @@ function compile_drawpile_client_only_function () {
 	echo
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
 			echo
 			drawpile_client_shortcut_function
@@ -4227,11 +4318,6 @@ function compile_drawpile_client_only_function () {
 			echo
 			sleep 30
 			exit
-		elif [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
-			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
-			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
-			drawpile_client_compile_verification=0
-			echo
 		else
 			echo "${red}Drawpile $drawpile_version has been detected but is not${normal}"
 			echo "${red}the correct version of $drawpile_version_script_check.${normal}"
@@ -4313,14 +4399,9 @@ function drawpile_client_compile_verification_function () {
 	fi
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
 			drawpile_client_compile_verification=1
-			echo
-		elif [[ "$drawpile_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
-			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
-			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
-			drawpile_client_compile_verification=0
 			echo
 		else
 			drawpile_client_compile_verification=0
@@ -4403,22 +4484,16 @@ function drawpile_srv_compile_verification_function () {
 		echo
 		sleep 30
 		exit
-	elif [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" == "false" ]] ; then
+	fi
+	if [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" == "false" ]] ; then
 		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This may cause problems. ${normal}"
 		echo "${bold}${red}Ignoring error since compile check bypass is enabled.${normal}"
-	else
-		echo "${bold}${red}This message should not be visible regarding 'remove extra information from drawpile-srv'. ${normal}"
 	fi
 	
 	if [[ ( -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ) || -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
-		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" != "false" ]]; then
+		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
 			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
 			drawpile_srv_compile_verification=1
-			echo
-		elif [[ "$drawpile_srv_version" = "$drawpile_version_script_check" && "$dp_compile_check_bypass" == "false" ]]; then
-			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
-			echo "${yellow}However bypass compile check was skipped, so will compile anyway.${normal}"
-			drawpile_srv_compile_verification=0
 			echo
 		else
 			drawpile_srv_compile_verification=0
@@ -4679,7 +4754,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		package_name=kf5-karchive-devel
-		version=$( dnf -q info kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+		version=$( dnf info -q kf5-karchive-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version"
 	echo
@@ -4719,7 +4794,7 @@ function drawpile_build_and_compile_function () {
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 		package_name=qt5-qtbase-devel
-		version_qt=$( dnf -q info qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
+		version_qt=$( dnf info -q qt5-qtbase-devel | grep -i "Version" | tr -s " " | grep -i "Version :" | tail -1 | awk '{ print $3 }' )
 	fi
 	echo "$package_name is using version $version_qt"
 	echo
@@ -5195,21 +5270,29 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			drawpile_srv_compile_verification_function
 			drawpile_dprectool_compile_verification_function
 			echo
-			# If compiled, skip action and continue on with script setup. If failure, attempt compiling again.
-			if [ "$drawpile_srv_compile_verification" == "1" ]; then
-				echo "${bold}${green}Drawpile Server successfully built.${normal}"
-				echo
-				echo "${bold}${green}Skipping compiling step.${normal}"
-				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
-			elif [ "$drawpile_srv_compile_verification" == "0" ]; then
-				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
-				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				# If compiled, skip action and continue on with script setup. If failure, attempt compiling again.
+				if [ "$drawpile_srv_compile_verification" == "1" ]; then
+					echo "${bold}${green}Drawpile Server successfully built.${normal}"
+					echo
+					echo "${bold}${green}Skipping compiling step.${normal}"
+					echo
+					echo '--------------------------------------------------------------------------------'
+					echo '--------------------------------------------------------------------------------'
+				elif [ "$drawpile_srv_compile_verification" == "0" ]; then
+					echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
+					echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+					
+					drawpile_build_and_compile_function
+				else
+					echo "${bold}${red}This message should not be visible for skipping compiling check."
+				fi
+			else
+				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
+				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
 				
 				drawpile_build_and_compile_function
-			else
-				echo "${bold}${red}This message should not be visible for skipping compiling check."
 			fi
 		elif [ "$drawpile_build_configuration" == "3" ] || [ "$drawpile_build_configuration" == "4" ] || [ "$drawpile_build_configuration" == "5" ] || [ "$drawpile_build_configuration" == "6" ]; then
 			# 3 - Server And Client - GUI server, client, Wacom Tablet drivers, dprectool, and drawpile-cmd tool		sudo cmake .. -DINITSYS=systemd -DTOOLS=on												--> sudo $package_install_program libwacom-bin libwacom-common libwacom-dev libwacom2 libwacom2-dbg xserver-xorg-input-wacom
@@ -5221,20 +5304,29 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			drawpile_tools_compile_verification_function
 			echo
 			# If compiled, skip action and continue on with script setup.
-			if [ "$drawpile_srv_compile_verification" == "1" ] && [ "$drawpile_client_compile_verification" == "1" ]; then
-				echo "${bold}${green}Drawpile Client and Server successfully built.${normal}"
-				echo
-				echo "${bold}${green}Skipping compiling step.${normal}"
-				echo
-				echo '--------------------------------------------------------------------------------'
-				echo '--------------------------------------------------------------------------------'
-			elif [ "$drawpile_srv_compile_verification" == "0" ] || [ "$drawpile_client_compile_verification" == "0" ]; then
-				echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
-				echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+			
+			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				if [ "$drawpile_srv_compile_verification" == "1" ] && [ "$drawpile_client_compile_verification" == "1" ]; then
+					echo "${bold}${green}Drawpile Client and Server successfully built.${normal}"
+					echo
+					echo "${bold}${green}Skipping compiling step.${normal}"
+					echo
+					echo '--------------------------------------------------------------------------------'
+					echo '--------------------------------------------------------------------------------'
+				elif [ "$drawpile_srv_compile_verification" == "0" ] || [ "$drawpile_client_compile_verification" == "0" ]; then
+					echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
+					echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+					
+					drawpile_build_and_compile_function
+				else
+					echo "${bold}${red}This message should not be visible for skipping compiling check."
+				fi
+			else
+				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
+				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
 				
 				drawpile_build_and_compile_function
-			else
-				echo "${bold}${red}This message should not be visible for skipping compiling check."
 			fi
 		elif [ "$drawpile_build_configuration" == "9" ] || [ "$drawpile_build_configuration" == "10" ]; then
 			# 9 - Server - Graphical User Interface (GUI) WARNING NO SERVER CONFIGURATION							sudo cmake .. -DINITSYS=systemd -DCLIENT=OFF -DTOOLS=on
@@ -5242,8 +5334,32 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			skip_build_checks=0
 			drawpile_srv_compile_verification_function
 			drawpile_dprectool_compile_verification_function
-			# If compiled, skip action and continue on with script exit. If failure, attempt compiling again.
 			
+			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				# If compiled, skip action and continue on with script exit. If failure, attempt compiling again.
+				if [ "$drawpile_srv_compile_verification" == "1" ]; then
+					echo "${bold}${green}Drawpile Server successfully built.${normal}"
+					echo
+					echo "${bold}${green}Skipping compiling step.${normal}"
+					echo
+					echo '--------------------------------------------------------------------------------'
+					echo '--------------------------------------------------------------------------------'
+				elif [ "$drawpile_srv_compile_verification" == "0" ]; then
+					echo "${bold}${cyan}*****   Drawpile is using old version . . .   *****${normal}"
+					echo "${bold}${cyan}*****     Will run compiling options . . .    *****${normal}"
+					
+					drawpile_build_and_compile_function
+				else
+					echo "${bold}${red}This message should not be visible for skipping compiling check."
+				fi
+			else
+				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
+				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
+				
+				drawpile_build_and_compile_function
+			fi
+
 			drawpile_srv_compile_verification_stored_result=1
 			sudo sed -i '\!^drawpile_srv_compile_verification_stored_result =!{h;s!=.*!= '"$drawpile_srv_compile_verification_stored_result"'!};${x;\!^$!{s!!drawpile_srv_compile_verification_stored_result = '"$drawpile_srv_compile_verification_stored_result"'!;H};x}' $drawpile_configuration_values_file
 			# The sort command used at the end sorts the list alphabetically.
@@ -5278,7 +5394,7 @@ fi
 
 #---------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------
-
+echo
 echo "${bold}${green}*****      Drawpile is Compiled . . .      *****${normal}"
 echo "${bold}${green}***** Setting location of executable . . . *****${normal}"
 
@@ -5593,11 +5709,11 @@ if [ "$firewall_cmd_available_check" -eq "0" ] || [ "$firewall_cmd_available_che
 		echo
 		echo '-------------------------------------------'				
 		echo
-		sudo systemctl start --now firewall-cmd
+		sudo systemctl start --now firewalld.service
 		echo
 		firewall_cmd_adjustments_function
 		echo
-		sudo systemctl stop --now firewall-cmd
+		sudo systemctl stop --now firewalld.service
 
 		sleep 10
 	fi
@@ -7369,7 +7485,7 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			# Sample Output: /usr/bin/python3.11
 			# python_3_12=$( ls -l /usr/bin/python* | grep "3.12" | awk '{ print $9 }' | grep "3.12" )
 			# Sample Output: /usr/bin/python3.12
-			if [ "$python_version" == "3.12" ]; then
+			if [[ "$python_version" == "3.12" || "$python_version" == "3.13" ]]; then
 				if [ -e "/usr/bin/python3.11" ]; then
 					echo
 					echo "Python install is $python_version ..."
@@ -9016,7 +9132,7 @@ if [ "$drawpile_abuse_report_installation_status" == "y" ] || [ "$drawpile_abuse
 				# Sample Output: /usr/bin/python3.11
 				# python_3_12=$( ls -l /usr/bin/python* | grep "3.12" | awk '{ print $9 }' | grep "3.12" )
 				# Sample Output: /usr/bin/python3.12
-				if [ "$python_version" == "3.12" ]; then
+				if [[ "$python_version" == "3.12" || "$python_version" == "3.13" ]]; then
 					if [ -e "/usr/bin/python3.11" ]; then
 						echo
 						echo "Python install is $python_version ..."
@@ -11203,12 +11319,38 @@ if [ "$local_or_remote" == "Local" ]; then
 				progs=(samba samba-common-bin);
 			fi
 			if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-				version_samba=$( dnf -q info samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-				installation_status_samba=$( dnf -q info samba | sed -n '2 p' )
+				version_samba=$( dnf info -q samba | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba=$( dnf info -q samba | sed -n '2 p' )
 				# minimum_version_samba=2:4.13.13
-				version_samba_common_bin=$( dnf -q info samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-				installation_status_samba_common_bin=$( dnf -q info samba-common | sed -n '2 p' )
+				if [[ "${installation_status_samba,,}" == "installed packages" || "${installation_status_samba,,}" == "available packages" ]]; then
+					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					:
+				else
+					installation_status_samba=$( dnf info -q samba | sed -n '1 p' )
+					if [[ "${installation_status_samba,,}" == "installed packages" || "${installation_status_samba,,}" == "available packages" ]]; then
+						# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+						:
+					else
+						installation_status_samba="error"
+					fi
+				fi
+				
+				version_samba_common_bin=$( dnf info -q samba-common | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+				installation_status_samba_common_bin=$( dnf info -q samba-common | sed -n '2 p' )
 				# minimum_version_samba_common_bin=2:4.13.13
+				if [[ "${installation_status_samba_common_bin,,}" == "installed packages" || "${installation_status_samba_common_bin,,}" == "available packages" ]]; then
+					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+					:
+				else
+					installation_status_samba_common_bin=$( dnf info -q samba-common | sed -n '1 p' )
+					if [[ "${installation_status_samba_common_bin,,}" == "installed packages" || "${installation_status_samba_common_bin,,}" == "available packages" ]]; then
+						# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+						:
+					else
+						installation_status_samba_common_bin="error"
+					fi
+				fi
+				
 				progs=(samba samba-common);
 				# Installed Packages
 				# Available Packages
@@ -11646,12 +11788,24 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 fi
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
 	# https://www.liquidweb.com/kb/how-to-install-apache-on-fedora-21/
-	is_apache_2_installed=$( dnf -q info httpd | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_apache2=$( dnf -q info httpd | sed -n '2 p' )
+	is_apache_2_installed=$( dnf info -q httpd | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_apache2=$( dnf info -q httpd | sed -n '2 p' )
 	package_name=httpd
 	# Installed Packages
 	# Available Packages
 	# Error: No matching Packages to list
+	if [[ "${installation_status_apache2,,}" == "installed packages" || "${installation_status_apache2,,}" == "available packages" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		installation_status_apache2=$( dnf info -q httpd | sed -n '1 p' )
+		if [[ "${installation_status_apache2,,}" == "installed packages" || "${installation_status_apache2,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_apache2="error"
+		fi
+	fi
 fi
 
 # Apache check
@@ -11848,14 +12002,28 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 		version_golang=$( apt-cache policy golang | grep "Installed:" | cut -c 14-21 )
 	fi
 	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		version_golang=$( dnf -q info golang | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-		installation_status_golang=$( dnf -q info golang | sed -n '2 p' )
+		version_golang=$( dnf info -q golang | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		
+		installation_status_golang=$( dnf info -q golang | sed -n '2 p' )
 		# Installed Packages
 		# Available Packages
 		# Error: No matching Packages to list
+		if [[ "${installation_status_golang,,}" == "installed packages" || "${installation_status_golang,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_golang=$( dnf info -q golang | sed -n '1 p' )
+			if [[ "${installation_status_golang,,}" == "installed packages" || "${installation_status_golang,,}" == "available packages" ]]; then
+				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+				:
+			else
+				installation_status_golang="error"
+			fi
+		fi
 	fi
 	minimum_version_golang=2:1.15~1
-	if [[ "$version_golang" == "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] && [[ "$version_golang" == "(none)" && "$what_linux_name" != "NAME=Fedora" ]] || [[ "$installation_status_golang" == "Available Packages" ]]; then
+	if 
+	[[ "$version_golang" == "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]] && [[ "$version_golang" == "(none)" && "$what_linux_name" != "NAME=Fedora" ]] || [[ "${installation_status_golang,,}" == "available packages" ]]; then
 		echo "Installing package golang . . ."
 		echo
 		app_does_not_exist=0
@@ -14056,6 +14224,7 @@ EOF
 		systemctl status nginx.service --no-pager -l
 		wait $!
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [ "`systemctl is-failed nginx.service`" = "failed" ]; then
+			echo
 			echo "${bold}${yellow}Oops, NGINX is unhappy. Killing processes and restarting.${normal}"
 			echo "${bold}${yellow}Hoping this fixes it! I'm not sure what causes this state,${normal}"
 			echo "${bold}${yellow}so until then, this should work.${normal}"
@@ -14986,16 +15155,16 @@ EOF
 				echo
 			}
 
-			if [ "$python_version" == "3.12" ]; then
-				
-				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
-					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Fedora 40 currently.${normal}"
+			if [[ "$python_version" == "3.12" || "$python_version" == "3.13" ]]; then
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && 
+				[[ ( "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ) || ( "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ) ]]; then
+					echo "${bold}${red}Executing manual install process, Python 3.12/3.13 causes issues in Fedora currently.${normal}"
 					sudo $package_install_program python3-inotify python3-systemd
 				elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
-					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues in Ubuntu 24.04 currently.${normal}"
+					echo "${bold}${red}Executing manual install process, Python 3.12/3.13 causes issues in Ubuntu currently.${normal}"
 					sudo $package_install_program python3-pyinotify python3-systemd
 				else
-					echo "${bold}${red}Executing manual install process, Python 3.12 causes issues currently.${normal}"
+					echo "${bold}${red}Executing manual install process, Python 3.12/3.13 causes issues currently.${normal}"
 					sudo $package_install_program python3-pyinotify python3-systemd
 				fi
 				echo
@@ -15049,7 +15218,7 @@ EOF
 					sudo service enable fail2ban.service
 					sudo service start --now fail2ban.service
 				else
-					echo "Python3.12 is installed. Some systems may have problems with"
+					echo "Python $python_version is installed. Some systems may have problems with"
 					echo "installing Fail2Ban properly. It's recommended to try a regular"
 					echo "installation before attempting manual, read the log output "
 					echo "carefully. If it fails or doesn't appear to work correctly "
