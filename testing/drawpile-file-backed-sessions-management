@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1414
+drawpilescriptversion=0.1415
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -266,7 +266,7 @@ https://www.techrepublic.com/article/linux-101-how-to-clean-the-dnf-and-apt-cach
 apt-get clean							dnf clean dbcache / sudo dnf clean all
 
 Will need to edit entire queries that use this command, information is formatted differently
-apt-cache policy PACKAGENAME			dnf info PACKAGENAME
+apt-cache policy PACKAGENAME			dnf info -q PACKAGENAME
 apt-cache search PACKAGENAME			dnf search PACKAGENAME
 
 Should not need added, only for Pi
@@ -399,7 +399,7 @@ function dnf_function () {
 	packages_update_program="dnf -q -y check-update"
 	packages_system_upgrade="dnf -q -y upgrade"
 	packages_clean_program="echo ${invis} Skipping 'dnf clean dbcache' ${normal}"
-	package_info_program="dnf info"
+	package_info_program="dnf info -q"
 }
 
 function yum_function () {
@@ -558,17 +558,21 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	
 	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
 		# Values would be null because the VARIANT ID does not exist.
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
 			what_fedora_variant="VARIANT_ID=server"
 			what_fedora_variant_name="server"
 		fi
 	fi
+	
 	# dnf_function
 	yum_function
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
@@ -607,6 +611,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "${bold}${yellow}Running Fedora Server, version may not be supported.${normal}"
 			echo
 			echo "Linux Name         : $what_linux_name"
+			echo "Variant Name       : $what_fedora_variant_name"
 			echo "Linux Flavor       : $what_linux_flavor"
 			echo "Architecture       : $what_architecture"
 			echo
@@ -615,7 +620,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Workstation 40.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
@@ -631,6 +639,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "${bold}${yellow}Running Fedora Workstation, version may not be supported.${normal}"
 			echo
 			echo "Linux Name         : $what_linux_name"
+			echo "Variant Name       : $what_fedora_variant_name"
 			echo "Linux Flavor       : $what_linux_flavor"
 			echo "Architecture       : $what_architecture"
 			echo
@@ -642,6 +651,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 		echo "${bold}${yellow}Running Fedora, version may not be supported.${normal}"
 		echo
 		echo "Linux Name         : $what_linux_name"
+		echo "Variant Name       : $what_fedora_variant_name"
 		echo "Linux Flavor       : $what_linux_flavor"
 		echo "Architecture       : $what_architecture"
 		echo
@@ -1123,18 +1133,41 @@ function script_update_check_function () {
 # ----------------------------------------------------------------------------------
 # Verify wget is installed.
 # ----------------------------------------------------------------------------------
-
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
-elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-	version_wget=$( dnf info wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info wget2 | sed -n '2 p' )
+	version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_wget="error"
+		fi
+	fi
 	minimum_version_wget=2.1.0
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf info wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info wget | sed -n '2 p' )
+	version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+	installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+		:
+	else
+		installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
+			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
+			:
+		else
+			installation_status_wget="error"
+		fi
+	fi
 	minimum_version_wget=1.18-5
 	# Installed Packages
 	# Available Packages
@@ -1145,7 +1178,6 @@ else
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
 fi
-
 
 if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
 	echo "Package ${bold}wget${normal} is not installed."
