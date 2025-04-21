@@ -1,4 +1,7 @@
 # PiDrawpile
+
+Project moved to https://github.com/Bluestrings-Drawpile/PiDrawpile
+
 This contains scripts for setting up the Drawpile Server on Raspbian 4.9 (or higher) for the Raspberry Pi 3, 
 though I'm sure it could be used in other setups. 
 

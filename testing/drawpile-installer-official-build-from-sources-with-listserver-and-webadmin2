@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003940
+drawpilescriptversion=2.996003942
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -29,10 +29,10 @@ else
 fi
 script_name=drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2
 script_name2=drawpile-installer-official-build-from-sources-server-mgmt
-script_main_url=https://raw.githubusercontent.com/Wade821/PiDrawpile/master
+script_main_url=https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master
 script_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #In case I decide to change the name
-github_account_name=Wade821
+github_account_name=Bluestrings-Drawpile
 github_project_name=PiDrawpile
 # When no path being used, should look like github_sub_folder_path=""
 github_main_script_only_sub_folder_path=testing/
@@ -58,8 +58,8 @@ login_credentials_length_minimum="14"
 nginx_reusing_login_and_password_status="disabled"
 # ----------------------------------------------------------------------------------
 # Normal line
-# sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
-# sudo wget -q --force-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --show-progress "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --force-progress "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # Example line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name"
 # ----------------------------------------------------------------------------------
@@ -14240,7 +14240,7 @@ EOF
 		# Link --> https://github.com/drawpile/dpwebadmin/releases/download/0.5.1/dpwebadmin-0.5.1.tar.gz
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.11.0
+		web_admin_release=0.12.0
 		web_admin_release_filename=dpwebadmin-0.11.0.tar.gz
 		
 		if [[ "$web_admin_release_test" == "$web_admin_release" ]]; then
@@ -17485,7 +17485,7 @@ if [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_se
 			echo "${bold}${red}This message should not be visible for: dp_file_backed_sessions_mgmt_script_run ${normal}"
 		fi
 		
-		# sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
+		# sudo wget -q --show-progress "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/testing/drawpile-file-backed-sessions-management" -O "$dp_install_loc/Programs/Drawpile-Srv-Files/server-scripts/drawpile-file-backed-sessions-management"
 	else
 		echo "${bold}${cyan}File backed sessions in use, script already downloaded to find content ${normal}"
 		echo "${bold}${cyan}      for recovery and delete old backups.  ${normal}"

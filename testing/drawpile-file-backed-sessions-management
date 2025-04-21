@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1415
+drawpilescriptversion=0.1417
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -28,17 +28,17 @@ else
 	# echo "Using: Unknown terminal"
 fi
 script_name=drawpile-file-backed-sessions-management
-script_main_url=https://raw.githubusercontent.com/Wade821/PiDrawpile/master
+script_main_url=https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master
 script_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #In case I decide to change the name
-github_account_name=Wade821
+github_account_name=Bluestrings-Drawpile
 github_project_name=PiDrawpile
 # When no path being used, should look like github_sub_folder_path=""
 github_main_script_only_sub_folder_path=testing/
 
 # Normal line
-# sudo wget -q --show-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
-# sudo wget -q --force-progress "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --show-progress "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
+# sudo wget -q --force-progress "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/testing/drawpile-installer-official-build-from-sources-with-listserver-and-webadmin2"
 # Example line
 # sudo wget -q --show-progress "https://raw.githubusercontent.com/$github_account_name/$github_project_name/master/$github_main_script_only_sub_folder_path$script_name"
 # ----------------------------------------------------------------------------------

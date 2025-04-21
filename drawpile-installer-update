@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.95
+drawpilescriptversion=2.97
 scriptname=drawpile-installer-update
 scriptmgmtupdate=drawpile-installer-official-build-from-sources-server-mgmt-for-update
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -27,7 +27,8 @@ echo
 function DrawpileCreditsURLsFunctions () {
 echo "Script Ver.	--> ${bold}$drawpilescriptversion${normal}"
 echo "Google Doc 	--> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
-echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
+# echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
+echo "GitHub 		--> ${underline}https://github.com/Bluestrings-Drawpile/PiDrawpile.git ${normal}"
 }
 
 DrawpileCreditsFunction
@@ -207,9 +208,11 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
-sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
+# sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
+sudo wget "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/$scriptname"
 echo
-sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
+# sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
+sudo wget "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/scripts-for-other-scripts-only/$scriptmgmtupdate"
 sudo chmod 777 "$dpinstallloc/Programs" -R
 sudo chmod 777 "$dpinstallloc/Programs/$scriptmgmtupdate"
 echo
@@ -693,8 +696,8 @@ elif [[ "$versionQT" < "5.8" ]]; then
 	echo
 	echo
 	cd "$dpinstallloc/Programs/Drawpile"
-	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer.patch"
-	sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
+	sudo wget "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer.patch"
+	sudo wget "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/scripts-for-other-scripts-only/elapsed-timer2.patch"
 	patch -p1 < elapsed-timer.patch
 	patch -p1 < elapsed-timer2.patch
 	echo

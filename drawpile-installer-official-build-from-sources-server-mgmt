@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.94
+drawpilescriptversion=2.96
 scriptname=drawpile-installer-official-build-from-sources-server-mgmt
 scriptname2=drawpile-installer-official-build-from-sources-server-mgmt
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -27,7 +27,7 @@ echo
 function DrawpileCreditsURLsFunctions () {
 echo "Script Ver.	--> ${bold}$drawpilescriptversion${normal}"
 echo "Google Doc 	--> ${underline}http://tinyurl.com/jx5oe4h ${normal}"
-echo "GitHub 		--> ${underline}https://github.com/Wade821/PiDrawpile.git ${normal}"
+echo "GitHub 		--> ${underline}https://github.com/Bluestrings-Drawpile/PiDrawpile.git ${normal}"
 }
 
 DrawpileCreditsFunction
@@ -207,7 +207,7 @@ echo
 cd "$dpinstallloc/"
 sudo mkdir -p -v Programs
 cd "$dpinstallloc/Programs"
-sudo wget "https://raw.githubusercontent.com/Wade821/PiDrawpile/master/$scriptname"
+sudo wget "https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/$scriptname"
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -406,7 +406,7 @@ echo \"\${underline}laakkonenc@gmail.com\${normal}\"
 echo
 echo \"Script Version \${bold}$drawpilescriptversion\${normal}\"
 echo \"'Google Doc --> \${underline}http://tinyurl.com/jx5oe4h \${normal}\"
-echo \"GitHub --> \${underline}https://github.com/Wade821/PiDrawpile.git \${normal}\"
+echo \"GitHub --> \${underline}https://github.com/Bluestrings-Drawpile/PiDrawpile.git \${normal}\"
 echo
 echo 'Please make sure you are using the latest version of this script before'
 echo 'continuing. You can get the latest version from Github or by making sure'
@@ -1116,7 +1116,7 @@ elif [ \"\$xyx\" == \"5\" ]; then
   \$drawpilescriptversion=$drawpilescriptversion
   \$scriptname2=$scriptname2
   cd \"$dpinstallloc/Programs\"
-  sudo wget \"https://raw.githubusercontent.com/Wade821/PiDrawpile/master/\$scriptname2\"
+  sudo wget \"https://raw.githubusercontent.com/Bluestrings-Drawpile/PiDrawpile/master/\$scriptname2\"
  
   echo
   echo '--------------------------------------------------------------------------------'
