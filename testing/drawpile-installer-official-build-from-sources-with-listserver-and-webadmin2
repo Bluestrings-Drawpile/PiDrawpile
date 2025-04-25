@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003943
+drawpilescriptversion=2.996003944
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -4163,7 +4163,7 @@ function start_drawpile_srv_if_updated_function () {
 	service_name_to_check_01=drawpile-srv.socket
 	service_name_to_check_02=drawpile-srv.service
 	if [[ ( -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ) || ( -e "/etc/systemd/system/drawpile-srv.service" && ! -e "/etc/systemd/system/drawpile-srv.socket" ) ]]; then
-		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && ( "$drawpile_srv_service_loaded" == "disabled" || "$drawpile_srv_service_loaded" == "enabled" ) ]]; then
 			echo "sudo systemctl start --now $service_name_to_check_01"
 			sudo systemctl start --now $service_name_to_check_01
 			echo '--------------------------------------------------------------------------------'
