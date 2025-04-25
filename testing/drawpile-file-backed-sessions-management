@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1417
+drawpilescriptversion=0.1418
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1271,7 +1271,125 @@ fi
 # fi
 
 { # this ensures the entire script is downloaded, other part is at very end of script #
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+function selinux_adjustments_check_function () {
+	selinux_status=$( getenforce 2>/dev/null )
+	selinux_available_check=$?
 
+	# echo "Available:		$selinux_available_check"
+	# echo "SELinux Current Status:	$selinux_status"
+
+	if [ "$selinux_available_check" -eq "0" ]; then
+		# SELinux installed.
+		if [ "$selinux_status" == "Disabled" ]; then
+			echo "${bold}${green}SELinux status is: Disabled.${normal}"
+			echo "No action is required. However, if you enable it in the future,"
+			echo "it will cause $package_name to not function as intended."
+			echo
+			$function_to_call_non_required_changes
+			sleep 10
+		else
+			selinux_config_status=$( sestatus 2>/dev/null | grep -i "Mode from config file:" | awk '{ print $5 }' )
+			# echo "SELinux Config Status:	$selinux_config_status"
+			# echo
+			if [ "${selinux_status,,}" == "${selinux_config_status,,}" ]; then
+				echo "${bold}${green}SELinux status is not temporarily changed.${normal}"
+				if [ "$selinux_status" == "Enforcing" ]; then
+					echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+					echo
+					echo "${bold}${yellow}Action required to ensure $package_name works.${normal}"
+					echo
+					echo '-------------------------------------------'				
+					echo 
+					$function_to_call_required_changes
+					echo
+					sleep 10
+				elif [ "$selinux_status" == "Permissive" ]; then
+					echo "${bold}${green}SELinux status is: Permissive.${normal}"
+					echo
+					echo "No action is required."
+					echo
+					$function_to_call_non_required_changes
+					sleep 10
+				else
+					echo "${bold}${red}This message for SELinux status and $package_name (1) should not be visible.${normal}"
+				fi
+			elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
+				echo "${bold}${yellow}SELinux status is temporarily changed.${normal}"
+				if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
+					echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+					echo
+					echo "However, on system reboot the status will return to permissive."
+					echo "No action is required. It is recommended that you reboot when"
+					echo "the script is completed or turn it back to permissive mode with"
+					echo "the following command:"
+					echo "     sudo setenforce 0"
+					echo
+					pause
+					echo
+				elif [ "$selinux_status" == "Permissive" ] && [ "$selinux_config_status" == "enforcing" ]; then
+					echo "${bold}${yellow}SELinux status is: Permissive.${normal}"
+					echo
+					echo "However, on system reboot the status will return to enforcing."
+					echo "Action required to ensure $package_name works on reboot."
+					echo
+					echo '-------------------------------------------'				
+					echo
+					$function_to_call_required_changes
+					echo
+					sleep 10
+				else
+					echo "${bold}${red}This message for SELinux status and $package_name (2) should not be visible.${normal}"
+					echo
+				sleep 10
+				fi
+			else
+				echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
+				echo
+				sleep 10
+			fi
+		fi
+	elif [ "$selinux_available_check" -eq "127" ]; then
+		echo "${bold}${green}SELinux is not available. No action required.${normal}"
+		echo
+		$function_to_call_non_required_changes
+		sleep 10
+	else
+		echo "${bold}${red}This message for SELinux check should not be visible.${normal}"
+		echo
+		sleep 10
+	fi
+	
+	package_name=""
+	function_to_call_required_changes=""
+	function_to_call_non_required_changes=""
+}
+
+function selinux_purge_sessions_adjustments_function () {
+	# Useful notes for trying to figure out why NGINX doesn't work. u3u
+	# sudo ausearch -m avc -ts today | audit2allow
+	# sudo cat /var/log/nginx/error.log
+	
+	# Check for failed entries that might occur when running scripts from user home directory
+	# ausearch -ts yesterday -te now -i -sv no | awk 'BEGIN { RS="----" } ; !/sshd/'
+
+	echo "${bold}${cyan}Needed when running scripts from user's home directory (I think for systemd or crontab jobs)${normal}"
+	echo "Running command: sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'"
+	sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'
+	echo
+	echo "Running command: sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'"
+	sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'
+	echo
+	# Shouldn't be needed.
+	# sudo restorecon -R -v /home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/
+}
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Version 1.0 - https://github.com/drawpile/Drawpile/commit/8974436285d5692bfc469c4ce4f77a3d0e87f98d
 # Version 1.1 - https://github.com/drawpile/Drawpile/commit/f77dd391080d0c1d6a37048cb72e8ccbf7166a8c
 purge_sessions_current_version=1.1
@@ -1285,6 +1403,10 @@ if [[ ! -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessio
 		sleep 5
 		sudo $package_install_program perl-JSON-PP
 	fi
+	package_name="purge-sessions"
+	function_to_call_required_changes="selinux_purge_sessions_adjustments_function"
+	function_to_call_non_required_changes=""
+	selinux_adjustments_check_function
 else
 	if [[ -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
 		purge_sessions_version=$( grep -m 1 "purge_sessions_version = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
@@ -1294,6 +1416,10 @@ else
 			sudo chmod 777 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 			purge_sessions_version="$purge_sessions_current_version"
 			sudo sed -i '\!^purge_sessions_version =!{h;s!=.*!= '"$purge_sessions_version"'!};${x;\!^$!{s!!purge_sessions_version = '"$purge_sessions_version"'!;H};x}' $drawpile_configuration_values_file
+			package_name="purge-sessions"
+			function_to_call_required_changes="selinux_purge_sessions_adjustments_function"
+			function_to_call_non_required_changes=""
+			selinux_adjustments_check_function
 		elif [[ "$purge_sessions_version" = "$purge_sessions_current_version" ]]; then
 			echo "The ./purge-sessions script is up to date."
 		else
