@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003942
+drawpilescriptversion=2.996003943
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -607,7 +607,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	
 	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
 		# Values would be null because the VARIANT ID does not exist.
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
 			what_fedora_variant="VARIANT_ID=server"
 			what_fedora_variant_name="server"
 		fi
@@ -619,10 +619,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
 		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}" && echo "${bold}${yellow}End of Life support is 2025-11-19.${normal}"
 			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
-			echo "${bold}${green}Running Fedora Server 40.${normal}"
+			echo "${bold}${green}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}End of Life support is 2025-05-28.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
@@ -630,8 +630,8 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
 			wget_or_wget2_fedora_function
 			
-		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
-			echo "${bold}${green}Running Fedora Server 39.${normal}"  && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" ]; then
+			echo "${bold}${green}Running Fedora Server 39.${normal}" && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
 			fedora_end_of_life_function
@@ -3987,7 +3987,7 @@ function drawpile_srv_reboot_warn_function () {
 				echo
 				sleep 5
 			else
-				# elif [[ "$systemd_selection" == "3" || "$systemd_selection" == "6" || "$systemd_selection" == "7" || "$systemd_selection" == "8" || "$systemd_selection" == "10" || "$systemd_selection" == "11" || "$systemd_selection" == "12" || "$systemd_selection" == "13" || "$systemd_selection" == "16" || "$systemd_selection" == "18" || "$systemd_selection" == "19" "$systemd_selection" == "20" ]]; then
+				# elif [[ "$systemd_selection" == "3" || "$systemd_selection" == "6" || "$systemd_selection" == "7" || "$systemd_selection" == "8" || "$systemd_selection" == "10" || "$systemd_selection" == "11" || "$systemd_selection" == "12" || "$systemd_selection" == "13" || "$systemd_selection" == "16" || "$systemd_selection" == "18" || "$systemd_selection" == "19" || "$systemd_selection" == "20" ]]; then
 				# Does not Support Session backed Files 3, 6, 7, 8, 10, 11, 12, 13, 16, 18, 19, 20
 				#
 				# echo "Wasn't able to determine if file-backed sessions are in use."
@@ -4480,6 +4480,18 @@ function drawpile_srv_compile_verification_function () {
 	fi
 	if [ -z "$drawpile_srv_version_stripped" ] && [[ "$dp_compile_check_bypass" != "false" ]] ; then
 		echo "${bold}${red}Unable to remove extra information from drawpile-srv. This will cause problems. ${normal}"
+		echo "${bold}${red}Try re-running script and enable 'skipping compiling step if matching versions located'.${normal}"
+		echo
+		echo "${bold}${red}You can enable this mode by typing one of the following after the script name:${normal}"
+		echo "${bold}${red}false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
+		echo "${bold}${red}     Example 1: ./script_name d${normal}"
+		if [[ "$script_name" == "$current_script_name" ]]; then
+			echo "${bold}${red}     Example 2: ./$script_name d${normal}"
+		elif [[ "$script_name" != "$current_script_name" ]]; then
+			echo "${bold}${red}     Example 2: ./$current_script_name d${normal}"
+		fi
+		echo
+		echo
 		echo "${bold}${red}Exiting script, unable to continue.${normal}"
 		echo
 		sleep 30
@@ -5541,6 +5553,99 @@ else
 fi
 comment_EOF
 
+function selinux_adjustments_check_function () {
+	selinux_status=$( getenforce 2>/dev/null )
+	selinux_available_check=$?
+
+	# echo "Available:		$selinux_available_check"
+	# echo "SELinux Current Status:	$selinux_status"
+
+	if [ "$selinux_available_check" -eq "0" ]; then
+		# SELinux installed.
+		if [ "$selinux_status" == "Disabled" ]; then
+			echo "${bold}${green}SELinux status is: Disabled.${normal}"
+			echo "No action is required. However, if you enable it in the future,"
+			echo "it will cause $package_name to not function as intended."
+			echo
+			$function_to_call_non_required_changes
+			sleep 10
+		else
+			selinux_config_status=$( sestatus 2>/dev/null | grep -i "Mode from config file:" | awk '{ print $5 }' )
+			# echo "SELinux Config Status:	$selinux_config_status"
+			# echo
+			if [ "${selinux_status,,}" == "${selinux_config_status,,}" ]; then
+				echo "${bold}${green}SELinux status is not temporarily changed.${normal}"
+				if [ "$selinux_status" == "Enforcing" ]; then
+					echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+					echo
+					echo "${bold}${yellow}Action required to ensure $package_name works.${normal}"
+					echo
+					echo '-------------------------------------------'				
+					echo 
+					$function_to_call_required_changes
+					echo
+					sleep 10
+				elif [ "$selinux_status" == "Permissive" ]; then
+					echo "${bold}${green}SELinux status is: Permissive.${normal}"
+					echo
+					echo "No action is required."
+					echo
+					$function_to_call_non_required_changes
+					sleep 10
+				else
+					echo "${bold}${red}This message for SELinux status and $package_name (1) should not be visible.${normal}"
+				fi
+			elif [ "${selinux_status,,}" != "${selinux_config_status,,}" ]; then
+				echo "${bold}${yellow}SELinux status is temporarily changed.${normal}"
+				if [ "$selinux_status" == "Enforcing" ] && [ "$selinux_config_status" == "permissive" ]; then
+					echo "${bold}${yellow}SELinux status is: Enforcing${normal}"
+					echo
+					echo "However, on system reboot the status will return to permissive."
+					echo "No action is required. It is recommended that you reboot when"
+					echo "the script is completed or turn it back to permissive mode with"
+					echo "the following command:"
+					echo "     sudo setenforce 0"
+					echo
+					pause
+					echo
+				elif [ "$selinux_status" == "Permissive" ] && [ "$selinux_config_status" == "enforcing" ]; then
+					echo "${bold}${yellow}SELinux status is: Permissive.${normal}"
+					echo
+					echo "However, on system reboot the status will return to enforcing."
+					echo "Action required to ensure $package_name works on reboot."
+					echo
+					echo '-------------------------------------------'				
+					echo
+					$function_to_call_required_changes
+					echo
+					sleep 10
+				else
+					echo "${bold}${red}This message for SELinux status and $package_name (2) should not be visible.${normal}"
+					echo
+				sleep 10
+				fi
+			else
+				echo "${bold}${red}This message for SELinux temporary status should not be visible.${normal}"
+				echo
+				sleep 10
+			fi
+		fi
+	elif [ "$selinux_available_check" -eq "127" ]; then
+		echo "${bold}${green}SELinux is not available. No action required.${normal}"
+		echo
+		$function_to_call_non_required_changes
+		sleep 10
+	else
+		echo "${bold}${red}This message for SELinux check should not be visible.${normal}"
+		echo
+		sleep 10
+	fi
+	
+	package_name=""
+	function_to_call_required_changes=""
+	function_to_call_non_required_changes=""
+}
+
 function selinux_adjustments_function () {
 	# Useful notes for trying to figure out why NGINX doesn't work. u3u
 	# sudo ausearch -m avc -ts today | audit2allow
@@ -5570,6 +5675,12 @@ function selinux_adjustments_function () {
 	sudo setsebool -P httpd_can_network_relay 1
 }
 
+package_name="drawpile-srv"
+function_to_call_required_changes="selinux_adjustments_function"
+function_to_call_non_required_changes=""
+selinux_adjustments_check_function
+
+<<comment_EOF_delete
 selinux_status=$( getenforce 2>/dev/null )
 selinux_available_check=$?
 
@@ -5653,6 +5764,8 @@ else
 	echo
 	sleep 10
 fi
+comment_EOF_delete
+
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
@@ -10960,21 +11073,26 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo
 	echo "${underline}https://gist.github.com/notfood/b8d93250c706f1d5b5faee99c111126f ${normal}"
 	echo
-	echo "This script can help keep boards with limited user slots available"
-	echo "free by kicking inactive users. This will not apply to room"
-	echo "operators or moderators in the session. The script checks every 15"
-	echo "minutes based on the current hour."
+	echo "This script can help keep public boards with limited user slots "
+	echo "available free by kicking inactive users. This will not apply to "
+	echo "room operators or moderators in the session. By default, the script"
+	echo "checks every 15 minutes based on the current hour."
 	echo " e.g. 12:00, 12:15, 12:30, 12:45, 1:00, 1:15, etc..."
+	echo
+	echo "The AFK status is determined by the drawpile server, based on the"
+	echo "time the last command was sent (includes chat)."
+	echo "   Source --> https://github.com/drawpile/Drawpile/blob/main/src/libserver/client.cpp#L256-L260"
 	echo
 	echo "The script can configure the following values:"
 	echo " - Minimum number of free slots to begin AFK KICK"
 	echo " - Number of AFK users to KICK"
+	echo " - Frequency of checking for AFK users"
 	echo " - Minutes to be considered AFK"
 	echo
 	echo "The script will not modify these values:"
-	echo " - Message to be given before KICK"
-	echo "     USERNAME, you have been AFK kicked by the administrator for"
-	echo "        being HOURS:MINUTES hours away."
+	echo " - Edited script original message to be given before KICK"
+	echo "     USERNAME, you have been AFK kicked by the AFK Bot Admin for"
+	echo "        being HOURS:MINUTES hours away. (said 'administrator' previously)"
 	echo " - Logging kicks to the console."
 	echo
 	echo "Would you like to enable this service?"
@@ -11040,26 +11158,84 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		done
 		echo ----------------------------------------------------------------------------------
 		echo
-		echo "How many minutes should a user be away to be considered AFK? Blank"
-		echo "     defaults to 60 minutes."
+		echo "How often should the bot check for AFK users? "
+		echo "     Blank defaults to 15 minutes."
 		echo
-		echo "  NOTE: Remember, the script checks once every 15 minutes, so if"
-		echo "     you pick 60 minutes the user might be kicked after 61 to 74"
-		echo "     minutes of inactivity."
+		echo "  Examples of auto kick after 60 minutes checking every 5 minutes:"
+		echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
+		echo "      Next kick time check is 1:05 PM. 64 minutes of being inactive."
+		echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
+		echo "      Next kick time check is 1:00 PM. 61 minutes of being inactive."
 		echo
-		echo "  Examples of auto kick after 60 minutes:"
+		echo "  Examples of auto kick after 60 minutes checking every 15 minutes:"
 		echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
 		echo "      Next kick time check is 1:15 PM. 74 minutes of being inactive."
 		echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
 		echo "      Next kick time check is 1:00 PM. 61 minutes of being inactive."
+		echo
+		echo "Suggested usable values (based on being able to divide 60 into a whole number):"
+		echo "     1, 2, 3, 4, 5, 6, 10, 12, and 15"
+		echo
+		echo "	   However, it is not suggested to go below 3 minutes, may result in"
+		echo "     overlapping runs on busy servers."
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Enter one of the above suggested values:${normal} " drawpile_afk_check_timer
+			echo
+			if [ "$drawpile_afk_check_timer" == "" ]; then
+					drawpile_afk_check_timer="15"
+					echo "Left blank, selecting default value: 15"
+					break
+			elif [[ "$drawpile_afk_check_timer" == "1" || "$drawpile_afk_check_timer" == "2" || "$drawpile_afk_check_timer" == "3" || "$drawpile_afk_check_timer" == "4" || "$drawpile_afk_check_timer" == "5" || "$drawpile_afk_check_timer" == "6" || "$drawpile_afk_check_timer" == "10" || "$drawpile_afk_check_timer" == "12" || "$drawpile_afk_check_timer" == "15" ]] ; then
+			# elif (( "$drawpile_afk_check_timer" >= "3" && "$drawpile_afk_check_timer" <= "15" )) ; then
+				echo "Selected value: $drawpile_afk_check_timer"
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		echo ----------------------------------------------------------------------------------
+		echo
+		# drawpile_afk_check_timer="15"
+		echo "How many minutes should a user be away to be considered AFK? Blank"
+		echo "     defaults to 60 minutes."
+		echo
+		echo "  NOTE: Remember, the script checks now every $drawpile_afk_check_timer minute(s), so if"
+		echo "     you pick 60 minutes the user might be kicked after 61 to $((60 + $drawpile_afk_check_timer - 1))"
+		echo "     minutes of inactivity."
+		echo
+		echo "  Examples of auto kick after 60 minutes:"
+		if (( "$drawpile_afk_check_timer" == "1" )); then
+			echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
+			echo "      Next kick time check is 1:0$drawpile_afk_check_timer PM. 60 minutes of being inactive."
+			echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
+			echo "      Next kick time check is 1:0$drawpile_afk_check_timer PM. 60 minutes of being inactive."
+		elif (( "$drawpile_afk_check_timer" >= "2" && "$drawpile_afk_check_timer" <= "9" )); then
+			echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
+			echo "      Next kick time check is 1:0$drawpile_afk_check_timer PM. $((60 + $drawpile_afk_check_timer + 1)) minutes of being inactive."
+			echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
+			echo "      Next kick time check is 1:0$drawpile_afk_check_timer PM. $((60 + $drawpile_afk_check_timer - 1)) minutes of being inactive."
+		else
+			# elif (( "$drawpile_afk_check_timer" == "10" || "$drawpile_afk_check_timer" == "12" || "$drawpile_afk_check_timer" == "15" )); then
+			echo "  - User goes AFK at 11:59 AM. 60 minutes doesn't occur until 12:59 PM."
+			echo "      Next kick time check is 1:$drawpile_afk_check_timer PM. $((60 + $drawpile_afk_check_timer + 1)) minutes of being inactive."
+			echo "  - User goes AFK at 12:01 PM. 60 minutes doesn't occur until 1:01 PM."
+			echo "      Next kick time check is 1:$drawpile_afk_check_timer PM. $((60 + $drawpile_afk_check_timer - 1)) minutes of being inactive."
+		fi
 		echo
 		while :; do
 			read -r -p "${bold}${cyan}Enter any number from 1 to 1440:${normal} " drawpile_afk_kick_timer
 			echo
 			if [ "$drawpile_afk_kick_timer" == "" ]; then
 					drawpile_afk_kick_timer="60"
+					echo "Left blank, selecting default value: 60"
 					break	
 			elif (( "$drawpile_afk_kick_timer" >= "1" && "$drawpile_afk_kick_timer" <= "1440" )) ; then
+				echo "Selected value: $drawpile_afk_kick_timer"
 				break
 			else
 				echo
@@ -11071,8 +11247,111 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		done
 
 		sudo $package_install_program jq
-		mkdir -p -v /home/drawpileuser/drawpile-afk
-		cat <<EOF | sudo tee /home/drawpileuser/drawpile-afk/drawpile-afk-kick >/dev/null
+		
+		function drawpile_afk_kick_script_non_required_location_function () {
+			drawpile_afk_kick_script_location=/home/drawpileuser/drawpile-afk
+			if [ ! -d "/home/drawpileuser/drawpile-afk" ]; then
+				mkdir -p -v /home/drawpileuser/drawpile-afk
+			fi
+		}
+		function drawpile_afk_kick_script_required_location_function () {
+			drawpile_afk_kick_script_location=/usr/local/bin
+		}
+		
+		package_name="Drawpile AFK Kick Bot"
+		function_to_call_required_changes="drawpile_afk_kick_script_required_location_function"
+		function_to_call_non_required_changes="drawpile_afk_kick_script_non_required_location_function"
+		selinux_adjustments_check_function
+
+		if [[ "$git_clone_dp_checkout" = "1" ]]; then
+			cat <<EOF | sudo tee $drawpile_afk_kick_script_location/drawpile-afk-kick >/dev/null
+#!/bin/sh
+
+# Drawpile Admin API URL. Alternatively use pubsrvproxy for safety.
+API=http://localhost:27780/api
+
+# Minimun free slots to begin AFK KICK
+MINSLOTS=$drawpile_afk_kick_minimum_slots
+
+# Number of AFK users to KICK
+NUM2KICK=$drawpile_afk_kick_number
+
+# Minutes to be considered AFK
+MINAFK=$drawpile_afk_kick_timer
+
+# Message to be given before KICK format(name, seconds afk)
+MESSAGE="%s, you have been AFK kicked by the AFK Bot Admin for being %(%H:%M)T hours away."
+
+# Should we log the kicks to console?
+LOG=1
+
+
+# Get the session ids with almost no slots for only public boards
+sessions=\$(curl -s \$API/sessions | jq -c '[.[]
+  | select(.hasPassword == false and .maxUserCount - .userCount < '\$MINSLOTS')
+  | .id]')
+
+
+# Exit if there is no sessions full
+if [ "\$sessions" = "[]" ]; then
+        exit
+fi
+
+
+# Don't overwhelm Admin
+sleep .5
+
+
+# Pick top non mod non op AFK
+users=\$(curl -s \$API/users | jq '.
+  | map(.afk = (.lastActive | split("+")[0] + "Z" | now - fromdate))
+  | sort_by(-.afk)
+  |
+  [ .[]
+    | select(.session | IN('\${sessions:1:-1}'))
+    | select(.mod == false and .op == false and .afk > 60*'\$MINAFK')
+    | [.id, .session, .name, .afk]
+    | join("|")
+  ] [:'\$NUM2KICK'] []' )
+
+
+# Avoid any action if the above failed
+if [ \$? -ne 0 ]; then
+    exit 1;
+fi
+
+# If no users to kick, notify
+if [ "\$users" = "" ]; then
+    if [ "\$LOG" -ne "0" ]; then
+        printf "FULL without AFK\n"
+    fi
+    exit
+fi
+
+
+# Notify and Kick
+while IFS=\$'\n' read line; do
+  IFS='|' read -r id session name afk <<<"\${line:1:-1}"
+
+  afk=\${afk%.*}
+  
+  # Output for logging
+  if [ "\$LOG" -ne "0" ]; then
+          printf "KICK %s/%s\t%s\t%(%HH:%MM:%SS)T\t%s\n" "\$session" "\$id" "\$afk" "\$afk" "\$name"
+  fi
+
+  url="\$API/sessions/\$session/\$id"
+  msg=\$(printf "\$MESSAGE" "\$name" "\$afk")
+  curl -s -H 'Content-Type: application/json' -X PUT -d '{"message":"'"\$msg"'"}' "\$url" -o /dev/null
+  sleep .5
+  curl -s -X DELETE "\$url" -o /dev/null
+  sleep 1
+
+done <<<"\$users"
+EOF
+		else
+			# elif [[ "$git_clone_dp_checkout" = "2" ]] || [[ "$git_clone_dp_checkout" = "3" ]]; then 
+			cat <<EOF | sudo tee $drawpile_afk_kick_script_location/drawpile-afk-kick >/dev/null
 #!/bin/bash
 
 # Drawpile Admin API URL. Alternatively use pubsrvproxy for safety.
@@ -11088,7 +11367,7 @@ NUM2KICK=$drawpile_afk_kick_number
 MINAFK=$drawpile_afk_kick_timer
 
 # Message to be given before KICK format(name, seconds afk)
-MESSAGE="%s, you have been AFK kicked by the administrator for being %(%H:%M)T hours away."
+MESSAGE="%s, you have been AFK kicked by the AFK Bot Admin for being %(%H:%M)T hours away."
 
 # Should we log the kicks to console?
 LOG=1
@@ -11157,14 +11436,17 @@ while IFS=\$'\n' read line; do
 
 done <<<"\$users"
 EOF
-		sudo chmod 775 /home/drawpileuser/drawpile-afk/drawpile-afk-kick
+		fi
+		if [ -e "/home/drawpileuser/drawpile-afk/drawpile-afk-kick" ]; then
+			sudo chmod 775 /home/drawpileuser/drawpile-afk/drawpile-afk-kick
+		fi
 		cat <<EOF | sudo tee /etc/systemd/system/drawpile-afk-kick.service >/dev/null
 [Unit]
 Description=Drawpile afk users kick service
 
 [Service]
 Type=oneshot
-ExecStart=/home/drawpileuser/drawpile-afk/drawpile-afk-kick
+ExecStart=$drawpile_afk_kick_script_location/drawpile-afk-kick
 
 [Install]
 WantedBy=multi-user.target
@@ -11175,13 +11457,17 @@ EOF
 Description=Drawpile afk users kick timer check
 
 [Timer]
-OnCalendar=*:0/15
-# https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
-# https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html
+OnCalendar=*:0/$drawpile_afk_check_timer
+# Examples of configuration
+#      https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
+#      https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html
+#
 # Checks every minute
 # OnCalendar=*:0/1
 # Checks every 5 minutes
 # OnCalendar=*:0/5
+# Checks every 15 minutes (default)
+# OnCalendar=*:0/15
 
 [Install]
 WantedBy=timers.target
@@ -11633,6 +11919,12 @@ comment_EOF_delete
 					sleep 10
 				fi
 			}
+			package_name="samba"
+			function_to_call_required_changes="selinux_samba_adjustments_function"
+			function_to_call_non_required_changes=""
+			selinux_adjustments_check_function
+
+<<comment_EOF_delete
 			selinux_status=$( getenforce 2>/dev/null )
 			selinux_available_check=$?
 			echo
@@ -11715,6 +12007,7 @@ comment_EOF_delete
 				echo
 				sleep 10
 			fi
+comment_EOF_delete
 			#---------------------------------------------------------------------------------------------------------------------------------
 			function firewall_cmd_samba_adjustments_function () {
 				firewall_zone_name=$( sudo firewall-cmd --list-all | sed -n '1 p' | awk '{ print $1 }' )
@@ -12336,6 +12629,10 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 				echo '48x48      / 48.png'
 				echo '64x64      / 64.png'
 				echo '128x128    / 128.png (maximum size used by DP client)'
+				echo 
+				echo 'To make a favicon, start with a square image. You can use this website'
+				echo 'for a quick way to turn it into a favicon.'
+				echo '     https://favicon.io/favicon-converter/'
 			}
 			favicon_instructions_function
 			echo
@@ -13440,7 +13737,7 @@ EOF
 			fi
 		fi
 		
-		if [[ -e  "$dp_install_loc/favicon.ico" ]]; then
+		if [[ -e "$dp_install_loc/favicon.ico" ]]; then
 			sudo cp $dp_install_loc/favicon.ico /var/www/html/drawpile/favicon.ico
 		elif [[ -e  "$script_directory/favicon.ico" ]]; then
 			sudo cp $script_directory/favicon.ico /var/www/html/drawpile/favicon.ico
@@ -13616,6 +13913,10 @@ EOF
 		echo
 		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
+		if [ -z "$list_server_favicon_location_entry" ]; then
+			list_server_favicon_location_entry=$( grep -m 1 "list_server_favicon_location_entry = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		fi
+		
 		if [ -z "$list_server_favicon_location_entry" ] || [ "$list_server_favicon_location_entry" = "" ]; then
 			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
 			# Do nothing as no error was detected.
@@ -13654,6 +13955,8 @@ EOF
 			echo '<link rel="icon" type="image/png" href="/128.png" sizes="128x128">'
 			echo
 			echo No further guidance will be provided. When you are ready to continue...
+			echo
+			pause
 		fi
 		# echo 'Press 1 for Self Signed Certificates'
 		if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
@@ -13927,16 +14230,26 @@ EOF
 		echo
 		echo '--------------------------------------------------------------------------------'
 		echo
-		echo "*****${bold}${cyan}Preparing Favicon Setup . . .${normal}*****"
+		echo "${bold}${cyan} *****Preparing Favicon Setup . . .***** ${normal}"
 		echo
-		if [ "$list_server_favicon_location_entry" = "" ]; then
+		if [ -z "$list_server_favicon_location_entry" ]; then
+			list_server_favicon_location_entry=$( grep -m 1 "list_server_favicon_location_entry = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		fi
+		
+		if [ -z "$list_server_favicon_location_entry" ] || [ "$list_server_favicon_location_entry" = "" ]; then
 			echo "${bold}${cyan}Selected nothing, favicon will not be used. Skipping.${normal}"
 			# Do nothing as no error was detected.
 			# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			:
-		elif [ "$list_server_favicon_location_entry" = "1" ]; then
-			echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
-			echo
+		elif [ "$list_server_favicon_location_entry" = "1" ] || [[ -d "$list_server_favicon_location_entry" ]]; then
+			if [ "$list_server_favicon_location_entry" = "1" ]; then
+				echo "${bold}${cyan}Selected 1, favicon will use default value to be configured in script.${normal}"
+			elif [[ -d "$list_server_favicon_location_entry" ]]; then
+				echo "${bold}${cyan}Selected custom location which passed verification.${normal}"
+				echo "${bold}${cyan}Will copy from designated location.${normal}"
+			else
+				echo "This message should not be visible for: Preparing Favicon Setup"
+			fi
 			favicon_copy_function
 			sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
 			sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
@@ -14187,13 +14500,15 @@ EOF
 	echo "You can choose to build the web admin interface yourself"
 	echo "or use a pre-built configuration."
 	echo
-	echo "${bold}${cyan}Option 1 --> Use Pre-built:${normal}"
+	echo "${bold}${cyan}Option 1 --> Use Pre-built (Recommended) ${normal}"
 	echo "${bold}${cyan}Pros:${normal}    Fast to download and set up."
+	echo "         Takes only a few seconds to set up."
 	echo "${bold}${cyan}Cons:${normal}    May not be the most up to date."
 	echo
 	echo "${bold}${cyan}Option 2 --> Build it${normal}"
 	echo "${bold}${cyan}Pros:${normal}    Latest version, may be more up to date."
 	echo "${bold}${cyan}Cons:${normal}    Slow, requires installation of additional software"
+	echo "         Can take up to an hour."
 	echo
 	while :; do
 		read -r -p "${bold}${cyan}Please make your selection now by entering 1 or 2:${normal} " select_web_build_or_prebuilt
@@ -14238,10 +14553,14 @@ EOF
 	if [ "$select_web_build_or_prebuilt" == "1" ]; then
 		# Pre-built web admin
 		# Link --> https://github.com/drawpile/dpwebadmin/releases/download/0.5.1/dpwebadmin-0.5.1.tar.gz
+		# drawpile_configuration_values_file=/home/drawpileuser/Drawpile_Configuration_Values.txt
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		web_admin_release=0.12.0
-		web_admin_release_filename=dpwebadmin-0.11.0.tar.gz
+		web_admin_release_filename_extension=.tar.gz
+		web_admin_release_filename=dpwebadmin-$web_admin_release$web_admin_release_filename_extension
+		web_admin_release_test_filename=dpwebadmin-$web_admin_release_test$web_admin_release_filename_extension
+		
 		
 		if [[ "$web_admin_release_test" == "$web_admin_release" ]]; then
 			echo "Skipping download and setup, web admin is up to date."
@@ -14290,6 +14609,10 @@ EOF
 				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			fi
 			sudo mv "dpwebadmin-$web_admin_release" /var/www/html/drawpile/admin
+			sudo rm -f $web_admin_release_filename
+			if [[ -e "/home/drawpileuser/Programs/$web_admin_release_test_filename" ]]; then
+				sudo rm -f $web_admin_release_test_filename
+			fi
 			sudo restorecon -R /var/www/html/drawpile/
 			echo
 			echo "Will reload NGINX after the New Web Admin interface is downloaded."
@@ -14302,7 +14625,9 @@ EOF
 		echo
 		web_and_web_and_list_server_admin_release_test=$( grep -m 1 "web_and_list_server_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		web_and_list_server_admin_release=1.0.0
-		web_and_list_server_admin_release_filename=drawpile-admin-webui-1.0.0.tar.gz
+		web_and_list_server_admin_filename_extension=.tar.gz
+		web_and_list_server_admin_release_filename=drawpile-admin-webui-$web_and_list_server_admin_release$web_and_list_server_admin_filename_extension
+		web_and_web_and_list_server_admin_release_test_filename=drawpile-admin-webui-$web_and_web_and_list_server_admin_release_test$web_and_list_server_admin_filename_extension
 		
 		if [[ "$web_and_web_and_list_server_admin_release_test" == "$web_and_list_server_admin_release" ]]; then
 			echo "Skipping download and setup, new web admin is up to date."
@@ -14338,6 +14663,10 @@ EOF
 				# Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			fi
 			sudo mv "drawpile-admin-webui-$web_and_list_server_admin_release" /var/www/html/drawpile/admin_ui
+			sudo rm -f $web_and_list_server_admin_release_filename
+			if [[ -e "/home/drawpileuser/Programs/$web_and_web_and_list_server_admin_release_test_filename" ]]; then
+				sudo rm -f $web_and_web_and_list_server_admin_release_test_filename
+			fi
 			sudo restorecon -R /var/www/html/drawpile/
 			echo
 			echo '--------------------------------------------------------------------------------'
@@ -17149,7 +17478,8 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	else
 		echo "${bold}${red}This message for the external authentication token should not be visible.${normal}"
 	fi
-
+	
+	# SQL Database tool
 	# Useful site to check SQL Table --> https://sqliteviewer.app
 	
 	# if [ "$drawpile_external_authentication" == "1" ]; then
@@ -18587,7 +18917,7 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 		echo "sudo do-release-upgrade"
 		echo "sudo reboot"
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+		if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
 			echo "${bold}${red}Read more here:${normal}"
 			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
 			echo
