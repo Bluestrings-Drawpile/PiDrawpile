@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1424
+drawpilescriptversion=0.1425
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2231,8 +2231,7 @@ elif [ "$search_query_type" == "8" ]; then
 				
 				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
 					echo "Adding crontab job to auto clean files."
-					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * 
-					$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
 					echo "Skipping crontab job to be added."
