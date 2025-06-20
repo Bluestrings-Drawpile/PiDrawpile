@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1421
+drawpilescriptversion=0.1422
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2308,6 +2308,7 @@ elif [ "$search_query_type" == "8" ]; then
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Size Mode.${normal}"
 			echo "${bold}${red}MAY BE INACCURATE. CANNOT PROVIDE ACCURATE VALUES UNTIL FIRST OPERATION PERFORMED.${normal}"
 			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
+			echo
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
@@ -2342,6 +2343,13 @@ elif [ "$search_query_type" == "8" ]; then
 			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
 			echo
+			
+			disk_blocks=$( df -H --output=size / | awk ' NR==2 ' | sed 's/ //g' )
+			disk_in_use=$( df -H --output=used / | awk ' NR==2 ' | sed 's/ //g' )
+			disk_available=$( df -H --output=avail / | awk ' NR==2 ' | sed 's/ //g' )
+			disk_pcent=$( df -H --output=pcent / | awk ' NR==2 '| sed 's/ //g' )
+			disk_sessions_size=$( du -hs "$path_to_delete_parameter" | awk '{ print $1 }'| sed 's/ //g' )
+			
 			echo "${bold}${yellow}Returning to prior menu.${normal}"
 			echo
 		elif (( "$drawpile_archive_file_cleanup_run" == "6" )); then
