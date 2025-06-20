@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1419
+drawpilescriptversion=0.1420
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -699,6 +699,7 @@ function read_stored_config_value_query_function () {
 	read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	[ -z "$variable_to_read_4" ] || read_stored_config_value_query_4=$( grep -m 1 "$variable_to_read_4 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
 		read_stored_config_value_query_null_check=1
@@ -706,6 +707,7 @@ function read_stored_config_value_query_function () {
 		read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_4" ] || read_stored_config_value_query_4=$( grep -m 1 "$variable_to_read_4 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	fi
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
@@ -764,11 +766,23 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_38" ] || echo "$value_description_38"
 		[ -z "$value_description_39" ] || echo "$value_description_39"
 		[ -z "$value_description_40" ] || echo "$value_description_40"
+		[ -z "$value_description_41" ] || echo "$value_description_41"
+		[ -z "$value_description_42" ] || echo "$value_description_42"
+		[ -z "$value_description_43" ] || echo "$value_description_43"
+		[ -z "$value_description_44" ] || echo "$value_description_44"
+		[ -z "$value_description_45" ] || echo "$value_description_45"
+		[ -z "$value_description_46" ] || echo "$value_description_46"
+		[ -z "$value_description_47" ] || echo "$value_description_47"
+		[ -z "$value_description_48" ] || echo "$value_description_48"
+		[ -z "$value_description_49" ] || echo "$value_description_49"
+		[ -z "$value_description_50" ] || echo "$value_description_50"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
 		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
 		[ -z "$variable_to_read_3" ] || echo
+		[ -z "$variable_to_read_4" ] || echo "Query 04: $read_stored_config_value_query_4"
+		[ -z "$variable_to_read_4" ] || echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
 			echo
@@ -785,6 +799,7 @@ function read_stored_config_value_query_function () {
 	fi
 	variable_to_read_2=""
 	variable_to_read_3=""
+	variable_to_read_4=""
 	
 	value_description_1=""
 	value_description_2=""
@@ -826,6 +841,16 @@ function read_stored_config_value_query_function () {
 	value_description_38=""
 	value_description_39=""
 	value_description_40=""
+	value_description_41=""
+	value_description_42=""
+	value_description_43=""
+	value_description_44=""
+	value_description_45=""
+	value_description_46=""
+	value_description_47=""
+	value_description_48=""
+	value_description_49=""
+	value_description_50=""
 }
 
 # ----------------------------------------------------------------------------------
@@ -1922,7 +1947,8 @@ elif [ "$search_query_type" == "8" ]; then
 	
 	variable_to_read_1="age_to_delete_parameter"
 	variable_to_read_2="size_to_delete_parameter"
-	variable_to_read_3="by_session_or_file_parameter"	
+	variable_to_read_3="by_session_or_file_parameter"
+	variable_to_read_4="maximum_count_parameter"
 	
 	value_description_1="Value above is the length of time to retain archives. Older files are deleted."
 	value_description_2=" "
@@ -1960,6 +1986,15 @@ elif [ "$search_query_type" == "8" ]; then
 	value_description_34="Note that deleting whole sessions will mean that long-running sessions will keep"
 	value_description_35="accumulating files! File mode is likely the better option if you don't otherwise"
 	value_description_36="take care of rehosting long-running sessions periodically."
+	value_description_37=" "
+	value_description_38="Value 04 refers to the max number of DPREC files to keep for active sessions ONLY."
+	value_description_39="If there is no value or it is an equals sign, then this will default to a "
+	value_description_40="value of 10."
+	value_description_41=" "
+	value_description_42="This is intended to clamp down very busy sessions to a reasonable amount of"
+	value_description_43="recordings, since they can clog up backups with their large amounts of"
+	value_description_44="recordings and \"punish\" other sessions by evicting their files too early just to"
+	value_description_45="keep dozens of recordings of the same sessions laying around."
 			
 
 	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
@@ -1985,8 +2020,43 @@ elif [ "$search_query_type" == "8" ]; then
 		else
 			by_session_or_file_parameter=$read_stored_config_value_query_3
 		fi
+		
+		if [ -z $read_stored_config_value_query_4 ] || [ "$read_stored_config_value_query_4" = "=" ]; then
+			# If null or equal sign, value not stored. Prefer classic behavior unless specified.
+			echo "No value detected for maximum count found. Defaulting to 10."
+			maximum_count_parameter="10"
+		else
+			maximum_count_parameter=$read_stored_config_value_query_4
+		fi
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		while :; do
+			echo "Delete archived recording files of active sessions until they have at most"
+			echo "C<COUNT> left. 0 means that all archives except the currently running file will"
+			echo "be purged. This will not delete archives of archived sessions."
+			echo " "
+			echo "This is intended to clamp down very busy sessions to a reasonable amount of"
+			echo "recordings, since they can clog up backups with their large amounts of"
+			echo "recordings and \"punish\" other sessions by evicting their files too early just to"
+			echo "keep dozens of recordings of the same sessions laying around."
+			echo
+			echo "Script will accept values between 0 and 1000. A value of 10 is probably best for most cases."
+			echo
+			while :; do
+				read -r -p "${bold}${cyan}Please set the number of archived recording files for active sessions:${normal} " maximum_count_parameter
+				[[ $maximum_count_parameter =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
+				if (( $maximum_count_parameter >= 0 && $maximum_count_parameter <= 1000)); then
+					break
+				else
+					echo
+					echo "Invalid number selection, try again."
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
 			echo "We need to set both a timeframe at which older files will be deleted and"
 			echo "a size limit to prevent the file backed sessions from growing too large."
 			echo "Failure to do so will prevent Drawpile-srv from working at all."
@@ -2091,9 +2161,19 @@ elif [ "$search_query_type" == "8" ]; then
 			fi
 			echo
 			echo '--------------------------------------------------------------------------------'
+			echo '--------------------------------------------------------------------------------'
 			echo
 			echo "${bold}${cyan}Testing inputs to ensure they are valid.${normal}"
-			echo		
+			echo
+			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run &>/dev/null; then
+				echo "${bold}${red}Failure: Maximum count value is invalid.${normal}"
+				maximum_count_parameter=fail
+				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run
+			else
+				echo "${bold}${green}Success: Maximum count value is valid.${normal}"
+				maximum_count_parameter=pass
+			fi
+			echo '--------------------------------------------------------------------------------'
 			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
 				echo "${bold}${red}Failure: time input is invalid.${normal}"
 				age_to_delete_parameter_test=fail
@@ -2102,7 +2182,7 @@ elif [ "$search_query_type" == "8" ]; then
 				echo "${bold}${green}Success: time input is valid.${normal}"
 				age_to_delete_parameter_test=pass
 			fi
-			echo
+			echo '--------------------------------------------------------------------------------'
 			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
 				echo "${bold}${red}Failure: size input is invalid.${normal}"
 				size_to_delete_parameter_test=fail
@@ -2114,6 +2194,7 @@ elif [ "$search_query_type" == "8" ]; then
 
 			if [[ "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
 				echo
+				echo '--------------------------------------------------------------------------------'
 				echo '--------------------------------------------------------------------------------'
 				echo
 				if sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
@@ -2149,7 +2230,8 @@ elif [ "$search_query_type" == "8" ]; then
 				
 				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
 					echo "Adding crontab job to auto clean files."
-					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * 
+					$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
 					echo "Skipping crontab job to be added."
@@ -2163,6 +2245,7 @@ elif [ "$search_query_type" == "8" ]; then
 				echo "${bold}${red}Errors detected. Please try again.${normal}"
 				echo
 				echo '--------------------------------------------------------------------------------'
+				echo '--------------------------------------------------------------------------------'
 				echo
 				continue
 			fi
@@ -2170,6 +2253,7 @@ elif [ "$search_query_type" == "8" ]; then
 		sudo sed -i '\!^age_to_delete_parameter =!{h;s!=.*!= '"$age_to_delete_parameter"'!};${x;\!^$!{s!!age_to_delete_parameter = '"$age_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^size_to_delete_parameter =!{h;s!=.*!= '"$size_to_delete_parameter"'!};${x;\!^$!{s!!size_to_delete_parameter = '"$size_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^by_session_or_file_parameter =!{h;s!=.*!= '"$by_session_or_file_parameter"'!};${x;\!^$!{s!!by_session_or_file_parameter = '"$by_session_or_file_parameter"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^maximum_count_parameter =!{h;s!=.*!= '"$maximum_count_parameter"'!};${x;\!^$!{s!!maximum_count_parameter = '"$maximum_count_parameter"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -2188,10 +2272,14 @@ elif [ "$search_query_type" == "8" ]; then
 		echo	
 		echo "${bold}${cyan}Cleanup time!${normal}"
 		echo
-		echo "1 - Dry run - test files to be deleted."
-		echo "6 - Clean up old files."
+		echo "${bold}${yellow}1 - Dry run - test files to be deleted.${normal}"
+		echo "    INACCURACY WARNING - Must delete archived old files of active running sessions to provide accurate results."
 		echo
-		echo "9 - Exit cleanup script."
+		echo "${bold}${red}3 - Partial Dry run - test files to be deleted.${normal}"
+		echo "    WARNING - This WILL DELETE archived old files of active running sessions to provide accurate results."
+		echo "${bold}${red}6 - Clean up old files.${normal}"
+		echo
+		echo "${bold}${green}9 - Exit cleanup script.${normal}"
 		echo
 		read -r -p "${bold}${cyan}Please select one of the above options:${normal} " drawpile_archive_file_cleanup_run
 		
@@ -2199,6 +2287,36 @@ elif [ "$search_query_type" == "8" ]; then
 		if (( "$drawpile_archive_file_cleanup_run" == "1" )); then
 			echo
 			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${yellow}Dry Run - Maximum File Count for Active Sessions.${normal}"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Age Mode.${normal}"
+			echo "${bold}${red}MAY BE INACCURATE. CANNOT PROVIDE ACCURATE VALUES UNTIL FIRST OPERATION PERFORMED.${normal}"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Size Mode.${normal}"
+			echo "${bold}${red}MAY BE INACCURATE. CANNOT PROVIDE ACCURATE VALUES UNTIL FIRST OPERATION PERFORMED.${normal}"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${yellow}Returning to prior menu.${normal}"
+			echo
+		elif (( "$drawpile_archive_file_cleanup_run" == "3" )); then
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${red}Partial Dry Run - Maximum File Count for Active Sessions.${normal}"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter"
+			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Age Mode.${normal}"
@@ -2217,6 +2335,11 @@ elif [ "$search_query_type" == "8" ]; then
 		elif (( "$drawpile_archive_file_cleanup_run" == "6" )); then
 			echo
 			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
+			echo "${bold}${red}Running - Maximum File Count for Active Sessions.${normal}"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter"
+			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Archive File Cleanup in Age Mode.${normal}"
