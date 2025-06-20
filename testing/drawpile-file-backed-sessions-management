@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1418
+drawpilescriptversion=0.1419
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -754,6 +754,16 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_28" ] || echo "$value_description_28"
 		[ -z "$value_description_29" ] || echo "$value_description_29"
 		[ -z "$value_description_30" ] || echo "$value_description_30"
+		[ -z "$value_description_31" ] || echo "$value_description_31"
+		[ -z "$value_description_32" ] || echo "$value_description_32"
+		[ -z "$value_description_33" ] || echo "$value_description_33"
+		[ -z "$value_description_34" ] || echo "$value_description_34"
+		[ -z "$value_description_35" ] || echo "$value_description_35"
+		[ -z "$value_description_36" ] || echo "$value_description_36"
+		[ -z "$value_description_37" ] || echo "$value_description_37"
+		[ -z "$value_description_38" ] || echo "$value_description_38"
+		[ -z "$value_description_39" ] || echo "$value_description_39"
+		[ -z "$value_description_40" ] || echo "$value_description_40"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
@@ -806,6 +816,16 @@ function read_stored_config_value_query_function () {
 	value_description_28=""
 	value_description_29=""
 	value_description_30=""
+	value_description_31=""
+	value_description_32=""
+	value_description_33=""
+	value_description_34=""
+	value_description_35=""
+	value_description_36=""
+	value_description_37=""
+	value_description_38=""
+	value_description_39=""
+	value_description_40=""
 }
 
 # ----------------------------------------------------------------------------------
@@ -1392,7 +1412,7 @@ function selinux_purge_sessions_adjustments_function () {
 # ----------------------------------------------------------------------------------
 # Version 1.0 - https://github.com/drawpile/Drawpile/commit/8974436285d5692bfc469c4ce4f77a3d0e87f98d
 # Version 1.1 - https://github.com/drawpile/Drawpile/commit/f77dd391080d0c1d6a37048cb72e8ccbf7166a8c
-purge_sessions_current_version=1.1
+purge_sessions_current_version=1.2
 if [[ ! -e "$dp_install_loc/$script_created_location_server_scripts/purge-sessions" ]]; then
 	sudo $wget_or_wget2_quiet_progress https://raw.githubusercontent.com/drawpile/Drawpile/main/src/thinsrv/contrib/purge-sessions -O "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
 	sudo chmod 777 "$dp_install_loc/$script_created_location_server_scripts/purge-sessions"
@@ -1902,7 +1922,7 @@ elif [ "$search_query_type" == "8" ]; then
 	
 	variable_to_read_1="age_to_delete_parameter"
 	variable_to_read_2="size_to_delete_parameter"
-	variable_to_read_3=""	
+	variable_to_read_3="by_session_or_file_parameter"	
 	
 	value_description_1="Value above is the length of time to retain archives. Older files are deleted."
 	value_description_2=" "
@@ -1914,21 +1934,33 @@ elif [ "$search_query_type" == "8" ]; then
 	value_description_8="total size of backups exceeds the limit we will set later. This ensures "
 	value_description_9="backups are made available for retrievability."
 	value_description_10=" "
-	value_description_11="If the total size of session files exceeds a set size, the oldest, fully"
-	value_description_12="archived sessions will be deleted until enough space is freed. The newest"
-	value_description_13="file in a set of session files determines the age of that session, so if"
-	value_description_14="a session has one recording from last year and one from 2 seconds ago, it"
-	value_description_15="will be considered 2 seconds old overall."
-	value_description_16=" "
-	value_description_17="If that doesn't free enough space, archived recordings of still-running"
-	value_description_18="sessions are deleted as well, oldest first. Active files of running "
-	value_description_19="sessions are never touched though, so if deleting all archived files "
-	value_description_20="still doesn't make enough room, the script just exits with an error."
-	value_description_21=" "
-	value_description_22="If you need to change the auto clean scheduled task or run a manual"
-	value_description_23="cleanup, answer no. Otherwise, answer yes."
-	value_description_24=" "
-	value_description_25="Value below represents the max size of the backups."
+	value_description_11=" "
+	value_description_12="If the total size of session files exceeds a set size, the oldest, fully"
+	value_description_13="archived sessions will be deleted until enough space is freed. The newest"
+	value_description_14="file in a set of session files determines the age of that session, so if"
+	value_description_15="a session has one recording from last year and one from 2 seconds ago, it"
+	value_description_16="will be considered 2 seconds old overall."
+	value_description_17=" "
+	value_description_18="If that doesn't free enough space, archived recordings of still-running"
+	value_description_19="sessions are deleted as well, oldest first. Active files of running "
+	value_description_20="sessions are never touched though, so if deleting all archived files "
+	value_description_21="still doesn't make enough room, the script just exits with an error."
+	value_description_22=" "
+	value_description_23="If you need to change the auto clean scheduled task or run a manual"
+	value_description_24="cleanup, answer no. Otherwise, answer yes."
+	value_description_25=" "
+	value_description_26="Value 02 below represents the max size of the backups."
+	value_description_27=" "
+	value_description_28=" "
+	value_description_29="Value 03 below represents deletion by file (new) or by session (classic, aka"
+	value_description_30="default behavior). Sessions are deleted as a whole, file deletes old files "
+	value_description_31="even if they're part of an active session (but not the most recent dprec "
+	value_description_32="that is active)."
+	value_description_33=" "
+	value_description_34="Note that deleting whole sessions will mean that long-running sessions will keep"
+	value_description_35="accumulating files! File mode is likely the better option if you don't otherwise"
+	value_description_36="take care of rehosting long-running sessions periodically."
+			
 
 	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
 		echo
@@ -1946,6 +1978,13 @@ elif [ "$search_query_type" == "8" ]; then
 		echo "Storing value and moving on."
 		age_to_delete_parameter=$read_stored_config_value_query_1
 		size_to_delete_parameter=$read_stored_config_value_query_2
+		
+		if [ -z $read_stored_config_value_query_3 ] || [ "$read_stored_config_value_query_3" = "=" ]; then
+			# If null or equal sign, value not stored. Prefer classic behavior unless specified.
+			by_session_or_file_parameter="--by=session"
+		else
+			by_session_or_file_parameter=$read_stored_config_value_query_3
+		fi
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		while :; do
 			echo "We need to set both a timeframe at which older files will be deleted and"
@@ -2016,24 +2055,61 @@ elif [ "$search_query_type" == "8" ]; then
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo	
+			echo "${bold}${cyan}Deletion behavior - by session or by file.${normal}"
+			echo ""
+			# =item B<--by=session|file>, B<-b session|file>
+			echo "Whether to delete sessions as a whole (the default) or the oldest archived files"
+			echo "regardless of the age of the session they belong to."
+			echo ""
+			echo "Note that deleting whole sessions will mean that long-running sessions will keep"
+			echo "accumulating files! File mode is likely the better option if you don't otherwise"
+			echo "take care of rehosting long-running sessions periodically."
+			echo ""
+			echo "1 - By Session (default, classic behavior)"
+			echo "2 - By File"
+			echo
+			
+			while :; do
+				read -r -p "${bold}${cyan}Please set deletion method:${normal} " by_session_or_file_parameter
+				echo
+				if [ "$by_session_or_file_parameter" == "1" ] || [ "$by_session_or_file_parameter" == "2" ]; then
+					break
+				else
+					echo
+					echo "${bold}${red}Invalid input provided, try again.${normal}"
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+				fi
+			done
+			if [ "$by_session_or_file_parameter" == "1" ]; then
+				by_session_or_file_parameter="--by=session"
+			elif [ "$by_session_or_file_parameter" == "2" ]; then
+				by_session_or_file_parameter="--by=file"
+			else
+				echo "This message should not be visible for setting deletion method by session or file parameter."
+			fi
+			echo
+			echo '--------------------------------------------------------------------------------'
+			echo
 			echo "${bold}${cyan}Testing inputs to ensure they are valid.${normal}"
 			echo		
-			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
+			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
 				echo "${bold}${red}Failure: time input is invalid.${normal}"
 				age_to_delete_parameter_test=fail
-				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			else
 				echo "${bold}${green}Success: time input is valid.${normal}"
 				age_to_delete_parameter_test=pass
 			fi
 			echo
-			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
+			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
 				echo "${bold}${red}Failure: size input is invalid.${normal}"
 				size_to_delete_parameter_test=fail
 			else
 				echo "${bold}${green}Success: size input is valid.${normal}"
 				size_to_delete_parameter_test=pass
-				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			fi
 
 			if [[ "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
@@ -2073,8 +2149,8 @@ elif [ "$search_query_type" == "8" ]; then
 				
 				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
 					echo "Adding crontab job to auto clean files."
-					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
-					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
 					echo "Skipping crontab job to be added."
 				else
@@ -2093,6 +2169,7 @@ elif [ "$search_query_type" == "8" ]; then
 		done
 		sudo sed -i '\!^age_to_delete_parameter =!{h;s!=.*!= '"$age_to_delete_parameter"'!};${x;\!^$!{s!!age_to_delete_parameter = '"$age_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
 		sudo sed -i '\!^size_to_delete_parameter =!{h;s!=.*!= '"$size_to_delete_parameter"'!};${x;\!^$!{s!!size_to_delete_parameter = '"$size_to_delete_parameter"'!;H};x}' $drawpile_configuration_values_file
+		sudo sed -i '\!^by_session_or_file_parameter =!{h;s!=.*!= '"$by_session_or_file_parameter"'!};${x;\!^$!{s!!by_session_or_file_parameter = '"$by_session_or_file_parameter"'!;H};x}' $drawpile_configuration_values_file
 	else
 		echo "This message should not be visible."
 	fi
@@ -2125,12 +2202,12 @@ elif [ "$search_query_type" == "8" ]; then
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Age Mode.${normal}"
-			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Size Mode.${normal}"
-			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
@@ -2143,12 +2220,12 @@ elif [ "$search_query_type" == "8" ]; then
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Archive File Cleanup in Age Mode.${normal}"
-			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Archive File Cleanup in Size Mode.${normal}"
-			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter"
+			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
