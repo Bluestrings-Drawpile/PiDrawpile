@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1422
+drawpilescriptversion=0.1423
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2168,11 +2168,11 @@ elif [ "$search_query_type" == "8" ]; then
 			echo
 			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run &>/dev/null; then
 				echo "${bold}${red}Failure: Maximum count value is invalid.${normal}"
-				maximum_count_parameter=fail
+				maximum_count_parameter_test=fail
 				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run
 			else
 				echo "${bold}${green}Success: Maximum count value is valid.${normal}"
-				maximum_count_parameter=pass
+				maximum_count_parameter_test=pass
 			fi
 			echo '--------------------------------------------------------------------------------'
 			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run &>/dev/null; then
@@ -2193,7 +2193,7 @@ elif [ "$search_query_type" == "8" ]; then
 				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			fi
 
-			if [[ "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
+			if [[ "$maximum_count_parameter_test" == "pass" && "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
 				echo
 				echo '--------------------------------------------------------------------------------'
 				echo '--------------------------------------------------------------------------------'
