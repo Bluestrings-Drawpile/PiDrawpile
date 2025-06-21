@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1425
+drawpilescriptversion=0.1426
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1987,14 +1987,15 @@ elif [ "$search_query_type" == "8" ]; then
 	value_description_35="accumulating files! File mode is likely the better option if you don't otherwise"
 	value_description_36="take care of rehosting long-running sessions periodically."
 	value_description_37=" "
-	value_description_38="Value 04 refers to the max number of DPREC files to keep for active sessions ONLY."
-	value_description_39="If there is no value or it is an equals sign, then this will default to a "
-	value_description_40="value of 10."
-	value_description_41=" "
-	value_description_42="This is intended to clamp down very busy sessions to a reasonable amount of"
-	value_description_43="recordings, since they can clog up backups with their large amounts of"
-	value_description_44="recordings and \"punish\" other sessions by evicting their files too early just to"
-	value_description_45="keep dozens of recordings of the same sessions laying around."
+	value_description_38=" "
+	value_description_39="Value 04 refers to the max number of DPREC files to keep for active sessions ONLY."
+	value_description_40="If there is no value or it is an equals sign, then this will default to a "
+	value_description_41="value of 10."
+	value_description_42=" "
+	value_description_43="This is intended to clamp down very busy sessions to a reasonable amount of"
+	value_description_44="recordings, since they can clog up backups with their large amounts of"
+	value_description_45="recordings and \"punish\" other sessions by evicting their files too early just to"
+	value_description_46="keep dozens of recordings of the same sessions laying around."
 			
 
 	if ! sudo crontab -u root -l | grep '#Drawpile Archive File Cleanup' > /dev/null 2>&1; then
@@ -2031,6 +2032,8 @@ elif [ "$search_query_type" == "8" ]; then
 		fi
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 		while :; do
+			echo "${bold}${cyan}Delete archived files of active sessions configuration.${normal}"
+			echo
 			echo "Delete archived recording files of active sessions until they have at most"
 			echo "C<COUNT> left. 0 means that all archives except the currently running file will"
 			echo "be purged. This will not delete archives of archived sessions."
@@ -2058,7 +2061,7 @@ elif [ "$search_query_type" == "8" ]; then
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
-			echo "We need to set both a timeframe at which older files will be deleted and"
+			echo "${bold}${cyan}Note:${normal} We need to set both a timeframe at which older files will be deleted and"
 			echo "a size limit to prevent the file backed sessions from growing too large."
 			echo "Failure to do so will prevent Drawpile-srv from working at all."
 			echo
@@ -2167,11 +2170,11 @@ elif [ "$search_query_type" == "8" ]; then
 			echo "${bold}${cyan}Testing inputs to ensure they are valid.${normal}"
 			echo
 			if ! $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run &>/dev/null; then
-				echo "${bold}${red}Failure: Maximum count value is invalid.${normal}"
+				echo "${bold}${red}Failure: maximum count value is invalid.${normal}"
 				maximum_count_parameter_test=fail
 				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run
 			else
-				echo "${bold}${green}Success: Maximum count value is valid.${normal}"
+				echo "${bold}${green}Success: maximum count value is valid.${normal}"
 				maximum_count_parameter_test=pass
 			fi
 			echo '--------------------------------------------------------------------------------'
@@ -2290,30 +2293,29 @@ elif [ "$search_query_type" == "8" ]; then
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Maximum File Count for Active Sessions.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" --dry-run"
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" --dry-run"
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Age Mode.${normal}"
 			echo "${bold}${red}MAY BE INACCURATE. CANNOT PROVIDE ACCURATE VALUES UNTIL FIRST OPERATION PERFORMED.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Size Mode.${normal}"
 			echo "${bold}${red}MAY BE INACCURATE. CANNOT PROVIDE ACCURATE VALUES UNTIL FIRST OPERATION PERFORMED.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
-			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Returning to prior menu.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
 			echo
 		elif (( "$drawpile_archive_file_cleanup_run" == "3" )); then
 			echo
@@ -2321,25 +2323,22 @@ elif [ "$search_query_type" == "8" ]; then
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Partial Dry Run - Maximum File Count for Active Sessions.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\""
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\""
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Age Mode.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${yellow}Dry Run - Archive File Cleanup in Size Mode.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" --dry-run"
 			echo
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			echo
-			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
 			echo
 			
@@ -2351,28 +2350,28 @@ elif [ "$search_query_type" == "8" ]; then
 			
 			echo "${bold}${yellow}Returning to prior menu.${normal}"
 			echo
+			echo ----------------------------------------------------------------------------------
+			echo ----------------------------------------------------------------------------------
+			echo
 		elif (( "$drawpile_archive_file_cleanup_run" == "6" )); then
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Maximum File Count for Active Sessions.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\""
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\""
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Archive File Cleanup in Age Mode.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\""
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\""
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age="$age_to_delete_parameter" "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
 			echo
 			echo "${bold}${red}Running - Archive File Cleanup in Size Mode.${normal}"
-			echo "$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\""
-			echo
+			echo "${bold}Command:${normal}      $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\""
 			$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter"
 			echo
 			echo ----------------------------------------------------------------------------------
