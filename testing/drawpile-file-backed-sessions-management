@@ -156,8 +156,9 @@ function drawpile_credits_function () {
 	echo 'Original Dev - Calle Laakkonen (PayPal):'
 	echo "     ${underline}laakkonenc@gmail.com${normal}"
 	echo
-	echo 'Current Dev - askmeaboutloom: - Not yet provided'
-	echo "     ${underline}https://github.com/askmeaboutlo0m${normal}"
+	echo 'Current Dev - askmeaboutloom: SEPA Transfer, PayPal, Stripe, Liberapay'
+	echo "     ${underline}https://donate.drawpile.org/${normal}"
+	# echo "     ${underline}https://github.com/askmeaboutlo0m${normal}"
 	echo
 	echo 'Script Creator - Bluestrings (Ko-Fi):'
 	echo "     ${underline}https://ko-fi.com/bluestrings${normal}"
