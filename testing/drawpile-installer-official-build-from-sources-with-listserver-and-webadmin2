@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003944
+drawpilescriptversion=2.996003945
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -123,27 +123,82 @@ drawpile_completed_successfully_values_file_bak=/home/drawpileuser/Drawpile_Comp
 # ----------------------------------------------------------------------------------
 # Script accepted arguments should go here that are typed after the script name.
 dp_compile_check_bypass="$1"
+dp_listserver_build_bypass="$2"
+
+declare -a value_true_or_enabled
+value_true_or_enabled=(true t e enable enabled)
+
+declare -a value_false_or_disabled
+value_false_or_disabled=(false f d disable disabled)
+# ----------------------------------------------------------------------------------
+function dp_compile_check_bypass_function () {
+	if [[ " ${value_false_or_disabled[*]} " =~ [[:space:]]${dp_compile_check_bypass,,}[[:space:]] ]]; then
+		echo "${bold}${yellow}         DISABLED: Run compiling step regardless of versions located.${normal}"
+		dp_compile_check_bypass="false"
+	elif [[ " ${value_true_or_enabled[*]} " =~ [[:space:]]${dp_compile_check_bypass,,}[[:space:]] ]]; then
+		echo "${bold}${green}          ENABLED: Skip compiling step if matching versions located. (default behavior)${normal}"
+		dp_compile_check_bypass="true"
+	elif [[ "$dp_compile_check_bypass" != "false" ]]; then
+		echo "${bold}${red} INVALID ARGUMENT: Skip compiling step if matching versions located.${normal}"
+		echo
+		echo "${bold}${red}Proceeding as if dp_compile_check_bypass was not set (will skip compiling if versions match).${normal}"
+		dp_compile_check_bypass="true"
+	else
+		echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
+	fi
+}
+# ----------------------------------------------------------------------------------
+function dp_listserver_build_bypass_function () {
+	if [[ " ${value_false_or_disabled[*]} " =~ [[:space:]]${dp_listserver_build_bypass,,}[[:space:]] ]]; then
+		echo "${bold}${yellow}         DISABLED: Skip list server build step.${normal}"
+		dp_listserver_build_bypass="false"
+	elif [[ " ${value_true_or_enabled[*]} " =~ [[:space:]]${dp_listserver_build_bypass,,}[[:space:]] ]]; then
+		echo "${bold}${green}          ENABLED: Run list server build step. (default behavior)${normal}"
+		dp_listserver_build_bypass="true"
+	elif [[ "$dp_listserver_build_bypass" != "false" ]]; then
+		echo "${bold}${red} INVALID ARGUMENT: not skipping list server build step.${normal}"
+		echo
+		echo "${bold}${red}Proceeding as if dp_listserver_build_bypass was not set (will run list server build step).${normal}"
+		dp_listserver_build_bypass="true"
+	else
+		echo "${bold}${yellow}This message should not be visible for the dp_listserver_build_bypass.${normal}"
+	fi
+}
+# ----------------------------------------------------------------------------------
 echo
-if [ -z "$dp_compile_check_bypass" ]; then
-	echo "${bold}${green}No script argument set, not skipping compiling step if matching versions located.${normal}"
+if [ -z "$dp_compile_check_bypass" ] && [ -z "$dp_listserver_build_bypass" ]; then
+	echo "${bold}${green}No 1st or 2nd script argument set.${normal}"
+	echo "${bold}${green} * not skipping compiling step if matching versions located.${normal}"
+	echo "${bold}${green} --> Setting to false WILL skip the compile version check, compiles even if it matches.${normal}"
+	echo "${bold}${green} --> Setting to true or leaving empty/null is default behavior. Checks if compile step is necessary.${normal}"
+	echo "${bold}${green} * not skipping list server build step.${normal}"
+	echo "${bold}${green} --> Setting to false WILL skip list server build step.${normal}"
+	echo "${bold}${green} --> Setting to true or leaving empty/null is default behavior. Builds list server.${normal}"
 	echo "${bold}${green}Most users should not need to use this feature.${normal}"
 	echo
 	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
-	echo "${bold}${green}false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
-	echo "${bold}${green}     For example: ./script-name d${normal}"
-elif [[ "$dp_compile_check_bypass" == "false" || "$dp_compile_check_bypass" == "FALSE" || "$dp_compile_check_bypass" == "f" || "$dp_compile_check_bypass" == "F"  ]] || [[ "$dp_compile_check_bypass" == "disable" || "$dp_compile_check_bypass" == "disabled" || "$dp_compile_check_bypass" == "d" || "$dp_compile_check_bypass" == "DISABLE" || "$dp_compile_check_bypass" == "DISABLED" || "$dp_compile_check_bypass" == "D" ]]; then
-	echo "${bold}${yellow}         DISABLED: Skip compiling step if matching versions located.${normal}"
-	dp_compile_check_bypass="false"
-elif [[ "$dp_compile_check_bypass" == "true" || "$dp_compile_check_bypass" == "TRUE" || "$dp_compile_check_bypass" == "t" || "$dp_compile_check_bypass" == "T"  ]] || [[ "$dp_compile_check_bypass" == "enable" || "$dp_compile_check_bypass" == "enabled" || "$dp_compile_check_bypass" == "e" || "$dp_compile_check_bypass" == "ENABLE" || "$dp_compile_check_bypass" == "ENABLED" || "$dp_compile_check_bypass" == "E" ]]; then
-	echo "${bold}${green}          ENABLED: Skip compiling step if matching versions located. (default behavior)${normal}"
-	dp_compile_check_bypass="true"
-elif [[ "$dp_compile_check_bypass" != "false" ]]; then
-	echo "${bold}${red} INVALID ARGUMENT: Skip compiling step if matching versions located.${normal}"
+	echo "${bold}${green}  false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
+	echo "${bold}${green}     For example: ./script-name d d${normal}"
+	echo "${bold}${green}  true, TRUE, t, T, enable, enabled, e, ENABLE, ENABLED, E${normal}"
+	echo "${bold}${green}     For example: ./script-name e e${normal}"
+elif [ -z "$dp_listserver_build_bypass" ]; then
+	echo "${bold}${yellow}No 2nd script argument set.${normal}"
+	echo "${bold}${yellow} * not skipping list server build step.${normal}"
+	echo "${bold}${yellow} --> Setting to false WILL skip list server build step.${normal}"
+	echo "${bold}${yellow} --> Setting to true or leaving empty/null is default behavior. Builds list server.${normal}"
+	echo "${bold}${yellow}Most users should not need to use this feature.${normal}"
 	echo
-	echo "${bold}${red}Proceeding as if dp_compile_check_bypass was not set (will skip compiling if versions match).${normal}"
-	dp_compile_check_bypass="true"
+	echo "${bold}${green}You can set an argument by typing one of the following:${normal}"
+	echo "${bold}${green}false, FALSE, f, F, disable, disabled, d, DISABLE, DISABLED, D${normal}"
+	echo "${bold}${green}     For example: ./script-name d d${normal}"
+	echo "${bold}${green}  true, TRUE, t, T, enable, enabled, e, ENABLE, ENABLED, E${normal}"
+	echo "${bold}${green}     For example: ./script-name e e${normal}"
+	echo
+	dp_compile_check_bypass_function
 else
-	echo "${bold}${yellow}This message should not be visible for the dp_compile_check_bypass.${normal}"
+	dp_compile_check_bypass_function
+	echo
+	dp_listserver_build_bypass_function
 fi
 echo
 echo
@@ -568,7 +623,9 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.3 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04.3 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 24.04.2 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 24.04.1 LTS.${normal}"
@@ -2988,7 +3045,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List 
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libwebp-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libzstd-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
 
 	# Full List Unsorted
@@ -3004,7 +3061,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	
 	# Full List 
 	#QT5
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libzstd-devel libwebp-devel"
 	# QT6
 	# program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
@@ -3021,7 +3078,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
 	
 	# Full List - optional dependencies are slightly different - httpd-core libmicrohttpd-devel libsodium-devel
-	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libwebp-devel"
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libzstd-devel libwebp-devel"
 	program_list_to_install_optional_dependencies="httpd libmicrohttpd libsodium libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
 	
 	# Full List unsorted
@@ -3031,7 +3088,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	# Unsorted
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
@@ -3040,7 +3097,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 
 	
@@ -3054,7 +3111,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
-	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev"
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	
 	# Unsorted
@@ -3656,6 +3713,25 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	package_version_check_and_update_function
 fi
 # --------------------------------------------------------------------------------
+if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	package_name=libzstd-dev
+fi
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	package_name=libzstd-devel
+fi
+package_version_length=14-30
+version_apt_or_dnf_function
+minimum_version=1.0.0
+# 1.5.5 was lowest installed but I figure a lower version won't hurt since I haven't tested this thoroughly yet.
+package_available_dpkg_or_dnf_function
+package_description_1="Package: libzstd-dev"
+package_description_2=
+package_description_3=
+package_description_4=
+package_description_5=
+install_package_set="no"
+package_version_check_and_update_function
+# --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 # --------------------------- **Optional Dependencies** --------------------------
@@ -4164,22 +4240,50 @@ function start_drawpile_srv_if_updated_function () {
 	service_name_to_check_01=drawpile-srv.socket
 	service_name_to_check_02=drawpile-srv.service
 	if [[ ( -e "/etc/systemd/system/drawpile-srv.service" && -e "/etc/systemd/system/drawpile-srv.socket" ) || ( -e "/etc/systemd/system/drawpile-srv.service" && ! -e "/etc/systemd/system/drawpile-srv.socket" ) ]]; then
-		if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && ( "$drawpile_srv_service_loaded" == "disabled" || "$drawpile_srv_service_loaded" == "enabled" ) ]]; then
-			echo "sudo systemctl start --now $service_name_to_check_01"
-			sudo systemctl start --now $service_name_to_check_01
-			echo '--------------------------------------------------------------------------------'
-			sudo systemctl status $service_name_to_check_01 --no-pager -l
-			echo '--------------------------------------------------------------------------------'
-			sudo systemctl status $service_name_to_check_02 --no-pager -l
-		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && ( "$drawpile_srv_service_status" == "(running)" || "$drawpile_srv_service_status" != "(running)" ) ]]; then
-			echo "sudo systemctl start --now $service_name_to_check_02"
-			sudo systemctl start --now $service_name_to_check_02
-			echo '--------------------------------------------------------------------------------'
-			sudo systemctl status $service_name_to_check_02 --no-pager -l
-		elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
-			echo "Drawpile server startup is not yet configured. No action required."
+		dp_srv_startup=$( grep -m 1 "dp_srv_startup = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		# 1 is for socket activation, 2 is for always on.
+
+		if [ -z "$dp_srv_startup" ] || [ "$dp_srv_startup" = "=" ]; then
+			# Value stored is null or not filled in. Running manual check.
+			if [[ "$drawpile_srv_socket_loaded" == "enabled" && ( "$drawpile_srv_socket_status" == "(running)" || "$drawpile_srv_socket_status" == "(listening)" ) && ( "$drawpile_srv_service_loaded" == "disabled" || "$drawpile_srv_service_loaded" == "enabled" ) ]]; then
+				echo "sudo systemctl start --now $service_name_to_check_01"
+				sudo systemctl start --now $service_name_to_check_01
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_01 --no-pager -l
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_02 --no-pager -l
+			elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "enabled" && ( "$drawpile_srv_service_status" == "(running)" || "$drawpile_srv_service_status" != "(running)" ) ]] || [[ "$drawpile_srv_socket_loaded" == "enabled" && "$drawpile_srv_socket_status" == "(dead)" && "$drawpile_srv_service_loaded" == "enabled" ]]; then
+				echo "sudo systemctl start --now $service_name_to_check_02"
+				sudo systemctl start --now $service_name_to_check_02
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_02 --no-pager -l
+			elif [[ "$drawpile_srv_socket_loaded" == "disabled" && "$drawpile_srv_service_loaded" == "disabled" ]]; then
+				echo "Drawpile server startup is not yet configured. No action required."
+			else
+				echo "This message should not be visible for starting drawpile-srv after to compiling code update (Error 2)."
+				sleep 30
+			fi
 		else
-			echo "This message should not be visible for starting drawpile-srv after to compiling code update."
+			echo "Detected user selected startup type."
+			echo
+			if [[ "$dp_srv_startup" = "1" ]]; then
+				# Socket Activation enabled.
+				echo "sudo systemctl start --now $service_name_to_check_01"
+				sudo systemctl start --now $service_name_to_check_01
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_01 --no-pager -l
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_02 --no-pager -l
+			elif [[ "$dp_srv_startup" = "2" ]]; then
+				# Always on Service.
+				echo "sudo systemctl start --now $service_name_to_check_02"
+				sudo systemctl start --now $service_name_to_check_02
+				echo '--------------------------------------------------------------------------------'
+				sudo systemctl status $service_name_to_check_02 --no-pager -l
+			else
+				echo "This message should not be visible for starting drawpile-srv after to compiling code update (Error 1)."
+				sleep 30
+			fi
 		fi
 	fi
 	echo
@@ -5284,6 +5388,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			drawpile_dprectool_compile_verification_function
 			echo
 			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				# Setting to true or leaving empty/null is default behavior. Checks if compile step is necessary.
 				# If compiled, skip action and continue on with script setup. If failure, attempt compiling again.
 				if [ "$drawpile_srv_compile_verification" == "1" ]; then
 					echo "${bold}${green}Drawpile Server successfully built.${normal}"
@@ -5302,6 +5407,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				fi
 			else
 				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				# Setting to false WILL skip the compile version check, compiles even if it matches.
 				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
 				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
 				
@@ -5316,9 +5422,10 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			drawpile_client_compile_verification_function
 			drawpile_tools_compile_verification_function
 			echo
-			# If compiled, skip action and continue on with script setup.
 			
 			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				# Setting to true or leaving empty/null is default behavior. Checks if compile step is necessary.
+				# If compiled, skip action and continue on with script setup.
 				if [ "$drawpile_srv_compile_verification" == "1" ] && [ "$drawpile_client_compile_verification" == "1" ]; then
 					echo "${bold}${green}Drawpile Client and Server successfully built.${normal}"
 					echo
@@ -5336,6 +5443,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				fi
 			else
 				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				# Setting to false WILL skip the compile version check, compiles even if it matches.
 				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
 				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
 				
@@ -5349,6 +5457,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 			drawpile_dprectool_compile_verification_function
 			
 			if [[ -z "$dp_compile_check_bypass" || "$dp_compile_check_bypass" == "true" ]]; then
+				# Setting to true or leaving empty/null is default behavior. Checks if compile step is necessary.
 				# If compiled, skip action and continue on with script exit. If failure, attempt compiling again.
 				if [ "$drawpile_srv_compile_verification" == "1" ]; then
 					echo "${bold}${green}Drawpile Server successfully built.${normal}"
@@ -5367,6 +5476,7 @@ if [[ -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ]] || [[ -e
 				fi
 			else
 				# if [[ "$dp_compile_check_bypass" == "false" ]]; then
+				# Setting to false WILL skip the compile version check, compiles even if it matches.
 				echo "${bold}${yellow}*****        Forced Compile Mode . . .        *****${normal}"
 				echo "${bold}${yellow}*****     Will run compiling options . . .    *****${normal}"
 				
@@ -8418,6 +8528,10 @@ echo
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
+
+# Service File Example -->  https://github.com/drawpile/Drawpile/blob/main/src/thinsrv/systemd/service.in#L10-L11
+# Socket File Example  -->  https://github.com/drawpile/Drawpile/blob/main/src/thinsrv/systemd/socket.in
+
 if [[ $drawpile_srv_version_stripped = "2.2.0" || $drawpile_srv_version_stripped > "2.2.0" ]]; then
 	# --------------------------------------------------------------------------------
 	#1 - Socket Activation
@@ -8482,7 +8596,7 @@ User=drawpileuser
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 [Install]
-Also=drawpile-srv.socket
+# Also=drawpile-srv.socket
 WantedBy=multi-user.target
 EOF
 	# --------------------------------------------------------------------------------
@@ -8512,7 +8626,7 @@ Type=notify
 NotifyAccess=main
 # --------------------------------------------------------------------------------
 # Note: in order to use session recording and SSL safely,
-#      a dedicated user account should be created for drawpile-srv.
+#       a dedicated user account should be created for drawpile-srv.
 User=drawpileuser
 # --------------------------------------------------------------------------------
 [Install]
@@ -12344,75 +12458,84 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	go_path=$( go env GOPATH )
 	echo "${bold}${cyan}***** Installing Drawpile List Server . . . *****${normal}"
 	echo
-	if [[ -e "/etc/systemd/system/drawpile-listserver.service" ]]; then
-		echo "${bold}${cyan}***** If Drawpile Listserver Running, Stopping Process . . . *****${normal}"
-		echo
-	fi
-	# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
-	service_name_to_check_03=drawpile-listserver.service
-	if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
-		drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		# Check to ensure output is not blank and find it in an alternate way
-		# echo Value: $drawpile_listserver_loaded
-		# echo
-		if [ -z "$drawpile_listserver_loaded" ]; then
-			# echo Oops. Blank!
-			drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); preset:.*/\1/p" )
-			# echo
-		fi
-		# echo Value: $drawpile_listserver_loaded
-		# echo
-		if [ -z "$drawpile_listserver_loaded" ]; then
-			drawpile_listserver_loaded=error
-		fi
-		# ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
-		if [ -z "$drawpile_listserver_status" ]; then
-			drawpile_listserver_status=error
-		fi		
-		echo "Service name : $service_name_to_check_03"
-		echo "Start on boot: $drawpile_listserver_loaded"
-		echo "Loaded Status: $drawpile_listserver_status"
-		sudo systemctl stop --now $service_name_to_check_03
-		echo
-	else
-		drawpile_listserver_loaded="not_loaded"
-		drawpile_listserver_status="not_loaded"
-		echo "The $service_name_to_check_03 is not yet loaded. No action required."
-		echo
-	fi
-	echo "This step may take a while, please be patient."
-	echo
-	# The -a being passed to install or get makes the install take longer, but also rebuilds everything...
-	# So hopefully the recompile process works every time. Otherwise it appears you can build a bad binary.
-	if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
-		# Version check provided by askmeaboutloom
-		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
-			go install -a 'github.com/drawpile/listserver@latest'
-		else
-			# go get github.com/drawpile/listserver
-			GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
-		fi
-	fi
-	if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		package_name=golang
-		version_test_by_distro_function
+	if [[ -z "$dp_listserver_build_bypass" || "$dp_listserver_build_bypass" == "true" ]]; then
+		# Setting to true or leaving empty/null is default behavior. Builds list server.
 		
-		if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\.?/ && $1 >= 1.16 ? 0 : 1)'; then
-			go install -a 'github.com/drawpile/listserver@latest'
-		else
-			# go get github.com/drawpile/listserver
-			GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
+		if [[ -e "/etc/systemd/system/drawpile-listserver.service" ]]; then
+			echo "${bold}${cyan}***** If Drawpile Listserver Running, Stopping Process . . . *****${normal}"
+			echo
 		fi
-		echo "Go Version: $test_version_simple"
-		# if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
-		# 	go install 'github.com/drawpile/listserver@latest'
-		# elif [[ "$test_version_simple" < "1.16" ]]; then
-		# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
-		# else
-		# 	echo "This message for golang's version ($test_version_simple) should not be visible."
-		# fi
+		# The number ordering chosen is based on the order in which they appear in RPi-Monitor. Not the order in which they are used in the script.
+		service_name_to_check_03=drawpile-listserver.service
+		if [ -e "/etc/systemd/system/drawpile-listserver.service" ]; then
+			drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); vendor.*/\1/p" )
+			# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+			# Check to ensure output is not blank and find it in an alternate way
+			# echo Value: $drawpile_listserver_loaded
+			# echo
+			if [ -z "$drawpile_listserver_loaded" ]; then
+				# echo Oops. Blank!
+				drawpile_listserver_loaded=$( systemctl status $service_name_to_check_03 | grep "Loaded: " | sed -nEr "s/.*$service_name_to_check_03; (.*); preset:.*/\1/p" )
+				# echo
+			fi
+			# echo Value: $drawpile_listserver_loaded
+			# echo
+			if [ -z "$drawpile_listserver_loaded" ]; then
+				drawpile_listserver_loaded=error
+			fi
+			# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+			drawpile_listserver_status=$( systemctl status $service_name_to_check_03 | grep "Active: " | sed -nEr 's/.*(\(.*\)).*/\1/p' )
+			if [ -z "$drawpile_listserver_status" ]; then
+				drawpile_listserver_status=error
+			fi		
+			echo "Service name : $service_name_to_check_03"
+			echo "Start on boot: $drawpile_listserver_loaded"
+			echo "Loaded Status: $drawpile_listserver_status"
+			sudo systemctl stop --now $service_name_to_check_03
+			echo
+		else
+			drawpile_listserver_loaded="not_loaded"
+			drawpile_listserver_status="not_loaded"
+			echo "The $service_name_to_check_03 is not yet loaded. No action required."
+			echo
+		fi
+		echo "This step may take a while, please be patient."
+		echo
+		# The -a being passed to install or get makes the install take longer, but also rebuilds everything...
+		# So hopefully the recompile process works every time. Otherwise it appears you can build a bad binary.
+		if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+			# Version check provided by askmeaboutloom
+			if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\./ && $1 >= 1.16 ? 0 : 1)'; then
+				go install -a 'github.com/drawpile/listserver@latest'
+			else
+				# go get github.com/drawpile/listserver
+				GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
+			fi
+		fi
+		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+			package_name=golang
+			version_test_by_distro_function
+			
+			if go version | perl -0777 -ne 'exit(/\bgo([0-9]+\.[0-9]+)\.?/ && $1 >= 1.16 ? 0 : 1)'; then
+				go install -a 'github.com/drawpile/listserver@latest'
+			else
+				# go get github.com/drawpile/listserver
+				GO111MODULE=on go get -a 'github.com/drawpile/listserver@latest'
+			fi
+			echo "Go Version: $test_version_simple"
+			# if [[ "$test_version_simple" = "1.16" ]] || [[ "$test_version_simple" > "1.16" ]]; then
+			# 	go install 'github.com/drawpile/listserver@latest'
+			# elif [[ "$test_version_simple" < "1.16" ]]; then
+			# 	GO111MODULE=on go get 'github.com/drawpile/listserver@latest'
+			# else
+			# 	echo "This message for golang's version ($test_version_simple) should not be visible."
+			# fi
+		fi	
+	else
+		# if [[ "$dp_listserver_build_bypass" == "false" ]]; then
+		# Setting to false WILL skip list server build step.
+		echo "${bold}${yellow}Skipping Drawpile Listserver Compile Step.${normal}"
+		echo
 	fi
 	# package_name=golang
 	# version_test_by_distro_function
@@ -15712,8 +15835,8 @@ variable_to_read_3=""
 value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
 value_description_2="server powers on?"
 value_description_3=" "
-value_description_4="${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
-value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
+value_description_4="${bold}${cyan}1 - Socket Activation${normal}"
+value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Raspberry Pi or Remote Servers${normal}"
 
 read_stored_config_value_query_function
 if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
@@ -15723,10 +15846,11 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
 	echo 'server powers on?'
 	echo
-	echo "${bold}${cyan}1 - Socket Activation - Recommended for Raspberry Pi${normal}"
+	echo "${bold}${cyan}1 - Socket Activation${normal}"
 	echo '    This setting is less resource intensive on the server or Raspberry Pi,'
 	echo '     as the drawpile server is only running when a user is connected.' 
-	echo "${bold}${cyan}2 - Always on Service - Recommended for Remote Servers${normal}"
+	echo "    ${bold}${cyan}WARNING:${normal} May not function as intended, not thoroughly tested."
+	echo "${bold}${cyan}2 - Always on Service - Recommended for Raspberry Pi or Remote Servers${normal}"
 	echo '    The drawpile-srv starts on Server or Raspberry Pi power up, runs all'
 	echo '    the time in the background.'
 	echo
@@ -15741,8 +15865,27 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			echo
 		fi
 	done
+	if [ "`systemctl is-enabled drawpile-srv.service`" = "enabled" ] || [ "`systemctl is-enabled drawpile-srv.socket`" = "enabled" ]; then
+		# Ensures files in place are up to date, copying over new files if the service is enabled and setting is being changed.
+		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
+		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" /etc/systemd/system/
+		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" /etc/systemd/system/
+		wait $!
+		sudo systemctl daemon-reload
+		sudo systemctl restart systemd-modules-load
+		wait $!
+	fi
 	echo
 	if [ "$dp_srv_startup" == "1" ]; then
+		if [ "`systemctl is-enabled drawpile-srv.service`" = "enabled" ]; then
+			echo "${bold}${yellow}Drawpile-srv.service already enabled, disabling.${normal}"
+			echo
+			sudo systemctl stop --now drawpile-srv.socket
+			wait $!
+			sudo systemctl disable drawpile-srv.service
+			sudo systemctl stop --now drawpile-srv.service
+			wait $!
+		fi
 		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
 		wait $!
 		echo
@@ -15755,6 +15898,16 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		wait $!
 		#Read more on systemd --> https://drawpile.net/help/server
 	elif [ "$dp_srv_startup" == "2" ]; then
+		if [ "`systemctl is-enabled drawpile-srv.socket`" = "enabled" ]; then
+			echo "${bold}${yellow}Drawpile-srv.socket already enabled, disabling.${normal}"
+			echo
+			sudo systemctl disable drawpile-srv.socket
+			wait $!
+			sudo systemctl stop --now drawpile-srv.socket
+			wait $!
+			sudo systemctl stop --now drawpile-srv.service
+			wait $!
+		fi
 		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
 		wait $!
 		echo
@@ -18519,6 +18672,24 @@ fi
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 echo
+
+#if [[ "$dp_srv_startup" = "2" && "`systemctl is-active drawpile-srv.service`" = "failed" ]]; then
+#	echo "${bold}${red}Service failed, attempting restart of service.${normal}"
+#	systemctl stop --now drawpile-srv.service
+#	wait $!
+#	echo "Waiting 10 seconds before restarting service."
+#	sleep 10
+#	systemctl start --now drawpile-srv.service
+#fi
+#if [[ "$dp_srv_startup" = "2" && "`systemctl is-active drawpile-srv.service`" = "inactive" ]]; then
+#	echo "${bold}${red}Service inactive, starting service.${normal}"
+#	systemctl start --now drawpile-srv.service
+#fi
+#
+#if [[ "$dp_srv_startup" = "1" && ( "`systemctl is-active drawpile-srv.service`" = "failed" ) ]]; then
+#	systemctl start --now drawpile-srv.socket
+#fi
+
 echo "${bold}${green}***********************************************************${normal}"
 echo "${bold}${green}**********    Displaying Server Status  . . .    **********${normal}"
 echo "${bold}${green}***********************************************************${normal}"
