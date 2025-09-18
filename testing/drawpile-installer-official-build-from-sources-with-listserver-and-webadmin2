@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003945
+drawpilescriptversion=2.996003946
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -168,10 +168,10 @@ function dp_listserver_build_bypass_function () {
 echo
 if [ -z "$dp_compile_check_bypass" ] && [ -z "$dp_listserver_build_bypass" ]; then
 	echo "${bold}${green}No 1st or 2nd script argument set.${normal}"
-	echo "${bold}${green} * not skipping compiling step if matching versions located.${normal}"
+	echo "${bold}${green} * 1st Argument - Choose to skip compiling step if matching versions located.${normal}"
 	echo "${bold}${green} --> Setting to false WILL skip the compile version check, compiles even if it matches.${normal}"
 	echo "${bold}${green} --> Setting to true or leaving empty/null is default behavior. Checks if compile step is necessary.${normal}"
-	echo "${bold}${green} * not skipping list server build step.${normal}"
+	echo "${bold}${green} * 2nd Argument - not skipping list server build step.${normal}"
 	echo "${bold}${green} --> Setting to false WILL skip list server build step.${normal}"
 	echo "${bold}${green} --> Setting to true or leaving empty/null is default behavior. Builds list server.${normal}"
 	echo "${bold}${green}Most users should not need to use this feature.${normal}"
@@ -183,7 +183,7 @@ if [ -z "$dp_compile_check_bypass" ] && [ -z "$dp_listserver_build_bypass" ]; th
 	echo "${bold}${green}     For example: ./script-name e e${normal}"
 elif [ -z "$dp_listserver_build_bypass" ]; then
 	echo "${bold}${yellow}No 2nd script argument set.${normal}"
-	echo "${bold}${yellow} * not skipping list server build step.${normal}"
+	echo "${bold}${green} * 2nd Argument - not skipping list server build step.${normal}"
 	echo "${bold}${yellow} --> Setting to false WILL skip list server build step.${normal}"
 	echo "${bold}${yellow} --> Setting to true or leaving empty/null is default behavior. Builds list server.${normal}"
 	echo "${bold}${yellow}Most users should not need to use this feature.${normal}"
@@ -676,7 +676,11 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 42.${normal}" && echo "${bold}${yellow}Testing support now...${normal}" && echo "${bold}${yellow}End of Life support is 2026-05-13.${normal}"
+			wget_or_wget2_fedora_function
+		
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}" && echo "${bold}${yellow}End of Life support is 2025-11-19.${normal}"
 			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
@@ -727,7 +731,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 42.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Workstation 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
 			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
@@ -2216,15 +2223,24 @@ function script_update_check_function () {
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
-elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-	version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	if dnf info -q wget2 > /dev/null 2>&1; then
+		version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	else
+		echo "No matching packages to list --> wget2"
+	fi
 	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	else
-		installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		
+		if dnf info -q wget2 > /dev/null 2>&1; then
+			installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		else
+			echo "No matching packages to list --> wget2"
+		fi
 		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			:
@@ -2234,13 +2250,21 @@ elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\
 	fi
 	minimum_version_wget=2.1.0
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	if dnf info -q wget > /dev/null 2>&1; then
+		version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	else
+		echo "No matching packages to list --> wget"
+	fi
 	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	else
-		installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		if dnf info -q wget > /dev/null 2>&1; then
+			installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		else
+			echo "No matching packages to list --> wget"
+		fi
 		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			:
@@ -2850,12 +2874,20 @@ function package_install_status_check_function () {
 			package_install_status_check_decision_tree_a2="(none)"
 		fi
 		if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-			package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '2 p' )
+			if dnf info -q $p > /dev/null 2>&1; then
+				package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '2 p' )
+			else
+				echo "No matching packages to list -- Error 1 --> $p"
+			fi
 			if [[ "${package_install_status_check_decision_tree_q1,,}" == "installed packages" || "${package_install_status_check_decision_tree_q1,,}" == "available packages" ]]; then
 				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 				:
 			else
-				package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '1 p' )
+				if dnf info -q $p > /dev/null 2>&1; then
+					package_install_status_check_decision_tree_q1=$( dnf info -q $p | sed -n '1 p' )
+				else
+					echo "No matching packages to list -- Error 2 --> $p"
+				fi
 				if [[ "${package_install_status_check_decision_tree_q1,,}" == "installed packages" || "${package_install_status_check_decision_tree_q1,,}" == "available packages" ]]; then
 					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 					:
@@ -2867,12 +2899,21 @@ function package_install_status_check_function () {
 			package_install_status_check_decision_tree_a1="Error: No matching Packages to list"
 			package_install_status_check_decision_tree_a3="Error: No matching Packages to list"
 			
-			package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '2 p' )
+			if dnf info -q $p > /dev/null 2>&1; then
+				package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '2 p' )
+			else
+				echo "No matching packages to list -- Error 3 --> $p"
+			fi
 			if [[ "${package_install_status_check_decision_tree_q2,,}" == "installed packages" || "${package_install_status_check_decision_tree_q2,,}" == "available packages" ]]; then
 				# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 				:
 			else
-				package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '1 p' )
+				
+				if dnf info -q $p > /dev/null 2>&1; then
+					package_install_status_check_decision_tree_q2=$( dnf info -q $p | sed -n '1 p' )
+				else
+					echo "No matching packages to list -- Error 4 --> $p"
+				fi
 				if [[ "${package_install_status_check_decision_tree_q2,,}" == "installed packages" || "${package_install_status_check_decision_tree_q2,,}" == "available packages" ]]; then
 					# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 					:
@@ -3038,7 +3079,87 @@ fi
 # cargo clang build-essential
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]] ); then
+	echo "Using packages for Fedora 40 and newer."
+	# dnf search PROGRAM
+	# Minimal List
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
+	
+	# Full List 
+	#QT5
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libzstd-devel libwebp-devel"
+	# QT6
+	# program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel libzip-devel libzip-tools kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtnetworkauth-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebsockets-devel zlib-ng-devel zlib-ng-compat-devel libwebp-devel"
+	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt6-devel sqlite systemd-devel"
+
+	# Full List Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
+	echo "Using packages for Fedora 31 and 32."
+	# dnf search PROGRAM
+	# Minimal List
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
+	
+	# Full List - optional dependencies are slightly different - httpd-core libmicrohttpd-devel libsodium-devel
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libzstd-devel libwebp-devel"
+	program_list_to_install_optional_dependencies="httpd libmicrohttpd libsodium libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
+	
+	# Full List unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
+	# program_list_to_install_optional_dependencies="libmicrohttpd libsodium systemd-devel httpd nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	echo "Using Generic Fedora Packages"
+	# dnf search PROGRAM
+	# Minimal List
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel sqlite"
+	
+	# Full List 
+	program_list_to_install_actual_dependencies="clang cmake cronie extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel make miniupnpc-devel policycoreutils-python-utils python3-gunicorn python-unversioned-command qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel qt5-qttools-devel qt5-qtwebsockets-devel zlib-devel libzstd-devel libwebp-devel"
+	program_list_to_install_optional_dependencies="httpd-core libmicrohttpd-devel libsodium-devel libvpx-devel nginx openssl qtkeychain-qt5-devel sqlite systemd-devel"
+
+	# Full List Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel kf5-kdnssd-devel miniupnpc-devel qt5-qtnetworkauth-devel qt5-qtsvg-devel make	policycoreutils-python-utils qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qttools-devel zlib-devel cronie python3-gunicorn python-unversioned-command clang qt5-qtwebsockets-devel"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
+elif [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+	echo "Using packages for Debian on x86-64."
+	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+
+	
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python3.*-venv python3-pip libsqlite3-dev policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.11-venv python3-pip libsqlite3-dev policycoreutils clang"
+	# Unsorted
+	#program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+	echo "Using Generic Ubuntu Packages."
+	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+	
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python3.10-venv python3-pip policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+elif [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	echo "Using Generic Linux Packages."
+	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
+	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
+	# Unsorted
+	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
+	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
+else
+	echo "This message should not be visible for required and optional dependencies."
+fi
+
+<<comment_EOF_Old_Package_Selection_Method
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+	echo "Using Generic Fedora Packages"
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3053,7 +3174,8 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 	# program_list_to_install_optional_dependencies="libmicrohttpd-devel libsodium-devel systemd-devel httpd-core nginx openssl qtkeychain-qt5-devel libvpx-devel sqlite"
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] ); then
+if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && ( [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]] ); then
+	echo "Using packages for Fedora 40 and newer."
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3072,6 +3194,7 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]] && [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 31 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 32 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora 32 (Server Edition)\"" ]]; then
+	echo "Using packages for Fedora 31 and 32."
 	# dnf search PROGRAM
 	# Minimal List
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules gcc-c++ git kf5-karchive-devel qt5-qtsvg-devel make policycoreutils-python-utils qt5-qtmultimedia-devel qt5-qtbase-devel zlib-devel cronie"
@@ -3088,6 +3211,7 @@ fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
+	echo "Using Generic Linux Packages."
 	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
 	# Unsorted
@@ -3096,6 +3220,7 @@ if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NA
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "" ]; then
+	echo "Using packages for Debian on x86-64."
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip / libpython3.10
 	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
@@ -3110,6 +3235,7 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architectur
 fi
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
+	echo "Using Generic Ubuntu Packages."
 	# Same as above for Not Fedora, but includes python-is-python3 for unversioned. Just a symlink I guess. python3.10-venv python3-pip
 	program_list_to_install_actual_dependencies="apache2-utils build-essential clang cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev libqt5websockets5-dev libsqlite3-dev miniupnpc policycoreutils python3.*-venv python3-pip python-is-python3 qtbase5-dev qtmultimedia5-dev qttools5-dev libwebp-dev libzstd-dev"
 	program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev libvpx-dev mini-httpd nginx openssl qt5keychain-dev sqlite3"
@@ -3118,10 +3244,11 @@ if [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	# program_list_to_install_actual_dependencies="cmake extra-cmake-modules g++ libgif-dev libkf5archive-dev libkf5dnssd-dev libminiupnpc-dev libqt5network5 libqt5svg5-dev miniupnpc qtbase5-dev qtmultimedia5-dev qttools5-dev python3.10-venv python3-pip policycoreutils python-is-python3 python3.*-venv clang build-essential apache2-utils libqt5websockets5-dev"
 	# program_list_to_install_optional_dependencies="libmicrohttpd-dev libsodium-dev libsystemd-dev mini-httpd nginx openssl qt5keychain-dev libvpx-dev sqlite3"
 fi
+comment_EOF_Old_Package_Selection_Method
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
+echo
 app_does_not_exist=0
 app_installed=0
 app_not_installed=0
@@ -3332,34 +3459,75 @@ echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
 echo
+<<comment_EOF
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+https://sh.rustup.rs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+askmeaboutloom — 5:23 PM - 2025-09-15
+-s means to read the script from stdin, -- means to stop processing arguments, -y afterwards is an argument to the install script, not to sh.
+Which presumably means "yes to all"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Options:
+  -v, --verbose
+          Set log level to 'DEBUG' if 'RUSTUP_LOG' is unset
+  -q, --quiet
+          Disable progress output, set log level to 'WARN' if 'RUSTUP_LOG' is unset
+  -y
+          Disable confirmation prompt
+      --default-host <DEFAULT_HOST>
+          Choose a default host triple
+      --default-toolchain <DEFAULT_TOOLCHAIN>
+          Choose a default toolchain to install. Use 'none' to not install any toolchains at all
+      --profile <PROFILE>
+          [default: default] [possible values: minimal, default, complete]
+  -c, --component <COMPONENT>
+          Comma-separated list of component names to also install
+  -t, --target <TARGET>
+          Comma-separated list of target names to also install
+      --no-update-default-toolchain
+          Don't update any existing default toolchain after install
+      --no-modify-path
+          Don't configure the PATH environment variable
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+comment_EOF
+
 echo "${bold}${cyan}***** Update Rust Installation . . . *****${normal}"
 echo
-
+# rustup self uninstall
 function rust_install_or_update_function () {
 	# https://www.rust-lang.org/tools/install
 	if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [ "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]; then
 		# Needed for Raspbian for Desktop
 		# rustup installs incorrect version when 64 bit kernel enabled in 32bit OS
 		#     https://github.com/rust-lang/rustup/issues/3307
-		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-		echo
+		
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-i686-unknown-linux-gnu
+		
+		# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+		# echo
 		. ~/.cargo/env
-		rustup install --force-non-host stable-i686-unknown-linux-gnu
+		# rustup install --force-non-host stable-i686-unknown-linux-gnu
 		echo
-		rustup default stable-i686-unknown-linux-gnu
+		# rustup default stable-i686-unknown-linux-gnu
 	else
 		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 		echo
 		. ~/.cargo/env
 	fi
 	echo
+	. ~/.cargo/env
 	rustc --version
 }
 
-# Necessary in Fedora to prevent unexpected install messsage when doing version testing.
+# Necessary in Fedora to prevent unexpected install message when doing version testing.
 # unset command_not_found_handle
+# . ~/.cargo/env
+. ~/.cargo/env > /dev/null 2>&1
 
-if ! rustc --version 2> /dev/null; then
+if ! rustc --version > /dev/null 2>&1; then
     echo "Rust is not installed."
 	echo
 	rust_install_or_update_function
@@ -3367,9 +3535,10 @@ else
 	current_version=$( rustc --version 2> /dev/null | awk '{ print $2 }' )
 	required_version="1.66.1"
 	if [ ! -z "$current_version" ]; then
-		echo "Rust Version: $current_version"
+		echo "Rust Version Installed: $current_version"
+		echo
 		if [ "$(printf '%s\n' "$required_version" "$current_version" | sort -V | head -n1)" = "$required_version" ]; then 
-			echo "Rust is up to date or past minimum version ($required_version) required. Skipping update."
+			echo "Rust is past minimum version ($required_version) required. Skipping update."
 		else
 			echo "Version installed ($current_version) is less than requirement: $required_version"
 			echo "Updating rust."
@@ -4403,8 +4572,8 @@ function compile_drawpile_client_only_function () {
 	echo
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
-			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_version" = "${drawpile_version_script_check}-dirty" ]]; then
+			echo "${green}Drawpile Client $drawpile_version compiled successfully!${normal}"
 			echo
 			drawpile_client_shortcut_function
 			
@@ -4446,8 +4615,8 @@ function compile_drawpile_client_only_function () {
 			echo
 			sleep 10
 		elif [[ "$git_clone_dp_checkout" = "2" ]] || [[ "$git_clone_dp_checkout" = "3" ]]; then
-			if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
-				echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+			if [[ "$drawpile_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_version" = "${drawpile_version_script_check}-dirty" ]]; then
+				echo "${green}Drawpile Client $drawpile_version compiled successfully!${normal}"
 				echo
 				drawpile_client_shortcut_function
 				echo
@@ -4504,8 +4673,8 @@ function drawpile_client_compile_verification_function () {
 	fi
 	#Location of created executable --> /usr/local/bin/
 	if [[ -e "/usr/local/bin/drawpile" || -e  "/usr/bin/drawpile" ]]; then
-		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
-			echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+		if [[ "$drawpile_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_version" = "${drawpile_version_script_check}-dirty" ]]; then
+			echo "${green}Drawpile Client $drawpile_version compiled successfully!${normal}"
 			drawpile_client_compile_verification=1
 			echo
 		else
@@ -4538,8 +4707,8 @@ function drawpile_client_compile_verification_function () {
 			echo
 			sleep 10
 		elif [[ "$git_clone_dp_checkout" = "2" ]] || [[ "$git_clone_dp_checkout" = "3" ]]; then
-			if [[ "$drawpile_version" = "$drawpile_version_script_check" ]]; then
-				echo "${green}Drawpile $drawpile_version compiled successfully!${normal}"
+			if [[ "$drawpile_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_version" = "${drawpile_version_script_check}-dirty" ]]; then
+				echo "${green}Drawpile Client $drawpile_version compiled successfully!${normal}"
 				echo
 			else
 				echo "${red}Drawpile $drawpile_version has been detected but is not${normal}"
@@ -4608,7 +4777,7 @@ function drawpile_srv_compile_verification_function () {
 	fi
 	
 	if [[ ( -e "/usr/local/bin/drawpile-srv" || -e "/usr/bin/drawpile-srv" ) || -e "$dp_install_loc/Programs/Drawpile/build/bin/drawpile-srv" ]]; then
-		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_srv_version" = "${drawpile_version_script_check}-dirty" ]]; then
 			echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
 			drawpile_srv_compile_verification=1
 			echo
@@ -4644,7 +4813,7 @@ function drawpile_srv_compile_verification_function () {
 		elif [[ "$git_clone_dp_checkout" = "2" ]] || [[ "$git_clone_dp_checkout" = "3" ]]; then
 			# 2 is a release version, but not checked by script author. Verifiable.
 			# 3 is a release version, and checked by script author. Verifiable.
-				if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]]; then
+				if [[ "$drawpile_srv_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_srv_version" = "${drawpile_version_script_check}-dirty" ]]; then
 					echo "${green}Drawpile-srv $drawpile_srv_version compiled successfully!${normal}"
 					echo
 				else
@@ -4714,7 +4883,7 @@ function drawpile_tools_compile_verification_function () {
 	
 	# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	if [[ -e "/usr/local/bin/drawpile-cmd" && -e "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/drawpile-cmd" && -e "/usr/bin/dprectool" ]]; then
-		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" ]] && [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$drawpile_cmd_version" = "$drawpile_version_script_check" && "$dprec_tool_version" = "$drawpile_version_script_check" ]] || [[ "$drawpile_cmd_version" = "${drawpile_version_script_check}-dirty" && "$dprec_tool_version" = "${drawpile_version_script_check}-dirty" ]]; then
 			echo "${green}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version compiled successfully!${normal}"
 		else
 			echo "${red}Drawpile-cmd $drawpile_cmd_version and dprectool $dprec_tool_version have been detected but${normal}"
@@ -4748,7 +4917,7 @@ function drawpile_dprectool_compile_verification_function () {
 	fi
 
 	if [[ "/usr/local/bin/dprectool" ]] || [[ -e "/usr/bin/dprectool" ]]; then
-		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]]; then
+		if [[ "$dprec_tool_version" = "$drawpile_version_script_check" ]] || [[ "$dprec_tool_version" = "${drawpile_version_script_check}-dirty" ]]; then
 			echo "${green}Dprectool $dprec_tool_version compiled successfully!${normal}"
 		else
 			echo "${red}Dprectool $dprec_tool_version have been detected but${normal}"
@@ -11709,7 +11878,7 @@ if [ "$local_or_remote" == "Local" ]; then
 			fi
 		done
 		if [ "$samba_choice" == "1" ] || [ "$samba_choice" == "2" ] || [ "$samba_choice" == "3" ]; then
-
+			echo
 			echo "${bold}${cyan}*****Installing Samba for Windows Network Sharing . . . *****${normal}"
 			echo
 			if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
@@ -11761,7 +11930,7 @@ if [ "$local_or_remote" == "Local" ]; then
 			app_installed=0
 			app_not_installed=0
 			package_install_status_check_function		
-			if [[ "$version_samba" = "(none)" ]] || [[ "$installation_status_samba" = "Available Packages" ]]; then
+			if [[ "${version_samba,,}" = "(none)" ]] || [[ "${installation_status_samba,,}" = "available packages" ]]; then
 				echo "Installing package samba . . ."
 				echo
 				sudo $package_install_program samba # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
@@ -11770,7 +11939,7 @@ if [ "$local_or_remote" == "Local" ]; then
 				echo "Package samba already installed."
 			fi
 			echo
-			if [[ "$version_samba_common_bin" = "(none)" ]] || [[ "$installation_status_samba_common_bin" = "Available Packages" ]]; then
+			if [[ "${version_samba_common_bin,,}" = "(none)" ]] || [[ "${installation_status_samba_common_bin,,}" = "available packages" ]]; then
 				echo "Installing package samba . . ."
 				echo
 				if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
@@ -11782,7 +11951,7 @@ if [ "$local_or_remote" == "Local" ]; then
 				sudo $package_install_program samba-common-bin # || echo "" && echo "${bold}${red}Installation failed.${normal}" && echo "" && sleep 30
 				echo
 			else
-				echo "Package samba already installed."
+				echo "Package samba-common (or samba-common bin) already installed."
 			fi
 			echo
 			if [[ ! -e /etc/samba/smb.conf.bak && -e /etc/samba/smb.conf ]]; then
@@ -12217,7 +12386,9 @@ if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NA
 fi
 
 # Apache check
-if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]]; then
+if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "${installation_status_apache2,,}" == "installed packages" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "${installation_status_apache2,,}" == "installed packages" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]]; then
+
+# if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$installation_status_apache2" == "Installed Packages" && "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]] || [[ "$port_80_listening" == "LISTEN" && "$port_80_listening_app" != "nginx" ]] || [[ "$port_443_listening" == "LISTEN" && "$port_443_listening_app" != "nginx" ]]; then
 	# Checks if apache is installed and active in non-Fedora with apt-cache, installed and active in Fedora with dnf, or if some generic service using port 80 or port 443.
 	if [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" && "$port_80_listening" == "LISTEN" ]] || [[ "$is_apache_2_installed" != "(none)" && "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$port_443_listening" == "LISTEN" ]]; then
 		# Checks if apache is installed and active in non-Fedora with apt-cache
@@ -12325,14 +12496,14 @@ elif [[ "$is_apache_2_installed" = "(none)" && "$what_linux_name" != "NAME=\"Fed
 	sudo sed -i '\!^apache_port_443 =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache_port_443 = '"no"'!;H};x}' $app_installation_status_file
 	echo "${green}Apache2 or other website hosting service is not installed.${normal}"
 	echo "${green}No conflict detected with NGINX web server.${normal}"
-elif [[ "$installation_status_apache2" == "Available Packages" && "$port_80_listening" != "LISTEN" && "$port_443_listening" != "LISTEN" ]]; then
+elif [[ "${installation_status_apache2,,}" == "available packages" && "$port_80_listening" != "LISTEN" && "$port_443_listening" != "LISTEN" ]]; then
 	sudo sed -i '\!^apache =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache = '"no"'!;H};x}' $app_installation_status_file
 	sudo sed -i '\!^apache_port_80 =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache_port_80 = '"no"'!;H};x}' $app_installation_status_file
 	sudo sed -i '\!^apache_port_443 =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache_port_443 = '"no"'!;H};x}' $app_installation_status_file
 	echo "${green}Apache HTTP server (httpd apparently in Fedora, aka Apache2) or other${normal}"
 	echo "${green}website hosting service is not installed. No conflict detected with${normal}"
 	echo "${green}NGINX web server.${normal}"
-elif [[ "$installation_status_apache2" == "Installed Packages" && "$port_80_listening" != "LISTEN" && "$port_443_listening" != "LISTEN" ]]; then
+elif [[ "${installation_status_apache2,,}" == "installed packages" && "$port_80_listening" != "LISTEN" && "$port_443_listening" != "LISTEN" ]]; then
 	sudo sed -i '\!^apache =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!apache = '"yes"'!;H};x}' $app_installation_status_file
 	sudo sed -i '\!^apache_port_80 =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache_port_80 = '"no"'!;H};x}' $app_installation_status_file
 	sudo sed -i '\!^apache_port_443 =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!apache_port_443 = '"no"'!;H};x}' $app_installation_status_file
@@ -12608,6 +12779,39 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 	# --------------------------------------------------------------------------------
 	# --------------------------------------------------------------------------------
 
+	function favicon_instructions_function () {
+		echo "Please prepare for images in the PNG file type with the filenames listed below."
+		echo "Think of this as a logo to represent your server community and show up in the"
+		echo "Session, Browse menu (for the beta client)."
+		echo
+		[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place them here: "
+		[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+		[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
+		[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
+		[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+		[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
+		[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+		[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
+		[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these three locations below: "
+		[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
+		[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
+		[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
+		echo
+		echo "The script will handle the rest of the required configuration."
+		echo "Using other configurations is not recommended except for advanced users."
+		echo
+		echo 'Resolution / Filename'
+		echo '16x16      / 16.png'
+		echo '32x32      / 32.png'
+		echo '48x48      / 48.png'
+		echo '64x64      / 64.png'
+		echo '128x128    / 128.png (maximum size used by DP client)'
+		echo 
+		echo 'To make a favicon, start with a square image. You can use this website'
+		echo 'for a quick way to turn it into a favicon.'
+		echo '     https://favicon.io/favicon-converter/'
+	}
+
 	function generate_list_server_config_filename () {
 		echo "${bold}${cyan}***** Configuring settings for List Server . . . *****${normal}"
 		echo
@@ -12726,38 +12930,6 @@ elif [[ "$ssl_encryption_config" == "1" ]] || [[ "$ssl_encryption_config" == "2"
 			echo "the favicon file. The default location will be the the following location:"
 			echo "     https://$hostname/128.png"
 			echo
-			function favicon_instructions_function () {
-				echo "Please prepare for images in the PNG file type with the filenames listed below."
-				echo "Think of this as a logo to represent your server community and show up in the"
-				echo "Session, Browse menu (for the beta client)."
-				echo
-				[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place them here: "
-				[[ "$dp_install_loc" == "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
-				[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
-				[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
-				[[ "$dp_install_loc" != "$script_directory" && ! -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
-				[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these two locations below: "
-				[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
-				[[ "$dp_install_loc" == "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
-				[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "Once prepared, please place in one of these three locations below: "
-				[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $script_directory"
-				[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $dp_install_loc"
-				[[ "$dp_install_loc" != "$script_directory" && -d "$list_server_favicon_location_entry" ]] && echo "     $list_server_favicon_location_entry"
-				echo
-				echo "The script will handle the rest of the required configuration."
-				echo "Using other configurations is not recommended except for advanced users."
-				echo
-				echo 'Resolution / Filename'
-				echo '16x16      / 16.png'
-				echo '32x32      / 32.png'
-				echo '48x48      / 48.png'
-				echo '64x64      / 64.png'
-				echo '128x128    / 128.png (maximum size used by DP client)'
-				echo 
-				echo 'To make a favicon, start with a square image. You can use this website'
-				echo 'for a quick way to turn it into a favicon.'
-				echo '     https://favicon.io/favicon-converter/'
-			}
 			favicon_instructions_function
 			echo
 			echo "Leaving the field blank will assume there is no icon to be used."
@@ -13743,18 +13915,30 @@ EOF
 			echo '16x16      / 16.png'
 			echo
 			pause
-			if [[ -e  "$dp_install_loc/16.png" ]]; then
-				sudo cp $dp_install_loc/16.png /var/www/html/drawpile/16.png
-			elif [[ -e  "$script_directory/16.png" ]]; then
-				sudo cp $script_directory/16.png /var/www/html/drawpile/16.png
-			elif [[ -d "$list_server_favicon_location_entry/16.png" ]]; then
-				sudo cp "$list_server_favicon_location_entry/16.png" /var/www/html/drawpile/16.png
-			else
-				echo "Ok, fine, find out what happens when you don't read instructions."
-				echo "Exiting script."
-				pause
-				exit
-			fi
+			echo
+			echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+			echo
+			while :; do
+				if [[ -e  "$dp_install_loc/16.png" ]]; then
+					sudo cp $dp_install_loc/16.png /var/www/html/drawpile/16.png
+					break
+				elif [[ -e  "$script_directory/16.png" ]]; then
+					sudo cp $script_directory/16.png /var/www/html/drawpile/16.png
+					break
+				elif [[ -d "$list_server_favicon_location_entry/16.png" ]]; then
+					sudo cp "$list_server_favicon_location_entry/16.png" /var/www/html/drawpile/16.png
+					break
+				else
+					echo
+					echo "File not located, require png icon to proceed."
+					echo "Please re-read instructions or press Ctrl + C to exit script."
+					echo
+					pause
+					echo
+					echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+					echo
+				fi
+			done
 		fi
 		if [[ -e  "$dp_install_loc/32.png" ]]; then
 			sudo cp $dp_install_loc/32.png /var/www/html/drawpile/32.png
@@ -13769,18 +13953,30 @@ EOF
 			echo '32x32      / 32.png'
 			echo
 			pause
-			if [[ -e  "$dp_install_loc/32.png" ]]; then
-				sudo cp $dp_install_loc/32.png /var/www/html/drawpile/32.png
-			elif [[ -e  "$script_directory/32.png" ]]; then
-				sudo cp $script_directory/32.png /var/www/html/drawpile/32.png
-			elif [[ -d "$list_server_favicon_location_entry/32.png" ]]; then
-				sudo cp "$list_server_favicon_location_entry/32.png" /var/www/html/drawpile/32.png
-			else
-				echo "Ok, fine, find out what happens when you don't read instructions."
-				echo "Exiting script."
-				pause
-				exit
-			fi
+			echo
+			echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+			echo
+			while :; do
+				if [[ -e  "$dp_install_loc/32.png" ]]; then
+					sudo cp $dp_install_loc/32.png /var/www/html/drawpile/32.png
+					break
+				elif [[ -e  "$script_directory/32.png" ]]; then
+					sudo cp $script_directory/32.png /var/www/html/drawpile/32.png
+					break
+				elif [[ -d "$list_server_favicon_location_entry/32.png" ]]; then
+					sudo cp "$list_server_favicon_location_entry/32.png" /var/www/html/drawpile/32.png
+					break
+				else
+					echo
+					echo "File not located, require png icon to proceed."
+					echo "Please re-read instructions or press Ctrl + C to exit script."
+					echo
+					pause
+					echo
+					echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+					echo
+				fi
+			done
 		fi
 		if [[ -e  "$dp_install_loc/48.png" ]]; then
 			sudo cp $dp_install_loc/48.png /var/www/html/drawpile/48.png
@@ -13795,18 +13991,30 @@ EOF
 			echo '48x48      / 48.png'
 			echo
 			pause
-			if [[ -e  "$dp_install_loc/48.png" ]]; then
-				sudo cp $dp_install_loc/48.png /var/www/html/drawpile/48.png
-			elif [[ -e  "$script_directory/48.png" ]]; then
-				sudo cp $script_directory/48.png /var/www/html/drawpile/48.png
-			elif [[ -d "$list_server_favicon_location_entry/48.png" ]]; then
-				sudo cp "$list_server_favicon_location_entry/48.png" /var/www/html/drawpile/48.png
-			else
-				echo "Ok, fine, find out what happens when you don't read instructions."
-				echo "Exiting script."
-				pause
-				exit
-			fi
+			echo
+			echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+			echo
+			while :; do
+				if [[ -e  "$dp_install_loc/48.png" ]]; then
+					sudo cp $dp_install_loc/48.png /var/www/html/drawpile/48.png
+					break
+				elif [[ -e  "$script_directory/48.png" ]]; then
+					sudo cp $script_directory/48.png /var/www/html/drawpile/48.png
+					break
+				elif [[ -d "$list_server_favicon_location_entry/48.png" ]]; then
+					sudo cp "$list_server_favicon_location_entry/48.png" /var/www/html/drawpile/48.png
+					break
+				else
+					echo
+					echo "File not located, require png icon to proceed."
+					echo "Please re-read instructions or press Ctrl + C to exit script."
+					echo
+					pause
+					echo
+					echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+					echo
+				fi
+			done
 		fi
 		if [[ -e  "$dp_install_loc/64.png" ]]; then
 			sudo cp $dp_install_loc/64.png /var/www/html/drawpile/64.png
@@ -13821,18 +14029,30 @@ EOF
 			echo '64x64      / 64.png'
 			echo
 			pause
-			if [[ -e  "$dp_install_loc/64.png" ]]; then
-				sudo cp $dp_install_loc/64.png /var/www/html/drawpile/64.png
-			elif [[ -e  "$script_directory/64.png" ]]; then
-				sudo cp $script_directory/64.png /var/www/html/drawpile/64.png
-			elif [[ -d "$list_server_favicon_location_entry/64.png" ]]; then
-				sudo cp "$list_server_favicon_location_entry/64.png" /var/www/html/drawpile/64.png
-			else
-				echo "Ok, fine, find out what happens when you don't read instructions."
-				echo "Exiting script."
-				pause
-				exit
-			fi
+			echo
+			echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+			echo
+			while :; do
+				if [[ -e  "$dp_install_loc/64.png" ]]; then
+					sudo cp $dp_install_loc/64.png /var/www/html/drawpile/64.png
+					break
+				elif [[ -e  "$script_directory/64.png" ]]; then
+					sudo cp $script_directory/64.png /var/www/html/drawpile/64.png
+					break
+				elif [[ -d "$list_server_favicon_location_entry/64.png" ]]; then
+					sudo cp "$list_server_favicon_location_entry/64.png" /var/www/html/drawpile/64.png
+					break
+				else
+					echo
+					echo "File not located, require png icon to proceed."
+					echo "Please re-read instructions or press Ctrl + C to exit script."
+					echo
+					pause
+					echo
+					echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+					echo
+				fi
+			done
 		fi
 		if [[ -e  "$dp_install_loc/128.png" ]]; then
 			sudo cp $dp_install_loc/128.png /var/www/html/drawpile/128.png
@@ -13847,18 +14067,30 @@ EOF
 			echo '128x128    / 128.png (maximum size used by DP client)'
 			echo
 			pause
-			if [[ -e  "$dp_install_loc/128.png" ]]; then
-				sudo cp $dp_install_loc/128.png /var/www/html/drawpile/128.png
-			elif [[ -e  "$script_directory/128.png" ]]; then
-				sudo cp $script_directory/128.png /var/www/html/drawpile/128.png
-			elif [[ -d "$list_server_favicon_location_entry/128.png" ]]; then
-				sudo cp "$list_server_favicon_location_entry/128.png" /var/www/html/drawpile/128.png
-			else
-				echo "Ok, fine, find out what happens when you don't read instructions."
-				echo "Exiting script."
-				pause
-				exit
-			fi
+			echo
+			echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+			echo
+			while :; do
+				if [[ -e  "$dp_install_loc/128.png" ]]; then
+					sudo cp $dp_install_loc/128.png /var/www/html/drawpile/128.png
+					break
+				elif [[ -e  "$script_directory/128.png" ]]; then
+					sudo cp $script_directory/128.png /var/www/html/drawpile/128.png
+					break
+				elif [[ -d "$list_server_favicon_location_entry/128.png" ]]; then
+					sudo cp "$list_server_favicon_location_entry/128.png" /var/www/html/drawpile/128.png
+					break
+				else
+					echo
+					echo "File not located, require png icon to proceed."
+					echo "Please re-read instructions or press Ctrl + C to exit script."
+					echo
+					pause
+					echo
+					echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+					echo
+				fi
+			done
 		fi
 		
 		if [[ -e "$dp_install_loc/favicon.ico" ]]; then
@@ -14374,6 +14606,7 @@ EOF
 			else
 				echo "This message should not be visible for: Preparing Favicon Setup"
 			fi
+			echo
 			favicon_copy_function
 			sudo sed -i '\!<link rel="stylesheet" href="/css/styles.css">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!;H};x}' /var/www/html/drawpile/index.html
 			sudo sed -i '\!	<link rel="icon" type="image/png" href="/16.png" sizes="16x16">!{x;\!^$!{s!!	<link rel="icon" type="image/png" href="/32.png" sizes="32x32">!;H};x}' /var/www/html/drawpile/index.html
@@ -15824,25 +16057,32 @@ echo
 sudo chmod 777 $app_installation_status_file
 sudo chmod 777 $drawpile_configuration_values_file
 # sudo adduser $current_username drawpileread
-if [[ -e "/home/drawpileuser/cert.pem" ]]; then sudo chmod 700 /home/drawpileuser/cert.pem; fi
-if [[ -e "/home/drawpileuser/key.pem" ]]; then sudo chmod 700 /home/drawpileuser/key.pem; fi
+# SSL certs are stored in this location: /etc/nginx/ssl/drawpile/cert.pem;
+# if [[ -e "/home/drawpileuser/cert.pem" ]]; then sudo chmod 700 /home/drawpileuser/cert.pem; fi
+# if [[ -e "/home/drawpileuser/key.pem" ]]; then sudo chmod 700 /home/drawpileuser/key.pem; fi
 sudo chown drawpileuser:drawpileread /home/drawpileuser/ -R
 
-variable_to_read_1="dp_srv_startup"
-variable_to_read_2=""
-variable_to_read_3=""
 
-value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
-value_description_2="server powers on?"
-value_description_3=" "
-value_description_4="${bold}${cyan}1 - Socket Activation${normal}"
-value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Raspberry Pi or Remote Servers${normal}"
+dp_srv_startup=$( grep -m 1 "dp_srv_startup = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+if [ "$dp_srv_startup" == "2" ]; then
+	echo "Already configured for Always on Service, skipping section."
+elif [ -z "$dp_srv_startup" ] || [ "$dp_srv_startup" = "=" ] || [ "$dp_srv_startup" == "1" ]; then
 
-read_stored_config_value_query_function
-if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
-	echo "Storing value and moving on."
-	dp_srv_startup=$read_stored_config_value_query_1
-elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
+# variable_to_read_1="dp_srv_startup"
+# variable_to_read_2=""
+# variable_to_read_3=""
+
+# value_description_1="Enable socket activation or start drawpile-srv when the Raspberry Pi or"
+# value_description_2="server powers on?"
+# value_description_3=" "
+# value_description_4="${bold}${cyan}1 - Socket Activation${normal}"
+# value_description_5="${bold}${cyan}2 - Always on Service - Recommended for Raspberry Pi or Remote Servers${normal}"
+
+# read_stored_config_value_query_function
+# if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] || [ "$maybe_use_config_value" == "yes" ] || [ "$maybe_use_config_value" == "YES" ] || [ "$maybe_use_config_value" == "Yes" ]; then
+	# echo "Storing value and moving on."
+	# dp_srv_startup=$read_stored_config_value_query_1
+# elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	echo 'Enable socket activation or start drawpile-srv when the Raspberry Pi or'
 	echo 'server powers on?'
 	echo
@@ -15855,7 +16095,24 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	echo '    the time in the background.'
 	echo
 	while :; do
-	read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " dp_srv_startup
+		# Uncomment this part if restoring this choice section. Removed when socket activation removed from Drawpile.
+		# dp_srv_startup=$( grep -m 1 "dp_srv_startup = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		if [ -z "$dp_srv_startup" ] || [ "$dp_srv_startup" = "=" ]; then
+			# read -r -p "${bold}${cyan}Enter a number and hit enter to continue${normal}: " dp_srv_startup
+			echo "Socket activation is no longer supported, automatically setting server to Always on Service."
+			dp_srv_startup=2
+		else
+			if [ "$dp_srv_startup" == "1" ]; then
+				echo "${bold}${cyan}Previously set to Socket activation. Setting to Always on Service.${normal}"
+				dp_srv_startup=2
+			else
+				# elif [ "$dp_srv_startup" == "2" ]; then
+				# echo "${bold}${cyan}Previously set to Always on Service. Setting to Socket activation.${normal}"
+				#dp_srv_startup=1
+				# Socket Activation is no longer a supported start up type. Commenting out. 
+				dp_srv_startup=2
+			fi
+		fi
 		[[ $dp_srv_startup =~ ^[0-9]+$ ]] || { echo; echo "Enter a valid number."; echo; continue; }
 		if (( $dp_srv_startup >= 1 && $dp_srv_startup <= 2)); then
 			break
@@ -15867,8 +16124,10 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 	done
 	if [ "`systemctl is-enabled drawpile-srv.service`" = "enabled" ] || [ "`systemctl is-enabled drawpile-srv.socket`" = "enabled" ]; then
 		# Ensures files in place are up to date, copying over new files if the service is enabled and setting is being changed.
+		# https://github.com/drawpile/Drawpile/blob/main/src/thinsrv/systemd/service.in
 		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv01.service" /etc/systemd/system/
 		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv02.service" /etc/systemd/system/
+		# https://github.com/drawpile/Drawpile/blob/main/src/thinsrv/systemd/socket.in
 		sudo cp "$dp_install_loc/Programs/Drawpile/server/drawpile-srv.socket" /etc/systemd/system/
 		wait $!
 		sudo systemctl daemon-reload
@@ -15884,6 +16143,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			wait $!
 			sudo systemctl disable drawpile-srv.service
 			sudo systemctl stop --now drawpile-srv.service
+			wait $!
+			sudo systemctl reset-failed drawpile-srv.socket
+			sudo systemctl reset-failed drawpile-srv.service
 			wait $!
 		fi
 		sudo cp /etc/systemd/system/drawpile-srv01.service /etc/systemd/system/drawpile-srv.service
@@ -15906,6 +16168,9 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 			sudo systemctl stop --now drawpile-srv.socket
 			wait $!
 			sudo systemctl stop --now drawpile-srv.service
+			wait $!
+			sudo systemctl reset-failed drawpile-srv.socket
+			sudo systemctl reset-failed drawpile-srv.service
 			wait $!
 		fi
 		sudo cp /etc/systemd/system/drawpile-srv02.service /etc/systemd/system/drawpile-srv.service
@@ -15939,9 +16204,16 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 		sudo systemctl status drawpile-monitor.service  --no-pager -l
 		wait $!
 	fi
+# else
+# 	echo "This message should not be visible."
+# fi
 else
-	echo "This message should not be visible."
-fi
+ 	echo "${bold}${red}This message should not be visible for server startup type, only one option available.${normal}"
+	echo "${bold}${red}Script will exit in 30 seconds.${normal}"
+	echo
+	sleep 30
+	exit
+ fi
 echo
 echo '--------------------------------------------------------------------------------'
 echo '--------------------------------------------------------------------------------'
@@ -15949,6 +16221,104 @@ echo
 echo "${bold}${cyan}***** Configure Pi for Home Network Ad-Blocking . . . *****${normal}"
 echo
 if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" == "NAME=\"Raspbian GNU/Linux\"" ) && "$verify_if_this_is_raspbian_or_debian" == "Raspberry Pi" ]]; then
+
+	Pi_Hole_Status=$( grep -m 1 "Pi_Hole_Status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+
+	if [ "${Pi_Hole_Status,,}" == "yes" ] ; then
+		echo "${bold}${green}Detected that you previously selected to install Pi-hole.${normal}"
+
+		if [[ -e "/$dp_install_loc/default-sites-available-backup" ]] && [[ ! -e "/$dp_install_loc/default-sites-available-pihole-backup" ]]; then
+			echo "Pi-hole should be updated to no longer require LigHTTPD or NGINX, so the configuration"
+			echo "set aside for Pi-hole should be removed."
+			echo
+			echo "The file modified was --> /etc/nginx/sites-available/default"
+			echo
+			echo "${bold}${green}A backup of this file was detected, located here:${normal}"
+			echo "     /$dp_install_loc/default-sites-available-backup"
+			echo
+			echo "Would you like to update Pi-Hole and then restore this backup file?"
+			echo "Update command will be ran with:     sudo pihole -up"
+		elif [[ -e "/$dp_install_loc/default-sites-available-backup" ]] && [[ -e "/$dp_install_loc/default-sites-available-pihole-backup" ]]; then
+			echo "${bold}${green}NGINX configuration was previously restored.${normal}"
+			echo "     /$dp_install_loc/default-sites-available-backup"
+			echo "     /$dp_install_loc/default-sites-available-pihole-backup"
+			echo
+			echo "The script will not take ANY action on the existing NGINX configuration."
+			echo "Would you like to update Pi-Hole anyway?"
+		else
+			echo "${bold}${yellow}A backup of this file was not detected, was renamed,${normal}"
+			echo "${bold}${yellow}     or has been deleted.${normal}"
+			echo
+			echo "The script will not take ANY action on the existing NGINX configuration."
+			echo "Would you like to update Pi-Hole anyway?"
+		fi
+		echo
+		while :; do
+			read -r -p "${bold}${cyan}Without quotes, type 'yes' or 'no':${normal} " Pi_Hole_Update_NGINX_Status
+			echo
+			if [ "${Pi_Hole_Update_NGINX_Status,,}" == "yes" ] || [ "${Pi_Hole_Update_NGINX_Status,,}" == "no" ]; then
+				break
+			else
+				echo
+				echo "${bold}${red}Invalid input selection, try again.${normal}"
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+		echo
+		echo ----------------------------------------------------------------------------------
+		echo
+		echo "${bold}${cyan}***********************************************************${normal}"
+		echo "${bold}${cyan}*****              Updating Pi-hole . . .             *****${normal}"
+		echo "${bold}${cyan}***********************************************************${normal}"
+		echo
+		sudo pihole -up
+		echo
+		echo ----------------------------------------------------------------------------------
+		echo
+		if [[ -e "/$dp_install_loc/default-sites-available-backup" ]]; then
+			if [[ ! -e "/$dp_install_loc/default-sites-available-pihole-backup" ]]; then
+				echo "${bold}${cyan}***** Restoring prior configuration . . . *****${normal}"
+				echo
+				echo "Backing up file from:"
+				echo "     /etc/nginx/sites-available/default"
+				echo "Backing up file to:"
+				echo "     /$dp_install_loc/default-sites-available-pihole-backup"
+				sudo cp /etc/nginx/sites-available/default "/$dp_install_loc/default-sites-available-pihole-backup"
+				wait $!
+				echo
+				echo "Restoring backup file from location:"
+				echo "     /$dp_install_loc/default-sites-available-backup"
+				echo "Restoring backup file to location:"
+				echo "     /etc/nginx/sites-available/default"
+				sudo cp "/$dp_install_loc/default-sites-available-backup" /etc/nginx/sites-available/default
+				wait $!
+				echo
+				echo "Reloading systemctl daemon, modules, and nginx . . ."
+				sudo systemctl daemon-reload
+				wait $!
+				sudo systemctl restart systemd-modules-load
+				wait $!
+				sudo nginx -s reload
+				wait $!
+				sudo systemctl restart nginx.service
+				wait $!
+				systemctl status nginx.service --no-pager -l
+				echo
+				echo '--------------------------------------------------------------------------------'
+				echo
+			else
+				echo "${bold}${cyan}*****    File previously restored       *****${normal}"
+				echo "${bold}${cyan}*****        Skipping step . . .        *****${normal}"
+			fi
+		else
+			echo "${bold}${cyan}***** No prior configuration to restore *****${normal}"
+			echo "${bold}${cyan}*****        Skipping step . . .        *****${normal}"
+		fi
+	fi
+
+
 	variable_to_read_1="Pi_Hole_Status"
 	variable_to_read_2=""
 	variable_to_read_3=""
@@ -15965,10 +16335,13 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		echo "Storing value and moving on."
 		Pi_Hole_Status=$read_stored_config_value_query_1
 	elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
-		echo This is certainly outside the scope of the project, but I will include it as an
-		echo installation option so users can choose to also use it, as there is special
-		echo nginx configuration required to work simultaneously with Drawpile. A description
-		echo of the software from github is included below:
+		echo "NOTE: This is outside the scope of this project. It used to require"
+		echo "special configuration to work simultaneously with Drawpile; which is"
+		echo "why I included it originally. To be specific, it used to rely on"
+		echo "LigHTTPD, but could be made to work with NGINX given some adjustments."
+		echo "This portion of the script may be removed in the future."
+		echo
+		echo "A description of the software from github is included below:"
 		echo
 		echo "${bold}${green}The Pi-hole® is a DNS sinkhole that protects your devices from unwanted content${normal}"
 		echo "${bold}${green}without installing any client-side software.${normal}"
@@ -16050,6 +16423,7 @@ EOF
 			echo
 			echo '--------------------------------------------------------------------------------'	
 			echo
+			<<comment_EOF_PiHole_LigHTTPD_Disable
 			echo Pi-Hole installed. Will start configuration to work with nginx.
 			sleep 10
 			sudo service lighttpd stop
@@ -16133,72 +16507,73 @@ server {
     }
 }
 EOF
+comment_EOF_PiHole_LigHTTPD_Disable
 			echo
 			echo '--------------------------------------------------------------------------------'
 			echo
 			echo "${bold}${cyan}*****Configure Pi-Hole Admin Password in NGINX  . . . *****${normal}"
 			echo
-function nginx_username_and_password_pihole_function () {
-	echo 'Please type in a username you wish to use for making changes to your Pi-Hole'
-	echo 'server. If you make a mistake or need to update the server login, open a new'
-	echo 'terminal window and type in the following:'
-	echo
-	echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole USERNAME PASSWORD'
-	echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole "USERNAME" "PASSWORD"'
-	echo
-	echo
-	echo 'You can change the web interface password itself with this command:'
-	echo
-	echo 'pihole -a -p'
-	echo
-	echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
-	echo 'can be any password you like to use without spaces.'
-	echo
-	# login_credentials_length_minimum="14"
-	while :; do
-		read -r -p "Enter username                    : " nginx_username_pihole_1
-		read -r -p "Enter username again              : " nginx_username_pihole_2
-		pihole_username_length_1=${#nginx_username_pihole_1}
-		pihole_username_length_2=${#nginx_username_pihole_2}
-		echo
-		if [[ "$nginx_username_pihole_1" != "$nginx_username_pihole_2" ]]; then
-			echo "${bold}${red}Usernames entered do not match!${normal}"
-			echo
-		elif (( "$pihole_username_length_1" < "$login_credentials_length_minimum" || "$pihole_username_length_2" < "$login_credentials_length_minimum" )); then
-			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
-			echo "${bold}${red}Please try again.${normal}"
-			echo
-		else
-			break
-		fi
-	done
-	echo
-	echo "${bold}${green}Your Pi-Hole Administration username is :${normal} $nginx_username_pihole_1"
-	echo
-	while :; do
-		read -r -p "Enter password                    : " nginx_htpasswd_pihole_1
-		read -r -p "Enter password again              : " nginx_htpasswd_pihole_2
-		pihole_password_length_1=${#nginx_htpasswd_pihole_1}
-		pihole_password_length_2=${#nginx_htpasswd_pihole_2}
-		echo
-		if [[ "$nginx_htpasswd_pihole_1" != "$nginx_htpasswd_pihole_2" ]]; then
-			echo "${bold}${red}Passwords entered do not match!${normal}"
-			echo
-		elif (( "$pihole_password_length_1" < "$login_credentials_length_minimum" || "$pihole_password_length_2" < "$login_credentials_length_minimum" )); then
-			echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
-			echo "${bold}${red}Please try again.${normal}"
-			echo
-		elif [[ ( "$nginx_username_pihole_1" == "$nginx_htpasswd_pihole_1" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
-			echo "${bold}${red}For security reasons, the username and password${normal}"
-			echo "${bold}${red}cannot be the same. Please try again.${normal}"
-			echo
-		else
-			break
-		fi
-	done
-	echo
-	echo "${bold}${green}Your Pi-Hole Administration password is :${normal} $nginx_htpasswd_pihole_1"
-}
+			function nginx_username_and_password_pihole_function () {
+				echo 'Please type in a username you wish to use for making changes to your Pi-Hole'
+				echo 'server. If you make a mistake or need to update the server login, open a new'
+				echo 'terminal window and type in the following:'
+				echo
+				echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole USERNAME PASSWORD'
+				echo 'sudo htpasswd -bc /etc/nginx/passwords_pihole "USERNAME" "PASSWORD"'
+				echo
+				echo
+				echo 'You can change the web interface password itself with this command:'
+				echo
+				echo 'pihole -a -p'
+				echo
+				echo 'Where USERNAME can be any username you wish to use for login and PASSWORD'
+				echo 'can be any password you like to use without spaces.'
+				echo
+				# login_credentials_length_minimum="14"
+				while :; do
+					read -r -p "Enter username                    : " nginx_username_pihole_1
+					read -r -p "Enter username again              : " nginx_username_pihole_2
+					pihole_username_length_1=${#nginx_username_pihole_1}
+					pihole_username_length_2=${#nginx_username_pihole_2}
+					echo
+					if [[ "$nginx_username_pihole_1" != "$nginx_username_pihole_2" ]]; then
+						echo "${bold}${red}Usernames entered do not match!${normal}"
+						echo
+					elif (( "$pihole_username_length_1" < "$login_credentials_length_minimum" || "$pihole_username_length_2" < "$login_credentials_length_minimum" )); then
+						echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+						echo "${bold}${red}Please try again.${normal}"
+						echo
+					else
+						break
+					fi
+				done
+				echo
+				echo "${bold}${green}Your Pi-Hole Administration username is :${normal} $nginx_username_pihole_1"
+				echo
+				while :; do
+					read -r -p "Enter password                    : " nginx_htpasswd_pihole_1
+					read -r -p "Enter password again              : " nginx_htpasswd_pihole_2
+					pihole_password_length_1=${#nginx_htpasswd_pihole_1}
+					pihole_password_length_2=${#nginx_htpasswd_pihole_2}
+					echo
+					if [[ "$nginx_htpasswd_pihole_1" != "$nginx_htpasswd_pihole_2" ]]; then
+						echo "${bold}${red}Passwords entered do not match!${normal}"
+						echo
+					elif (( "$pihole_password_length_1" < "$login_credentials_length_minimum" || "$pihole_password_length_2" < "$login_credentials_length_minimum" )); then
+						echo "${bold}${red}Less than minimum length required ($login_credentials_length_minimum).${normal}"
+						echo "${bold}${red}Please try again.${normal}"
+						echo
+					elif [[ ( "$nginx_username_pihole_1" == "$nginx_htpasswd_pihole_1" ) && "$nginx_reusing_login_and_password_status" == "disabled" ]]; then
+						echo "${bold}${red}For security reasons, the username and password${normal}"
+						echo "${bold}${red}cannot be the same. Please try again.${normal}"
+						echo
+					else
+						break
+					fi
+				done
+				echo
+				echo "${bold}${green}Your Pi-Hole Administration password is :${normal} $nginx_htpasswd_pihole_1"
+			}
 			if [[ ! -e "/etc/nginx/passwords_pihole" ]]; then
 				if [ ! -z "$nginx_username_1" ] && [ ! -z "$nginx_htpasswd_1" ]; then
 					echo "This step is to create a username for authentication for the Pi-Hole"
@@ -16388,6 +16763,35 @@ if [[ ( "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" || "$what_linux_name" 
 		echo For details, refer to keys features of RPi-Monitor in documentation.
 		echo
 		echo https://github.com/XavierBerger/RPi-Monitor
+		echo
+		if [[ -d "$option_loc_2" ]]; then
+			echo "Once configured, a web page to see system status should be available at"
+			echo "the web address on the Raspberry Pi. A shortcut will be created later."
+			echo "     localhost:8888     OR     http://$(hostname):8888/"
+			echo
+		fi
+		output_test=$(hostname -I | awk '{ print $1 }')
+		if [ "$output_test" != "" ]; then
+			if [[ -d "$option_loc_2" ]]; then
+				echo "You can check from any computer on your home network at:"
+			else
+				echo "Once configured, a web page to see system status should be available at"
+				echo "the web address below from any computer on your home network."
+			fi
+			echo "     http://${output_test}:8888/"
+		fi
+		output_test=$(hostname -I | awk '{ print $2 }')
+		if [ "$output_test" != "" ]; then
+			echo "     http://${output_test}:8888/"
+		fi
+		output_test=$(hostname -I | awk '{ print $3 }')
+		if [ "$output_test" != "" ]; then
+			echo "     http://${output_test}:8888/"
+		fi
+		output_test=$(hostname -I | awk '{ print $4 }')
+		if [ "$output_test" != "" ]; then
+			echo "     http://${output_test}:8888/"
+		fi
 		echo
 		while :; do
 			read -r -p "${bold}${cyan}1 for yes, 2 for no${normal}: " RPi_Monitor_Status
@@ -16689,18 +17093,36 @@ EOF
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
-			rpi_monitor_test_output=n
-			if [ "$rpi_monitor_test_output" == "y" ]; then
+			rpi_monitor_test_output_1=n
+			if [ "$rpi_monitor_test_output_1" == "y" ]; then
 				# Test Section to verify this works for RPi-Monitor
 				drawpile_abuse_report_installation_status=y
+				drawpile_afk_kick_installation_status=n
 				drawpile_monitor_installation_status=y
+				dp_srv_startup
 				fail2ban_status=y
-					# Value 2 is let's encrypt, 1 is for self signed certificates, and 3 is disabled.
+				
+				# Value 2 is let's encrypt, 1 is for self signed certificates, and 3 is disabled.
 				ssl_encryption_config=2
-					# Can be values 1 through 3 to be enabled
-				samba_choice=1
-					# yes must be explicitly typed out.
+				
+				# yes must be explicitly typed out.
 				Pi_Hole_Status=yes
+				
+				# Can be values 1 through 3 to be enabled
+				samba_choice=1
+			fi
+			
+			rpi_monitor_test_output_2=n
+			if [ "$rpi_monitor_test_output_2" == "y" ]; then
+				# Test Section to verify this works for RPi-Monitor
+				drawpile_abuse_report_installation_status=$( grep -m 1 "drawpile_abuse_report_installation_status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				drawpile_afk_kick_installation_status=$( grep -m 1 "drawpile_afk_kick_installation_status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				drawpile_monitor_installation_status=$( grep -m 1 "drawpile_monitor_installation_status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				dp_srv_startup=$( grep -m 1 "dp_srv_startup = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				fail2ban_status=$( grep -m 1 "fail2ban_status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				ssl_encryption_config=$( grep -m 1 "ssl_encryption_config = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				Pi_Hole_Status=$( grep -m 1 "Pi_Hole_Status = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+				samba_choice=$( grep -m 1 "samba_choice = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
 			rpi_start=1
@@ -16870,10 +17292,22 @@ dynamic.$DYN_DP_SRV_SVC_03.source=systemctl status drawpile-srv.service | grep "
 dynamic.$DYN_DP_SRV_SVC_03.regexp=; (.*)
 EOF
 )
+
+			if [ "$dp_srv_startup" == "1" ]; then
+				# 1 - Socket Activation
+				services_conf_contents_drawpile_srv_02=$(cat << EOF
+<tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"=='(dead)'","KO","danger")+"</td><td><b>Drawpile-srv Service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr>
+EOF
+)
+			else
+				# elif [ "$dp_srv_startup" == "2" ]; then
+				# 2 - Always on Service
 				services_conf_contents_drawpile_srv_02=$(cat << EOF
 <tr><td>"+Label(data.drawpile_srv_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile-srv Service</b></td><td>" + data.drawpile_srv_desc + "</td><td>"+Label(data.drawpile_srv_act,"=='(running)'",data.drawpile_srv_runtime,"default")+Label(data.drawpile_srv_act,"!='(running)'","-","default")+"</td></tr>
 EOF
 )
+			fi
+			
 				rpi_increment=3
 				rpi_start=$(($rpi_start + $rpi_increment))
 			}
@@ -16897,9 +17331,11 @@ dynamic.$DYN_DP_SRV_SOCK_03.regexp=; (.*)
 EOF
 )
 				services_conf_contents_drawpile_srv_socket_02=$(cat << EOF
-<tr><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(running)'","KO","danger")+"</td><td><b>Drawpile-srv Socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(running)'","-","default")+"</td></tr>
+<tr><td>"+Label(data.drawpile_srv_socket_act,"=='(listening)'","OK","success")+Label(data.drawpile_srv_socket_act,"=='(running)'","OK","success")+Label(data.drawpile_srv_socket_act,"=='(failed)'","KO","danger")+Label(data.drawpile_srv_socket_act,"=='(dead)'","KO","danger")+Label(data.drawpile_srv_socket_act,"=='(Result: resources)'","KO","danger")+"</td><td><b>Drawpile-srv Socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(listening)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"=='(running)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"=='(failed)'","-","default")+Label(data.drawpile_srv_socket_act,"=='(dead)'","-","default")+Label(data.drawpile_srv_socket_act,"=='(Result: resources)'","-","default")+"</td></tr>
 EOF
 )			
+				# Old config for above, services_conf_contents_drawpile_srv_socket_02... adding conditions individually.
+				# <tr><td>"+Label(data.drawpile_srv_socket_act,"=='(listening)'","OK","success")+Label(data.drawpile_srv_socket_act,"!='(listening)'","KO","danger")+"</td><td><b>Drawpile-srv Socket</b></td><td>" + data.drawpile_srv_socket_desc + "</td><td>"+Label(data.drawpile_srv_socket_act,"=='(listening)'",data.drawpile_srv_socket_runtime,"default")+Label(data.drawpile_srv_socket_act,"!='(listening)'","-","default")+"</td></tr>
 				rpi_increment=3
 				rpi_start=$(($rpi_start + $rpi_increment))
 			}
@@ -17159,7 +17595,7 @@ $services_conf_contents_samba_choice_01" | sed -e ':L;N;s/^\n$//;t L'
 			fi
 			#---------------------------------------------------------------------------------------------------------------------------------
 			#---------------------------------------------------------------------------------------------------------------------------------
-		services_conf_contents=$(cat << EOF
+			services_conf_contents=$(cat << EOF
 ########################################################################
 # Extract information about Opened Port
 #  Page: 1
@@ -17188,14 +17624,14 @@ web.status.1.content.11.icon=daemons.png
 web.status.1.content.11.line.1="<style type=\"text/css\">.tg331 {border-collapse:collapse;border-spacing:0;}.tg331 tr:nth-child(even){background-color: #343434}.tg331 table{border: 0px solid #e9e9e9;}.tg331 td{font-family:Arial, sans-serif;font-size:14px;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:12px 2px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}.tg331 .tg331-yw4l{vertical-align:top;text-align: left;}.tg331 hr {display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset; border-width: 1px;}</style><table width=\"100%\" class=\"tg331\"><tr><td><b>Status</b></td><td><b>Service Name</b></td><td><b>Service Description</b></td><td><b>Run Time</b></td></tr>$services_conf_contents_abuse_report_02$services_conf_contents_afk_bot_02$services_conf_contents_listserver_02$services_conf_contents_drawpile_monitor_02$services_conf_contents_drawpile_srv_02$services_conf_contents_drawpile_srv_socket_02$services_conf_contents_fail2ban_02$services_conf_contents_Lets_Encrypt_02$services_conf_contents_nginx_02$services_conf_contents_PiHole_02$services_conf_contents_rpi_monitor_02$services_conf_contents_samba_choice_02</table>"
 EOF
 )
-services_conf_contents=$( echo "
+			services_conf_contents=$( echo "
 $services_conf_contents" | sed -e ':L;N;s/^\n$//;t L' )
-# The sed line removes double blank lines.
-echo "$services_conf_contents" | sudo tee /etc/rpimonitor/template/services.conf >/dev/null
-sudo service rpimonitor restart
-#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-<<comment_EOF
+			# The sed line removes double blank lines.
+			echo "$services_conf_contents" | sudo tee /etc/rpimonitor/template/services.conf >/dev/null
+			sudo service rpimonitor restart
+			#----------------------------------------------------------------------------------------------------------------------------------------
+			#----------------------------------------------------------------------------------------------------------------------------------------
+			<<comment_EOF
 web.status.1.content.11.title="Services"
 web.status.1.content.11.icon=daemons.png
 
@@ -17299,18 +17735,25 @@ comment_EOF
 			
 			
 				if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] && [ "$what_architecture" == "Architecture: x86-64" ] && [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
+					# Old Line
+					# Exec=/usr/bin/chromium %U http://$pihostname.local:8888
+					# Changed to localhost for better compatibility.
 					cat <<EOF | sudo tee $option_loc_2/RPi-Monitor.desktop >/dev/null
 [Desktop Entry]
 Name=RPi-Monitor
 Comment=RPi-Monitor Web Page
 Terminal=false
-Exec=/usr/bin/chromium %U http://$pihostname.local:8888
+Exec=/usr/bin/chromium %U http://localhost:8888
 Type=Application
 #Icon=/usr/share/rpimonitor/web/img/logo.png
 Icon=$option_loc_4/drawpile_icons/rpi-logo-img.png
 Name[en_GB]=RPi-Monitor
 EOF
 				elif [[ ! -e "$option_loc_2/RPi-Monitor.desktop" ]]; then
+					# Old Line
+					# Exec=chromium-browser http://$pihostname.local:8888
+					# Changed to localhost for better compatibility.
+
 					echo Creating shortcut for RPi-Monitor on Desktop.
 					echo
 					cat <<EOF | sudo tee $option_loc_2/RPi-Monitor.desktop >/dev/null
@@ -17318,7 +17761,7 @@ EOF
 Name=RPi-Monitor
 Comment=RPi-Monitor Web Page
 Terminal=false
-Exec=chromium-browser http://$pihostname.local:8888
+Exec=chromium-browser http://localhost:8888
 Type=Application
 #Icon=/usr/share/rpimonitor/web/img/logo.png
 Icon=$option_loc_4/drawpile_icons/rpi-logo-img.png
@@ -19089,13 +19532,14 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 		echo "sudo do-release-upgrade"
 		echo "sudo reboot"
 	elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-		if [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]]; then
+		if 
+		[[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Fourty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Fourty Two)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]]; then
 			echo "${bold}${red}Read more here:${normal}"
 			echo "     https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/"
 			echo
 			echo "sudo dnf --refresh upgrade"
 			echo "sudo reboot"
-			echo "sudo dnf system-upgrade download --releasever=41"
+			echo "sudo dnf system-upgrade download --releasever=42"
 			echo "sudo dnf system-upgrade reboot"
 		else
 			echo "${bold}${red}Read more here:${normal}"
