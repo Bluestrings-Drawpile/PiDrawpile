@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1427
+drawpilescriptversion=0.1428
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1188,18 +1188,28 @@ function script_update_check_function () {
 # ----------------------------------------------------------------------------------
 # Verify wget is installed.
 # ----------------------------------------------------------------------------------
+
 if [[ "$what_linux_name" != "NAME=\"Fedora Linux\"" && "$what_linux_name" != "NAME=Fedora" ]]; then
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
-elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]]; then
+elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]] || [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" || "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]]; then
 	# elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
-	version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	if dnf info -q wget2 > /dev/null 2>&1; then
+		version_wget=$( dnf info -q wget2 | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info -q wget2 | sed -n '2 p' )
+	else
+		echo "No matching packages to list --> wget2"
+	fi
 	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	else
-		installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		
+		if dnf info -q wget2 > /dev/null 2>&1; then
+			installation_status_wget=$( dnf info -q wget2 | sed -n '1 p' )
+		else
+			echo "No matching packages to list --> wget2"
+		fi
 		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			:
@@ -1209,13 +1219,21 @@ elif [[ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\
 	fi
 	minimum_version_wget=2.1.0
 elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
-	version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
-	installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	if dnf info -q wget > /dev/null 2>&1; then
+		version_wget=$( dnf info -q wget | grep -i "Version" | tail -1 | tr -s " " | awk '{ print $3 }' )
+		installation_status_wget=$( dnf info -q wget | sed -n '2 p' )
+	else
+		echo "No matching packages to list --> wget"
+	fi
 	if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 		# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 		:
 	else
-		installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		if dnf info -q wget > /dev/null 2>&1; then
+			installation_status_wget=$( dnf info -q wget | sed -n '1 p' )
+		else
+			echo "No matching packages to list --> wget"
+		fi
 		if [[ "${installation_status_wget,,}" == "installed packages" || "${installation_status_wget,,}" == "available packages" ]]; then
 			# Do nothing as no error was detected. Symbol --> : (a colon) --> Do nothing beyond expanding arguments and performing redirections. The return status is zero.
 			:
@@ -1233,6 +1251,7 @@ else
 	version_wget=$( apt-cache policy wget | grep "Installed:" | cut -c 14-19 )
 	minimum_version_wget=1.18-5
 fi
+
 
 if [[ "$version_wget" = "(none)" ]] || [[ "$installation_status_wget" = "Available Packages" ]]; then
 	echo "Package ${bold}wget${normal} is not installed."
