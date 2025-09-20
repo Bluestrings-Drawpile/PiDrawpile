@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1426
+drawpilescriptversion=0.1427
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -519,7 +519,9 @@ if [ "$what_linux_name" == "NAME=\"Debian GNU/Linux\"" ] || [ "$what_linux_name"
 elif [ "$what_linux_name" == "NAME=\"Ubuntu\"" ]; then
 	apt_get_function
 	adduser_and_addgroup_function
-	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
+	if [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.3 LTS\"" ]; then
+		echo "${bold}${yellow}Running Ubuntu 24.04.3 LTS.${normal}"
+	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.2 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 24.04.2 LTS.${normal}"
 	elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Ubuntu 24.04.1 LTS\"" ]; then
 		echo "${bold}${green}Running Ubuntu 24.04.1 LTS.${normal}"
@@ -559,7 +561,7 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	
 	if [ -z "$what_fedora_variant" ] || [ -z "$what_fedora_variant_name" ]; then
 		# Values would be null because the VARIANT ID does not exist.
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
 			what_fedora_variant="VARIANT_ID=server"
 			what_fedora_variant_name="server"
 		fi
@@ -570,11 +572,15 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 	useradd_and_groupadd_function
 	check_root_or_sudo_access_function	
 	if [ "$what_fedora_variant_name" == "server" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
-			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Forty Two)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 42.${normal}" && echo "${bold}${yellow}Testing support now...${normal}" && echo "${bold}${yellow}End of Life support is 2026-05-13.${normal}"
+			wget_or_wget2_fedora_function
+		
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Forty One)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Server 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}" && echo "${bold}${yellow}End of Life support is 2025-11-19.${normal}"
 			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Forty)\"" ]; then
-			echo "${bold}${green}Running Fedora Server 40.${normal}"
+			echo "${bold}${green}Running Fedora Server 40.${normal}" && echo "${bold}${yellow}End of Life support is 2025-05-28.${normal}"
 			
 			# Replace wget with wget2 (a modern implementation of wget intended to replace wget 1.x) as the provider of wget.
 			#      https://discussion.fedoraproject.org/t/f40-change-proposal-wget2-as-wget/96422/5
@@ -582,8 +588,8 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			#      https://github.com/rockdaboot/wget2/issues/314#issuecomment-2080858803
 			wget_or_wget2_fedora_function
 			
-		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ]; then
-			echo "${bold}${green}Running Fedora Server 39.${normal}"  && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Server Edition)\"" ] || [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 39 (Thirty Nine)\"" ]; then
+			echo "${bold}${green}Running Fedora Server 39.${normal}" && echo "${bold}${yellow}End of Life support is 2024-11-12.${normal}"
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 38 (Server Edition)\"" ]; then
 			echo "${bold}${green}Running Fedora Server 38.${normal}" && echo && echo "${bold}${yellow}End of Life support is 2024-05-14.${normal}"
 			fedora_end_of_life_function
@@ -621,7 +627,10 @@ elif [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "
 			echo "This message shouldn't be visible to determine Fedora type (Server)."
 		fi
 	elif [ "$what_fedora_variant_name" == "workstation" ]; then
-		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
+		if [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 42 (Workstation Edition)\"" ]; then
+			echo "${bold}${yellow}Running Fedora Workstation 42.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
+			wget_or_wget2_fedora_function
+		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 41 (Workstation Edition)\"" ]; then
 			echo "${bold}${yellow}Running Fedora Workstation 41.${normal}" && echo "${bold}${yellow}Testing support now...${normal}"
 			wget_or_wget2_fedora_function
 		elif [ "$what_linux_flavor" == "PRETTY_NAME=\"Fedora Linux 40 (Workstation Edition)\"" ]; then
@@ -1425,6 +1434,9 @@ function selinux_purge_sessions_adjustments_function () {
 	echo "${bold}${cyan}Needed when running scripts from user's home directory (I think for systemd or crontab jobs)${normal}"
 	echo "Running command: sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'"
 	sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'
+	#
+	# sudo semanage fcontext -a -t user_home_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'
+	# sudo chcon -Rv -u system_u -t user_home_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'
 	echo
 	echo "Running command: sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'"
 	sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'
@@ -2217,7 +2229,8 @@ elif [ "$search_query_type" == "8" ]; then
 				# echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
 				echo
 				echo "1 - Yes"
-				echo "2 - No"
+				echo "2 - Yes - with logging to /var/log/cron-purge-sessions (10,000 lines max)"
+				echo "3 - No"
 				echo
 				while :; do
 					read -r -p "${bold}${cyan}Please select one of the above options, 1 or 2:${normal} " drawpile_archive_file_cleanup_crontab
@@ -2238,6 +2251,66 @@ elif [ "$search_query_type" == "8" ]; then
 					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
+					# For issues with auto cleanup, check that the script ran by looking in /var/log/cron 
+					# The actual results of the script will be stored in /var/log/cron -purge-sessions
+				
+					cat <<EOF | sudo tee "$dp_install_loc/$script_created_location_server_scripts/cron-purge-sessions" >/dev/null
+#!/bin/bash
+
+{ printf "*** %s Max File Count *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1
+
+{ printf "*** %s Age Mode *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1 
+
+{ printf "*** %s Size Mode *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1 
+
+{ printf "************************************************************************************************************************ \n"; } >> /var/log/cron-purge-sessions 2>&1
+{ printf "*************************************** %s Operations completed *************************************** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; } >> /var/log/cron-purge-sessions 2>&1
+{ printf "************************************************************************************************************************ \n"; } >> /var/log/cron-purge-sessions 2>&1
+
+# --------------------------------------------------
+# ---- Log File Management - by Size ----
+# --------------------------------------------------
+
+# Keeps logs from growing over 10 megabytes
+#tail -c 10485760 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# Keeps logs from growing over 5 megabytes
+#tail -c 5242880 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# Keeps logs from growing over 1 megabyte
+#tail -c 1048576 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# Keeps logs from growing over 1 kilobyte
+#tail -c 1096 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# --------------------------------------------------
+# ---- Log File Management - by Number of Lines ----
+# --------------------------------------------------
+# Keep last 1,000 lines.
+# tail -n 1000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# Keep last 5,000 lines.
+# tail -n 5000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+# Keep last 10,000 lines.
+tail -n 10000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+
+EOF
+					sudo chmod 770 "$dp_install_loc/$script_created_location_server_scripts/cron-purge-sessions"
+					
+					
+					echo "${bold}${cyan}Needed when running scripts from user's home directory (I think for systemd or crontab jobs)${normal}"
+					echo "Running command: sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'"
+					sudo semanage fcontext -a -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts/*.*'
+					echo
+					echo "Running command: sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'"
+					sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'
+					
+					echo "Adding crontab job to auto clean files with self limited logging."
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * \"$dp_install_loc/$script_created_location_server_scripts/./cron-purge-sessions\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					
+					
+				elif [ "$drawpile_archive_file_cleanup_crontab" == "3" ]; then
 					echo "Skipping crontab job to be added."
 				else
 					echo "This message should not be visible for Drawpile Archive File Cleanup via Crontab."
