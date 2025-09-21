@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003946
+drawpilescriptversion=2.996003947
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -1070,6 +1070,7 @@ function read_stored_config_value_query_function () {
 	read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+	[ -z "$variable_to_read_4" ] || read_stored_config_value_query_4=$( grep -m 1 "$variable_to_read_4 = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
 		read_stored_config_value_query_null_check=1
@@ -1077,6 +1078,7 @@ function read_stored_config_value_query_function () {
 		read_stored_config_value_query_1=$( grep -m 1 "$variable_to_read_1 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		[ -z "$variable_to_read_2" ] || read_stored_config_value_query_2=$( grep -m 1 "$variable_to_read_2 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 		[ -z "$variable_to_read_3" ] || read_stored_config_value_query_3=$( grep -m 1 "$variable_to_read_3 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+		[ -z "$variable_to_read_4" ] || read_stored_config_value_query_4=$( grep -m 1 "$variable_to_read_4 = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 	fi
 	
 	if [ -z "$read_stored_config_value_query_1" ] || [ "$read_stored_config_value_query_1" = "=" ]; then
@@ -1125,11 +1127,33 @@ function read_stored_config_value_query_function () {
 		[ -z "$value_description_28" ] || echo "$value_description_28"
 		[ -z "$value_description_29" ] || echo "$value_description_29"
 		[ -z "$value_description_30" ] || echo "$value_description_30"
+		[ -z "$value_description_31" ] || echo "$value_description_31"
+		[ -z "$value_description_32" ] || echo "$value_description_32"
+		[ -z "$value_description_33" ] || echo "$value_description_33"
+		[ -z "$value_description_34" ] || echo "$value_description_34"
+		[ -z "$value_description_35" ] || echo "$value_description_35"
+		[ -z "$value_description_36" ] || echo "$value_description_36"
+		[ -z "$value_description_37" ] || echo "$value_description_37"
+		[ -z "$value_description_38" ] || echo "$value_description_38"
+		[ -z "$value_description_39" ] || echo "$value_description_39"
+		[ -z "$value_description_40" ] || echo "$value_description_40"
+		[ -z "$value_description_41" ] || echo "$value_description_41"
+		[ -z "$value_description_42" ] || echo "$value_description_42"
+		[ -z "$value_description_43" ] || echo "$value_description_43"
+		[ -z "$value_description_44" ] || echo "$value_description_44"
+		[ -z "$value_description_45" ] || echo "$value_description_45"
+		[ -z "$value_description_46" ] || echo "$value_description_46"
+		[ -z "$value_description_47" ] || echo "$value_description_47"
+		[ -z "$value_description_48" ] || echo "$value_description_48"
+		[ -z "$value_description_49" ] || echo "$value_description_49"
+		[ -z "$value_description_50" ] || echo "$value_description_50"
 		[ -z "$value_description_1" ] || echo
 		[ -z "$variable_to_read_2" ] || echo "Query 02: $read_stored_config_value_query_2"
 		[ -z "$variable_to_read_2" ] || echo
 		[ -z "$variable_to_read_3" ] || echo "Query 03: $read_stored_config_value_query_3"
 		[ -z "$variable_to_read_3" ] || echo
+		[ -z "$variable_to_read_4" ] || echo "Query 04: $read_stored_config_value_query_4"
+		[ -z "$variable_to_read_4" ] || echo
 		while :; do
 			read -r -p "${bold}${cyan}Would you like to use this value again? (Y)es or (N)o:${normal} " maybe_use_config_value
 			echo
@@ -1146,6 +1170,7 @@ function read_stored_config_value_query_function () {
 	fi
 	variable_to_read_2=""
 	variable_to_read_3=""
+	variable_to_read_4=""
 	
 	value_description_1=""
 	value_description_2=""
@@ -1177,6 +1202,26 @@ function read_stored_config_value_query_function () {
 	value_description_28=""
 	value_description_29=""
 	value_description_30=""
+	value_description_31=""
+	value_description_32=""
+	value_description_33=""
+	value_description_34=""
+	value_description_35=""
+	value_description_36=""
+	value_description_37=""
+	value_description_38=""
+	value_description_39=""
+	value_description_40=""
+	value_description_41=""
+	value_description_42=""
+	value_description_43=""
+	value_description_44=""
+	value_description_45=""
+	value_description_46=""
+	value_description_47=""
+	value_description_48=""
+	value_description_49=""
+	value_description_50=""
 }
 
 <<comment_EOF
@@ -14913,7 +14958,7 @@ EOF
 		# drawpile_configuration_values_file=/home/drawpileuser/Drawpile_Configuration_Values.txt
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.12.0
+		web_admin_release=0.13.0
 		web_admin_release_filename_extension=.tar.gz
 		web_admin_release_filename=dpwebadmin-$web_admin_release$web_admin_release_filename_extension
 		web_admin_release_test_filename=dpwebadmin-$web_admin_release_test$web_admin_release_filename_extension
@@ -19540,6 +19585,7 @@ if [ "$install_all_packages" == "y" ] || [ "$install_all_packages" == "Y" ] || [
 			echo "sudo dnf --refresh upgrade"
 			echo "sudo reboot"
 			echo "sudo dnf system-upgrade download --releasever=42"
+			# Digital Ocean --> Transaction stored to be performed offline. Run `dnf5 offline reboot` to reboot and run the transaction. To cancel the transaction and delete the downloaded files, use `dnf5 offline clean`.
 			echo "sudo dnf system-upgrade reboot"
 		else
 			echo "${bold}${red}Read more here:${normal}"
