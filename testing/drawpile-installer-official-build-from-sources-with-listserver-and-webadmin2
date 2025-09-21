@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003947
+drawpilescriptversion=2.996003948
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -14958,7 +14958,7 @@ EOF
 		# drawpile_configuration_values_file=/home/drawpileuser/Drawpile_Configuration_Values.txt
 		
 		web_admin_release_test=$( grep -m 1 "web_admin_release = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
-		web_admin_release=0.13.0
+		web_admin_release=0.13.1
 		web_admin_release_filename_extension=.tar.gz
 		web_admin_release_filename=dpwebadmin-$web_admin_release$web_admin_release_filename_extension
 		web_admin_release_test_filename=dpwebadmin-$web_admin_release_test$web_admin_release_filename_extension
