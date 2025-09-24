@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1429
+drawpilescriptversion=0.1430
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2285,8 +2285,8 @@ script_created_location_sessions=$script_created_location_sessions
 path_to_delete_parameter=$path_to_delete_parameter
 dp_install_loc_sessions=\$dp_install_loc/Programs/Drawpile-Srv-Files/sessions
 
-enable_dry_run="--dry-run "
-# enable_dry_run=
+# enable_dry_run="--dry-run "
+enable_dry_run=
 cron_purge_sessions_log_location_1="/var/log/cron-purge-sessions"
 cron_purge_sessions_log_location_2="/var/log/cron-purge-sessions2"
 
