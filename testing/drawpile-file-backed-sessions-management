@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1428
+drawpilescriptversion=0.1429
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2276,44 +2276,148 @@ elif [ "$search_query_type" == "8" ]; then
 					cat <<EOF | sudo tee "$dp_install_loc/$script_created_location_server_scripts/cron-purge-sessions" >/dev/null
 #!/bin/bash
 
-{ printf "*** %s Max File Count *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1
+# --------------------------------------------------------------------------------
+# Necessary variables for cleanup.
 
-{ printf "*** %s Age Mode *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1 
+dp_install_loc=$dp_install_loc
+script_created_location_server_scripts=$script_created_location_server_scripts
+script_created_location_sessions=$script_created_location_sessions
+path_to_delete_parameter=$path_to_delete_parameter
+dp_install_loc_sessions=\$dp_install_loc/Programs/Drawpile-Srv-Files/sessions
 
-{ printf "*** %s Size Mode *** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\"; } >> /var/log/cron-purge-sessions 2>&1 
+enable_dry_run="--dry-run "
+# enable_dry_run=
+cron_purge_sessions_log_location_1="/var/log/cron-purge-sessions"
+cron_purge_sessions_log_location_2="/var/log/cron-purge-sessions2"
 
-{ printf "************************************************************************************************************************ \n"; } >> /var/log/cron-purge-sessions 2>&1
-{ printf "*************************************** %s Operations completed *************************************** \n" "$(date "+%Y-%m-%d %H:%M:%S")"; } >> /var/log/cron-purge-sessions 2>&1
-{ printf "************************************************************************************************************************ \n"; } >> /var/log/cron-purge-sessions 2>&1
+maximum_count_parameter=$maximum_count_parameter
+by_session_or_file_parameter=$by_session_or_file_parameter
+age_to_delete_parameter=$age_to_delete_parameter
+size_to_delete_parameter=$size_to_delete_parameter
+
+# --------------------------------------------------------------------------------
+# Variables for displaying system information at time of cleanup.
+
+disk_blocks=\$( df -H --output=size / | awk ' NR==2 ' | sed 's/ //g' )
+disk_in_use=\$( df -H --output=used / | awk ' NR==2 ' | sed 's/ //g' )
+disk_available=\$( df -H --output=avail / | awk ' NR==2 ' | sed 's/ //g' )
+disk_pcent=\$( df -H --output=pcent / | awk ' NR==2 '| sed 's/ //g' )
+
+# Session files are either .session or .session.archived.
+# The actual recordings are .dprec or .dprec.archived.
+SessionTextFiles=\$(sudo find "\$dp_install_loc_sessions" -name "*.sessio*")
+SessionTextFiles_active=\$(sudo find "\$dp_install_loc_sessions" -name "*.session")
+SessionTextFiles_archived=\$(sudo find "\$dp_install_loc_sessions" -name "*.session.archived")
+
+session_recordings_archived=\$(sudo find "\$dp_install_loc_sessions" -name "*.dprec.archived")
+session_recordings=\$(sudo find "\$dp_install_loc_sessions" -name "*.dpre*")
+
+# Uses stored info from variable and prints in nicer looking manner
+NumberOfSessionTextFiles_active=\$(printf '%s\n' "\$SessionTextFiles_active" | wc -l)
+NumberOfSessionTextFiles_archived=\$(printf '%s\n' "\$SessionTextFiles_archived" | wc -l)
+
+number_of_session_recordings_archived=\$(printf '%s\n' "\$session_recordings_archived" | wc -l)
+number_of_session_recordings=\$(printf '%s\n' "\$session_recordings" | wc -l)
+
+disk_sessions_size=\$( du -hs "\$dp_install_loc_sessions" | awk '{ print \$1 }'| sed 's/ //g' )
+
+# --------------------------------------------------------------------------------
+
+{ printf "Current Disk Values                         : \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Blocks                                      : \$disk_blocks \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Used                                        : \$disk_in_use \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Available                                   : \$disk_available \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf '%s\n' "Percent Used                                : \${disk_pcent}"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf -- "-------------------------------------------------------------------------------- \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Current Size of file-backed sessions folder : \$disk_sessions_size\n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total DPREC Recordings                      : \$number_of_session_recordings \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf " \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Archived Session Files                : \$NumberOfSessionTextFiles_archived \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Archived DPREC Recordings             : \$number_of_session_recordings_archived \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Active Session & DPREC Files          : \$NumberOfSessionTextFiles_active \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "************************************************************************************************************************ \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+
+{ printf "*** %s Max File Count *** \n" "\$(date "+%Y-%m-%d %H:%M:%S")"; \$dp_install_loc/\$script_created_location_server_scripts/./purge-sessions --maximum-count=\$maximum_count_parameter \${enable_dry_run}"\$path_to_delete_parameter"; } >> \$cron_purge_sessions_log_location_1 2>&1
+
+{ printf "*** %s Age Mode *** \n" "\$(date "+%Y-%m-%d %H:%M:%S")"; \$dp_install_loc/\$script_created_location_server_scripts/./purge-sessions \$by_session_or_file_parameter --maximum-age="\$age_to_delete_parameter" \${enable_dry_run}"\$path_to_delete_parameter"; } >> \$cron_purge_sessions_log_location_1 2>&1 
+
+{ printf "*** %s Size Mode *** \n" "\$(date "+%Y-%m-%d %H:%M:%S")"; \$dp_install_loc/\$script_created_location_server_scripts/./purge-sessions \$by_session_or_file_parameter --maximum-size="\$size_to_delete_parameter" \${enable_dry_run}"\$path_to_delete_parameter"; } >> \$cron_purge_sessions_log_location_1 2>&1 
+
+{ printf "************************************************************************************************************************ \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+
+# --------------------------------------------------------------------------------
+
+# Variables for displaying system information at time of cleanup.
+
+disk_blocks=\$( df -H --output=size / | awk ' NR==2 ' | sed 's/ //g' )
+disk_in_use=\$( df -H --output=used / | awk ' NR==2 ' | sed 's/ //g' )
+disk_available=\$( df -H --output=avail / | awk ' NR==2 ' | sed 's/ //g' )
+disk_pcent=\$( df -H --output=pcent / | awk ' NR==2 '| sed 's/ //g' )
+
+# Session files are either .session or .session.archived.
+# The actual recordings are .dprec or .dprec.archived.
+SessionTextFiles=\$(sudo find "\$dp_install_loc_sessions" -name "*.sessio*")
+SessionTextFiles_active=\$(sudo find "\$dp_install_loc_sessions" -name "*.session")
+SessionTextFiles_archived=\$(sudo find "\$dp_install_loc_sessions" -name "*.session.archived")
+
+session_recordings_archived=\$(sudo find "\$dp_install_loc_sessions" -name "*.dprec.archived")
+session_recordings=\$(sudo find "\$dp_install_loc_sessions" -name "*.dpre*")
+
+# Uses stored info from variable and prints in nicer looking manner
+NumberOfSessionTextFiles_active=\$(printf '%s\n' "\$SessionTextFiles_active" | wc -l)
+NumberOfSessionTextFiles_archived=\$(printf '%s\n' "\$SessionTextFiles_archived" | wc -l)
+
+number_of_session_recordings_archived=\$(printf '%s\n' "\$session_recordings_archived" | wc -l)
+number_of_session_recordings=\$(printf '%s\n' "\$session_recordings" | wc -l)
+
+disk_sessions_size=\$( du -hs "\$dp_install_loc_sessions" | awk '{ print \$1 }'| sed 's/ //g' )
+
+# --------------------------------------------------------------------------------
+
+{ printf "Current Disk Values                         : \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Blocks                                      : \$disk_blocks \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Used                                        : \$disk_in_use \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Available                                   : \$disk_available \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf '%s\n' "Percent Used                                : \${disk_pcent}"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf -- "-------------------------------------------------------------------------------- \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Current Size of file-backed sessions folder : \$disk_sessions_size\n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total DPREC Recordings                      : \$number_of_session_recordings \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf " \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Archived Session Files                : \$NumberOfSessionTextFiles_archived \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Archived DPREC Recordings             : \$number_of_session_recordings_archived \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "Total Active Session & DPREC Files          : \$NumberOfSessionTextFiles_active \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+
+{ printf "************************************************************************************************************************ \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "*************************************** %s Operations completed *************************************** \n" "\$(date "+%Y-%m-%d %H:%M:%S")"; } >> \$cron_purge_sessions_log_location_1 2>&1
+{ printf "************************************************************************************************************************ \n"; } >> \$cron_purge_sessions_log_location_1 2>&1
 
 # --------------------------------------------------
 # ---- Log File Management - by Size ----
 # --------------------------------------------------
 
 # Keeps logs from growing over 10 megabytes
-#tail -c 10485760 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+#tail -c 10485760 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # Keeps logs from growing over 5 megabytes
-#tail -c 5242880 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+#tail -c 5242880 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # Keeps logs from growing over 1 megabyte
-#tail -c 1048576 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+#tail -c 1048576 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # Keeps logs from growing over 1 kilobyte
-#tail -c 1096 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+#tail -c 1096 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # --------------------------------------------------
 # ---- Log File Management - by Number of Lines ----
 # --------------------------------------------------
 # Keep last 1,000 lines.
-# tail -n 1000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+# tail -n 1000 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # Keep last 5,000 lines.
-# tail -n 5000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
+# tail -n 5000 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 
 # Keep last 10,000 lines.
-tail -n 10000 /var/log/cron-purge-sessions > /var/log/cron-purge-sessions2 && rm -f /var/log/cron-purge-sessions && mv /var/log/cron-purge-sessions2 /var/log/cron-purge-sessions
-
+tail -n 10000 \$cron_purge_sessions_log_location_1 > \$cron_purge_sessions_log_location_2 && rm -f \$cron_purge_sessions_log_location_1 && mv \$cron_purge_sessions_log_location_2 \$cron_purge_sessions_log_location_1
 EOF
 					sudo chmod 770 "$dp_install_loc/$script_created_location_server_scripts/cron-purge-sessions"
 					
