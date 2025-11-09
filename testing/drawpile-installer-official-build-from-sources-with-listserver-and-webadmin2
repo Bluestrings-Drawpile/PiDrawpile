@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003948
+drawpilescriptversion=2.996003949
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2174,6 +2174,122 @@ elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" 
 else
 	echo "This message should not be visible."
 fi
+echo
+echo '--------------------------------------------------------------------------------'
+echo '--------------------------------------------------------------------------------'
+echo
+server_timezone_configured=$( grep -m 1 "server_timezone_configured = " "$app_installation_status_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
+echo
+if [ "$server_timezone_configured" == "yes" ]; then
+	echo "${bold}${yellow}Server timezone has already been configured by script,${normal}"
+	echo "${bold}${yellow}skipping configuration prompt.${normal}"
+elif [ -z "$server_timezone_configured" ] || [ "$server_timezone_configured" = "=" ]; then
+	# If value is null or equal to the = sign, run configuration.
+	echo "${bold}${green}Displaying server time set values.${normal}"
+	echo
+	timedatectl status
+	echo
+	echo
+	echo "Is this 'Local Time' correct? If not, consider setting the server time "
+	echo "zone correctly."
+	echo
+	echo "Certain parts of the script occur at specific times, like session file"
+	echo "cleanup if session archiving is enabled and web admin is set to archive"
+	echo "session data rather than delete it, so recovery of file backed session data"
+	echo "is more likely to be able to occur. This makes being able to set a time"
+	echo "for that script to run easier, since you know the time zone of the server."
+	echo
+	echo "${bold}${red}Would you like to correct the time zone?${normal}"
+	while :; do
+		read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " server_timezone_query
+		
+		if [ "$server_timezone_query" == "y" ] || [ "$server_timezone_query" == "Y" ] || [ "$server_timezone_query" == "yes" ] || [ "$server_timezone_query" == "YES" ] || [ "$server_timezone_query" == "Yes" ] || [ "$server_timezone_query" == "n" ] || [ "$server_timezone_query" == "N" ] || [ "$server_timezone_query" == "no" ] || [ "$server_timezone_query" == "NO" ] || [ "$server_timezone_query" == "No" ]; then
+			break
+		else
+			echo
+			echo "${bold}${red}Invalid input selection, try again.${normal}"
+			echo
+			echo ----------------------------------------------------------------------------------
+			echo
+		fi
+	done
+	
+	echo
+	echo ----------------------------------------------------------------------------------
+	echo
+	
+	if [ "$server_timezone_query" == "y" ] || [ "$server_timezone_query" == "Y" ] || [ "$server_timezone_query" == "yes" ] || [ "$server_timezone_query" == "YES" ] || [ "$server_timezone_query" == "Yes" ]; then
+		while :; do
+			new_timezone_selected=$(tzselect)
+
+			if [ -n "$new_timezone_selected" ]; then
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${green}User Selected Timezone:${normal} $new_timezone_selected"
+				echo
+				echo "${bold}${green}Running command:${normal} timedatectl set-timezone $new_timezone_selected"
+				timedatectl set-timezone $new_timezone_selected
+				echo
+				echo "${bold}${green}Restarting cron to make sure it is reading the correct time.${normal}"
+				if [[ "$what_linux_name" == "NAME=\"Fedora Linux\"" || "$what_linux_name" == "NAME=Fedora" ]]; then
+					echo "${bold}${green}Running command:${normal} sudo service crond restart"
+					sudo service crond restart
+				else
+					echo "${bold}${green}Running command:${normal} sudo systemctl daemon-reload"
+					sudo systemctl daemon-reload
+					echo
+					echo "${bold}${green}Running command:${normal} sudo service cron restart"
+					sudo service cron restart
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				echo "${bold}${green}Displaying server time set values.${normal}"
+				echo
+				timedatectl status
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+				sudo sed -i '\!^server_timezone_configured =!{h;s!=.*!= '"yes"'!};${x;\!^$!{s!!server_timezone_configured = '"yes"'!;H};x}' $app_installation_status_file
+				break
+			else
+				echo "${bold}${red}Timezone selection canceled or failed.${normal}"
+				echo "Would you like to try again?"
+				echo
+				read -r -p "${bold}${red}Without quotes, type 'yes' or 'no':${normal} " server_timezone_query
+				echo
+				if [ "$server_timezone_query" == "y" ] || [ "$server_timezone_query" == "Y" ] || [ "$server_timezone_query" == "yes" ] || [ "$server_timezone_query" == "YES" ] || [ "$server_timezone_query" == "Yes" ]; then
+					echo "${bold}${red}Re-running timezone selection.${normal}"
+				elif [ "$server_timezone_query" == "n" ] || [ "$server_timezone_query" == "N" ] || [ "$server_timezone_query" == "no" ] || [ "$server_timezone_query" == "NO" ] || [ "$server_timezone_query" == "No" ]; then
+					echo "${bold}${red}Canceling timezone selection.${normal}"
+					sudo sed -i '\!^server_timezone_configured =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!server_timezone_configured = '"no"'!;H};x}' $app_installation_status_file
+					break
+				else
+					echo "${bold}${red}Invalid input selection.${normal}"
+					echo "${bold}${red}Re-running timezone selection.${normal}"
+				fi
+				echo
+				echo ----------------------------------------------------------------------------------
+				echo
+			fi
+		done
+	elif [ "$server_timezone_query" == "n" ] || [ "$server_timezone_query" == "N" ] || [ "$server_timezone_query" == "no" ] || [ "$server_timezone_query" == "NO" ] || [ "$server_timezone_query" == "No" ]; then
+		echo "${bold}${yellow}Skipping timezone change.${normal}"
+		sudo sed -i '\!^server_timezone_configured =!{h;s!=.*!= '"no"'!};${x;\!^$!{s!!server_timezone_configured = '"no"'!;H};x}' $app_installation_status_file
+	else
+		echo "This message should not be visible regarding: server_timezone_configured"
+	fi
+else
+	# if [ "$server_timezone_configured" == "no" ]; then
+	echo "${bold}${yellow}Server timezone is correct or was configured outside ${normal}"
+	echo "${bold}${yellow}of the script, skipping configuration prompt.${normal}"
+fi
+
+
+
+
+
 
 echo
 echo '--------------------------------------------------------------------------------'

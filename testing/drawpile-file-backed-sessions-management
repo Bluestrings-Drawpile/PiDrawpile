@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=0.1430
+drawpilescriptversion=0.1431
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -2228,7 +2228,9 @@ elif [ "$search_query_type" == "8" ]; then
 				$dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size="$size_to_delete_parameter" "$path_to_delete_parameter" --dry-run
 			fi
 
+			# systemd_selection=$( grep -m 1 "systemd_selection = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}' )
 			if [[ "$maximum_count_parameter_test" == "pass" && "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]]; then
+			# if [[ "$maximum_count_parameter_test" == "pass" && "$age_to_delete_parameter_test" == "pass" && "$size_to_delete_parameter_test" == "pass" ]] && [[ "$systemd_selection" == "1" || "$systemd_selection" == "2" || "$systemd_selection" == "4" || "$systemd_selection" == "5" || "$systemd_selection" == "9" || "$systemd_selection" == "14" || "$systemd_selection" == "15" || "$systemd_selection" == "17" ]]; then
 				echo
 				echo '--------------------------------------------------------------------------------'
 				echo '--------------------------------------------------------------------------------'
@@ -2243,8 +2245,13 @@ elif [ "$search_query_type" == "8" ]; then
 					:
 					# echo No crontab, sadge. Adding in crontab jerb.
 				fi
+
 				echo "${bold}${cyan}Would you like to create a timed job that runs once per day?${normal}"
-				echo "${bold}${cyan}The job runs 12:00 AM, age check followed by size check.${normal}"
+				echo
+				echo "${bold}${cyan}If you choose yes, you'll be given some times to choose to ${normal}"
+				echo "${bold}${cyan}run cleanup. Script runs a maximum file count per active ${normal}"
+				echo "${bold}${cyan}session (useful for very busy sessions, then age check, ${normal}"
+				echo "${bold}${cyan}and finally followed by size check.${normal}"
 				# echo "${bold}${cyan}Age check occurs at 12:00 AM, size check cleanup at 1:00 AM.${normal}"
 				echo
 				echo "1 - Yes"
@@ -2252,9 +2259,9 @@ elif [ "$search_query_type" == "8" ]; then
 				echo "3 - No"
 				echo
 				while :; do
-					read -r -p "${bold}${cyan}Please select one of the above options, 1 or 2:${normal} " drawpile_archive_file_cleanup_crontab
+					read -r -p "${bold}${cyan}Please select one of the above options, 1 to 3:${normal} " drawpile_archive_file_cleanup_crontab
 					echo
-					if (( "$drawpile_archive_file_cleanup_crontab" >= "1" && "$drawpile_archive_file_cleanup_crontab" <= "2" )); then
+					if (( "$drawpile_archive_file_cleanup_crontab" >= "1" && "$drawpile_archive_file_cleanup_crontab" <= "3" )); then
 						break
 					else
 						echo
@@ -2264,10 +2271,53 @@ elif [ "$search_query_type" == "8" ]; then
 						echo
 					fi
 				done
+
+				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ] || [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then	
+					echo ----------------------------------------------------------------------------------
+					echo
+					echo "${bold}${green}Displaying server current time (cron uses server local time).${normal}"
+					echo
+					timedatectl status
+					echo
+					echo ----------------------------------------------------------------------------------
+					echo
+					echo "What time would you like file clean up to run daily?"
+					echo
+					echo " 1 -  1:00 AM Local Time  |  13 -  1:00 PM Local Time"
+					echo " 2 -  2:00 AM Local Time  |  14 -  2:00 PM Local Time"
+					echo " 3 -  3:00 AM Local Time  |  15 -  3:00 PM Local Time"
+					echo " 4 -  4:00 AM Local Time  |  16 -  4:00 PM Local Time"
+					echo " 5 -  5:00 AM Local Time  |  17 -  5:00 PM Local Time"
+					echo " 6 -  6:00 AM Local Time  |  18 -  6:00 PM Local Time"
+					echo " 7 -  7:00 AM Local Time  |  19 -  7:00 PM Local Time"
+					echo " 8 -  8:00 AM Local Time  |  20 -  8:00 PM Local Time"
+					echo " 9 -  9:00 AM Local Time  |  21 -  9:00 PM Local Time"
+					echo "10 - 10:00 AM Local Time  |  22 - 10:00 PM Local Time"
+					echo "11 - 11:00 AM Local Time  |  23 - 11:00 PM Local Time"
+					echo "12 - 12:00 PM Local Time  |  24 - 12:00 AM Local Time"
+					echo
+					
+					while :; do
+						read -r -p "${bold}${cyan}Please select one of the above options, 1 to 24:${normal} " drawpile_archive_file_cleanup_time_crontab
+						echo
+						if (( "$drawpile_archive_file_cleanup_time_crontab" >= "1" && "$drawpile_archive_file_cleanup_time_crontab" <= "24" )); then
+							break
+						else
+							echo
+							echo "${bold}${red}Invalid input selection, try again.${normal}"
+							echo
+							echo ----------------------------------------------------------------------------------
+							echo
+						fi
+					done
+					
+					(( "$drawpile_archive_file_cleanup_time_crontab" >= "1" && "$drawpile_archive_file_cleanup_time_crontab" <= "23" )) && drawpile_archive_file_cleanup_time_output_crontab="$drawpile_archive_file_cleanup_time_crontab"
+					[ "$drawpile_archive_file_cleanup_time_crontab" == "24" ] && drawpile_archive_file_cleanup_time_output_crontab="0"
+				fi
 				
 				if [ "$drawpile_archive_file_cleanup_crontab" == "1" ]; then
 					echo "Adding crontab job to auto clean files."
-					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 $drawpile_archive_file_cleanup_time_output_crontab * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions --maximum-count=$maximum_count_parameter \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-age=\"$age_to_delete_parameter\" \"$path_to_delete_parameter\" && $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 					# (sudo crontab -l -u root 2>>/dev/null; echo "0 1 * * * $dp_install_loc/$script_created_location_server_scripts/./purge-sessions $by_session_or_file_parameter --maximum-size=\"$size_to_delete_parameter\" \"$path_to_delete_parameter\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "2" ]; then
 					# For issues with auto cleanup, check that the script ran by looking in /var/log/cron 
@@ -2430,7 +2480,7 @@ EOF
 					sudo chcon -Rv -u system_u -t bin_t '/home/drawpileuser/Programs/Drawpile-Srv-Files/server-scripts'
 					
 					echo "Adding crontab job to auto clean files with self limited logging."
-					(sudo crontab -l -u root 2>>/dev/null; echo "0 0 * * * \"$dp_install_loc/$script_created_location_server_scripts/./cron-purge-sessions\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
+					(sudo crontab -l -u root 2>>/dev/null; echo "0 $drawpile_archive_file_cleanup_time_output_crontab * * * \"$dp_install_loc/$script_created_location_server_scripts/./cron-purge-sessions\" #Drawpile Archive File Cleanup") | sudo crontab -u root -
 					
 					
 				elif [ "$drawpile_archive_file_cleanup_crontab" == "3" ]; then
