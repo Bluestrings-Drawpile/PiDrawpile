@@ -1,5 +1,5 @@
 #!/bin/bash
-drawpilescriptversion=2.996003949
+drawpilescriptversion=2.996003950
 drawpile_script_version=$drawpilescriptversion
 if echo $SSH_TTY | grep -q "/dev/pts/" ; then
 	local_or_remote="Remote"
@@ -7131,7 +7131,13 @@ function generate_self_signed_ssl () {
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email"
 	
 	# Updated for 2023 and hopefully works better
-	sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+	# sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+	
+	# Updated for 2026, requires 4096 minimum key size supposedly for Edge Browser
+	# https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/how-do-i-get-edge-to-trust-our-internal-certificate-authority/785333
+	# https://learn.microsoft.com/en-us/azure/databox-online/azure-stack-edge-gpu-certificate-requirements#certificate-algorithms
+	sudo openssl req -x509 -newkey rsa:4096 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+	
 	# sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname,DNS:*.example.com,IP:10.0.0.1"
 	
 	# echo '--------------------------------------------------------------------------------'
@@ -7169,8 +7175,17 @@ ssl_unitname=		\$( grep -m 1 "ssl_organization = " "$drawpile_configuration_valu
 hostname=			\$( grep -m 1 "ssl_organization = " "$drawpile_configuration_values_file" | awk '{for (i=3; i<NF; i++) printf \$i " "; print \$NF}' )
 comment_EOF
 
-sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+# Updated for 2026, requires 4096 minimum key size supposedly for Edge Browser
+# https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/how-do-i-get-edge-to-trust-our-internal-certificate-authority/785333
+# https://learn.microsoft.com/en-us/azure/databox-online/azure-stack-edge-gpu-certificate-requirements#certificate-algorithms
+sudo openssl req -x509 -newkey rsa:4096 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+
+#Updated in 2023 I think
+# sudo openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout $ssl_private_cert_key -out $ssl_certificate -subj "/C=$ssl_country/ST=$ssl_state/L=$ssl_locality/O=$ssl_organization/OU=$ssl_unitname/CN=$hostname/emailAddress=$ssl_email" -addext "subjectAltName=DNS:$hostname"
+
+# Original command
 # sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $ssl_private_cert_key -out $ssl_certificate -days 365 -subj "/C=\$ssl_country/ST=\$ssl_state/L=\$ssl_locality/O=\$ssl_organization/OU=\$ssl_unitname/CN=\$hostname/emailAddress=\$ssl_email"
+
 sudo chown drawpileuser:drawpileread $ssl_certificate
 sudo chown drawpileuser:drawpileread $ssl_private_cert_key
 sudo nginx -s reload
@@ -7473,24 +7488,27 @@ if [ "$maybe_use_config_value" == "y" ] || [ "$maybe_use_config_value" == "Y" ] 
 	fi
 elif [ "$maybe_use_config_value" == "n" ] || [ "$maybe_use_config_value" == "N" ] || [ "$maybe_use_config_value" == "no" ] || [ "$maybe_use_config_value" == "NO" ] || [ "$maybe_use_config_value" == "No" ]; then
 	reused_ssl_encryption_config=no
-	echo "${bold}${underline}Self Signed Certificate${normal}"
-	echo "${bold}${green}Pros:${normal}"
+	echo "${bold}${underline}Self Signed Certificate (Generally required for free hostname services)${normal}"
+	echo "${bold}${green}Pros: ${normal}"
 	echo "  * No registration"
-	echo "  * Renew cert via automated script every year."
+	echo "  * Renew cert via automated crontab script every year."
 	echo "${bold}${red}Cons:${normal}"
-	echo "  * If script does not update SSL cert, users cannot connect."
+	echo '  * Less trusted on web browsers due to it being self signed.'
 	echo '  * Requires users to replace cert in app or cannot connect.'
-	echo '  * Also less trusted on web browsers due to it being self signed.'
 	echo '  * Drawpile web users will need to manually install certificate in order to'
 	echo '         use the web version of Drawpile on the server. There is no other way'
 	echo '         to get around this issue if you use self signed certificates (and'
 	echo '         a free hostname, generally speaking).'
+	echo "  * If scheduled ssl renewal via crontab script does not update SSL cert, "
+	echo '         users cannot connect. This should not occur and has been tested.'
 	echo 
-	echo "${bold}${underline}Let's Encrypt ${normal}"
-	echo "${bold}${green}Pros:${normal}"
+	echo "${bold}${underline}Let's Encrypt (Use with paid hostname services)${normal}"
+	echo "${bold}${green}Pros: (${normal}"
 	echo "  * Free to use, simple setup, only slightly more complex."
 	echo '  * Creates 3rd party signed certificate from Certificate Authority'
 	echo '  * Works well with paid domains, from Squarespace or other services.'
+	echo '  * For web drawpile client, this makes connections much easier without'
+	echo '         needing special set up configuration.'
 	echo "${bold}${red}Cons:${normal}"
 	echo '  * May not be available when using free hostnames as there are too many'
 	echo '         hostnames using it for SSL encryption. To increase chances of'
@@ -11994,14 +12012,26 @@ if [ "$local_or_remote" == "Local" ]; then
 		echo
 		echo "							${bold}Actual Path to be shared${normal}"
 		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		if [[ -d "$option_loc_1" ]]; then
-			echo " 1 - ${underline}Public Folder (Recommended)${normal}			$option_loc_1"
+		if [[ "$option_loc_num" == "1" ]] && [[ -d "$option_loc_1" ]]; then
+			echo " 1 - ${underline}Public Folder (Recommended)${normal}				$option_loc_1"
+		elif [[ -d "$option_loc_1" ]]; then
+			echo " 1 - ${underline}Public Folder${normal}						$option_loc_1"
 		else
 			echo " ${red}${bold}$invalid_path_text	$option_loc_1${normal}"
 		fi
 		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		if [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
-			echo " 2 - ${underline}Music, Pictures, Public, and Videos${normal}		$option_loc_10
+		if [[ "$option_loc_num" -ge "2" && "$option_loc_num" -le "4" ]] && [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
+			echo " 2 - ${underline}Music, Pictures, Public, and Videos (Recommended)${normal}		$option_loc_10
+								$option_loc_4
+								$option_loc_1
+								$option_loc_11"
+		elif [[ "$option_loc_num" == "1" ]] && [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
+			echo " 2 - ${underline}Music, Pictures, Public, and Videos (Alt. Recommended)${normal}	$option_loc_10
+								$option_loc_4
+								$option_loc_1
+								$option_loc_11"
+		elif [[ -d "$option_loc_10" ]] && [[ -d "$option_loc_4" ]] && [[ -d "$option_loc_1" ]] && [[ -d "$option_loc_11" ]]; then
+			echo " 2 - ${underline}Music, Pictures, Public, and Videos${normal}			$option_loc_10
 								$option_loc_4
 								$option_loc_1
 								$option_loc_11"
@@ -12012,14 +12042,24 @@ if [ "$local_or_remote" == "Local" ]; then
 								$option_loc_11${normal}"
 		fi
 		echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		if [[ -d "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" ]]; then
-			echo " 3 - ${underline}Custom location of drawpile${normal}			$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" || echo "${red}${bold}$invalid_path_text	- $dp_install_loc/Programs/Drawpile-Srv-Files${normal}"
+		if [[ "$option_loc_num" == "9" ]] && [[ -d "$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" ]]; then
+			echo " 3 - ${underline}Custom location of drawpile (Recommended) ${normal}			$dp_install_loc_9_custom/Programs/Drawpile-Srv-Files" || echo "${red}${bold}$invalid_path_text	- $dp_install_loc/Programs/Drawpile-Srv-Files${normal}"
 			echo "     Server files only to be shared, like recordings,"
 			echo "           templates, and file-backed sessions."
 		elif [[ -d "$dp_install_loc/Programs/Drawpile-Srv-Files" ]]; then
-			echo " 3 - ${underline}Server files only to be shared.${normal}			$dp_install_loc/Programs/Drawpile-Srv-Files"
-			echo "     Server files only to be shared, like recordings,"
-			echo "           templates, and file-backed sessions."
+			if [[ "$option_loc_num" -ge "1" && "$option_loc_num" -le "4" ]]; then
+				echo " 3 - ${underline}Server files only to be shared. (Alt. Recommended) ${normal}	$dp_install_loc/Programs/Drawpile-Srv-Files"
+				echo "     Server files only to be shared, like recordings,"
+				echo "           templates, and file-backed sessions."
+			elif [[ "$option_loc_num" == "5" || "$option_loc_num" == "6" ]]; then
+				echo " 3 - ${underline}Server files only to be shared. (Recommended)${normal}		$dp_install_loc/Programs/Drawpile-Srv-Files"
+				echo "     Server files only to be shared, like recordings,"
+				echo "           templates, and file-backed sessions."
+			else
+				echo " 3 - ${underline}Server files only to be shared.${normal}				$dp_install_loc/Programs/Drawpile-Srv-Files"
+				echo "     Server files only to be shared, like recordings,"
+				echo "           templates, and file-backed sessions."
+			fi
 		else
 			echo "${red}${bold} $invalid_path_text	$dp_install_loc/Programs/Drawpile-Srv-Files"
 		fi
@@ -14385,7 +14425,32 @@ EOF
 			
 			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<p>To install a cert in Chrome, click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files(\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>/g" /var/www/html/drawpile/index.html
 
-			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ) and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari or Firefox\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<br><br>\n\nIn Firefox, you may need to confirm the certificate by dragging the certificate to the Keychain Access App ( <a href=\"https:\/\/support.apple.com\/guide\/keychain-access\/add-certificates-to-a-keychain-kyca2431\/mac\" target=\"mac-keychain\">Add certificates to a keychain using Keychain Access on Mac<\/a> ). To do this you will need to visit the website and accept the risk to continue, you can go into the keychain to find the certificate under \"All items\", \"Local items\". Find the website, double click it and enter your keychain password. Reload the web page, you should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
+			# Old as of January 2026
+			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<details>\n<summary>\nInstall Certificate for Windows Edge\/CCleaner Browser\/Chrome\n  <\/summary>\n<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ). Click 'Advanced' and 'Continue to <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname (unsafe)<\/a>' and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for Windows Firefox\n  <\/summary>\n<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>\n<details>\n<summary>\nInstall Certificate for iOS Safari or Firefox\n  <\/summary>\n<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<br><br>\n\nIn Firefox, you may need to confirm the certificate by dragging the certificate to the Keychain Access App ( <a href=\"https:\/\/support.apple.com\/guide\/keychain-access\/add-certificates-to-a-keychain-kyca2431\/mac\" target=\"mac-keychain\">Add certificates to a keychain using Keychain Access on Mac<\/a> ). To do this you will need to visit the website and accept the risk to continue, you can go into the keychain to find the certificate under \"All items\", \"Local items\". Find the website, double click it and enter your keychain password. Reload the web page, you should be able to use the web version of Drawpile now on this server.<\/p>\n<\/details>\n<br>/g" /var/www/html/drawpile/index.html
+			
+			sudo sed -i -e "s/<\/head>/	<style>\n	.no-bullets-list {\n		list-style-type: none; \/* Removes the bullets\/numbers *\/\n	}\n	<\/style>\n<\/head>/g" /var/www/html/drawpile/index.html
+
+			# certificate_instructions_Win_Edge="<p>To install a cert in Edge, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ). Click 'Advanced' and 'Continue to <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname (unsafe)<\/a>' and then click the 'Not Secure' message in the address bar, click 'Your connection to this site isn\'t secure', click the certificate icon next to the 'X' in the upper right, select 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificate'. You should find and select something called 'Manage Certificates', click 'Installed by you', and click 'Import' next to 'Trusted Certificates'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>"
+			
+			# certificate_instructions_Win_Chromium_CCleaner="<p>To install a cert in Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ). Click 'Advanced' and 'Continue to <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname (unsafe)<\/a>' and then click the 'Not Secure' message in the address bar, click 'Certificate is not valid', go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings', select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>"
+
+			certificate_instructions_Win_Edge_Chromium_CCleaner="<p>To install a cert in Chromium based browser, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>"
+
+			certificate_instructions_old_Chromium="<p>OLD INSTRUCTIONS: To install a cert in Edge, CCleaner Browser, or Chrome, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname<\/a> ). Click 'Advanced' and 'Continue to <a href=\"https:\/\/$hostname\" target=\"web-client\">https:\/\/$hostname (unsafe)<\/a>' and then click the 'Not Secure' message in the address bar. If you're in CCleaner Browser or Chrome click 'Certificate is not valid', if it's Edge click 'Your connection to this site isn\'t secure' and then click the certificate icon next to the 'X' in the upper right. From there, go to 'Details', and select 'Export...'. Once you have saved it to your computer, go to your browser menu in the upper right, go to 'Settings' and search for 'Certificates'. You should find something called 'Manage Certificates - Manage HTTPS\/SSL certificates and settings' (In CCleaner browser you may need to click 'More' first to find it, in Chrome it's under 'Security'), select that, click 'Import...', 'Next', and 'Browse...'. Navigate to your file you downloaded earlier (note that you may have to change the drop down type to 'All Files (\*.\*)'), leave it on the default option 'Place all certificates in the following store' which should be 'Personal'. Click 'Next' and then 'Finish', close those windows and the settings tab. You should be able to use the web version of Drawpile now on this server.<\/p>"
+
+			certificate_instructions_Win_Firefox="<p>To install a cert in Firefox, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Advanced...' and select 'Accept the Risk and Continue.' You should be able to use the web version of Drawpile now on this server.<\/p>"
+
+			certificate_instructions_iOS="<p>To install a cert in iOS Safari, first make sure that you are on this web page ( <a href=\"https:\/\/$hostname\">https:\/\/$hostname<\/a> ). Click 'Show Details' and select 'visit this website'. You should be able to use the web version of Drawpile now on this server.<br><br>\n\nIn Firefox, you may need to confirm the certificate by dragging the certificate to the Keychain Access App ( <a href=\"https:\/\/support.apple.com\/guide\/keychain-access\/add-certificates-to-a-keychain-kyca2431\/mac\" target=\"mac-keychain\">Add certificates to a keychain using Keychain Access on Mac<\/a> ). To do this you will need to visit the website and accept the risk to continue, you can go into the keychain to find the certificate under \"All items\", \"Local items\". Find the website, double click it and enter your keychain password. Reload the web page, you should be able to use the web version of Drawpile now on this server.<\/p>"
+
+			################################################
+			# Old formatting attempt, can probably ignore or delete
+			# sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n$certificate_instructions_Win_Edge\n$certificate_instructions_Win_Chromium_CCleaner\n$certificate_instructions_Win_Firefox\n$certificate_instructions_iOS/g" /var/www/html/drawpile/index.html
+			################################################
+
+			# Cleanup old entries when re-running sed commands. Used for testing
+			# sudo sed -z -i 's/common community guidelines<\/a>\.<\/p>.*<drawpile-session-list/common community guidelines<\/a>\.<\/p>\n\n<drawpile-session-list/g' /var/www/html/drawpile/index.html
+
+			sudo sed -i -e "s/common community guidelines<\/a>.<\/p>/common community guidelines<\/a>.<\/p>\n\n<ul class="no-bullets-list">\n  <li>\n    <span>Windows<\/span>\n    <ul class="no-bullets-list">\n      <li><details><summary>CCleaner Browser,  Chrome, and Edge<\/summary>$certificate_instructions_Win_Edge_Chromium_CCleaner\n\n$certificate_instructions_old_Chromium<br><br><\/details><\/li>\n      <li><details><summary>Firefox<\/summary>$certificate_instructions_Win_Firefox<br><br><\/details><\/li>\n    <\/ul>\n  <\/li>\n  <li>\n    <span>Apple<\/span>\n    <ul class="no-bullets-list">\n      <li><details><summary>iOS - iPad and iPhone<\/summary>$certificate_instructions_iOS<br><br><\/details><\/li>\n    <\/ul>\n  <\/li>\n<\/ul>\n/g" /var/www/html/drawpile/index.html
 		fi
 		
 		community_server_extra_rules_insertion_function		
